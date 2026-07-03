@@ -1,0 +1,96 @@
+.audit-toolbar {
+  display: grid;
+  grid-template-columns: minmax(220px, 1.4fr) repeat(4, minmax(150px, 1fr)) auto;
+  gap: 12px;
+  align-items: end;
+  margin-bottom: 16px;
+}
+
+.audit-description {
+  max-width: 360px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.audit-entity {
+  font-weight: 500;
+}
+
+.audit-pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
+  color: var(--muted-foreground);
+  font-size: 0.875rem;
+}
+
+.audit-pagination__actions {
+  display: flex;
+  gap: 8px;
+}
+
+.audit-details {
+  display: grid;
+  gap: 16px;
+}
+
+.audit-details dl {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+}
+
+.audit-details dl div {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 8px;
+}
+
+.audit-details dt {
+  color: var(--muted-foreground);
+  font-size: 0.8125rem;
+}
+
+.audit-details dd {
+  margin: 0;
+  text-align: right;
+  font-weight: 500;
+}
+
+.audit-details h3 {
+  margin: 0 0 8px;
+  font-size: 0.875rem;
+}
+
+.audit-details pre {
+  max-height: 320px;
+  overflow: auto;
+  margin: 0;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--secondary);
+  font-size: 0.8125rem;
+}
+
+@media (max-width: 1200px) {
+  .audit-toolbar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .audit-toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .audit-pagination {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

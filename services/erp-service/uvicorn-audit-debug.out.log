@@ -1,0 +1,102 @@
+Database connection successful!
+INFO:     127.0.0.1:57731 - "POST /clients/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57732 - "POST /invoices/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57733 - "POST /payments/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57735 - "GET /audit-logs?limit=10&skip=0 HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57736 - "GET /audit-logs/?limit=10&skip=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57737 - "GET /audit-logs?entity_type=client&search=17&limit=5&skip=0 HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57738 - "GET /audit-logs/?entity_type=client&search=17&limit=5&skip=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57739 - "GET /audit-logs?entity_type=invoice&action=create&limit=5&skip=0 HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57740 - "GET /audit-logs/?entity_type=invoice&action=create&limit=5&skip=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57741 - "GET /audit-logs?entity_type=payment&action=create&limit=5&skip=0 HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57742 - "GET /audit-logs/?entity_type=payment&action=create&limit=5&skip=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57743 - "GET /audit-logs?limit=1&skip=0 HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57744 - "GET /audit-logs/?limit=1&skip=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57745 - "GET /audit-logs?limit=1&skip=1 HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57746 - "GET /audit-logs/?limit=1&skip=1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57482 - "GET /notifications/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57027 - "OPTIONS /users/me HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62169 - "OPTIONS /users/me HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57027 - "GET /users/me HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62169 - "GET /users/me HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62169 - "OPTIONS /notifications/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53807 - "OPTIONS /notifications/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57027 - "OPTIONS /audit-logs?limit=25&skip=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65158 - "OPTIONS /audit-logs?limit=25&skip=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50646 - "GET /audit-logs?limit=25&skip=0 HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:50646 - "GET /audit-logs?limit=25&skip=0 HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:65158 - "OPTIONS /audit-logs/?limit=25&skip=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50646 - "OPTIONS /audit-logs/?limit=25&skip=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62169 - "GET /notifications/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57027 - "GET /audit-logs/?limit=25&skip=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50646 - "GET /notifications/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62169 - "GET /audit-logs/?limit=25&skip=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62169 - "OPTIONS /audit-logs/3 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50646 - "GET /audit-logs/3 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51714 - "OPTIONS /users/me HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53435 - "OPTIONS /users/me HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51714 - "GET /users/me HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53435 - "GET /users/me HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53435 - "OPTIONS /notifications/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60882 - "OPTIONS /notifications/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51714 - "OPTIONS /audit-logs?limit=25&skip=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56618 - "OPTIONS /audit-logs?limit=25&skip=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52434 - "GET /audit-logs?limit=25&skip=0 HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:52434 - "GET /audit-logs?limit=25&skip=0 HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:53435 - "GET /notifications/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52434 - "GET /notifications/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52434 - "OPTIONS /audit-logs/?limit=25&skip=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53435 - "OPTIONS /audit-logs/?limit=25&skip=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56618 - "GET /audit-logs/?limit=25&skip=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53435 - "GET /audit-logs/?limit=25&skip=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63512 - "GET /notifications/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54789 - "OPTIONS /users/me HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50308 - "OPTIONS /users/me HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54789 - "GET /users/me HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50308 - "GET /users/me HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50308 - "OPTIONS /notifications/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54789 - "OPTIONS /audit-logs?limit=25&skip=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50308 - "OPTIONS /notifications/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58076 - "OPTIONS /audit-logs?limit=25&skip=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64182 - "GET /audit-logs?limit=25&skip=0 HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:50308 - "GET /audit-logs?limit=25&skip=0 HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:64182 - "OPTIONS /audit-logs/?limit=25&skip=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50308 - "OPTIONS /audit-logs/?limit=25&skip=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54789 - "GET /notifications/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64182 - "GET /audit-logs/?limit=25&skip=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50308 - "GET /notifications/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54789 - "GET /audit-logs/?limit=25&skip=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54789 - "GET /users/me HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50308 - "GET /users/me HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54789 - "GET /audit-logs?limit=25&skip=0 HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:64182 - "GET /audit-logs?limit=25&skip=0 HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:50308 - "GET /notifications/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64182 - "GET /audit-logs/?limit=25&skip=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54789 - "GET /notifications/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50308 - "GET /audit-logs/?limit=25&skip=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55681 - "OPTIONS /audit-logs?limit=25&skip=0&start_date=2026-06-01 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55681 - "GET /audit-logs?limit=25&skip=0&start_date=2026-06-01 HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:55681 - "OPTIONS /audit-logs/?limit=25&skip=0&start_date=2026-06-01 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55681 - "GET /audit-logs/?limit=25&skip=0&start_date=2026-06-01 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55681 - "OPTIONS /audit-logs?limit=25&skip=0&start_date=2026-06-01&end_date=2026-06-16 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55681 - "GET /audit-logs?limit=25&skip=0&start_date=2026-06-01&end_date=2026-06-16 HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:55681 - "OPTIONS /audit-logs/?limit=25&skip=0&start_date=2026-06-01&end_date=2026-06-16 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55681 - "GET /audit-logs/?limit=25&skip=0&start_date=2026-06-01&end_date=2026-06-16 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50645 - "GET /audit-logs?limit=25&skip=0 HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:50645 - "GET /audit-logs/?limit=25&skip=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50645 - "GET /audit-logs?limit=25&skip=0 HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:50645 - "GET /audit-logs/?limit=25&skip=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50645 - "GET /audit-logs?limit=25&skip=0 HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:50645 - "GET /audit-logs/?limit=25&skip=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50645 - "GET /audit-logs?limit=25&skip=0 HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:50645 - "GET /audit-logs/?limit=25&skip=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50645 - "GET /audit-logs?limit=25&skip=0 HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:50645 - "GET /audit-logs/?limit=25&skip=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50645 - "OPTIONS /email/logs?limit=50&skip=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61688 - "OPTIONS /email/logs?limit=50&skip=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50645 - "GET /email/logs?limit=50&skip=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61688 - "GET /email/logs?limit=50&skip=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61076 - "GET /audit-logs?limit=25&skip=0 HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:58750 - "GET /audit-logs?limit=25&skip=0 HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:61076 - "GET /audit-logs/?limit=25&skip=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58750 - "GET /audit-logs/?limit=25&skip=0 HTTP/1.1" 200 OK
