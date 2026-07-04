@@ -1,14 +1,16 @@
 import psycopg2
 from psycopg2.extras import RealDictCursor
 import time
+import os
 
 while True:
     try:
+        database_url = os.getenv("DATABASE_URL")
+        if not database_url:
+            raise ValueError("DATABASE_URL environment variable is not set")
+            
         conn = psycopg2.connect(
-            host="localhost",
-            database="vexbill",
-            user="postgres",
-            password="jesusilu10@",
+            database_url,
             cursor_factory=RealDictCursor
         )
 

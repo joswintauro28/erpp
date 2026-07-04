@@ -1,7 +1,9 @@
 import axios from "axios";
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 const portalApi = axios.create({
-  baseURL: "http://localhost:8000/portal",
+  baseURL: `${API_URL}/portal`,
 });
 
 portalApi.interceptors.request.use((config) => {
