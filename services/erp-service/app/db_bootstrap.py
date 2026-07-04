@@ -53,6 +53,7 @@ ALTER TABLE invoices ADD COLUMN IF NOT EXISTS inventory_applied BOOLEAN DEFAULT 
 ALTER TABLE invoices ADD COLUMN IF NOT EXISTS warehouse_id INTEGER;
 -- Assign main warehouse to existing invoices (deferred — handled in _seed_rbac after warehouse creation)
 
+ALTER TABLE IF EXISTS products ADD COLUMN IF NOT EXISTS stock NUMERIC DEFAULT 0;
 ALTER TABLE IF EXISTS products ADD COLUMN IF NOT EXISTS low_stock_threshold INTEGER DEFAULT 10;
 ALTER TABLE IF EXISTS products ADD COLUMN IF NOT EXISTS uses_batch_tracking BOOLEAN DEFAULT FALSE;
 ALTER TABLE IF EXISTS products ADD COLUMN IF NOT EXISTS uses_serial_tracking BOOLEAN DEFAULT FALSE;
@@ -175,6 +176,7 @@ CREATE TABLE IF NOT EXISTS quotations (
     igst NUMERIC DEFAULT 0,
     tax_total NUMERIC DEFAULT 0,
     total NUMERIC DEFAULT 0,
+    amount NUMERIC,
     notes TEXT,
     owner_id INTEGER NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -563,6 +565,24 @@ CREATE INDEX IF NOT EXISTS idx_stock_adjustments_product_id ON stock_adjustments
 
 -- Phase 2: Add warehouse_id to invoices (backfill with main warehouse per owner)
 ALTER TABLE IF EXISTS invoices ADD COLUMN IF NOT EXISTS warehouse_id INTEGER REFERENCES warehouses(id);
+
+-- Clean up duplicate organization members and ensure unique constraint is present
+DELETE FROM organization_members a 
+USING organization_members b 
+WHERE a.organization_id = b.organization_id 
+  AND a.user_id = b.user_id 
+  AND a.id > b.id;
+
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = 'organization_members_org_user_unique'
+    ) THEN
+        ALTER TABLE organization_members
+            ADD CONSTRAINT organization_members_org_user_unique
+            UNIQUE (organization_id, user_id);
+    END IF;
+END $$;
 """
 
 

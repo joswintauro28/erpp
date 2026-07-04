@@ -36,7 +36,7 @@ def login(
 
     if not verify(
         user_credentials.password,
-        user["password"]
+        user.get("password_hash") or user.get("password")
     ):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,

@@ -1,29 +1,20 @@
 import os
+from pydantic_settings import BaseSettings
 from pathlib import Path
-from typing import Optional
 
+class Settings(BaseSettings):
+    DATABASE_URL: str
+    JWT_SECRET: str
+    JWT_EXPIRES_IN: str = "7d"
+    PORT: int = 8000
+    FRONTEND_URL: str = "http://localhost:3000"
+    AI_SERVICE_URL: str = "http://localhost:8000"
+    NODE_ENV: str = "development"
+    ENCRYPTION_KEY: str
 
-def load_env_file(path: Optional[Path] = None) -> None:
-    env_path = path or Path(__file__).resolve().parents[1] / ".env"
-    if not env_path.exists():
-        return
+    class Config:
+        env_file = str(Path(__file__).resolve().parents[1] / ".env")
+        env_file_encoding = "utf-8"
+        extra = "ignore"
 
-    for raw_line in env_path.read_text(encoding="utf-8").splitlines():
-        line = raw_line.strip()
-        if not line or line.startswith("#") or "=" not in line:
-            continue
-
-        if line.startswith("export "):
-            line = line[len("export "):].lstrip()
-
-        key, value = line.split("=", 1)
-        key = key.strip()
-        value = value.strip()
-
-        if not key:
-            continue
-
-        if (value.startswith('"') and value.endswith('"')) or (value.startswith("'") and value.endswith("'")):
-            value = value[1:-1]
-
-        os.environ.setdefault(key, value)
+settings = Settings()

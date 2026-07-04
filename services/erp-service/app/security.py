@@ -1,7 +1,7 @@
-import os
 from cryptography.fernet import Fernet
+from app.config import settings
 
-KEY_STR = os.getenv("ENCRYPTION_KEY")
+KEY_STR = settings.ENCRYPTION_KEY
 if not KEY_STR:
     raise RuntimeError("FATAL: ENCRYPTION_KEY environment variable is missing. It must be persistently set to run VexBill securely.")
 

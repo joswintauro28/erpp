@@ -33,7 +33,7 @@ def create_user(user: UserCreate):
 
         cursor.execute(
             """
-            INSERT INTO users (email, password)
+            INSERT INTO users (email, password_hash)
             VALUES (%s, %s)
             RETURNING *
             """,

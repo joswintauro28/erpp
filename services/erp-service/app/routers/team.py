@@ -238,7 +238,7 @@ def accept_invitation(payload: AcceptInvitation):
             logger.info(f"User {payload.email} already exists with ID {user_id}")
         else:
             hashed_pw = hash(payload.password)
-            cursor.execute("INSERT INTO users (email, password) VALUES (%s, %s) RETURNING id", (payload.email, hashed_pw))
+            cursor.execute("INSERT INTO users (email, password_hash) VALUES (%s, %s) RETURNING id", (payload.email, hashed_pw))
             user_id = cursor.fetchone()["id"]
             logger.info(f"Created new user {payload.email} with ID {user_id}")
 

@@ -309,9 +309,9 @@ def accept_invitation(req: AcceptInvitationRequest):
         
         if user:
             user_id = user["id"]
-            cursor.execute("UPDATE users SET password=%s, full_name=%s WHERE id=%s", (hashed_pw, req.full_name, user_id))
+            cursor.execute("UPDATE users SET password_hash=%s, full_name=%s WHERE id=%s", (hashed_pw, req.full_name, user_id))
         else:
-            cursor.execute("INSERT INTO users (email, password, full_name) VALUES (%s, %s, %s) RETURNING id", 
+            cursor.execute("INSERT INTO users (email, password_hash, full_name) VALUES (%s, %s, %s) RETURNING id", 
                           (invitation["email"], hashed_pw, req.full_name))
             user_id = cursor.fetchone()["id"]
 
