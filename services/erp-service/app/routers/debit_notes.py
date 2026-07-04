@@ -40,10 +40,11 @@ def get_debit_notes(current_user: int = Depends(require_permission('invoices.vie
                 """,
                 (current_user,)
             )
-            return cursor.fetchall()
+            return {"data": cursor.fetchall()}
     except Exception as e:
         conn.rollback()
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @router.get("/{id}")
 def get_debit_note(id: int, current_user: int = Depends(require_permission('invoices.view'))):
@@ -62,7 +63,7 @@ def get_debit_note(id: int, current_user: int = Depends(require_permission('invo
             dn = cursor.fetchone()
             if not dn:
                 raise HTTPException(status_code=404, detail="Debit Note not found")
-            return dn
+            return {"data": dn}
     except HTTPException:
         raise
     except Exception as e:

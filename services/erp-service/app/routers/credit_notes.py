@@ -48,7 +48,7 @@ def get_credit_notes(current_user: int = Depends(require_permission('invoices.vi
                 """,
                 (current_user,)
             )
-            return cursor.fetchall()
+            return {"data": cursor.fetchall()}
     except Exception as e:
         conn.rollback()
         raise HTTPException(status_code=500, detail=str(e))
@@ -71,7 +71,7 @@ def get_credit_note(id: int, current_user: int = Depends(require_permission('inv
             cn = cursor.fetchone()
             if not cn:
                 raise HTTPException(status_code=404, detail="Credit Note not found")
-            return cn
+            return {"data": cn}
     except HTTPException:
         raise
     except Exception as e:

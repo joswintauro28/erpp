@@ -59,11 +59,13 @@
 .sidebar__item:hover {
   background: var(--sidebar-accent);
   color: var(--sidebar-accent-foreground);
+  transform: translateX(3px);
 }
 
 .sidebar__item.active {
-  background: var(--sidebar-primary);
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
   color: var(--sidebar-primary-foreground);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);
 }
 
 .sidebar__item svg {
@@ -92,6 +94,7 @@
 .sidebar__group-btn:hover {
   background: var(--sidebar-accent);
   color: var(--sidebar-accent-foreground);
+  transform: translateX(3px);
 }
 
 .sidebar__group-btn-left {
@@ -142,11 +145,13 @@
 .sidebar__child:hover {
   background: var(--sidebar-accent);
   color: var(--sidebar-accent-foreground);
+  transform: translateX(3px);
 }
 
 .sidebar__child.active {
-  background: var(--sidebar-primary);
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
   color: var(--sidebar-primary-foreground);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
 }
 
 .sidebar__child svg {

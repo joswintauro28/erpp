@@ -302,7 +302,7 @@ export default function Invoices() {
                     <TableCell><Badge variant={statusVariant(inv.status)}>{inv.status}</Badge></TableCell>
                     <TableCell>{inv.due_date}</TableCell>
                     <TableCell><div className="page__actions">
-                      <Button variant="ghost" size="icon" onClick={() => router.push(`/invoices/${inv.id}`)} title="Details"><Eye size={15} /></Button>
+                      <Button variant="ghost" size="icon" onClick={() => router.push(`/billing/invoices/${inv.id}`)} title="Details"><Eye size={15} /></Button>
                       <Button variant="ghost" size="icon" onClick={() => handleDownload(inv.id)} title="Download PDF"><Download size={15} /></Button>
                       {canSend && <Button variant="ghost" size="icon" onClick={() => handleEmail(inv.id)} title="Send Email"><Mail size={15} /></Button>}
                       {canEdit && <Button variant="ghost" size="icon" onClick={() => openEdit(inv.id)} title="Edit"><Edit size={15} /></Button>}

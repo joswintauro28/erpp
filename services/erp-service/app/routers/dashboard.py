@@ -1,29 +1,29 @@
 from fastapi import APIRouter, Depends
 
-from app.database import conn
 from app.auth.permissions import require_permission
+from app.database import get_db
 
 router = APIRouter(prefix="/dashboard", tags=["Dashboard"])
 
 
 def _one(sql, params):
     try:
-        with conn.cursor() as cursor:
-            cursor.execute(sql, params)
-            return cursor.fetchone()
+        with get_db() as connection:
+            with connection.cursor() as cur:
+                cur.execute(sql, params)
+                return cur.fetchone()
     except Exception as e:
-        conn.rollback()
         print(f"Dashboard SQL Error in _one: {e}")
         raise e
 
 
 def _many(sql, params):
     try:
-        with conn.cursor() as cursor:
-            cursor.execute(sql, params)
-            return cursor.fetchall()
+        with get_db() as connection:
+            with connection.cursor() as cur:
+                cur.execute(sql, params)
+                return cur.fetchall()
     except Exception as e:
-        conn.rollback()
         print(f"Dashboard SQL Error in _many: {e}")
         raise e
 
@@ -48,9 +48,7 @@ def get_stats(current_user: int = Depends(require_permission('reports.view'))):
             (SELECT COUNT(*) FROM quotations WHERE owner_id=%s AND status = 'accepted') AS accepted_quotations,
             (SELECT COUNT(*) FROM quotations WHERE owner_id=%s) AS total_quotations
         """,
-        (current_user, current_user, current_user, current_user, current_user,
-         current_user, current_user, current_user, current_user, current_user,
-         current_user, current_user, current_user, current_user),
+        (current_user,) * 14,
     )
     money = _one(
         """
@@ -73,12 +71,12 @@ def get_stats(current_user: int = Depends(require_permission('reports.view'))):
     conversion_rate = 0
     if counts["total_leads"]:
         conversion_rate = round((counts["converted_leads"] / counts["total_leads"]) * 100, 2)
-        
+
     quotation_conversion_rate = 0
     if counts["total_quotations"]:
         quotation_conversion_rate = round((counts["accepted_quotations"] / counts["total_quotations"]) * 100, 2)
-        
-    return {
+
+    return {"data": {
         **counts,
         **money,
         **pending,
@@ -89,7 +87,7 @@ def get_stats(current_user: int = Depends(require_permission('reports.view'))):
         "billed_amount": float(money["billed_amount"]),
         "inventory_value": float(counts["inventory_value"]),
         "total_quotation_value": float(counts["total_quotation_value"]),
-    }
+    }}
 
 
 @router.get("/summary")
@@ -103,12 +101,12 @@ def report_summary(current_user: int = Depends(require_permission('reports.view'
     )
     revenue = row["revenue"]
     expenses = row["expenses"]
-    return {"revenue": float(revenue), "expenses": float(expenses), "profit": float(revenue - expenses)}
+    return {"data": {"revenue": float(revenue), "expenses": float(expenses), "profit": float(revenue - expenses)}}
 
 
 @router.get("/revenue-trend")
 def revenue_trend(current_user: int = Depends(require_permission('reports.view'))):
-    return _many(
+    return {"data": _many(
         """
         SELECT TO_CHAR(created_at, 'YYYY-MM') AS month, SUM(amount) AS revenue
         FROM payments
@@ -117,7 +115,7 @@ def revenue_trend(current_user: int = Depends(require_permission('reports.view')
         ORDER BY TO_CHAR(created_at, 'YYYY-MM')
         """,
         (current_user,),
-    )
+    )}
 
 
 @router.get("/invoice-summary")
@@ -141,13 +139,13 @@ def invoice_summary(current_user: int = Depends(require_permission('reports.view
     )
     total = sum(row["count"] for row in rows)
     if total == 0:
-        return {"paid": 0, "pending": 0, "partially_paid": 0, "overdue": 0, "cancelled": 0}
-    return {row["status"]: round((row["count"] / total) * 100, 2) for row in rows}
+        return {"data": {"paid": 0, "pending": 0, "partially_paid": 0, "overdue": 0, "cancelled": 0}}
+    return {"data": {row["status"]: round((row["count"] / total) * 100, 2) for row in rows}}
 
 
 @router.get("/recent-invoices")
 def recent_invoices(current_user: int = Depends(require_permission('reports.view'))):
-    return _many(
+    return {"data": _many(
         """
         SELECT i.id, i.invoice_number, c.name AS client_name, i.total AS amount,
                CASE
@@ -165,12 +163,12 @@ def recent_invoices(current_user: int = Depends(require_permission('reports.view
         LIMIT 5
         """,
         (current_user,),
-    )
+    )}
 
 
 @router.get("/client-growth")
 def client_growth(current_user: int = Depends(require_permission('reports.view'))):
-    return _many(
+    return {"data": _many(
         """
         SELECT TO_CHAR(created_at, 'YYYY-MM') AS month, COUNT(*) AS clients
         FROM clients
@@ -179,12 +177,12 @@ def client_growth(current_user: int = Depends(require_permission('reports.view')
         ORDER BY TO_CHAR(created_at, 'YYYY-MM')
         """,
         (current_user,),
-    )
+    )}
 
 
 @router.get("/payment-analytics")
 def payment_analytics(current_user: int = Depends(require_permission('reports.view'))):
-    return _many(
+    return {"data": _many(
         """
         SELECT COALESCE(payment_method, provider, 'Unknown') AS method, COUNT(*) AS count, COALESCE(SUM(amount),0) AS amount
         FROM payments
@@ -193,12 +191,12 @@ def payment_analytics(current_user: int = Depends(require_permission('reports.vi
         ORDER BY amount DESC
         """,
         (current_user,),
-    )
+    )}
 
 
 @router.get("/recent-stock-movements")
 def recent_stock_movements(current_user: int = Depends(require_permission('reports.view'))):
-    return _many(
+    return {"data": _many(
         """
         SELECT sm.id, sm.invoice_id, sm.product_id, sm.movement_type, sm.quantity, sm.reference, sm.created_at,
                p.name AS product_name, p.sku
@@ -209,13 +207,12 @@ def recent_stock_movements(current_user: int = Depends(require_permission('repor
         LIMIT 5
         """,
         (current_user,),
-    )
+    )}
 
 
 @router.get("/inventory-summary")
 def inventory_summary(current_user: int = Depends(require_permission('reports.view'))):
     """Returns inventory widgets: pending POs, expiring batches, warehouse distribution."""
-    # Pending purchase orders
     pending_pos = _one(
         """
         SELECT COUNT(*) AS count,
@@ -226,7 +223,6 @@ def inventory_summary(current_user: int = Depends(require_permission('reports.vi
         (current_user,),
     )
 
-    # Batches expiring within 30 days
     expiring_batches = _many(
         """
         SELECT pb.id, pb.batch_number, pb.expiry_date, pb.quantity,
@@ -245,7 +241,6 @@ def inventory_summary(current_user: int = Depends(require_permission('reports.vi
         (current_user,),
     )
 
-    # Stock distribution by warehouse
     warehouse_distribution = _many(
         """
         SELECT w.name AS warehouse_name, COALESCE(SUM(ws.quantity), 0) AS total_quantity
@@ -258,7 +253,7 @@ def inventory_summary(current_user: int = Depends(require_permission('reports.vi
         (current_user,),
     )
 
-    return {
+    return {"data": {
         "pending_purchase_orders": {
             "count": pending_pos["count"],
             "total_value": float(pending_pos["total_value"]),
@@ -266,4 +261,4 @@ def inventory_summary(current_user: int = Depends(require_permission('reports.vi
         "expiring_batches": expiring_batches,
         "expiring_batches_count": len(expiring_batches),
         "warehouse_distribution": warehouse_distribution,
-    }
+    }}

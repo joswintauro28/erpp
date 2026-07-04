@@ -566,6 +566,12 @@ CREATE INDEX IF NOT EXISTS idx_stock_adjustments_product_id ON stock_adjustments
 -- Phase 2: Add warehouse_id to invoices (backfill with main warehouse per owner)
 ALTER TABLE IF EXISTS invoices ADD COLUMN IF NOT EXISTS warehouse_id INTEGER REFERENCES warehouses(id);
 
+-- Ensure organization_members has the status, invited_by, joined_at, and created_at columns
+ALTER TABLE organization_members ADD COLUMN IF NOT EXISTS status VARCHAR DEFAULT 'active';
+ALTER TABLE organization_members ADD COLUMN IF NOT EXISTS invited_by INTEGER REFERENCES users(id);
+ALTER TABLE organization_members ADD COLUMN IF NOT EXISTS joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+ALTER TABLE organization_members ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+
 -- Clean up duplicate organization members and ensure unique constraint is present
 DELETE FROM organization_members a 
 USING organization_members b 

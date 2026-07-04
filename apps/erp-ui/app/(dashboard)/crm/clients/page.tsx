@@ -137,7 +137,7 @@ export default function Clients() {
                     <TableCell>{c.state || "-"}</TableCell>
                     <TableCell>
                       <div className="page__actions">
-                        <Button variant="ghost" size="icon" onClick={() => router.push(`/clients/${c.id}`)}><Eye size={15} /></Button>
+                        <Button variant="ghost" size="icon" onClick={() => router.push(`/crm/clients/${c.id}`)}><Eye size={15} /></Button>
                         {canEdit && <Button variant="ghost" size="icon" onClick={() => openEdit(c)}><Edit size={15} /></Button>}
                         {canDelete && <Button variant="ghost" size="icon" onClick={() => handleDelete(c.id)}><Trash2 size={15} color="var(--destructive)" /></Button>}
                       </div>

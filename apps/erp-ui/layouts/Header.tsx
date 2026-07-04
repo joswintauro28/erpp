@@ -155,11 +155,11 @@ export default function Header() {
           
           // Rebuild flat array for keyboard nav
           const arr: FlatSearchItem[] = [];
-          (data.invoices || []).forEach((item: SearchResultItem) => arr.push({ ...item, type: 'invoice', url: `/invoices/${item.id}`, label: `${item.invoice_number} (${item.client_name})`, icon: FileText }));
-          (data.quotations || []).forEach((item: SearchResultItem) => arr.push({ ...item, type: 'quotation', url: `/quotations?view=${item.id}`, label: `${item.quote_number} (${item.client_name})`, icon: ClipboardList }));
-          (data.clients || []).forEach((item: SearchResultItem) => arr.push({ ...item, type: 'client', url: `/clients/${item.id}`, label: `${item.name}`, icon: Users }));
-          (data.products || []).forEach((item: SearchResultItem) => arr.push({ ...item, type: 'product', url: `/products?view=${item.id}`, label: `${item.name}`, icon: Package }));
-          (data.stock || []).forEach((item: SearchResultItem) => arr.push({ ...item, type: 'stock', url: `/stock`, label: `${item.name} (Stock: ${item.stock})`, icon: Warehouse }));
+          (data.invoices || []).forEach((item: SearchResultItem) => arr.push({ ...item, type: 'invoice', url: `/billing/invoices/${item.id}`, label: `${item.invoice_number} (${item.client_name})`, icon: FileText }));
+          (data.quotations || []).forEach((item: SearchResultItem) => arr.push({ ...item, type: 'quotation', url: `/billing/quotations?view=${item.id}`, label: `${item.quote_number} (${item.client_name})`, icon: ClipboardList }));
+          (data.clients || []).forEach((item: SearchResultItem) => arr.push({ ...item, type: 'client', url: `/crm/clients/${item.id}`, label: `${item.name}`, icon: Users }));
+          (data.products || []).forEach((item: SearchResultItem) => arr.push({ ...item, type: 'product', url: `/inventory/products?view=${item.id}`, label: `${item.name}`, icon: Package }));
+          (data.stock || []).forEach((item: SearchResultItem) => arr.push({ ...item, type: 'stock', url: `/inventory/stock`, label: `${item.name} (Stock: ${item.stock})`, icon: Warehouse }));
           
           flatResults.current = arr;
           setSelectedIndex(-1);

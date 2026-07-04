@@ -129,7 +129,7 @@ export default function CreditNotes() {
                 <TableRow key={note.id}>
                   <TableCell style={{ fontWeight: 500 }}>{note.credit_note_number}</TableCell>
                   <TableCell>
-                    <Link href={`/invoices/${note.invoice_id}`} style={{ color: "var(--primary)" }}>
+                    <Link href={`/billing/invoices/${note.invoice_id}`} style={{ color: "var(--primary)" }}>
                       {note.invoice_number}
                     </Link>
                   </TableCell>

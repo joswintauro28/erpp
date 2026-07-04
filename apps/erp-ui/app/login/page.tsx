@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import Input from "@/components/ui/Input";
@@ -16,12 +16,13 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  if (authLoading) {
-    return null;
-  }
+  useEffect(() => {
+    if (!authLoading && isAuthenticated && user) {
+      router.replace("/dashboard");
+    }
+  }, [authLoading, isAuthenticated, user, router]);
 
-  if (isAuthenticated && user) {
-    router.replace("/dashboard");
+  if (authLoading) {
     return null;
   }
 

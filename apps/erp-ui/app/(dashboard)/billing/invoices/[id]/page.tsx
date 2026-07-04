@@ -228,7 +228,7 @@ export default function InvoiceDetails() {
           <p>{invoice.client_name} | Due {invoice.due_date}</p>
         </div>
         <div className="page__actions">
-          <Button variant="outline" onClick={() => router.push("/invoices")}>Back</Button>
+          <Button variant="outline" onClick={() => router.push("/billing/invoices")}>Back</Button>
           <div style={{ display: 'flex', gap: 12 }}>
             <Button variant="outline" onClick={downloadPdf}>Download PDF</Button>
             <Button variant="secondary" onClick={() => setRecurringModalOpen(true)}>Make Recurring</Button>

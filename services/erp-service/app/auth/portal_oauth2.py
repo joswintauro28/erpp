@@ -1,9 +1,9 @@
-import os
 from jose import JWTError, jwt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
+from app.config import settings
 
-PORTAL_SECRET_KEY = os.getenv("PORTAL_SECRET_KEY", "myportalsecretkey456")
+PORTAL_SECRET_KEY = settings.JWT_SECRET + "_portal"
 ALGORITHM = "HS256"
 
 portal_oauth2_scheme = OAuth2PasswordBearer(tokenUrl="portal/login")

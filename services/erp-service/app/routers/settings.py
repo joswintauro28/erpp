@@ -146,7 +146,7 @@ def get_organization(current_user: int = Depends(require_permission('settings.ma
         if settings:
             settings = dict(settings)
             settings = _mask_row(settings, "smtp_password", "razorpay_key_secret", "razorpay_webhook_secret")
-        return settings or {"message": "No settings found"}
+        return {"data": settings} if settings else {"data": None, "message": "No settings found"}
     except Exception as e:
         conn.rollback()
         raise HTTPException(status_code=500, detail=str(e))
@@ -202,7 +202,7 @@ def get_branding(current_user: int = Depends(require_permission('settings.manage
         with conn.cursor() as cursor:
             cursor.execute("SELECT * FROM branding_settings WHERE owner_id = %s", (current_user,))
             settings = cursor.fetchone()
-        return settings or {"message": "No branding settings found"}
+        return {"data": settings} if settings else {"data": None, "message": "No branding settings found"}
     except Exception as e:
         conn.rollback()
         raise HTTPException(status_code=500, detail=str(e))
@@ -277,7 +277,7 @@ def get_notifications(current_user: int = Depends(require_permission('settings.m
         with conn.cursor() as cursor:
             cursor.execute("SELECT * FROM notification_settings WHERE owner_id = %s", (current_user,))
             settings = cursor.fetchone()
-        return settings or {"message": "No notification settings found"}
+        return {"data": settings} if settings else {"data": None, "message": "No notification settings found"}
     except Exception as e:
         conn.rollback()
         raise HTTPException(status_code=500, detail=str(e))

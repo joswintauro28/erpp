@@ -182,7 +182,7 @@ export default function ClientDetails() {
           <h1>{client.name}</h1>
           <p>{client.email || "No email"} {client.gst_number ? `| GST ${client.gst_number}` : ""}</p>
         </div>
-        <Button variant="outline" onClick={() => router.push("/clients")}>Back to Clients</Button>
+        <Button variant="outline" onClick={() => router.push("/crm/clients")}>Back to Clients</Button>
       </div>
 
       <div className="page__grid" style={{ marginBottom: 24 }}>
@@ -282,7 +282,7 @@ export default function ClientDetails() {
             <TableHeader><TableRow><TableHead>Invoice</TableHead><TableHead>Total</TableHead><TableHead>Paid</TableHead><TableHead>Balance</TableHead><TableHead>Status</TableHead><TableHead>Due</TableHead></TableRow></TableHeader>
             <TableBody>
               {(invoices || []).map((inv: Invoice) => (
-                <TableRow key={inv.id} onClick={() => router.push(`/invoices/${inv.id}`)} style={{ cursor: "pointer" }}>
+                <TableRow key={inv.id} onClick={() => router.push(`/billing/invoices/${inv.id}`)} style={{ cursor: "pointer" }}>
                   <TableCell>{inv.invoice_number || `#${inv.id}`}</TableCell>
                   <TableCell>{money(inv.total || inv.amount)}</TableCell>
                   <TableCell>{money(inv.paid_amount)}</TableCell>

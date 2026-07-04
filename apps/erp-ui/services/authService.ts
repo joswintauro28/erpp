@@ -10,6 +10,8 @@ const authService = {
     });
   },
   register: (email: any, password: any): Promise<any> => api.post("/users/", { email, password }),
+  logout: (): Promise<any> => api.post("/logout"),
+  getMe: (): Promise<any> => api.get("/users/me"),
 };
 
 export default authService;

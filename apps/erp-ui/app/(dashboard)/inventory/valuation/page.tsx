@@ -98,7 +98,7 @@ export default function InventoryValuation() {
                 </span>
               )}
               <button
-                onClick={() => router.push("/products")}
+                onClick={() => router.push("/inventory/products")}
                 style={{ color: "#b45309", textDecoration: "underline", background: "none", border: "none", cursor: "pointer", fontSize: "inherit", padding: 0 }}
               >
                 Go to Products to update cost prices →
@@ -216,7 +216,7 @@ export default function InventoryValuation() {
                           variant="ghost"
                           size="icon"
                           title="Edit cost price"
-                          onClick={() => router.push(`/products?view=${p.id}`)}
+                          onClick={() => router.push(`/inventory/products?view=${p.id}`)}
                         >
                           <Edit size={14} />
                         </Button>

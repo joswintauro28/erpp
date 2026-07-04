@@ -137,7 +137,7 @@ export default function RecurringInvoices() {
                 (filtered || []).map((s: any) => (
                   <TableRow key={s.id}>
                     <TableCell>
-                      <Link href={`/invoices/${s.invoice_id}`} style={{ fontWeight: 500, color: "var(--primary)", textDecoration: "none" }}>
+                      <Link href={`/billing/invoices/${s.invoice_id}`} style={{ fontWeight: 500, color: "var(--primary)", textDecoration: "none" }}>
                         {s.invoice_number}
                       </Link>
                     </TableCell>
