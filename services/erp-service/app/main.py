@@ -1,26 +1,48 @@
-import pkgutil
-import importlib
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from apscheduler.schedulers.background import BackgroundScheduler
+from sqlalchemy import select
+from sqlalchemy.orm import Session
 
 from app.config import settings
-from app.database import engine, Base
-from app import models
-from app.db_bootstrap import ensure_phase1_schema
-from app.services.recurring_job import process_recurring_invoices
-from app.services.workflow_automation import run_daily_workflows
-from app import routers
+from app.database import SessionLocal, engine
+from app.models.base import Base
+from app.models.organization import Permission
+from app.core.permissions import ensure_permissions, ensure_role_permissions, ensure_roles
 
-# Create missing base schema tables using SQLAlchemy metadata
-Base.metadata.create_all(bind=engine)
 
-# Bootstrap remaining phase 1 table additions
-ensure_phase1_schema()
+def init_db():
+    Base.metadata.create_all(bind=engine)
+    # Ensure payments table has the status column if it was created historically without it
+    from sqlalchemy import text
+    with engine.begin() as conn:
+        conn.execute(text("ALTER TABLE payments ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'completed'"))
+    
+    db: Session = SessionLocal()
+    try:
+        existing = db.execute(select(Permission).limit(1)).scalar_one_or_none()
+        if existing is None:
+            permissions_map = ensure_permissions(db)
+            roles = ensure_roles(db, permissions_map)
+            ensure_role_permissions(db, roles, permissions_map)
+            db.commit()
+    finally:
+        db.close()
 
-app = FastAPI(title="VexBill ERP Backend")
 
-# Dynamic CORS Configuration from Settings
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    init_db()
+    yield
+
+
+app = FastAPI(
+    title="VexBill ERP Backend",
+    version="1.0.0",
+    lifespan=lifespan,
+)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[settings.FRONTEND_URL, "http://localhost:3000"],
@@ -29,42 +51,17 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Background scheduler configurations
-scheduler = BackgroundScheduler()
 
-@app.on_event("startup")
-def startup_event():
-    scheduler.add_job(
-        process_recurring_invoices,
-        trigger="cron",
-        hour=0,
-        minute=5,
-        id="daily_recurring_invoices",
-        replace_existing=True
-    )
-    scheduler.add_job(
-        run_daily_workflows,
-        trigger="cron",
-        hour=8,
-        minute=0,
-        id="daily_workflows",
-        replace_existing=True
-    )
-    scheduler.start()
+from app.api.v1 import auth, clients, dashboard, invoices, products, notifications
 
-@app.on_event("shutdown")
-def shutdown_event():
-    scheduler.shutdown()
+app.include_router(auth.router)
+app.include_router(clients.router)
+app.include_router(products.router)
+app.include_router(invoices.router)
+app.include_router(dashboard.router)
+app.include_router(notifications.router)
 
-# Dynamic Router Autodiscovery
-def autodiscover_routers(app: FastAPI):
-    for _, module_name, _ in pkgutil.iter_modules(routers.__path__):
-        module = importlib.import_module(f"app.routers.{module_name}")
-        if hasattr(module, "router"):
-            app.include_router(module.router)
-
-autodiscover_routers(app)
 
 @app.get("/")
-def root():
+def health_check():
     return {"message": "VexBill API Running", "status": "healthy"}

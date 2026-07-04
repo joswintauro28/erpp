@@ -1,14 +1,38 @@
-from typing import Optional
-from pydantic import BaseModel, EmailStr, Field
+from datetime import datetime
+
+from pydantic import BaseModel, EmailStr
 
 
-class Client(BaseModel):
-    name: str = Field(min_length=1)
-    email: Optional[EmailStr] = None
-    phone: Optional[str] = None
-    address: Optional[str] = None
-    gst_number: Optional[str] = None
-    state: Optional[str] = None
-    notes: Optional[str] = None
-    website: Optional[str] = None
-    industry: Optional[str] = None
+class ClientCreate(BaseModel):
+    name: str
+    email: EmailStr | None = None
+    phone: str | None = None
+    address: str | None = None
+    gst_number: str | None = None
+    state: str | None = None
+    notes: str | None = None
+
+
+class ClientUpdate(BaseModel):
+    name: str | None = None
+    email: EmailStr | None = None
+    phone: str | None = None
+    address: str | None = None
+    gst_number: str | None = None
+    state: str | None = None
+    notes: str | None = None
+
+
+class ClientOut(BaseModel):
+    id: int
+    owner_id: int
+    name: str
+    email: str | None = None
+    phone: str | None = None
+    address: str | None = None
+    gst_number: str | None = None
+    state: str | None = None
+    notes: str | None = None
+    created_at: datetime
+
+    model_config = {"from_attributes": True}

@@ -1,52 +1,109 @@
-from datetime import date
-from typing import List, Literal, Optional
-from pydantic import BaseModel, Field, model_validator
+from datetime import date, datetime
 
-InvoiceStatus = Literal["draft", "pending", "partially_paid", "paid", "overdue", "cancelled"]
-GstTreatment = Literal["intrastate", "interstate"]
+from pydantic import BaseModel, field_validator
 
 
-class BatchAllocation(BaseModel):
-    batch_id: int
-    quantity: float = Field(gt=0)
+class InvoiceItemCreate(BaseModel):
+    product_id: int | None = None
+    description: str
+    quantity: float
+    unit_price: float
+    gst_rate: float = 0.00
 
 
-class InvoiceItem(BaseModel):
-    product_id: Optional[int] = None
-    description: str = Field(min_length=1)
-    quantity: float = Field(default=1, gt=0)
-    unit_price: float = Field(default=0, ge=0)
-    gst_rate: float = Field(default=18, ge=0, le=100)
-    # Optional manual serial selection (serial-tracked products)
-    serial_ids: Optional[List[int]] = None
-    # Optional manual batch allocation (batch-tracked products)
-    batch_allocations: Optional[List[BatchAllocation]] = None
+class InvoiceItemOut(BaseModel):
+    id: int
+    invoice_id: int
+    product_id: int | None = None
+    description: str
+    quantity: float
+    unit_price: float
+    gst_rate: float
+    amount: float
+
+    model_config = {"from_attributes": True}
 
 
-class Invoice(BaseModel):
+class InvoiceCreate(BaseModel):
     client_id: int
-    amount: Optional[float] = Field(default=None, ge=0)
     due_date: date
-    issue_date: Optional[date] = None
-    status: Optional[InvoiceStatus] = "pending"
-    gst_treatment: GstTreatment = "intrastate"
-    place_of_supply: Optional[str] = None
-    notes: Optional[str] = None
-    warehouse_id: Optional[int] = None
-    items: List[InvoiceItem] = Field(default_factory=list)
+    issue_date: date | None = None
+    status: str = "draft"
+    gst_treatment: str = "intrastate"
+    place_of_supply: str | None = None
+    notes: str | None = None
+    items: list[InvoiceItemCreate]
 
-    @model_validator(mode="after")
-    def require_amount_or_items(self):
-        if not self.items and self.amount is None:
-            raise ValueError("Either amount or at least one invoice item is required")
-        return self
+    @field_validator("status")
+    @classmethod
+    def valid_status(cls, v: str) -> str:
+        allowed = {"draft", "pending", "paid", "overdue", "cancelled"}
+        if v not in allowed:
+            raise ValueError(f"Status must be one of {allowed}")
+        return v
 
 
 class InvoiceUpdate(BaseModel):
-    status: InvoiceStatus
+    status: str | None = None
 
 
-class InvoiceEmailRequest(BaseModel):
-    to_email: Optional[str] = None
-    subject: Optional[str] = None
-    message: Optional[str] = None
+class InvoiceOut(BaseModel):
+    id: int
+    owner_id: int
+    client_id: int
+    invoice_number: str | None = None
+    status: str
+    issue_date: date | None = None
+    due_date: date | None = None
+    subtotal: float
+    cgst: float
+    sgst: float
+    igst: float
+    tax_total: float
+    total: float
+    paid_amount: float
+    balance_due: float
+    gst_treatment: str
+    place_of_supply: str | None = None
+    notes: str | None = None
+    created_at: datetime
+    updated_at: datetime
+    items: list[InvoiceItemOut] = []
+
+    model_config = {"from_attributes": True}
+
+
+class PaymentCreate(BaseModel):
+    invoice_id: int
+    amount: float
+    payment_method: str
+    payment_date: date | None = None
+    reference_id: str | None = None
+    notes: str | None = None
+
+
+class PaymentOut(BaseModel):
+    id: int
+    owner_id: int
+    invoice_id: int | None = None
+    amount: float
+    payment_method: str | None = None
+    payment_date: date | None = None
+    reference_id: str | None = None
+    notes: str | None = None
+    status: str
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class DashboardStats(BaseModel):
+    total_clients: int = 0
+    total_invoices: int = 0
+    total_revenue: float = 0.0
+    outstanding_amount: float = 0.0
+    overdue_invoices: int = 0
+    total_products: int = 0
+    low_stock_count: int = 0
+    active_quotations: int = 0
+    lead_conversion_rate: float = 0.0
