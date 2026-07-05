@@ -2,111 +2,93 @@
 
 Next.js 16 (Turbopack) application with TypeScript, Tailwind CSS v4, and shadcn/ui.
 
-## Stack
+---
 
-- **Framework**: Next.js 16.2.10 (Turbopack)
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS v4 (theme via CSS `@theme` directives)
-- **UI Library**: shadcn/ui with custom "Refined Crimson & Brushed Gold" theme
-- **Fonts**: Montserrat (headings), Inter (body), JetBrains Mono (code)
-- **Icons**: lucide-react
-- **Animations**: tailwindcss-animate, tw-animate-css
+## Technical Stack
 
-## Getting Started
+* **Framework**: Next.js 16.2.10 (Turbopack compile root)
+* **Language**: TypeScript
+* **Styling**: Tailwind CSS v4 (native `@theme` configurations)
+* **UI Base**: shadcn/ui components customized for a premium "Modern Industrial" theme
+* **Fonts**: Montserrat (headings), Inter (body), JetBrains Mono (code)
+* **Icons**: lucide-react
 
-```bash
-bun run dev
-```
+---
 
-Opens at [http://localhost:3000](http://localhost:3000).
-
-## Architecture
+## Directory Structure
 
 ```
 app/
-├── layout.tsx              # Root: fonts, AuthProvider
-├── globals.css             # Theme tokens, @theme, animations
-├── (auth)/login/           # Login page
+├── layout.tsx              # Root layout injecting Inter, Montserrat, and AuthProvider
+├── globals.css             # Theme tokens, custom animations, input alignments
+├── (auth)/login/           # User authentication login view
 ├── (admin)/
-│   ├── layout.tsx          # Auth guard, Sidebar + Header
-│   ├── loading.tsx         # Skeleton loading page
-│   ├── dashboard/          # KPI cards, charts, procurement
-│   ├── crm/leads/          # Lead pipeline (wired to API)
-│   ├── crm/clients/        # Client list + detail (wired to API)
-│   ├── billing/            # Invoices, payments, quotations, etc.
-│   ├── accounting/         # Accounts, ledger, expenses, reports
-│   ├── inventory/          # Products, stock, warehouses, etc.
-│   └── settings/           # Settings, branding, workflow, team
-├── not-found.tsx            # 404 page
-├── forbidden/page.tsx       # 403 page
-├── error.tsx                # 500 error page
-
+│   ├── layout.tsx          # Router auth-guard, premium sidebar and header wrappers
+│   ├── loading.tsx         # skeleton layout loaders
+│   ├── dashboard/          # Analytics metrics, revenue trend charts, and invoices lists
+│   ├── crm/leads/          # Leads pipe management (wired to API)
+│   ├── crm/clients/        # Client database and detailed statistics (wired to API)
+│   ├── billing/            # Invoices, quotations, recurring bills, credit/debit notes
+│   ├── accounting/         # General ledger, chart of accounts, expenses, financial reports
+│   └── inventory/          # Products, warehouses, batches, procurement, and stock levels
 components/
-├── Sidebar.tsx              # Collapsible 240px/64px
-├── Header.tsx               # 80px deep maroon header
-├── multi-step-dialog.tsx    # Reusable step wizard dialog
-└── ui/                      # shadcn/ui primitives
-
-types/                       # Domain-organized TypeScript types
-├── crm.ts, billing.ts, accounting.ts, inventory.ts
-├── auth.ts, api.ts, dashboard.ts, ui.ts
-├── notifications.ts, navigation.ts, settings.ts
-
+├── Sidebar.tsx              # Dynamic collapsible navigation with hover flyouts for collapsed mode
+├── Header.tsx               # Primary header controls and alert center
+├── multi-step-dialog.tsx    # Reusable step wizard with key-isolated transitions and auto-sizing
+└── ui/                      # shadcn/ui base elements
 services/
-└── api.ts                   # Fetch wrapper with auto-refresh on 401
-
+└── api.ts                   # Fetch API wrapper with 401 refresh token interceptors
 utils/
-└── format.ts                # money(), searchLeads(), searchClients(), searchBilling()
-
+└── format.ts                # Numeric formatter helper functions
 contexts/
-└── AuthContext.tsx           # Login/logout/refresh, provides User
+└── AuthContext.tsx           # Global user authentication session manager
 ```
 
-## Theme
+---
 
-"Refined Crimson & Brushed Gold" — all tokens defined in `globals.css`:
+## Theme & Color Design
 
-| Token | Value | Usage |
-|-------|-------|-------|
-| `--sidebar` | `#4A1518` | Deep maroon sidebar chassis |
-| `--shell-header` | `#4A1518` | Deep maroon header bg |
-| `--shell-brand` | `#8C1D24` | Crimson red — buttons, primary actions |
-| `--shell-accent` | `#F1C423` | Yellow-gold — badges, icon fills, pulse bar |
-| `--radius` | `4px` | Buttons |
-| `--radius-xl` | `6px` | Cards |
+The interface adopts a high-end **"Modern Industrial"** theme configured in [globals.css](file:///c:/Users/ajith/Videos/Projects/DATAVEX/ERP/apps/erp-shell/app/globals.css):
 
-## Key Patterns
+| CSS Variable | Tailwind Utility Class | Hex Color | Usage |
+| :--- | :--- | :--- | :--- |
+| `--sidebar` | `bg-sidebar` | `#191B1F` | Deep premium carbon background |
+| `--sidebar-foreground` | `text-sidebar-foreground` | `rgba(255,255,255,0.78)` | Silver high-contrast menu text |
+| `--sidebar-primary` | `text-sidebar-primary` | `#CBA052` | Brushed Brass accent color |
+| `--sidebar-accent` | `bg-sidebar-accent` | `rgba(203,160,82,0.06)` | Warm brass glow hover indicator |
+| `--sidebar-border` | `border-sidebar-border` | `rgba(203,160,82,0.12)` | Subtle brass line borders |
+| `--shell-brand` | `bg-primary` | `#8C1D24` | Crimson Red primary brand button color |
+| `--shell-action` | `bg-[var(--shell-action)]` | `#B32428` | Clickable action button background |
 
-- **Auth**: `useAuth()` returns `{ user, isAuthenticated, loading, login, logout }`
-- **API**: `api.get<T>(path)`, `api.post<T>(path, body)`, `api.put<T>(path, body)`, `api.delete<T>(path)` — auto-refresh on 401
-- **Proxy**: `/api/*` routes forwarded to `http://127.0.0.1:8000`
-- **Styling**: Use CSS custom properties via Tailwind (`bg-[--shell-brand]`, `text-[--shell-muted]`)
-- **Forms**: Multi-step with `MultiStepDialog`, label→input `space-y-2`, field→field `space-y-5`
+---
 
-## Pages (33 routes)
+## Premium UI/UX Implementation Details
 
-| Route | Status |
-|-------|--------|
-| `/dashboard` | Wired to API (6 parallel calls) |
-| `/crm/leads` | Wired to API (GET/POST/PUT/DELETE + convert) |
-| `/crm/clients` | Wired to API |
-| `/crm/clients/[id]` | Wired to API |
-| `/billing/invoices` | Wired to API |
-| `/billing/invoices/[id]` | Wired to API |
-| `/billing/payments` | API-ready (empty state) |
-| `/billing/quotations` | API-ready (empty state) |
-| `/billing/recurring-invoices` | API-ready (empty state) |
-| `/billing/credit-notes` | API-ready (empty state) |
-| `/billing/debit-notes` | API-ready (empty state) |
-| `/accounting/*` (4 routes) | API-ready (empty state) |
-| `/inventory/*` (9 routes) | API-ready (empty state) |
-| `/settings/*` (4 routes) | API-ready (empty state) |
-| `/team` | API-ready (empty state) |
+### 1. Key-Isolated Multi-Step Modals
+All wizard modals (`MultiStepDialog`) calculate step states (`isFirstStep`, `isLastStep`) internally using the actual array size, preventing parent state lag. Buttons are assigned unique keys (`key="next-button"`, `key="submit-button"`) to prevent React from reusing DOM elements during transitions, which resolves the browser click-bubble submission bug.
 
-## Commands
+### 2. Micro-Caps Form Inputs
+Labels inside multi-step dialogs are automatically formatted in uppercase micro-caps with wide tracking (`letter-spacing: 0.04em`) and positioned exactly `4px` above text inputs to create close logical groupings. Inputs are sized to `13px` (`0.8125rem`) and standard `36px` (`h-9`) heights to fit compact modal viewports comfortably.
+
+### 3. Smart Sidebar Hover Flyouts
+When the sidebar is collapsed to `64px`, hovering over any group menu icon opens a floating submenu positioned at the icon's exact height. Transition timers (150ms buffer) allow the mouse to move to the flyout menu smoothly without the menu closing.
+
+---
+
+## Running the Application
+
+Ensure database service is active before running:
 
 ```bash
-bun run dev        # Development server
-npx next build     # Production build
-bun run lint       # Lint
+# Copy settings
+copy .env.example .env
+
+# Install dependencies
+bun install
+
+# Run cache cleaning startup script
+.\run.ps1
 ```
+
+Access frontend local server at: [http://localhost:3000](http://localhost:3000).
+Proxy routes are mapped automatically: `/api/*` rewrites to `http://127.0.0.1:8000`.
