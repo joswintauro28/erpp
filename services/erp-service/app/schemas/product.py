@@ -7,8 +7,8 @@ class ProductCreate(BaseModel):
     name: str
     sku: str | None = None
     category: str | None = None
-    price: float = 0.00
-    cost_price: float = 0.00
+    price: float = 0.0
+    cost_price: float = 0.0
     stock: int = 0
     low_stock_threshold: int = 10
     track_inventory: bool = True
@@ -35,8 +35,8 @@ class ProductOut(BaseModel):
     id: int
     owner_id: int
     name: str
-    sku: str | None = None
-    category: str | None = None
+    sku: str | None
+    category: str | None
     price: float
     cost_price: float
     stock: int

@@ -1,0 +1,7 @@
+{
+  "name": "datavex-erp",
+  "private": true,
+  "workspaces": [
+    "apps/*"
+  ]
+}

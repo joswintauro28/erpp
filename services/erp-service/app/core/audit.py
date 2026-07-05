@@ -1,51 +1,41 @@
-import json
-import logging
 from datetime import datetime, timezone
 
-from sqlalchemy import text
-from sqlalchemy.orm import Session
+import sqlalchemy as sa
+from sqlalchemy.ext.asyncio import AsyncSession
 
-logger = logging.getLogger(__name__)
-
-SENSITIVE_KEYS = {"password", "secret", "token", "apikey", "api_key", "key_secret", "webhook_secret", "authorization"}
+SENSITIVE_KEYS = {"password", "secret", "token", "authorization", "cookie", "jwt"}
 
 
-def _sanitize(value):
-    if isinstance(value, dict):
-        return {k: "[redacted]" if any(s in k.lower() for s in SENSITIVE_KEYS) else _sanitize(v) for k, v in value.items()}
-    if isinstance(value, list):
-        return [_sanitize(v) for v in value]
-    return value
+def sanitize_metadata(metadata: dict | None) -> dict | None:
+    if not metadata:
+        return metadata
+    return {
+        k: ("[REDACTED]" if any(s in k.lower() for s in SENSITIVE_KEYS) else v)
+        for k, v in metadata.items()
+    }
 
 
-def log_action(
-    db: Session,
-    owner_id: int,
-    user_id: int,
+async def log_action(
+    db: AsyncSession,
+    owner_id: int | None,
+    user_id: int | None,
     action: str,
-    entity_type: str,
-    entity_id: int | str | None,
-    description: str,
+    entity_type: str | None = None,
+    entity_id: int | None = None,
+    description: str | None = None,
     metadata: dict | None = None,
-):
-    try:
-        clean_metadata = _sanitize(metadata) if metadata else None
-        db.execute(
-            text("""
-                INSERT INTO audit_logs (owner_id, user_id, action, entity_type, entity_id, description, metadata)
-                VALUES (:owner_id, :user_id, :action, :entity_type, :entity_id, :description, :metadata::jsonb)
-            """),
-            {
-                "owner_id": owner_id,
-                "user_id": user_id,
-                "action": action,
-                "entity_type": entity_type,
-                "entity_id": str(entity_id) if entity_id else None,
-                "description": description,
-                "metadata": json.dumps(clean_metadata, default=str) if clean_metadata else None,
-            },
-        )
-        db.commit()
-    except Exception:
-        logger.exception("Failed to write audit log")
-        db.rollback()
+) -> None:
+    stmt = sa.text("""
+        INSERT INTO audit_logs (owner_id, user_id, action, entity_type, entity_id, description, metadata, created_at)
+        VALUES (:owner_id, :user_id, :action, :entity_type, :entity_id, :description, :metadata, :created_at)
+    """)
+    await db.execute(stmt, {
+        "owner_id": owner_id,
+        "user_id": user_id,
+        "action": action,
+        "entity_type": entity_type,
+        "entity_id": entity_id,
+        "description": description,
+        "metadata": sanitize_metadata(metadata),
+        "created_at": datetime.now(timezone.utc),
+    })

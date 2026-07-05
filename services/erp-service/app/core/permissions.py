@@ -1,10 +1,7 @@
-from sqlalchemy import select
-from sqlalchemy.orm import Session
+import sqlalchemy as sa
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.organization import OrganizationMember, Permission, Role, RolePermission
-
-
-PERMISSION_CODES = [
+PERMISSION_CODES: list[str] = [
     "clients.view", "clients.create", "clients.edit", "clients.delete",
     "invoices.view", "invoices.create", "invoices.edit", "invoices.delete",
     "quotations.view", "quotations.create", "quotations.edit", "quotations.delete",
@@ -21,8 +18,7 @@ PERMISSION_CODES = [
     "audit_logs.view",
 ]
 
-
-SYSTEM_ROLES = {
+SYSTEM_ROLES: dict[str, list[str]] = {
     "Organization Owner": PERMISSION_CODES,
     "Accountant": [
         "clients.view", "clients.create", "clients.edit",
@@ -40,7 +36,7 @@ SYSTEM_ROLES = {
     "Inventory Manager": [
         "products.view", "products.create", "products.edit",
         "stock.view", "stock.manage", "stock.adjust",
-        "purchase_orders.view", "purchase_orders.create", "purchase_orders.manage",
+        "suppliers.view", "suppliers.create", "suppliers.manage",
     ],
     "Auditor": [
         "reports.view",
@@ -58,85 +54,82 @@ SYSTEM_ROLES = {
 }
 
 
-def ensure_permissions(db: Session) -> dict[str, Permission]:
-    existing = {p.code: p for p in db.execute(select(Permission)).scalars().all()}
+async def seed_system_permissions(db: AsyncSession) -> None:
+    from app.models.organization import Permission, Role, RolePermission
+
+    existing = await db.execute(sa.select(Permission).limit(1))
+    if existing.scalar_one_or_none():
+        return
+
+    # Create permissions
+    perm_objs: dict[str, Permission] = {}
     for code in PERMISSION_CODES:
-        if code not in existing:
-            perm = Permission(code=code, name=code.replace("_", " ").title(), module=code.split(".")[0])
-            db.add(perm)
-            existing[code] = perm
-    db.flush()
-    return existing
+        perm = Permission(code=code, name=code, module=code.split(".")[0])
+        db.add(perm)
+        perm_objs[code] = perm
+    await db.flush()
 
-
-def ensure_roles(db: Session, permissions_map: dict[str, Permission]) -> dict[str, Role]:
-    existing = {r.name: r for r in db.execute(select(Role)).scalars().all()}
+    # Create roles and assign permissions
     for role_name, perm_codes in SYSTEM_ROLES.items():
-        if role_name not in existing:
-            role = Role(name=role_name, description=f"{role_name}", is_system_role=True)
-            db.add(role)
-            db.flush()
-            existing[role_name] = role
-    db.flush()
-    return existing
-
-
-def ensure_role_permissions(db: Session, roles: dict[str, Role], permissions_map: dict[str, Permission]):
-    for role_name, perm_codes in SYSTEM_ROLES.items():
-        role = roles[role_name]
+        role = Role(name=role_name, description=role_name, is_system_role=True)
+        db.add(role)
+        await db.flush()
         for code in perm_codes:
-            perm = permissions_map.get(code)
-            if perm:
-                existing = db.execute(
-                    select(RolePermission).where(
-                        RolePermission.role_id == role.id,
-                        RolePermission.permission_id == perm.id,
-                    )
-                ).scalar_one_or_none()
-                if not existing:
-                    db.add(RolePermission(role_id=role.id, permission_id=perm.id))
-    db.flush()
+            if code in perm_objs:
+                db.add(RolePermission(role_id=role.id, permission_id=perm_objs[code].id))
+    await db.flush()
 
 
-def has_permission(db: Session, user_id: int, permission_code: str) -> bool:
-    membership = db.execute(
-        select(OrganizationMember).where(
+async def has_permission(
+    db: AsyncSession,
+    user_id: int,
+    permission_code: str,
+) -> bool:
+    from app.models.organization import (
+        OrganizationMember,
+        Role,
+        RolePermission,
+        Permission,
+    )
+
+    # Check if user is org owner (has all permissions)
+    stmt = (
+        sa.select(OrganizationMember)
+        .where(
             OrganizationMember.user_id == user_id,
             OrganizationMember.status == "active",
-        ).order_by(OrganizationMember.id).limit(1)
-    ).scalar_one_or_none()
-
-    if not membership:
-        return False
-
-    role = db.execute(select(Role).where(Role.id == membership.role_id)).scalar_one_or_none()
-    if not role:
-        return False
-
-    if role.name == "Organization Owner":
-        return True
-
-    perm = db.execute(
-        select(Permission).where(Permission.code == permission_code)
-    ).scalar_one_or_none()
-    if not perm:
-        return False
-
-    rp = db.execute(
-        select(RolePermission).where(
-            RolePermission.role_id == role.id,
-            RolePermission.permission_id == perm.id,
         )
-    ).scalar_one_or_none()
+    )
+    result = await db.execute(stmt)
+    memberships = result.scalars().all()
 
-    return rp is not None
+    for membership in memberships:
+        role_stmt = (
+            sa.select(Role)
+            .where(Role.id == membership.role_id)
+        )
+        role_result = await db.execute(role_stmt)
+        role = role_result.scalar_one_or_none()
+        if role and role.name == "Organization Owner":
+            return True
 
+        if role:
+            rp_stmt = (
+                sa.select(RolePermission)
+                .where(RolePermission.role_id == role.id)
+            )
+            rp_result = await db.execute(rp_stmt)
+            role_perms = rp_result.scalars().all()
 
-def user_organization_id(db: Session, user_id: int) -> int | None:
-    membership = db.execute(
-        select(OrganizationMember).where(
-            OrganizationMember.user_id == user_id,
-            OrganizationMember.status == "active",
-        ).order_by(OrganizationMember.id).limit(1)
-    ).scalar_one_or_none()
-    return membership.organization_id if membership else None
+            perm_stmt = (
+                sa.select(Permission)
+                .where(
+                    Permission.id.in_([rp.permission_id for rp in role_perms]),
+                    Permission.code == permission_code,
+                )
+            )
+            perm_result = await db.execute(perm_stmt)
+            if perm_result.scalar_one_or_none():
+                return True
+
+    return False
