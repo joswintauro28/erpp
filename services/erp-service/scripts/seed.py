@@ -1,3 +1,6 @@
+import sys
+sys.path.append('.')
+
 """
 Seed script for ERP backend.
 
