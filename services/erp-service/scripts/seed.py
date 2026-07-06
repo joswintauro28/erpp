@@ -216,7 +216,7 @@ async def seed():
         for name, email, phone, expected, status, notes in leads_data:
             ld = Lead(
                 owner_id=sales.id,
-                name=name,
+                company_name=name,
                 email=email,
                 phone=phone,
                 expected_value=expected,
