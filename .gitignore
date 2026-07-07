@@ -241,3 +241,6 @@ frontend/build/
 
 # Next.js
 .next/
+
+# Nx
+.nx/

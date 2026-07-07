@@ -1,0 +1,33 @@
+{
+  "name": "erp-shell",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "sourceRoot": "apps/erp-shell",
+  "targets": {
+    "dev": {
+      "command": "next dev",
+      "options": {
+        "cwd": "apps/erp-shell"
+      }
+    },
+    "build": {
+      "command": "next build",
+      "options": {
+        "cwd": "apps/erp-shell"
+      },
+      "outputs": ["{workspaceRoot}/apps/erp-shell/.next"]
+    },
+    "start": {
+      "command": "next start",
+      "options": {
+        "cwd": "apps/erp-shell"
+      }
+    },
+    "lint": {
+      "command": "eslint",
+      "options": {
+        "cwd": "apps/erp-shell"
+      }
+    }
+  }
+}
