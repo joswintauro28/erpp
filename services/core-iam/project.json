@@ -1,0 +1,33 @@
+{
+  "name": "core-iam",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "sourceRoot": "services/core-iam",
+  "targets": {
+    "dev": {
+      "command": "nest start --watch",
+      "options": {
+        "cwd": "services/core-iam"
+      }
+    },
+    "build": {
+      "command": "nest build",
+      "options": {
+        "cwd": "services/core-iam"
+      },
+      "outputs": ["{workspaceRoot}/services/core-iam/dist"]
+    },
+    "start": {
+      "command": "nest start",
+      "options": {
+        "cwd": "services/core-iam"
+      }
+    },
+    "test": {
+      "command": "jest",
+      "options": {
+        "cwd": "services/core-iam"
+      }
+    }
+  }
+}
