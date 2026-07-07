@@ -1,99 +1,179 @@
-# Architecture & Implementation Strategy: Enterprise ERP System
+# DATAVEX ERP - System Architecture
 
-## 1. Executive Summary
+This document serves as the absolute source of truth for your architecture. It details the system topography, cross-module security, database separation strategy, cost-saving CI/CD pipeline, and the step-by-step scaling roadmap tailored to **Next.js, NestJS, and FastAPI**.
 
-This document outlines the architectural blueprint for a highly scalable, enterprise-grade ERP ecosystem. The system bridges existing legacy applications (HRMS, Accounts, Service Desk) with newly engineered modules (CRM, Ecommerce, AI Engine) using a **Polyglot Monorepo** and an **Event-Driven Microservices Architecture**.
+## 1. System Topology & Monorepo Directory Layout
 
-To eliminate legacy routing conflicts and ensure independent scalability, the platform utilizes **subdomain-based routing** managed via a unified identity and access management (IAM) layer.
+The entire ecosystem is housed inside an **Nx Polyglot Monorepo**. This approach isolates development teams into standalone workspace directories while forcing a strict, shared compilation contract for core authorization layers and design systems.
 
-## 2. Core Architectural Principles
-
-| Domain | Strategic Decision | Justification |
-| --- | --- | --- |
-| **Codebase** | Polyglot Monorepo (Nx / Bazel) | Centralizes CI/CD pipelines and shares type contracts while supporting Node, Python, and Java concurrently. |
-| **Routing** | Subdomain Deployment | Isolates module traffic, completely prevents path-matching conflicts for legacy apps, and allows independent scaling per module. |
-| **Legacy Integration** | Lift-and-Shift + Containerization | Wraps existing HRMS/Accounts in Docker as black boxes, saving months of rewrite time while modernizing infrastructure. |
-| **Asynchronous Data** | Event Broker (Kafka / RabbitMQ) | Decouples modules. For example, the CRM closing a deal emits an event; Accounts listens and generates an invoice without direct API coupling. |
-| **Synchronous Data** | gRPC & Protocol Buffers | Ensures strict, cross-language type safety for direct internal microservice-to-microservice API calls. |
-
-## 3. Subdomain & Network Strategy
-
-The ERP abandons traditional path-based gateways (e.g., `/api/hrms`) in favor of DNS-level subdomain routing. This is managed by an Ingress Controller (e.g., NGINX Ingress, AWS ALB).
-
-* **`app.yourdomain.com`**: The Core Workspace (Next.js central dashboard shell).
-* **`crm.yourdomain.com`**: The CRM Module UI (`api.crm.yourdomain.com` for backend).
-* **`shop.yourdomain.com`**: The Ecommerce Config UI (`api.shop.yourdomain.com` for backend).
-* **`hrms.yourdomain.com`**: Legacy HRMS UI (`api.hrms.yourdomain.com` for backend).
-* **`ai.yourdomain.com`**: Isolated Python/Ollama engine.
-
-**Strategic Advantages:**
-
-* **Zero Path Conflicts:** Legacy applications maintain their hardcoded relative paths (e.g., `/images/logo.png`) because they operate at the root of their own virtual domain.
-* **Isolated Blast Radius:** A massive influx of traffic hitting the Ecommerce subdomain will not consume the ingress resources required for internal HRMS processing.
-* **Targeted Security:** Different Web Application Firewalls (WAF) can be applied per subdomain. The AI layer can enforce strict prompt-injection filters, while Ecommerce utilizes standard DDoS protection.
-
-## 4. Security & Authentication
-
-Deploying across subdomains introduces strict browser security constraints that must be handled at the infrastructure level.
-
-* **Single Sign-On (Wildcard Cookies):** Standard `localStorage` cannot bridge subdomains. The central `core-iam-service` authenticates users and issues a secure, `HTTPOnly` JWT cookie scoped to `.yourdomain.com` (with a leading dot). This guarantees the browser automatically attaches the authentication token to requests made to any ERP module.
-* **CORS Firewall:** Every backend microservice explicitly configures its Cross-Origin Resource Sharing (CORS) policy to whitelist internal subdomains (e.g., `*.yourdomain.com`) while strictly blocking external traffic to prevent Cross-Site Request Forgery (CSRF).
-
-## 5. UI/UX: The Unified App Shell
-
-To prevent the subdomain architecture from feeling fragmented, the frontend utilizes a **Unified App Shell** pattern.
-
-* The top navigation bar and global sidebar are identically implemented across all frontends via the shared `ui-design-system` package.
-* When navigating from the Next.js shell to the legacy Accounts UI, the transition remains visually seamless. Next.js multi-zones or micro-frontend configurations are used to fetch and render subdomain content without jarring page reloads.
-
-## 6. Sub-System Implementation Details
-
-### The CRM (Domain-Driven Design)
-
-The CRM is built entirely from scratch utilizing Domain-Driven Design (DDD).
-
-* **Core Entities:** Customer, Opportunity, and Lead data models are strictly decoupled from external integrations.
-* **Ingestion:** Exposes a dedicated webhook endpoint to seamlessly ingest data from the existing legacy Lead Generation application.
-
-### Local AI Execution
-
-The AI Chatbot, Audit Logging, and Recommendation engines are isolated into a dedicated Python-based service (`ai-engine-service`).
-
-* **Privacy by Design:** It runs localized, quantized small language models (e.g., Gemma, Llama).
-* **Performance:** Isolating the AI prevents compute-heavy inference tasks from blocking standard transactional ERP operations.
-
-## 7. Monorepo Project Structure
-
-```text
-erp-ecosystem/
-├── apps/                                  # Frontend Applications (Subdomains)
-│   ├── shell-dashboard/                   # app.domain.com (Unified Next.js navigation)
-│   ├── crm-ui/                            # crm.domain.com (Brand new React UI)
-│   ├── ecommerce-ui/                      # shop.domain.com (Brand new React UI)
-│   ├── legacy-hrms-ui/                    # hrms.domain.com (Lift & shift container)
-│   └── legacy-accounts-ui/                # accounts.domain.com (Lift & shift container)
-│
-├── services/                              # Backend Microservices
-│   ├── core-iam-service/                  # auth.domain.com (Central Auth, Roles, Tenants)
-│   ├── crm-backend/                       # api.crm.domain.com (New DDD architecture)
-│   ├── ecommerce-backend/                 # api.shop.domain.com (New inventory/vendor config)
-│   ├── ai-engine-service/                 # ai.domain.com (Local LLM inference & chat API)
-│   ├── legacy-hrms-api/                   # api.hrms.domain.com (Lift & shift container)
-│   ├── legacy-accounts-api/               # api.accounts.domain.com (Lift & shift container)
-│   └── legacy-leadgen-api/                # Webhook ingestion from existing lead system
-│
-├── packages/                              # Shared Logic & Contracts (The Glue)
-│   ├── ui-design-system/                  # Shared React components for a unified look
-│   ├── rpc-contracts/                     # .proto files for cross-service type safety
-│   ├── auth-middleware/                   # JWT validation scripts used by all services
-│   └── logger/                            # Centralized audit trail utility
-│
-├── infrastructure/                        # DevOps & Orchestration
-│   ├── docker-compose.yml                 # Local polyglot orchestration
-│   ├── k8s/                               # Production Kubernetes/Ingress manifests
-│   └── ai-models/                         # Storage for quantized local models
-│
-├── nx.json                                # Monorepo task orchestration
-└── package.json                           # Root dependencies
+By standardizing on **TypeScript** (Next.js/NestJS) and **Python** (FastAPI), we maximize AI agent context-awareness and velocity.
 
 ```
+erp-ecosystem/
+├── apps/                                  # FRONTEND CORE CLIENTS (Subdomain Targets)
+│   ├── erp-shell/                         # app.erp.local (Next.js 15 App Router - Executive Control / Super Admin Shell)
+│   ├── crm-ui/                            # crm.erp.local (React/Next.js - Maintained by Team A)
+│   ├── billing-ui/                        # billing.erp.local (Next.js - Maintained by Team B)
+│   ├── inventory-ui/                      # inventory.erp.local (React/Next.js - Maintained by Team C)
+│   └── hrms-ui/                           # hrms.erp.local (React/Next.js - Maintained by Team D)
+│
+├── services/                              # SEMANTIC BACKEND MICROSERVICES (APIs)
+│   ├── core-iam/                          # auth.erp.local (NestJS - Global Single Sign-On Engine)
+│   ├── billing-service/                   # api.billing.erp.local (NestJS - Invoices & Accounting Ledger)
+│   ├── hrms-service/                      # api.hrms.erp.local (NestJS - Payroll & Employee Records)
+│   ├── crm-service/                       # api.crm.erp.local (FastAPI - Sales Funnels & Lead Ingestion)
+│   ├── inventory-service/                 # api.inventory.erp.local (FastAPI - Logistics & Batch Tracking)
+│   └── ai-service/                        # ai.erp.local (FastAPI + Ollama - Quantized Local SLM Inference)
+│
+├── packages/                              # CENTRAL SECURITY & DESIGN TOKENS (The Glue)
+│   ├── auth-middleware/                   # Shared NestJS Guards & Next.js JWT parsing scripts
+│   └── ui-theme/                          # Shared Shadcn UI primitives & Tailwind v4 design variables
+│
+├── infrastructure/                        # ENVIRONMENT ORCHESTRATION ENGINE
+│   ├── local/                             # Local Workstation Settings (Nginx + Compose Sandbox)
+│   ├── staging-vms/                       # Stage-1 Production Architecture (Caddy Server + High-Perf Compose)
+│   └── production-cluster/                # Stage-2 High-Availability Architecture (Kubernetes YAML Manifests)
+│
+├── nx.json                                # Caching topologies & dependency graphing configurations
+└── package.json                           # Central workspace project registry
+```
+
+## 2. Universal Role-Based Access Control (RBAC) & SSO
+
+To implement strict multi-department boundaries—where the **Super Admin** sees everything, but standard workers are sandboxed inside their explicit subdomains—the platform utilizes a **Zero-Trust Token Strategy**.
+
+### The Authentication Architecture
+
+1. **Domain Isolation Problem:** Standard browser `localStorage` is completely locked to individual subdomains. An application at `crm.erp.local` cannot natively look inside the local storage of `billing.erp.local`.
+2. **The Solution (Shared Wildcard Cookies):** The `core-iam` NestJS service acts as the centralized validator. When a user submits credentials, `core-iam` validates the hash, appends the user's Department and Role to the payload, and signs a JSON Web Token (JWT).
+3. **Cookie Broadcasting:** The server appends this token to a secure, browser-managed cookie using a root domain marker: `Domain=.erp.local`. Because of the preceding dot, the browser automatically transmits this token alongside every background HTTP network call targeting any functional subdomain.
+4. **The Security Guardrail:** Every microservice backend wraps its routing engines inside a unified guard layer imported from `packages/auth-middleware`. This intercepts incoming requests, decodes the token, and drops unauthorized traffic with a `403 Forbidden` response.
+
+## 3. The Database Architecture Strategy: Database-per-Service
+
+To build a system that can be maintained by multiple independent teams, deploy via subdomains, and scale from a single machine up to Kubernetes, you must avoid the **"Shared Database Trap."** If all your teams and microservices connect to a single, giant PostgreSQL database with shared tables, you lose all the benefits of your multi-module architecture. A bad query or database migration by the CRM team could instantly lock tables and crash the Billing and Inventory systems.
+
+Each core domain folder in your project owns its own data store completely:
+
+* The **CRM service** can only read/write to the **CRM database**.
+* The **Billing service** can only read/write to the **Billing database**.
+* If the CRM service needs information about an invoice, it is **strictly forbidden** from querying the Billing database directly. It must ask the Billing service for that data via an API call (gRPC/REST) or an Asynchronous Event.
+
+### The Database Allotments
+
+You will need **5 separate logical databases** (which can be hosted on a single server engine locally, but split apart in production):
+
+1. `erp_iam` (Core IAM): Stores global users, password hashes, organizations, tenants, master roles, and global system metadata (PostgreSQL via Prisma).
+2. `erp_crm`: Stores leads, clients, sales pipelines, and customer interactions (PostgreSQL via SQLModel).
+3. `erp_billing`: Stores invoices, quotations, payments, receipts, and the general accounting ledger (PostgreSQL via Prisma).
+4. `erp_inventory`: Stores product catalogs, warehouse locations, stock levels, batches, and serial tracking numbers (PostgreSQL via SQLModel).
+5. `erp_hrms`: Stores employee files, payroll history, attendance logs, and internal department structures (PostgreSQL via Prisma).
+
+---
+
+### How to Maintain Databases Across the Scaling Lifecycle
+
+You will structure your code so that databases are grouped logically for your teams but orchestrated universally based on your deployment stage.
+
+```
+[Local: 1 Postgres Container with 5 Databases] ──> [Cloud Stage 1: 1 Managed RDS Instance with 5 Schemas] ──> [Cloud Stage 2: Independent Isolated DB Instances]
+```
+
+#### Step 1: Local Development Setup (Zero Cost, One Command)
+
+To make local development easy for your developers, they should not have to spin up 5 separate database servers on their laptops. Instead, you run **one single PostgreSQL container** that hosts 5 distinct, isolated databases inside it.
+
+You define this directly in your local orchestration setup (`infrastructure/local/docker-compose.yml`):
+
+```yaml
+version: '3.8'
+
+services:
+  erp-postgres-local:
+    image: postgres:16-alpine
+    container_name: erp_postgres_local
+    environment:
+      POSTGRES_USER: erp_master
+      POSTGRES_PASSWORD: local_secure_password
+      # We use a custom initialization script to create all 5 databases on startup
+    volumes:
+      - ./init-multiple-databases.sh:/docker-entrypoint-initdb.d/init-multiple-databases.sh
+      - erp_local_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+volumes:
+  erp_local_data:
+```
+
+Your services will connect to their respective databases using localized environment strings:
+* **CRM**: `postgresql://erp_master:local_secure_password@erp-postgres-local:5432/erp_crm`
+* **Billing**: `postgresql://erp_master:local_secure_password@erp-postgres-local:5432/erp_billing`
+
+#### Step 2: Production Setup without Kubernetes (Stage 1 VMs)
+
+When you move to a single cloud Virtual Machine using Docker Compose + Caddy, **do not run your production databases inside Docker containers.** If the container crashes or the VM disk runs out of space, you risk corrupting your core ERP data.
+
+* **The Setup**: Provision **one managed cloud database instance** (like AWS RDS or DigitalOcean Managed Databases).
+* **The Division**: Inside this single managed instance, create your 5 isolated databases. This keeps your costs low (you only pay for one database server instance) while maintaining total code isolation between your microservice folders.
+
+#### Step 3: Production Setup with Kubernetes (Stage 2 High-Scale)
+
+When your traffic grows and you scale up to a Kubernetes cluster, you can scale your data tier independently to save money:
+
+* Your **Billing** and **IAM** databases require absolute transactional integrity, so you keep them on a highly available, multi-AZ PostgreSQL setup.
+* If your **CRM** or **Inventory** data grows massively due to high logging volumes, you can migrate that specific database onto a dedicated, storage-optimized database instance without touching or disrupting your core billing cluster.
+
+---
+
+### How the Super Admin Views Everything Without Shared Databases
+
+If the databases are completely separated, how does the Super Admin see metrics from all departments at once on the central dashboard (`app.yourdomain.com`)?
+
+You have two clean options to implement this:
+
+#### Option A: API Aggregation (Best for Real-Time Operational Views)
+
+When the Super Admin opens the dashboard, the central frontend backend (`erp-shell`) performs safe, parallel, read-only internal network requests (using high-speed gRPC or lightweight internal REST) to each individual service:
+
+```
+                  ┌──> [IAM Service] ──────> Reads erp_iam
+                  │
+[Super Admin] ────┼──> [CRM Service] ──────> Reads erp_crm
+  Dashboard       │
+                  └──> [Billing Service] ──> Reads erp_billing
+```
+
+The central gateway dynamically stitches these independent responses together into a single user interface view. This ensures no service database is exposed directly to foreign code components.
+
+#### Option B: Event-Driven Analytics (Best for Historical Metrics & Charts)
+
+If your Super Admin dashboard needs to show complex historical data (like a chart of *Sales Closed vs. Inventory Used* over the last 12 months), making multiple live API calls will slow down your application.
+
+1. You introduce a lightweight event-streaming layer (like **RabbitMQ** or **Kafka**) or a simple webhook network.
+2. Every time a transaction occurs (e.g., the Billing service generates an invoice, or the CRM team wins a lead), the service publishes a lightweight message packet like `{"event": "INVOICE_CREATED", "amount": 5000}` to the message pipeline.
+3. A small background utility process reads these messages and syncs them down to a dedicated read-only analytical database or data store owned exclusively by the Super Admin workspace. This gives your executives instant data visualization speeds without putting any read loads on your production operational databases.
+
+## 4. Cost-Saving CI/CD Pipeline (Build Cost Optimization)
+
+To scale this multi-team setup without incurring massive cloud compute bills or causing compilation lines to freeze during simple deployments, your deployment system leverages **Nx Incremental Delta Hashing**.
+
+### The Continuous Integration Workflow
+
+Every single pull request or merge event targeting the deployment branch executes a lean validation loop:
+
+```bash
+# 1. Bring in matching monorepo locks cleanly
+npm ci
+
+# 2. Execute testing processes ONLY on code segments modified by the current commit
+npx nx affected --target=test --base=origin/main --head=HEAD
+
+# 3. Build only the specific modules containing modifications
+npx nx affected --target=build --base=origin/main --head=HEAD --parallel=3
+```
+
+### The Optimization Framework
+
+- **Remote Workspace Caching:** Nx tracks a unique hash fingerprint of your folder structures, files, and environment settings. If Team A pushes code that alters files exclusively within `services/crm-service`, Nx instantly flags all other 6 services as unchanged. It bypasses compilation for those services entirely and references pre-compiled code fragments from a shared remote cache.
+- **Targeted Image Building:** The build runner only spins up a containerization step for the explicitly modified folder. A new image tag is generated and pushed to your image registry, saving hours of unnecessary machine processing time and dramatically lowering your infrastructure expenses.

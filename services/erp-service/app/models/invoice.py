@@ -106,3 +106,23 @@ class DebitNote(Base):
     created_at: Mapped[datetime] = mapped_column(
         sa.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
     )
+
+
+class Quotation(Base):
+    __tablename__ = "quotations"
+
+    id: Mapped[int] = mapped_column(sa.Integer, primary_key=True)
+    owner_id: Mapped[int] = mapped_column(sa.Integer, sa.ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    client_id: Mapped[int] = mapped_column(sa.Integer, sa.ForeignKey("clients.id", ondelete="CASCADE"), nullable=False)
+    quote_number: Mapped[str] = mapped_column(sa.String(100), nullable=False)
+    total: Mapped[float] = mapped_column(sa.Numeric(12, 2), default=0.00)
+    status: Mapped[str] = mapped_column(sa.String(50), default="draft")
+    issue_date: Mapped[date | None] = mapped_column(sa.Date, nullable=True)
+    valid_until: Mapped[date | None] = mapped_column(sa.Date, nullable=True)
+    notes: Mapped[str | None] = mapped_column(sa.Text, nullable=True)
+    converted_invoice_id: Mapped[int | None] = mapped_column(
+        sa.Integer, sa.ForeignKey("invoices.id", ondelete="SET NULL"), nullable=True
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        sa.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+    )

@@ -11,40 +11,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem("access_token");
-    if (token) {
-      setAccessToken(token);
-      api.get<User>("/auth/users/me")
-        .then((u) => {
-          setUser(u);
-          setLoading(false);
-        })
-        .catch(() => {
-          setAccessToken(null);
-          localStorage.removeItem("access_token");
-          setLoading(false);
+    const refreshAndRestore = async () => {
+      try {
+        const res = await fetch("/api/auth/refresh", {
+          method: "POST",
+          credentials: "include",
         });
-    } else {
-      const refreshAndRestore = async () => {
-        try {
-          const res = await fetch("/api/auth/refresh", {
-            method: "POST",
-            credentials: "include",
-          });
-          if (res.ok) {
-            const data = await res.json();
-            setAccessToken(data.access_token);
-            localStorage.setItem("access_token", data.access_token);
-            const u = await api.get<User>("/auth/users/me");
-            setUser(u);
-          }
-        } catch {
-          // Not authenticated
+        if (res.ok) {
+          const data = await res.json();
+          setAccessToken(data.access_token);
+          const u = await api.get<User>("/auth/users/me");
+          setUser(u);
         }
-        setLoading(false);
-      };
-      refreshAndRestore();
-    }
+      } catch {
+        // Not authenticated
+      }
+      setLoading(false);
+    };
+    refreshAndRestore();
   }, []);
 
   const login = useCallback(async (email: string, password: string) => {
@@ -54,7 +38,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }>("/auth/login", { email, password }, { skipAuth: true });
 
     setAccessToken(data.access_token);
-    localStorage.setItem("access_token", data.access_token);
 
     const u = await api.get<User>("/auth/users/me");
     setUser(u);
@@ -67,7 +50,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Proceed with local logout even if API fails
     }
     setAccessToken(null);
-    localStorage.removeItem("access_token");
     setUser(null);
   }, []);
 

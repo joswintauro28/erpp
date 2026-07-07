@@ -22,7 +22,6 @@ async function refreshAccessToken(): Promise<string | null> {
     if (!res.ok) return null;
     const data = await res.json();
     accessToken = data.access_token;
-    localStorage.setItem("access_token", data.access_token);
     return accessToken;
   } catch {
     return null;
@@ -30,7 +29,7 @@ async function refreshAccessToken(): Promise<string | null> {
 }
 
 function getToken(): string | null {
-  return accessToken ?? localStorage.getItem("access_token");
+  return accessToken;
 }
 
 async function request<T>(
@@ -76,7 +75,6 @@ async function request<T>(
     }
 
     accessToken = null;
-    localStorage.removeItem("access_token");
     throw new ApiClientError(401, "Session expired. Please log in again.");
   }
 

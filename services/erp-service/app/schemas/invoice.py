@@ -99,3 +99,58 @@ class DashboardStats(BaseModel):
     overdue_amount: float
     total_products: int
     low_stock_count: int
+
+
+class CreditNoteOut(BaseModel):
+    id: int
+    note_number: str | None
+    invoice_id: int
+    invoice_number: str | None
+    client_name: str | None
+    date: date | None
+    amount: float
+    status: str
+
+    model_config = {"from_attributes": True}
+
+
+class DebitNoteOut(BaseModel):
+    id: int
+    note_number: str | None
+    invoice_id: int
+    invoice_number: str | None
+    client_name: str | None
+    date: date | None
+    amount: float
+    status: str
+
+    model_config = {"from_attributes": True}
+
+
+class QuotationCreate(BaseModel):
+    client_id: int
+    total: float
+    notes: str | None = None
+
+
+class QuotationUpdate(BaseModel):
+    client_id: int | None = None
+    total: float | None = None
+    status: str | None = None
+    notes: str | None = None
+
+
+class QuotationOut(BaseModel):
+    id: int
+    owner_id: int
+    client_id: int
+    client_name: str | None = None
+    quote_number: str
+    total: float
+    status: str
+    issue_date: date | None
+    valid_until: date | None
+    notes: str | None
+    converted_invoice_id: int | None
+
+    model_config = {"from_attributes": True}
