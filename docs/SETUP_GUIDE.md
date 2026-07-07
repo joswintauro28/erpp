@@ -65,42 +65,45 @@ $env:PYTHONPATH="."
 .venv\Scripts\alembic upgrade head
 ```
 
-### 4. Seed the Database
+### 4. Database Reset (Optional)
+To completely delete the existing tables and clear the database back to a clean slate, run the reset script:
+```powershell
+$env:PYTHONPATH="."
+.venv\Scripts\python scripts/reset_db.py
+```
+*Note: Always run the migrations (`alembic upgrade head`) after resetting the database to recreate the empty tables.*
+
+### 5. Seed the Database
 There are two database seeding scripts available. Choose the one that fits your requirements:
 
-* **Admin-only seed** (minimally seeds a super admin user and settings):
-  ```powershell
-  $env:PYTHONPATH="."
-  .venv\Scripts\python scripts/seed_admin.py
-  ```
-
-* **Full mock data seed** (seeds full database records, products, invoices, and multiple roles):
+* **Full mock data seed (Recommended)**: Seeds the database with system permissions, roles, and generates a personalized, isolated dataset (clients, leads, products, invoices, payments, settings, credit/debit notes) for *all* 6 development users.
   ```powershell
   $env:PYTHONPATH="."
   .venv\Scripts\python scripts/seed.py
+  ```
+
+* **Admin-only seed**: Seeds the database with system permissions, roles, and a single, isolated dataset for the system administrator.
+  ```powershell
+  $env:PYTHONPATH="."
+  .venv\Scripts\python scripts/seed_admin.py
   ```
 
 ---
 
 ## Step 3: Seeded Users Reference
 
-Depending on the seeding script you executed, the database will contain the following user accounts:
+Executing `seed.py` populates the database with the following developer and role-based test accounts. Since data is isolated by user, each log-in will yield a fully-populated, realistic dashboard matching their domain:
 
-### From `seed_admin.py` (Super Admin Seeding)
-
-| Full Name | Email | Password | Primary Role |
+| Full Name | Email | Password | Primary Role / Department |
 | :--- | :--- | :--- | :--- |
 | **System Admin** | `admin@example.com` | `password123` | **Organization Owner** (Super Admin) |
+| **Alex Chen** | `admin@datavex.com` | `Admin@123!` | **Organization Owner** (Administrator) |
+| **Maya Patel** | `sales@datavex.com` | `Sales@123!` | **Sales Executive** (Sales) |
+| **Jordan Kim** | `accounts@datavex.com` | `Acc@123!` | **Accountant** (Finance) |
+| **Sam Rivera** | `inventory@datavex.com` | `Inv@123!` | **Inventory Manager** (Logistics) |
+| **Priya Sharma** | `auditor@datavex.com` | `Aud@123!` | **Auditor** (Audit) |
 
-### From `seed.py` (Comprehensive Mock Data Seeding)
-
-| Full Name | Email | Password | Intended Role / Access |
-| :--- | :--- | :--- | :--- |
-| **Alex Chen** | `admin@datavex.com` | `Admin@123!` | **Administrator** |
-| **Maya Patel** | `sales@datavex.com` | `Sales@123!` | **Sales Manager** |
-| **Jordan Kim** | `accounts@datavex.com` | `Acc@123!` | **Accountant** |
-| **Sam Rivera** | `inventory@datavex.com` | `Inv@123!` | **Inventory Manager** |
-| **Priya Sharma** | `auditor@datavex.com` | `Aud@123!` | **Auditor** |
+All users belong to the `DATAVEX Industries` organization, but view their own isolated entities upon logging in.
 
 ---
 
@@ -114,10 +117,10 @@ Navigate to the frontend directory and copy the environment example file:
 cd ../../apps/erp-shell
 copy .env.example .env
 ```
-*Note: The default `.env` is pre-configured to communicate via a rewrite proxy at `/api` matching your local port.*
+*Note: The default `.env` is pre-configured to communicate via a Next.js rewrite proxy at `/api` matching your local port (8000).*
 
 ### 2. Install Node Dependencies
-Install package dependencies using Bun:
+Install package dependencies using Bun from the root of the workspace (or inside the app folder):
 ```powershell
 bun install
 ```
@@ -142,4 +145,4 @@ The frontend folder also contains a custom PowerShell startup script `run.ps1` w
 cd apps/erp-shell
 .\run.ps1
 ```
-*Turbopack will compile and run the application on `http://localhost:3000`.*
+*Next.js Turbopack will compile and run the application on `http://localhost:3000`.*
