@@ -19,6 +19,10 @@
       }
     ],
     "paths": {
+      "@datavex/ui-theme": ["../../packages/ui-theme/src/index.ts"],
+      "@datavex/ui-theme/*": ["../../packages/ui-theme/src/*"],
+      "@/components/ui/*": ["../../packages/ui-theme/src/components/ui/*"],
+      "@/lib/utils": ["../../packages/ui-theme/src/lib/utils.ts"],
       "@/*": ["./*"]
     }
   },
@@ -28,7 +32,8 @@
     "**/*.tsx",
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts",
-    "**/*.mts"
+    "**/*.mts",
+    "../../packages/ui-theme/src/**/*"
   ],
   "exclude": ["node_modules"]
 }

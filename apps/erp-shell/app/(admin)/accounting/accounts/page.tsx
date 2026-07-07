@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, ChangeEvent } from "react";
 import { Search, Plus, Pencil, Power, PowerOff } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
@@ -103,7 +103,7 @@ export default function ChartOfAccounts() {
                 placeholder="Search by name, code, or group..."
                 className="pl-8"
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e: ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
               />
             </div>
             {typeFilter && (

@@ -1,6 +1,6 @@
 "use client";
 
-import { cn } from "@/lib/utils";
+import { cn } from "../../lib/utils";
 
 interface LabelProps extends React.LabelHTMLAttributes<HTMLLabelElement> {
   children: React.ReactNode;
