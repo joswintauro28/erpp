@@ -21,17 +21,23 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
             await session.close()
 
 
-async def get_current_user_id(
+async def get_current_token_payload(
     authorization: str = Header(..., alias="Authorization"),
-) -> int:
+) -> dict:
     if not authorization.startswith("Bearer "):
         raise CredentialsException("Invalid authorization header format")
     token = authorization.removeprefix("Bearer ")
     try:
         payload = decode_access_token(token)
-        return payload["user_id"]
+        return payload
     except Exception:
         raise CredentialsException("Invalid or expired access token")
+
+
+async def get_current_user_id(
+    payload: dict = Depends(get_current_token_payload),
+) -> int:
+    return payload["user_id"]
 
 
 async def get_optional_user_id(
@@ -48,12 +54,15 @@ async def get_optional_user_id(
 
 def require_permission(permission_code: str):
     async def permission_dep(
-        user_id: int = Depends(get_current_user_id),
-        db: AsyncSession = Depends(get_db),
+        payload: dict = Depends(get_current_token_payload),
     ) -> bool:
-        allowed = await check_permission(db, user_id, permission_code)
-        if not allowed:
-            raise ForbiddenException(f"Missing required permission: {permission_code}")
-        return True
+        role = payload.get("role")
+        permissions = payload.get("permissions", [])
+        
+        # Super admin role (Organization Owner) bypasses permission checks
+        if role == "Organization Owner" or permission_code in permissions:
+            return True
+            
+        raise ForbiddenException(f"Missing required permission: {permission_code}")
 
     return permission_dep

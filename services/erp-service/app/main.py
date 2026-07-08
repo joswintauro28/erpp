@@ -12,7 +12,6 @@ from app.models.base import Base
 from app.models import *  # noqa: F401, F403
 from app.api.middleware import SecurityHeadersMiddleware
 from app.api.v1.endpoints import (
-    auth_router,
     clients_router,
     products_router,
     invoices_router,
@@ -71,7 +70,6 @@ async def too_many_requests_handler(request, exc):
     )
 
 # Routers
-app.include_router(auth_router)
 app.include_router(clients_router)
 app.include_router(products_router)
 app.include_router(invoices_router)

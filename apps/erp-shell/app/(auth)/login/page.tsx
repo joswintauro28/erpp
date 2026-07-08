@@ -33,8 +33,26 @@ export default function LoginPage() {
     setError("");
 
     try {
-      await login(email, password);
-      router.push("/dashboard");
+      const user = await login(email, password);
+      
+      // 1. Read optional redirect parameter from query string
+      const searchParams = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
+      const redirectUrl = searchParams ? searchParams.get("redirect") : null;
+
+      if (redirectUrl) {
+        window.location.href = redirectUrl;
+        return;
+      }
+
+      // 2. Role-based intelligent routing to workstations
+      const role = user.role;
+      if (role === "Sales Executive") {
+        window.location.href = "http://localhost:3001/dashboard";
+      } else if (role === "Accountant" || role === "Auditor") {
+        window.location.href = "http://localhost:3002/dashboard";
+      } else {
+        router.push("/dashboard");
+      }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Invalid credentials";
       if (msg.includes("locked") || msg.includes("429")) {

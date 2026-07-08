@@ -370,6 +370,15 @@ const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 14. **Client portal access**: Removed from URL helpers (no backend endpoint yet), `PortalSection` conditionally hidden.
 15. **Build**: 33 pages clean on frontend, import-OK on backend.
 
+### v9 — Central SSO Authentication (core-iam) & Intelligent Workstation Routing
+
+1. **Isolated Centralized IAM Backend (`core-iam`):** Built and deployed the NestJS authentication service on port **`8002`** backed by a dedicated `erp_iam` PostgreSQL database.
+2. **Standard Developer Seeding:** Created seeds for system roles, permissions, and developer accounts, strictly restricting settings creation to administrators (`Organization Owner`).
+3. **Decoupled claims-based RBAC:** FastAPI permission verification dependencies (`deps.py`) refactored to validate roles and permission codes directly from cryptographically verified JWT claims, removing monolithic SQL lookups.
+4. **Next.js Proxy Gateway:** Configured `proxy.ts` rewrite engine in the Next.js shell to intelligently route `/api/auth/*` traffic to the NestJS IAM service (preserving `/api`) and business APIs to the FastAPI backend (stripping `/api`).
+5. **SSO Redirection:** Updated the login portal to process query parameters and perform redirects back to originating workstation subdomains (e.g. CRM, Billing).
+6. **Intelligent Workstation Routing:** Added automatic role-to-workstation routing on login: `Sales Executive` -> CRM (`3001`), `Accountant`/`Auditor` -> Billing (`3002`), and Admins -> Admin Shell (`3000`).
+
 ## What's Left
 
 - **Wire remaining pages to API**: Quotations, Recurring Invoices, Credit/Debit Notes, Payments, all Accounting/Inventory/Settings/Team pages (currently empty state)

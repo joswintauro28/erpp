@@ -6,7 +6,7 @@ This document is the unified context hub and source of truth for AI agents worki
 
 ## 1. System Topology & Directory Structure
 
-DATAVEX ERP is organized as an **Nx Polyglot Monorepo**. This isolates frontend, backend, and shared libraries while standardizing on **TypeScript** (frontend) and **Python** (backend) to maximize agent context-awareness.
+DATAVEX ERP is organized as an **Nx Polyglot Monorepo**. This isolates frontend, backend, and shared libraries while standardizing on **TypeScript** (frontend/NestJS) and **Python** (FastAPI) to maximize agent context-awareness.
 
 ```
 DATAVEX/ERP/ (Root)
@@ -14,7 +14,8 @@ DATAVEX/ERP/ (Root)
 │   └── erp-shell/                         # Next.js 16 (Turbopack) — Main Executive / Super Admin Shell
 │
 ├── services/                              # BACKEND MICROSERVICES
-│   └── erp-service/                       # FastAPI (Asynchronous Python 3.12+) — Core API Gateway
+│   ├── erp-service/                       # FastAPI (Asynchronous Python 3.12+) — Core Business Logic Gateway
+│   └── core-iam/                          # NestJS (Prisma) — Central SSO & RBAC Engine
 │
 ├── packages/                              # CENTRAL SHAREABLE PACKAGES
 │   └── ui-theme/                          # Shared Shadcn UI primitives, custom theme, and Tailwind v4 variables
@@ -38,7 +39,6 @@ DATAVEX/ERP/ (Root)
 * **Language:** TypeScript
 * **Styling:** Tailwind CSS v4 (no `tailwind.config` — all theme values defined via CSS custom properties and `@theme` directives in the global theme)
 * **Icons:** `lucide-react`
-* **Common Routing:** Proxies all `/api/*` endpoints directly to the backend at `http://127.0.0.1:8000/`.
 
 ### UI Theme: "Refined Crimson & Brushed Gold"
 A premium, authoritative dark structural shell built with deep maroon chassis, crimson active states, and yellow-gold highlights.
@@ -55,8 +55,14 @@ A premium, authoritative dark structural shell built with deep maroon chassis, c
 | `--radius-xl` | `6px` | Tight card corner radius |
 
 ### Core Frontend Patterns
-* **Authentication (`useAuth`):** AuthContext handles user authentication, token refresh, and login state. Session persistence uses `localStorage`. The returned user payload contains: `id, email, full_name, role, organization_name, permissions`.
+* **Authentication (`useAuth`):** AuthContext handles login status and state. Session persistence uses `localStorage`. The returned user payload contains: `id, email, full_name, role, organization_name, permissions`.
+* **Central SSO Redirection & Routing:** Authentications are routed through the Next.js shell (`erp-shell`).
+  * The login page processes query parameters `?redirect=...` to perform full browser redirects back to calling workstation domains on success.
+  * Role-based routing automatically redirects users to their appropriate ports on login: `Sales Executive` -> CRM (`3001`), `Accountant`/`Auditor` -> Billing (`3002`), and Admins -> Admin Shell (`3000`).
 * **API Service (`services/api.ts`):** Centralized fetch wrapper that appends JWT headers and handles automatic token refreshing upon receiving a `401 Unauthorized` response.
+* **Routing Gateway Proxy (`apps/erp-shell/proxy.ts`):** A Next.js rewrite proxy intercepts `/api/:path*`:
+  * Auth requests (`/api/auth/*`) are routed to `core-iam` on port `8002`, keeping the `/api` prefix.
+  * Business API requests are routed to the FastAPI backend on port `8000`, stripping the `/api` prefix.
 * **Imports & Path Aliases:** All Shadcn primitives (`button`, `card`, `dialog`, etc.) and the `cn` utility are imported from `@/components/ui/*` and `@/lib/utils`. In [tsconfig.json](apps/erp-shell/tsconfig.json), these paths are mapped directly to `@datavex/ui-theme` to keep application files clean:
   ```json
   "@/components/ui/*": ["../../packages/ui-theme/src/components/ui/*"],
@@ -66,22 +72,26 @@ A premium, authoritative dark structural shell built with deep maroon chassis, c
 
 ---
 
-## 3. Backend Project Context (`services/erp-service`)
+## 3. Backend Project Contexts
 
-### Tech Stack
+DATAVEX ERP utilizes a decoupled backend architecture where business services are separated from authentication and user access services.
+
+### 3.1 Central IAM Service (`services/core-iam`)
+* **Framework:** NestJS
+* **Language:** TypeScript
+* **Database Driver & ORM:** Prisma Client
+* **Database Target:** `erp_iam` (PostgreSQL)
+* **Auth Hashing:** `bcryptjs`
+* **RBAC Infrastructure:** Custom `@Permissions(...codes)` decorator annotations and a global-ready `PermissionsGuard` enforce endpoint security.
+* **JWT SSO Strategy:** Signed JWTs include claims for `user_id` (cast as a string `sub` to comply with python-jose), `role`, and `permissions` array, and set HttpOnly cookies with optional `COOKIE_DOMAIN` variables.
+
+### 3.2 FastAPI Business Backend (`services/erp-service`)
 * **Framework:** FastAPI
 * **Database Driver & ORM:** SQLAlchemy 2.0 (`AsyncSession` via `postgresql+asyncpg` driver)
 * **Migrations:** Alembic
-* **Authentication:** PyJWT (signs user details, sets HTTP-only secure session cookies)
-* **Password Hashing:** Native `bcrypt`
-
-### Core Backend Patterns
-* **Controller-Service-Repository Pattern:**
-  * **Routing (`app/api/v1/endpoints/`):** FastAPI paths validate payloads using Pydantic schemas.
-  * **Services (`app/services/`):** Handle transactions, business validations, and call repositories.
-  * **Repositories (`app/repositories/`):** Execute SQLAlchemy asynchronous queries.
-* **Ownership Isolation:** All queries filter data dynamically based on the current user's `owner_id` context (`User.id`).
-* **Auto-Migration Engine:** During startup, `main.py` checks metadata models and runs checks/alterations to sync missing columns dynamically.
+* **Database Target:** `erp_db` (PostgreSQL - business tables)
+* **Claims-Based Verification:** The `require_permission` dependency decodes and verifies JWT payloads locally. It inspects `role` and `permissions` claims without querying database tables, achieving database isolation.
+* **Obsolete Routes:** Monolithic `/auth` endpoints have been decommissioned.
 
 ---
 
@@ -107,28 +117,47 @@ For database initialization, migrations, and running development environments, u
   ```bash
   bun nx serve erp-shell
   ```
-* **Run Backend Only:**
+* **Run FastAPI Backend Only:**
   ```bash
   bun nx run erp-service:dev
   ```
+* **Run NestJS IAM Only:**
+  ```bash
+  bun nx run core-iam:dev
+  ```
 
-### Database Operations (Python Environment)
-All backend database commands must be executed within `services/erp-service` with `PYTHONPATH` configured:
+### Database Operations (Python & Prisma Environments)
 
+#### FastAPI Business DB (`services/erp-service`)
 * **Apply Schema Migrations:**
   ```powershell
+  cd services/erp-service
   $env:PYTHONPATH="."
   .venv\Scripts\alembic upgrade head
   ```
 * **Wipe Database (Drop All Tables):**
   ```powershell
+  cd services/erp-service
   $env:PYTHONPATH="."
   .venv\Scripts\python scripts/reset_db.py
   ```
-* **Seed Workspace Database (All Users - 241 rows):**
+* **Seed Business Data (241 rows):**
   ```powershell
+  cd services/erp-service
   $env:PYTHONPATH="."
   .venv\Scripts\python scripts/seed.py
+  ```
+
+#### NestJS IAM DB (`services/core-iam`)
+* **Deploy Schema (Isolated DB):**
+  ```powershell
+  cd services/core-iam
+  bunx prisma db push
+  ```
+* **Seed IAM Developer Accounts:**
+  ```powershell
+  cd services/core-iam
+  bunx prisma db seed
   ```
 
 ---

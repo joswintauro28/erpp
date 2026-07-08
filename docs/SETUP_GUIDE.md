@@ -107,6 +107,31 @@ All users belong to the `DATAVEX Industries` organization, but view their own is
 
 ---
 
+## Step 2.5: Configure & Run the Central IAM Service (core-iam)
+
+The central Single Sign-On (SSO) engine is built with NestJS and Prisma, running from the `services/core-iam/` directory.
+
+### 1. Set Up Environment Variables
+Navigate to the directory and create the `.env` file:
+```powershell
+cd services/core-iam
+# Create a .env file with the following variables:
+DATABASE_URL="postgresql://postgres:root@localhost:5432/erp_iam"
+JWT_SECRET="development-jwt-secret-key-123"
+PORT=8002
+REFRESH_TOKEN_EXPIRE_SECONDS=604800
+ACCESS_TOKEN_EXPIRE_SECONDS=900
+```
+
+### 2. Initialize Database Schema & Seed Data
+Generate the Prisma client, deploy the schemas to PostgreSQL to create the `erp_iam` database, and seed standard roles, permissions, and developer accounts (restricting settings creation to owners):
+```powershell
+bunx prisma db push
+bunx prisma db seed
+```
+
+---
+
 ## Step 4: Configure & Run the Frontend Application
 
 The frontend is a Next.js 16 application located in `apps/erp-shell/`.
@@ -129,7 +154,13 @@ bun install
 
 ## Step 5: Startup Commands
 
-Both services can be run simultaneously in separate terminals using the following startup commands:
+All three services must be run simultaneously in separate terminals using the following startup commands:
+
+### Running the Central IAM Service
+To start the hot-reloading NestJS authentication server on port `8002` (which handles login proxying and wildcard cookies):
+```powershell
+bun nx run core-iam:dev
+```
 
 ### Running the Backend Service
 The backend folder contains a custom PowerShell startup script `run.ps1` which handles activating the environment and initiating Uvicorn:

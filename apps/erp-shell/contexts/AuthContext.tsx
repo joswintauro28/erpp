@@ -41,6 +41,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const u = await api.get<User>("/auth/users/me");
     setUser(u);
+    return u;
   }, []);
 
   const logout = useCallback(async () => {
