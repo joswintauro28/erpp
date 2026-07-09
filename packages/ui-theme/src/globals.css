@@ -236,8 +236,7 @@
 }
 
 /* ── Multi-Step Dialog Form Styling ── */
-.animate-step-in {
-  /* Reduce label to input spacing */
+.step-form {
   .space-y-2 {
     display: flex;
     flex-direction: column;

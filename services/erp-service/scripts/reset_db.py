@@ -2,8 +2,7 @@ import sys
 sys.path.append('.')
 
 import asyncio
-from app.database import engine
-from app.models import Base
+from app.core.database import engine, Base
 
 async def reset_db():
     print("Dropping all tables from database...")

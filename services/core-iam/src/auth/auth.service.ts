@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, ConflictException, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
@@ -8,6 +8,8 @@ import * as crypto from 'crypto';
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,
@@ -32,17 +34,47 @@ export class AuthService {
       throw new UnauthorizedException('Account has been deactivated');
     }
 
+    if (user.lockedUntil && user.lockedUntil > new Date()) {
+      throw new UnauthorizedException('Account is temporarily locked due to too many failed attempts. Please try again later.');
+    }
+
     const isMatch = await bcrypt.compare(pass, user.passwordHash);
     if (!isMatch) {
-      // In a production system, you would increment failed login attempts here
+      const newAttempts = user.failedLoginAttempts + 1;
+      const lockThreshold = this.configService.get<number>('LOCK_THRESHOLD', 5);
+      const lockDurationMinutes = this.configService.get<number>('LOCK_DURATION_MINUTES', 15);
+
+      const updateData: Record<string, unknown> = {
+        failedLoginAttempts: newAttempts,
+      };
+
+      if (newAttempts >= lockThreshold) {
+        updateData.lockedUntil = new Date(Date.now() + lockDurationMinutes * 60 * 1000);
+      }
+
+      await this.prisma.user.update({
+        where: { id: user.id },
+        data: updateData,
+      });
+
       throw new UnauthorizedException('Invalid email or password');
     }
 
-    // Update last login timestamp
-    await this.prisma.user.update({
-      where: { id: user.id },
-      data: { lastLogin: new Date() },
-    });
+    if (user.failedLoginAttempts > 0 || user.lockedUntil) {
+      await this.prisma.user.update({
+        where: { id: user.id },
+        data: {
+          failedLoginAttempts: 0,
+          lockedUntil: null,
+          lastLogin: new Date(),
+        },
+      });
+    } else {
+      await this.prisma.user.update({
+        where: { id: user.id },
+        data: { lastLogin: new Date() },
+      });
+    }
 
     return user;
   }
@@ -124,102 +156,107 @@ export class AuthService {
     };
   }
 
-  async register(dto: RegisterDto) {
+  async register(dto: RegisterDto): Promise<any> {
+    this.logger.log(`Attempting to register user: ${dto.email}`);
     const existing = await this.prisma.user.findUnique({
       where: { email: dto.email },
     });
 
     if (existing) {
+      this.logger.warn(`Registration failed. User already exists: ${dto.email}`);
       throw new ConflictException('A user with this email already exists');
     }
 
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(dto.password, salt);
 
-    const user = await this.prisma.user.create({
-      data: {
-        email: dto.email,
-        passwordHash,
-        fullName: dto.fullName,
-        isActive: true,
-      },
+    return this.prisma.$transaction(async (tx) => {
+      const user = await tx.user.create({
+        data: {
+          email: dto.email,
+          passwordHash,
+          fullName: dto.fullName,
+          isActive: true,
+        },
+      });
+
+      const requestedRole = dto.role || 'Organization Owner';
+
+      // Fetch matching system role
+      const role = await tx.role.findUnique({
+        where: { name: requestedRole },
+      });
+
+      if (!role) {
+        throw new ConflictException(`Role '${requestedRole}' not found in system database`);
+      }
+
+      // Only create Organization, Memberships, and Settings for Admin / Owner roles
+      const isAdminRole = requestedRole === 'Organization Owner';
+      
+      if (isAdminRole) {
+        // 1. Create Organization
+        const org = await tx.organization.create({
+          data: {
+            name: `${dto.fullName}'s Organization`,
+            ownerId: user.id,
+          },
+        });
+
+        // 2. Assign Membership Owner role
+        await tx.organizationMember.create({
+          data: {
+            organizationId: org.id,
+            userId: user.id,
+            roleId: role.id,
+            status: 'active',
+          },
+        });
+
+        // 3. Create settings records
+        await tx.companySetting.create({
+          data: {
+            ownerId: user.id,
+            companyName: `${dto.fullName}'s Company`,
+            email: user.email,
+          },
+        });
+
+        await tx.brandingSetting.create({
+          data: {
+            ownerId: user.id,
+          },
+        });
+
+        await tx.notificationSetting.create({
+          data: {
+            ownerId: user.id,
+            invoiceNotifications: true,
+            paymentReminders: true,
+            lowStockAlerts: true,
+            weeklyReports: true,
+          },
+        });
+
+        await tx.workflowSetting.create({
+          data: {
+            ownerId: user.id,
+            sendUpcomingInvoiceReminders: true,
+            sendOverdueReminders: true,
+            notifyLowStock: true,
+            createdAt: new Date().toISOString(),
+          },
+        });
+      }
+
+      this.logger.log(`Successfully registered user: ${user.email} as ${requestedRole}`);
+      return user;
     });
-
-    const requestedRole = dto.role || 'Organization Owner';
-
-    // Fetch matching system role
-    const role = await this.prisma.role.findUnique({
-      where: { name: requestedRole },
-    });
-
-    if (!role) {
-      throw new ConflictException(`Role '${requestedRole}' not found in system database`);
-    }
-
-    // Only create Organization, Memberships, and Settings for Admin / Owner roles
-    const isAdminRole = requestedRole === 'Organization Owner';
-    
-    if (isAdminRole) {
-      // 1. Create Organization
-      const org = await this.prisma.organization.create({
-        data: {
-          name: `${dto.fullName}'s Organization`,
-          ownerId: user.id,
-        },
-      });
-
-      // 2. Assign Membership Owner role
-      await this.prisma.organizationMember.create({
-        data: {
-          organizationId: org.id,
-          userId: user.id,
-          roleId: role.id,
-          status: 'active',
-        },
-      });
-
-      // 3. Create settings records
-      await this.prisma.companySetting.create({
-        data: {
-          ownerId: user.id,
-          companyName: `${dto.fullName}'s Company`,
-          email: user.email,
-        },
-      });
-
-      await this.prisma.brandingSetting.create({
-        data: {
-          ownerId: user.id,
-        },
-      });
-
-      await this.prisma.notificationSetting.create({
-        data: {
-          ownerId: user.id,
-          invoiceNotifications: true,
-          paymentReminders: true,
-          lowStockAlerts: true,
-          weeklyReports: true,
-        },
-      });
-
-      await this.prisma.workflowSetting.create({
-        data: {
-          ownerId: user.id,
-          sendUpcomingInvoiceReminders: true,
-          sendOverdueReminders: true,
-          notifyLowStock: true,
-          createdAt: new Date().toISOString(),
-        },
-      });
-    }
-
-    return user;
   }
 
   async refreshAccessToken(rawRefreshToken: string, userAgent?: string, ipAddress?: string) {
     const tokenHash = this.computeTokenHash(rawRefreshToken);
-    
+
     const tokenRecord = await this.prisma.refreshToken.findFirst({
       where: {
         tokenHash,
@@ -234,6 +271,12 @@ export class AuthService {
     if (!tokenRecord || !tokenRecord.user.isActive) {
       throw new UnauthorizedException('Invalid or expired refresh token');
     }
+
+    // Revoke old refresh token (rotation)
+    await this.prisma.refreshToken.update({
+      where: { id: tokenRecord.id },
+      data: { revoked: true },
+    });
 
     const userId = tokenRecord.userId;
     const email = tokenRecord.user.email;
@@ -252,8 +295,25 @@ export class AuthService {
       },
     );
 
+    // Issue new refresh token
+    const rawNewRefreshToken = crypto.randomBytes(40).toString('hex');
+    const newTokenHash = this.computeTokenHash(rawNewRefreshToken);
+    const refreshExpiresSeconds = this.configService.get<number>('REFRESH_TOKEN_EXPIRE_SECONDS', 604800);
+    const expiresAt = new Date(Date.now() + refreshExpiresSeconds * 1000);
+
+    await this.prisma.refreshToken.create({
+      data: {
+        userId,
+        tokenHash: newTokenHash,
+        expiresAt,
+        userAgent,
+        ipAddress,
+      },
+    });
+
     return {
       accessToken: newAccessToken,
+      refreshToken: rawNewRefreshToken,
     };
   }
 

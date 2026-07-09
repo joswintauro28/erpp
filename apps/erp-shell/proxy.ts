@@ -3,6 +3,7 @@ import type { NextRequest } from "next/server";
 
 const BACKEND_URL = process.env.BACKEND_API_URL || "http://127.0.0.1:8000";
 const IAM_URL = process.env.IAM_API_URL || "http://127.0.0.1:8002";
+const BILLING_URL = process.env.BILLING_API_URL || "http://127.0.0.1:8003";
 
 export function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
@@ -19,6 +20,9 @@ export function proxy(request: NextRequest) {
   if (path.startsWith("/auth/")) {
     // NestJS core-iam runs with the global "/api" prefix (e.g., http://localhost:8002/api/auth/...)
     url = new URL(`/api${path}${search}`, IAM_URL);
+  } else if (path.startsWith("/invoices") || path.startsWith("/payments") || path === "/dashboard/billing") {
+    // NestJS billing-service runs with global "/api" prefix on port 8003
+    url = new URL(`/api${path}${search}`, BILLING_URL);
   } else {
     // FastAPI backend mounts routers at the root without "/api" prefix (e.g., http://localhost:8000/dashboard/...)
     url = new URL(`${path}${search}`, BACKEND_URL);

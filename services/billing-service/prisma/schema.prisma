@@ -1,0 +1,216 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum InvoiceStatus {
+  draft
+  sent
+  paid
+  partially_paid
+  overdue
+  cancelled
+}
+
+enum GstTreatment {
+  intrastate
+  interstate
+}
+
+enum PaymentMethod {
+  Bank_Transfer
+  UPI
+  Credit_Card
+  Cheque
+  Cash
+}
+
+enum PaymentStatus {
+  completed
+  failed
+  refunded
+}
+
+enum NoteStatus {
+  draft
+  issued
+}
+
+enum QuotationStatus {
+  draft
+  sent
+  accepted
+  rejected
+  expired
+}
+
+enum RecurringFrequency {
+  weekly
+  monthly
+  quarterly
+  yearly
+}
+
+enum RecurringStatus {
+  active
+  paused
+  completed
+}
+
+model Invoice {
+  id              Int            @id @default(autoincrement())
+  ownerId         Int            @map("owner_id")
+  organizationId  Int?           @map("organization_id")
+  clientId        Int            @map("client_id")
+  clientName      String         @map("client_name")
+  invoiceNumber   String?        @unique @map("invoice_number")
+  status          InvoiceStatus  @default(draft)
+  issueDate       DateTime?      @map("issue_date")
+  dueDate         DateTime?      @map("due_date")
+  subtotal        Decimal        @default(0.00) @db.Decimal(12, 2)
+  cgst            Decimal        @default(0.00) @db.Decimal(12, 2)
+  sgst            Decimal        @default(0.00) @db.Decimal(12, 2)
+  igst            Decimal        @default(0.00) @db.Decimal(12, 2)
+  taxTotal        Decimal        @default(0.00) @map("tax_total") @db.Decimal(12, 2)
+  total           Decimal        @default(0.00) @db.Decimal(12, 2)
+  paidAmount      Decimal        @default(0.00) @map("paid_amount") @db.Decimal(12, 2)
+  balanceDue      Decimal        @default(0.00) @map("balance_due") @db.Decimal(12, 2)
+  gstTreatment    GstTreatment   @default(intrastate) @map("gst_treatment")
+  placeOfSupply   String?        @map("place_of_supply")
+  notes           String?        @db.Text
+  createdAt       DateTime       @default(now()) @map("created_at")
+  updatedAt       DateTime       @updatedAt @map("updated_at")
+
+  items     InvoiceItem[]
+  payments  Payment[]
+  creditNotes CreditNote[]
+  debitNotes  DebitNote[]
+
+  @@index([ownerId])
+  @@index([status])
+  @@index([dueDate])
+  @@index([ownerId, status])
+  @@map("invoices")
+}
+
+model InvoiceItem {
+  id          Int     @id @default(autoincrement())
+  invoiceId   Int     @map("invoice_id")
+  productId   Int?    @map("product_id")
+  description String  @db.Text
+  quantity    Decimal @db.Decimal(12, 2)
+  unitPrice   Decimal @map("unit_price") @db.Decimal(12, 2)
+  gstRate     Decimal @default(0.00) @map("gst_rate") @db.Decimal(5, 2)
+  amount      Decimal @db.Decimal(12, 2)
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@index([invoiceId])
+  @@map("invoice_items")
+}
+
+model Payment {
+  id            Int           @id @default(autoincrement())
+  ownerId       Int           @map("owner_id")
+  organizationId Int?         @map("organization_id")
+  invoiceId     Int?          @map("invoice_id")
+  amount        Decimal       @db.Decimal(12, 2)
+  paymentMethod PaymentMethod? @map("payment_method")
+  paymentDate   DateTime?     @map("payment_date")
+  referenceId   String?       @map("reference_id")
+  notes         String?       @db.Text
+  status        PaymentStatus @default(completed)
+  createdAt     DateTime      @default(now()) @map("created_at")
+
+  invoice Invoice? @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
+
+  @@index([ownerId])
+  @@index([invoiceId])
+  @@index([status])
+  @@index([paymentDate])
+  @@index([ownerId, status, paymentDate])
+  @@map("payments")
+}
+
+model CreditNote {
+  id                Int        @id @default(autoincrement())
+  ownerId           Int        @map("owner_id")
+  organizationId    Int?       @map("organization_id")
+  invoiceId         Int        @map("invoice_id")
+  creditNoteNumber  String?    @map("credit_note_number")
+  amount            Decimal    @db.Decimal(12, 2)
+  reason            String?    @db.Text
+  status            NoteStatus @default(issued)
+  issueDate         DateTime?  @map("issue_date")
+  createdAt         DateTime   @default(now()) @map("created_at")
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@index([ownerId])
+  @@index([invoiceId])
+  @@map("credit_notes")
+}
+
+model DebitNote {
+  id               Int        @id @default(autoincrement())
+  ownerId          Int        @map("owner_id")
+  organizationId   Int?       @map("organization_id")
+  invoiceId        Int        @map("invoice_id")
+  debitNoteNumber  String?    @map("debit_note_number")
+  amount           Decimal    @db.Decimal(12, 2)
+  reason           String?    @db.Text
+  status           NoteStatus @default(issued)
+  issueDate        DateTime?  @map("issue_date")
+  createdAt        DateTime   @default(now()) @map("created_at")
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@index([ownerId])
+  @@index([invoiceId])
+  @@map("debit_notes")
+}
+
+model Quotation {
+  id                  Int              @id @default(autoincrement())
+  ownerId             Int              @map("owner_id")
+  organizationId      Int?             @map("organization_id")
+  clientId            Int              @map("client_id")
+  clientName          String           @map("client_name")
+  quoteNumber         String           @unique @map("quote_number")
+  total               Decimal          @default(0.00) @db.Decimal(12, 2)
+  status              QuotationStatus  @default(draft)
+  issueDate           DateTime?        @map("issue_date")
+  validUntil          DateTime?        @map("valid_until")
+  notes               String?          @db.Text
+  convertedInvoiceId  Int?             @map("converted_invoice_id")
+  createdAt           DateTime         @default(now()) @map("created_at")
+
+  @@index([ownerId])
+  @@map("quotations")
+}
+
+model RecurringInvoice {
+  id              Int                @id @default(autoincrement())
+  ownerId         Int                @map("owner_id")
+  organizationId  Int?               @map("organization_id")
+  clientId        Int                @map("client_id")
+  clientName      String             @map("client_name")
+  templateName    String             @map("template_name")
+  items           Json               @default("[]")
+  total           Decimal            @default(0.00) @db.Decimal(12, 2)
+  frequency       RecurringFrequency
+  nextRun         DateTime           @map("next_run")
+  endDate         DateTime?          @map("end_date")
+  lastGenerated   DateTime?          @map("last_generated")
+  autoEmail       Boolean            @default(false) @map("auto_email")
+  status          RecurringStatus    @default(active)
+  createdAt       DateTime           @default(now()) @map("created_at")
+  updatedAt       DateTime           @updatedAt @map("updated_at")
+
+  @@index([ownerId])
+  @@map("recurring_invoices")
+}

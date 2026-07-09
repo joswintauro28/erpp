@@ -5,6 +5,7 @@ datasource db {
 
 generator client {
   provider = "prisma-client-js"
+  output   = "../node_modules/@prisma/client-iam"
 }
 
 model Permission {
@@ -13,6 +14,7 @@ model Permission {
   name             String?
   module           String?
   rolePermissions  RolePermission[]
+  updatedAt        DateTime         @default(now()) @updatedAt @map("updated_at")
 
   @@map("permissions")
 }
@@ -25,6 +27,7 @@ model Role {
   rolePermissions     RolePermission[]
   organizationMembers OrganizationMember[]
   invitations         Invitation[]
+  updatedAt           DateTime             @default(now()) @updatedAt @map("updated_at")
 
   @@map("roles")
 }
@@ -37,6 +40,7 @@ model User {
   isActive             Boolean              @default(true) @map("is_active")
   lastLogin            DateTime?            @map("last_login")
   createdAt            DateTime             @default(now()) @map("created_at")
+  updatedAt            DateTime             @default(now()) @updatedAt @map("updated_at")
   failedLoginAttempts  Int                  @default(0) @map("failed_login_attempts")
   lockedUntil          DateTime?            @map("locked_until")
   passwordChangedAt    DateTime?            @map("password_changed_at")
@@ -50,58 +54,63 @@ model User {
   notificationSetting  NotificationSetting?
   workflowSetting      WorkflowSetting?
 
+  @@index([email])
   @@map("users")
 }
 
 model BrandingSetting {
-  id           Int     @id @default(autoincrement())
-  ownerId      Int     @unique @map("owner_id")
-  logoUrl      String? @map("logo_url")
-  primaryColor String? @map("primary_color")
-  accentColor  String? @map("accent_color")
-  invoiceFooter String? @map("invoice_footer")
-  paymentTerms String? @map("payment_terms")
-  owner        User    @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  id            Int      @id @default(autoincrement())
+  ownerId       Int      @unique @map("owner_id")
+  logoUrl       String?  @map("logo_url")
+  primaryColor  String?  @map("primary_color")
+  accentColor   String?  @map("accent_color")
+  invoiceFooter String?  @map("invoice_footer")
+  paymentTerms  String?  @map("payment_terms")
+  owner         User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  updatedAt     DateTime @default(now()) @updatedAt @map("updated_at")
 
   @@map("branding_settings")
 }
 
 model CompanySetting {
-  id          Int     @id @default(autoincrement())
-  ownerId     Int     @unique @map("owner_id")
-  companyName String  @map("company_name")
+  id          Int      @id @default(autoincrement())
+  ownerId     Int      @unique @map("owner_id")
+  companyName String   @map("company_name")
   email       String?
   phone       String?
   address     String?
   state       String?
-  gstNumber   String? @map("gst_number")
+  gstNumber   String?  @map("gst_number")
   website     String?
   industry    String?
-  owner       User    @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  owner       User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at")
 
   @@map("company_settings")
 }
 
 model NotificationSetting {
-  id                   Int     @id @default(autoincrement())
-  ownerId              Int     @unique @map("owner_id")
-  invoiceNotifications Boolean @map("invoice_notifications")
-  paymentReminders     Boolean @map("payment_reminders")
-  lowStockAlerts       Boolean @map("low_stock_alerts")
-  weeklyReports        Boolean @map("weekly_reports")
-  owner                User    @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  id                   Int      @id @default(autoincrement())
+  ownerId              Int      @unique @map("owner_id")
+  invoiceNotifications Boolean  @map("invoice_notifications")
+  paymentReminders     Boolean  @map("payment_reminders")
+  lowStockAlerts       Boolean  @map("low_stock_alerts")
+  weeklyReports        Boolean  @map("weekly_reports")
+  owner                User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  updatedAt            DateTime @default(now()) @updatedAt @map("updated_at")
 
   @@map("notification_settings")
 }
 
 model WorkflowSetting {
-  id                             Int     @id @default(autoincrement())
-  ownerId                        Int     @unique @map("owner_id")
-  sendUpcomingInvoiceReminders   Boolean @map("send_upcoming_invoice_reminders")
-  sendOverdueReminders           Boolean @map("send_overdue_reminders")
-  notifyLowStock                 Boolean @map("notify_low_stock")
-  createdAt                      String  @map("created_at")
-  owner                          User    @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  id                           Int      @id @default(autoincrement())
+  ownerId                      Int      @unique @map("owner_id")
+  sendUpcomingInvoiceReminders Boolean  @map("send_upcoming_invoice_reminders")
+  sendOverdueReminders         Boolean  @map("send_overdue_reminders")
+  notifyLowStock               Boolean  @map("notify_low_stock")
+  createdAt                    String   @map("created_at")
+  owner                        User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  updatedAt                    DateTime @default(now()) @updatedAt @map("updated_at")
 
   @@map("workflow_settings")
 }
@@ -114,6 +123,7 @@ model Organization {
   owner               User                 @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   organizationMembers OrganizationMember[]
   invitations         Invitation[]
+  updatedAt           DateTime             @default(now()) @updatedAt @map("updated_at")
 
   @@map("organizations")
 }
@@ -128,21 +138,30 @@ model OrganizationMember {
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   role           Role?        @relation(fields: [roleId], references: [id], onDelete: SetNull)
+  updatedAt      DateTime     @default(now()) @updatedAt @map("updated_at")
 
+  @@index([userId])
+  @@index([organizationId])
+  @@index([userId, status])
   @@map("organization_members")
 }
 
 model RefreshToken {
-  id         Int      @id @default(autoincrement())
-  userId     Int      @map("user_id")
-  tokenHash  String   @unique @map("token_hash")
-  expiresAt  DateTime @map("expires_at")
-  revoked    Boolean  @default(false)
-  createdAt  DateTime @default(now()) @map("created_at")
-  userAgent  String?  @map("user_agent")
-  ipAddress  String?  @map("ip_address")
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  tokenHash String   @unique @map("token_hash")
+  expiresAt DateTime @map("expires_at")
+  revoked   Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+  userAgent String?  @map("user_agent")
+  ipAddress String?  @map("ip_address")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
 
+  @@index([userId])
+  @@index([revoked])
+  @@index([expiresAt])
+  @@index([userId, revoked])
   @@map("refresh_tokens")
 }
 
@@ -158,7 +177,9 @@ model Invitation {
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   role           Role         @relation(fields: [roleId], references: [id], onDelete: Cascade)
   sender         User         @relation(fields: [invitedBy], references: [id], onDelete: Cascade)
+  updatedAt      DateTime     @default(now()) @updatedAt @map("updated_at")
 
+  @@index([email])
   @@map("invitations")
 }
 
@@ -168,6 +189,7 @@ model RolePermission {
   permissionId Int        @map("permission_id")
   role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
   permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  updatedAt    DateTime   @default(now()) @updatedAt @map("updated_at")
 
   @@map("role_permissions")
 }

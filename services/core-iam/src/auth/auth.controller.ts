@@ -11,6 +11,7 @@ import {
   HttpStatus,
   UseGuards
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import type { Request, Response } from 'express';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
@@ -53,6 +54,7 @@ export class AuthController {
   }
 
   @Post('login')
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
   @HttpCode(HttpStatus.OK)
   async login(
     @Body() loginDto: LoginDto,
@@ -113,6 +115,7 @@ export class AuthController {
 
     try {
       const result = await this.authService.refreshAccessToken(refreshToken, userAgent, ipAddress);
+      this.setRefreshTokenCookie(res, result.refreshToken);
       return {
         access_token: result.accessToken,
         expires_in: this.configService.get<number>('ACCESS_TOKEN_EXPIRE_SECONDS', 900),

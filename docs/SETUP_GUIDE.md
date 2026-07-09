@@ -152,28 +152,87 @@ bun install
 
 ---
 
+## Step 2.6: Configure & Run the Billing Service (billing-service)
+
+The billing NestJS microservice manages invoices, payments, quotations, credit/debit notes, and recurring invoices, running from `services/billing-service/`.
+
+### 1. Set Up Environment Variables
+Navigate to the directory and create the `.env` file:
+```powershell
+cd services/billing-service
+# Create a .env file with the following variables:
+DATABASE_URL="postgresql://postgres:root@localhost:5432/erp_billing"
+JWT_SECRET="development-jwt-secret-key-123"
+PORT=8003
+```
+
+### 2. Initialize Database Schema
+Generate the Prisma client and deploy the schema to create the `erp_billing` database:
+```powershell
+bunx prisma db push
+bunx prisma generate
+```
+
+---
+
+## Step 4.2: Configure & Run the Billing Workstation (billing-ui)
+
+The billing workstation is a standalone Next.js 16 application located in `apps/billing-ui/`.
+
+### 1. Environment Setup
+No manual `.env` configuration needed — defaults are pre-configured:
+```env
+NEXT_PUBLIC_API_URL=/api
+NEXT_PUBLIC_APP_URL=http://localhost:3002
+```
+
+### 2. Verify Dependencies
+From the workspace root:
+```powershell
+bun install
+```
+
+---
+
 ## Step 5: Startup Commands
 
-All three services must be run simultaneously in separate terminals using the following startup commands:
+All services must be run simultaneously in separate terminals using the following startup commands:
 
 ### Running the Central IAM Service
-To start the hot-reloading NestJS authentication server on port `8002` (which handles login proxying and wildcard cookies):
+To start the hot-reloading NestJS authentication server on port `8002`:
 ```powershell
 bun nx run core-iam:dev
 ```
 
+### Running the Billing Service
+To start the hot-reloading NestJS billing microservice on port `8003`:
+```powershell
+bun nx run billing-service:dev
+```
+*Alternative: `cd services/billing-service && bun run start:dev`*
+
 ### Running the Backend Service
-The backend folder contains a custom PowerShell startup script `run.ps1` which handles activating the environment and initiating Uvicorn:
+The backend folder contains a custom PowerShell startup script `run.ps1`:
 ```powershell
 cd services/erp-service
 .\run.ps1
 ```
 *Uvicorn will spin up a hot-reloading development server on `http://127.0.0.1:8000`.*
 
-### Running the Frontend Application
-The frontend folder also contains a custom PowerShell startup script `run.ps1` which handles clearing local Next.js cache state and launching the application:
+### Running the Executive Shell (Port 3000)
 ```powershell
 cd apps/erp-shell
 .\run.ps1
 ```
-*Next.js Turbopack will compile and run the application on `http://localhost:3000`.*
+*Next.js Turbopack runs on `http://localhost:3000`.*
+
+### Running the Billing Workstation (Port 3002)
+```powershell
+bun nx serve billing-ui
+```
+*Alternative: `cd apps/billing-ui && bun next dev --port 3002` — runs on `http://localhost:3002`.*
+
+### Run Everything at Once
+```powershell
+bun nx run-many --target=dev
+```

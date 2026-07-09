@@ -1,0 +1,186 @@
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from "@nestjs/common";
+import { PrismaService } from "../prisma/prisma.service";
+import { Prisma } from "@prisma/client";
+import { CreatePaymentDto } from "./dto/create-payment.dto";
+
+@Injectable()
+export class PaymentsService {
+  constructor(private readonly prisma: PrismaService) {}
+
+  async findAll(ownerId: number) {
+    const payments = await this.prisma.payment.findMany({
+      where: { ownerId },
+      orderBy: { createdAt: "desc" },
+      include: {
+        invoice: {
+          select: {
+            invoiceNumber: true,
+            clientName: true,
+          },
+        },
+      },
+    });
+
+    return payments.map((p) => ({
+      id: p.id,
+      paymentId: `PAY-${String(p.id).padStart(4, "0")}`,
+      invoiceId: p.invoiceId,
+      invoiceNumber: p.invoice?.invoiceNumber ?? `INV-${p.invoiceId}`,
+      clientName: p.invoice?.clientName ?? "Unknown",
+      amount: Number(p.amount),
+      refundedAmount: p.status === "refunded" ? Number(p.amount) : 0,
+      method: p.paymentMethod ?? "Unknown",
+      reference: p.referenceId ?? "",
+      date: p.paymentDate?.toISOString().split("T")[0] ?? "",
+      status: p.status,
+    }));
+  }
+
+  async create(ownerId: number, dto: CreatePaymentDto, organizationId?: number) {
+    return this.prisma.$transaction(async (tx) => {
+      const invoice = await tx.invoice.findFirst({
+        where: { id: dto.invoiceId, ownerId },
+      });
+      if (!invoice) throw new NotFoundException("Invoice not found");
+
+      const paidAmount = Number(invoice.paidAmount) + Number(dto.amount);
+      const total = Number(invoice.total);
+      let newStatus = invoice.status;
+
+      if (paidAmount >= total) {
+        newStatus = "paid";
+      } else if (paidAmount > 0) {
+        newStatus = "partially_paid";
+      }
+
+      const payment = await tx.payment.create({
+        data: {
+          ownerId,
+          organizationId,
+          invoiceId: dto.invoiceId,
+          amount: new Prisma.Decimal(dto.amount),
+          paymentMethod: dto.paymentMethod,
+          paymentDate: dto.paymentDate ? new Date(dto.paymentDate) : new Date(),
+          referenceId: dto.referenceId,
+          notes: dto.notes,
+        },
+      });
+
+      const balanceDue = total - paidAmount;
+      await tx.invoice.update({
+        where: { id: dto.invoiceId },
+        data: {
+          paidAmount: new Prisma.Decimal(paidAmount),
+          balanceDue: new Prisma.Decimal(Math.max(0, balanceDue)),
+          status: newStatus,
+        },
+      });
+
+      return payment;
+    });
+  }
+
+  async refund(id: number, ownerId: number) {
+    return this.prisma.$transaction(async (tx) => {
+      const payment = await tx.payment.findFirst({
+        where: { id, ownerId },
+      });
+      if (!payment) throw new NotFoundException("Payment not found");
+      if (payment.status === "refunded") {
+        throw new BadRequestException("Payment already refunded");
+      }
+
+      await tx.payment.update({
+        where: { id },
+        data: { status: "refunded" },
+      });
+
+      if (payment.invoiceId) {
+        const invoice = await tx.invoice.findUnique({
+          where: { id: payment.invoiceId },
+        });
+        if (invoice) {
+          const paidAmount = Number(invoice.paidAmount) - Number(payment.amount);
+          const newPaidAmount = Math.max(0, paidAmount);
+          const balanceDue = Number(invoice.total) - newPaidAmount;
+
+          let newStatus = invoice.status;
+          if (newPaidAmount <= 0) {
+            newStatus = "sent";
+          } else {
+            newStatus = "partially_paid";
+          }
+
+          await tx.invoice.update({
+            where: { id: payment.invoiceId },
+            data: {
+              paidAmount: new Prisma.Decimal(newPaidAmount),
+              balanceDue: new Prisma.Decimal(balanceDue),
+              status: newStatus,
+            },
+          });
+        }
+      }
+
+      return { message: "Payment refunded successfully" };
+    });
+  }
+
+  async getMetrics(ownerId: number) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+
+    const [todayPayments, monthPayments, outstanding, refunds, failed] =
+      await Promise.all([
+        this.prisma.payment.aggregate({
+          where: {
+            ownerId,
+            status: "completed",
+            paymentDate: { gte: today },
+          },
+          _sum: { amount: true },
+        }),
+        this.prisma.payment.aggregate({
+          where: {
+            ownerId,
+            status: "completed",
+            paymentDate: { gte: startOfMonth },
+          },
+          _sum: { amount: true },
+        }),
+        this.prisma.invoice.aggregate({
+          where: {
+            ownerId,
+            status: { in: ["sent", "overdue"] },
+          },
+          _sum: { balanceDue: true },
+        }),
+        this.prisma.payment.aggregate({
+          where: {
+            ownerId,
+            status: "refunded",
+          },
+          _sum: { amount: true },
+        }),
+        this.prisma.payment.count({
+          where: {
+            ownerId,
+            status: "failed",
+          },
+        }),
+      ]);
+
+    return {
+      today: Number(todayPayments._sum.amount ?? 0),
+      thisMonth: Number(monthPayments._sum.amount ?? 0),
+      outstanding: Number(outstanding._sum.balanceDue ?? 0),
+      refunds: Number(refunds._sum.amount ?? 0),
+      failed,
+    };
+  }
+}

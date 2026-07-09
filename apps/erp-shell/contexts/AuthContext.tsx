@@ -1,8 +1,9 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
-import { api, setAccessToken } from "@/services/api";
-import type { User, AuthState } from "@/types/auth";
+import { api, setAccessToken } from "@datavex/auth-middleware";
+import type { User } from "@datavex/auth-middleware";
+import type { AuthState } from "@/types/auth";
 
 const AuthContext = createContext<AuthState | null>(null);
 

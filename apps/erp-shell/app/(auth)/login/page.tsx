@@ -4,6 +4,9 @@ import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { Eye, EyeOff, Loader2, LogIn } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { getAccessToken } from "@datavex/auth-middleware";
+
+const BILLING_APP_URL = process.env.NEXT_PUBLIC_BILLING_APP_URL || "http://localhost:3002";
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -39,18 +42,19 @@ export default function LoginPage() {
       const searchParams = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
       const redirectUrl = searchParams ? searchParams.get("redirect") : null;
 
+      const token = getAccessToken();
+
       if (redirectUrl) {
-        window.location.href = redirectUrl;
+        window.location.href = redirectUrl + (token ? `?token=${token}` : "");
         return;
       }
 
       // 2. Role-based intelligent routing to workstations
       const role = user.role;
-      if (role === "Sales Executive") {
-        window.location.href = "http://localhost:3001/dashboard";
-      } else if (role === "Accountant" || role === "Auditor") {
-        window.location.href = "http://localhost:3002/dashboard";
+      if (role === "Accountant" || role === "Auditor") {
+        window.location.href = `${BILLING_APP_URL}/dashboard${token ? `?token=${token}` : ""}`;
       } else {
+        // Keep Sales Executive, Admins, and others on the main Executive Shell (port 3000)
         router.push("/dashboard");
       }
     } catch (err: unknown) {

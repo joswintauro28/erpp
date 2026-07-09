@@ -19,9 +19,12 @@
       }
     ],
     "paths": {
+      "@datavex/auth-middleware": ["../../packages/auth-middleware/src/index.ts"],
+      "@datavex/auth-middleware/*": ["../../packages/auth-middleware/src/*"],
       "@datavex/ui-theme": ["../../packages/ui-theme/src/index.ts"],
       "@datavex/ui-theme/*": ["../../packages/ui-theme/src/*"],
       "@/components/ui/*": ["../../packages/ui-theme/src/components/ui/*"],
+      "@/components/shared/*": ["../../packages/ui-theme/src/components/shared/*"],
       "@/lib/utils": ["../../packages/ui-theme/src/lib/utils.ts"],
       "@/*": ["./*"]
     }
@@ -33,7 +36,8 @@
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts",
     "**/*.mts",
-    "../../packages/ui-theme/src/**/*"
+    "../../packages/ui-theme/src/**/*",
+    "../../packages/auth-middleware/src/**/*"
   ],
   "exclude": ["node_modules"]
 }

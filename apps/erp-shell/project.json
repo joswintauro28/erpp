@@ -5,26 +5,26 @@
   "sourceRoot": "apps/erp-shell",
   "targets": {
     "dev": {
-      "command": "next dev",
+      "command": "bun run dev",
       "options": {
         "cwd": "apps/erp-shell"
       }
     },
     "build": {
-      "command": "next build",
+      "command": "bun run build",
       "options": {
         "cwd": "apps/erp-shell"
       },
       "outputs": ["{workspaceRoot}/apps/erp-shell/.next"]
     },
     "start": {
-      "command": "next start",
+      "command": "bun run start",
       "options": {
         "cwd": "apps/erp-shell"
       }
     },
     "lint": {
-      "command": "eslint",
+      "command": "bun run lint",
       "options": {
         "cwd": "apps/erp-shell"
       }

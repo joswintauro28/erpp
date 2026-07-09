@@ -1,0 +1,26 @@
+export interface User {
+  id: number;
+  email: string;
+  full_name: string | null;
+  last_login: string | null;
+  organization_id: number | null;
+  organization_name: string | null;
+  role: string | null;
+  permissions: string[];
+}
+
+export interface ApiError {
+  status: number;
+  detail: string;
+}
+
+export class ApiClientError extends Error {
+  status: number;
+  detail: string;
+  constructor(status: number, detail: string) {
+    super(`API Error ${status}: ${detail}`);
+    this.name = "ApiClientError";
+    this.status = status;
+    this.detail = detail;
+  }
+}

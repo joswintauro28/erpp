@@ -5,26 +5,26 @@
   "sourceRoot": "services/core-iam",
   "targets": {
     "dev": {
-      "command": "nest start --watch",
+      "command": "bun run start:dev",
       "options": {
         "cwd": "services/core-iam"
       }
     },
     "build": {
-      "command": "nest build",
+      "command": "bun run build",
       "options": {
         "cwd": "services/core-iam"
       },
       "outputs": ["{workspaceRoot}/services/core-iam/dist"]
     },
     "start": {
-      "command": "nest start",
+      "command": "bun run start",
       "options": {
         "cwd": "services/core-iam"
       }
     },
     "test": {
-      "command": "jest",
+      "command": "bun run test",
       "options": {
         "cwd": "services/core-iam"
       }

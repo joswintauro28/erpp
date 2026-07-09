@@ -1,13 +1,8 @@
-export interface User {
-  id: number;
-  email: string;
-  full_name: string | null;
-  last_login: string | null;
-  organization_id: number | null;
-  organization_name: string | null;
-  role: string | null;
-  permissions: string[];
-}
+import { ApiClientError } from "@datavex/auth-middleware";
+import type { User, ApiError } from "@datavex/auth-middleware";
+
+export type { User, ApiError };
+export { ApiClientError };
 
 export interface AuthState {
   user: User | null;

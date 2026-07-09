@@ -379,6 +379,15 @@ const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 5. **SSO Redirection:** Updated the login portal to process query parameters and perform redirects back to originating workstation subdomains (e.g. CRM, Billing).
 6. **Intelligent Workstation Routing:** Added automatic role-to-workstation routing on login: `Sales Executive` -> CRM (`3001`), `Accountant`/`Auditor` -> Billing (`3002`), and Admins -> Admin Shell (`3000`).
 
+### v10 — Billing Workstation (billing-ui) & 3-Way Proxy Routing
+
+1. **Standalone Billing Workstation (`apps/billing-ui`):** Built a new Next.js 16 app on port `3002` for Accountant/Auditor roles, with billing-specific collapsible sidebar and 9 routes (dashboard, invoices, quotations, payments, credit/debit notes, recurring invoices).
+2. **Token-Passing SSO:** Login page now appends `?token=<jwt>` when redirecting to workstation ports (3001/3002), enabling cross-origin authentication without shared localStorage.
+3. **3-Way Proxy Routing:** `proxy.ts` expanded to route `/api/invoices*`, `/api/payments*`, `/api/dashboard/billing` to billing-service (port 8003) in addition to existing auth→IAM and business→erp-service routes.
+4. **billing-service:** New NestJS microservice on port 8003 with 7 modules (Invoices, Payments, Quotations, Credit Notes, Debit Notes, Recurring Invoices, Dashboard) backed by `erp_billing` database.
+5. **Prisma Client Isolation:** core-iam now generates its Prisma client to `@prisma/client-iam` (custom output path) to prevent conflicts when multiple services use Prisma in the same monorepo.
+6. **Billing Pages Wired:** Invoices list + detail, quotations, payments, credit notes, debit notes, and recurring invoices all fetch from the billing-service API.
+
 ## What's Left
 
 - **Wire remaining pages to API**: Quotations, Recurring Invoices, Credit/Debit Notes, Payments, all Accounting/Inventory/Settings/Team pages (currently empty state)

@@ -132,13 +132,13 @@ export default function Sidebar({ collapsed }: { collapsed: boolean }) {
   const initials = (displayName
     .split(" ")
     .filter(Boolean)
-    .map((n) => n[0])
+    .map((n: string) => n[0])
     .join("")
     .toUpperCase()
     .slice(0, 2)) || "U";
     
   const displayRole = user?.role
-    ? user.role.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
+    ? user.role.replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase())
     : "User";
   
   const [hoveredGroup, setHoveredGroup] = useState<NavGroup | null>(null);
