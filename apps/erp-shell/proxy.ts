@@ -4,27 +4,25 @@ import type { NextRequest } from "next/server";
 const BACKEND_URL = process.env.BACKEND_API_URL || "http://127.0.0.1:8000";
 const IAM_URL = process.env.IAM_API_URL || "http://127.0.0.1:8002";
 const BILLING_URL = process.env.BILLING_API_URL || "http://127.0.0.1:8003";
+const INVENTORY_URL = process.env.INVENTORY_API_URL || "http://127.0.0.1:8004";
 
 export function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
 
-  // Intercept all requests starting with /api/
   if (!pathname.startsWith("/api/")) {
     return NextResponse.next();
   }
 
-  // Extract path following /api (e.g. /auth/login or /dashboard/stats)
   const path = pathname.slice("/api".length);
   
   let url: URL;
   if (path.startsWith("/auth/")) {
-    // NestJS core-iam runs with the global "/api" prefix (e.g., http://localhost:8002/api/auth/...)
     url = new URL(`/api${path}${search}`, IAM_URL);
   } else if (path.startsWith("/invoices") || path.startsWith("/payments") || path === "/dashboard/billing") {
-    // NestJS billing-service runs with global "/api" prefix on port 8003
     url = new URL(`/api${path}${search}`, BILLING_URL);
+  } else if (path.startsWith("/products") || path.startsWith("/warehouses") || path.startsWith("/stock") || path.startsWith("/suppliers") || path.startsWith("/purchase-orders") || path.startsWith("/serial-numbers") || path === "/dashboard/inventory") {
+    url = new URL(`${path}${search}`, INVENTORY_URL);
   } else {
-    // FastAPI backend mounts routers at the root without "/api" prefix (e.g., http://localhost:8000/dashboard/...)
     url = new URL(`${path}${search}`, BACKEND_URL);
   }
 

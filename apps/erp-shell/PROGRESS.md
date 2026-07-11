@@ -105,16 +105,16 @@ types/
 ├── billing.ts                    # ApiInvoice, InvoiceDetailView, ApiPayment, etc.
 ├── accounting.ts                 # FinancialReport, BalanceSheetItem, etc.
 ├── inventory.ts                  # Product, StockMovement, Warehouse, etc.
-├── auth.ts                       # User, AuthState
+├── auth.ts                       # User, AuthState (re-exports from @datavex/auth-middleware)
 ├── dashboard.ts                  # DashboardData
-├── api.ts                        # ApiClientError, ApiError
+├── api.ts                        # ApiClientError, ApiError (re-exports from @datavex/auth-middleware)
 ├── ui.ts                         # StepConfig, MultiStepDialogProps
 ├── notifications.ts
 ├── navigation.ts
 └── settings.ts
 
 services/
-└── api.ts                        # Fetch wrapper (JWT, auto-refresh on 401)
+└── api.ts                        # Re-exports { setAccessToken, getAccessToken, api } from @datavex/auth-middleware
 
 utils/
 └── format.ts                     # money(), searchLeads(), searchClients(), searchBilling()

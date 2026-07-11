@@ -50,6 +50,10 @@ Collapsible (260px expanded / 64px collapsed) with billing-specific nav:
 - Billing group (Invoices, Quotations, Payments, Credit Notes, Debit Notes, Recurring)
 - User footer with initials, name, role, and logout button
 
+## Required Dependencies
+- `"@datavex/auth-middleware": "workspace:*"` — must be listed in `package.json` dependencies (imported by `services/api.ts`, `contexts/AuthContext.tsx`, `types/auth.ts`, `types/api.ts`)
+- `turbopack.root` configured in `next.config.ts` — required for workspace package resolution with Turbopack
+
 ## Commands
 - Dev: `bun nx serve billing-ui` or `cd apps/billing-ui && bun next dev --port 3002`
 - Build: `cd apps/billing-ui && bunx next build`
