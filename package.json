@@ -8,6 +8,7 @@
   ],
   "scripts": {
     "dev": "nx run-many --target=dev",
+    "dev:crm": "nx run-many --targets=dev --projects=core-iam,crm-service,crm-shell,erp-shell",
     "build": "nx run-many --target=build",
     "test": "nx run-many --target=test",
     "lint": "nx run-many --target=lint"
