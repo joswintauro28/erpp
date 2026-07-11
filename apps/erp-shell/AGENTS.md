@@ -74,7 +74,7 @@ components/
 └── ui/                     # shadcn primitives (button, card, table, badge, textarea, etc.)
 
 services/
-└── api.ts                  # Fetch wrapper with auto-refresh on 401
+└── api.ts                  # Re-exports from @datavex/auth-middleware
 
 utils/
 └── format.ts               # money(), searchLeads(), searchClients(), searchBilling()
@@ -86,7 +86,7 @@ contexts/
 ## Key Patterns
 - **Auth**: `useAuth()` returns `{ user, isAuthenticated, loading, login, logout }`
 - **User shape**: `{ id, email, full_name, last_login, organization_id, organization_name, role, permissions }`
-- **API**: `api.get<T>(path)`, `api.post<T>(path, body)`, `api.put<T>(path, body)`, `api.delete<T>(path)` — all with auto-refresh on 401
+- **API**: `api.get<T>(path)`, `api.post<T>(path, body)`, `api.put<T>(path, body)`, `api.delete<T>(path)` — all with auto-refresh on 401. Imported from `@datavex/auth-middleware` via `services/api.ts`.
 - **Navigation**: All admin routes prefixed with `/api/` proxy to `http://127.0.0.1:8000/`
 - **Styling**: Use CSS custom properties (`--shell-*`, `--sidebar-*`) via Tailwind classes like `bg-sidebar`, `text-sidebar-primary`, `bg-[--shell-header]`
 - **Radius**: Use `rounded-sm` (4px) for buttons, `rounded-xl` (6px) for cards
@@ -102,3 +102,7 @@ contexts/
 - Dev: `bun run dev`
 - Build: `npx next build`
 - Backend: `.venv\Scripts\python.exe -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload` (from `services/erp-service/`)
+
+## Required Dependencies
+- `"@datavex/auth-middleware": "workspace:*"` — must be listed in `package.json` dependencies (imported by `services/api.ts`, `contexts/AuthContext.tsx`, `types/auth.ts`, `types/api.ts`)
+- `turbopack.root` configured in `next.config.ts` — required for workspace package resolution with Turbopack

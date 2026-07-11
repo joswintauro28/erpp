@@ -1,15 +1,5 @@
-export interface ApiError {
-  status: number;
-  detail: string;
-}
+import { ApiClientError } from "@datavex/auth-middleware";
+import type { ApiError } from "@datavex/auth-middleware";
 
-export class ApiClientError extends Error {
-  status: number;
-  detail: string;
-  constructor(status: number, detail: string) {
-    super(`API Error ${status}: ${detail}`);
-    this.name = "ApiClientError";
-    this.status = status;
-    this.detail = detail;
-  }
-}
+export type { ApiError };
+export { ApiClientError };

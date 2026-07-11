@@ -5,10 +5,18 @@ from alembic import context
 from sqlalchemy import pool
 from sqlalchemy.ext.asyncio import create_async_engine
 
-from app.config import settings
-from app.models import Base
+from app.core.config import settings
+from app.core.database import Base
+
+# Import all models to register in Base.metadata
+from app.client.models import Client
+from app.lead.models import Lead
+from app.product.models import Product
 
 config = context.config
+
+# Dynamically set sqlalchemy.url from settings.DATABASE_URL
+config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)

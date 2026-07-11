@@ -12,14 +12,17 @@ DATAVEX ERP is organized as an **Nx Polyglot Monorepo**. This isolates frontend,
 DATAVEX/ERP/ (Root)
 ├── apps/                                  # FRONTEND APPLICATIONS
 │   ├── erp-shell/                         # Next.js 16 (Turbopack, port 3000) — Main Executive / Super Admin Shell
-│   └── billing-ui/                        # Next.js 16 (Turbopack, port 3002) — Billing Workstation for Accountant/Auditor
+│   ├── billing-ui/                        # Next.js 16 (Turbopack, port 3002) — Billing Workstation for Accountant/Auditor
+│   └── inventory-ui/                      # Next.js 16 (Turbopack, port 3004) — Inventory Workstation for Inventory Manager
 │
 ├── services/                              # BACKEND MICROSERVICES
 │   ├── erp-service/                       # FastAPI (Python 3.12+, port 8000) — Core Business Logic Gateway
 │   ├── core-iam/                          # NestJS (Prisma, port 8002) — Central SSO & RBAC Engine
-│   └── billing-service/                   # NestJS (Prisma, port 8003) — Invoices, Payments, Quotations, Ledger
+│   ├── billing-service/                   # NestJS (Prisma, port 8003) — Invoices, Payments, Quotations, Ledger
+│   └── inventory-service/                 # FastAPI (Python 3.12+, port 8004) — Product Catalog, Warehouses, Stock, Suppliers, POs, Serial Tracking
 │
 ├── packages/                              # CENTRAL SHAREABLE PACKAGES
+│   ├── auth-middleware/                   # Shared JWT auth types, API client, token management
 │   └── ui-theme/                          # Shared Shadcn UI primitives, custom theme, and Tailwind v4 variables
 │
 ├── docs/                                  # DOCUMENTATION AND ROADMAPS
@@ -64,10 +67,11 @@ All tokens defined in `packages/ui-theme/src/globals.css` as CSS custom properti
   - Login page processes `?redirect=...` for full browser redirects back to calling workstation domains.
   - On success, passes `?token=<jwt>` in the redirect URL so the target workstation can authenticate.
   - Role-based workstation routing: `Accountant`/`Auditor` → Billing (`3002`), `Sales Executive` → CRM (currently embedded in Shell `3000` until separate port `3001` is implemented), Admins → stay on Shell (`3000`).
-- **API Service (`services/api.ts`):** Centralized fetch wrapper with JWT Bearer header, auto-refresh on 401.
-- **Routing Gateway Proxy (`proxy.ts`):** Next.js middleware intercepting `/api/:path*`:
+- **API Service (`services/api.ts`):** Re-exports `{ setAccessToken, getAccessToken, api }` from `@datavex/auth-middleware`.
+- **Routing Gateway Proxy (`proxy.ts`):** Next.js middleware intercepting `/api/:path*` (file named `proxy.ts` per modern Next.js middleware convention):
   - `/api/auth/*` → core-iam on port `8002` (preserving `/api` prefix)
   - `/api/invoices*`, `/api/payments*`, `/api/dashboard/billing` → billing-service on port `8003` (preserving `/api` prefix)
+  - `/api/products*`, `/api/warehouses*`, `/api/stock*`, `/api/suppliers*`, `/api/purchase-orders*`, `/api/serial-numbers*`, `/api/dashboard/inventory` → inventory-service on port `8004` (stripping `/api` prefix)
   - All other `/api/*` → erp-service FastAPI on port `8000` (stripping `/api` prefix)
 - **Imports & Path Aliases:** Shadcn primitives and `cn` utility from `@/components/ui/*` and `@/lib/utils`, mapped via tsconfig paths to `@datavex/ui-theme`.
 - **Multi-Step Modals:** All forms use `components/multi-step-dialog.tsx` with horizontal step wizard.
@@ -99,6 +103,36 @@ All tokens defined in `packages/ui-theme/src/globals.css` as CSS custom properti
 | `/billing/recurring-invoices` | `GET /api/invoices/recurring` | Recurring invoice schedules with frequency badges |
 
 **Sidebar:** Collapsible (260px/64px), billing-specific nav: Dashboard + Billing group (Invoices, Quotations, Payments, Credit Notes, Debit Notes, Recurring). Same Deep Maroon chassis as erp-shell.
+
+---
+
+### 2.3 Inventory Workstation (`apps/inventory-ui`) — Port 3004
+
+**Tech Stack**
+- Same as erp-shell: Next.js 16, TypeScript, Tailwind v4, lucide-react, recharts
+- Shares `@datavex/ui-theme` package (same theme tokens and components)
+
+**Architecture & Auth Pattern**
+- **Token-verification only** — no login page, no credential handling.
+- On mount, checks for `?token=<jwt>` in URL (passed from erp-shell after login), or tries `/api/auth/refresh` via cookie.
+- If no token found, redirects to `http://localhost:3000/login?redirect=http://localhost:3004` (erp-shell login).
+- `useAuth()` returns `{ user, isAuthenticated, loading, logout }` — no `login()` function.
+- **Proxy** (`proxy.ts`): Routes `/api/auth/*` → core-iam (8002), all other `/api/*` → inventory-service (8004).
+
+**Routes (8 total)**
+
+| Route | API Endpoint | Description |
+|-------|-------------|-------------|
+| `/dashboard` | `GET /api/dashboard/inventory` | Aggregated KPIs (products, warehouses, stock, low stock, pending POs) |
+| `/inventory/products` | `GET /api/products` | Product catalog with search, category badges |
+| `/inventory/warehouses` | `GET /api/warehouses` | Warehouse locations with status |
+| `/inventory/stock` | `GET /api/stock` | Stock levels per product/warehouse with availability |
+| `/inventory/stock/movements` | `GET /api/stock/movements` | Movement log with type badges (in/out/adjustment) |
+| `/inventory/suppliers` | `GET /api/suppliers` | Supplier list with contact info |
+| `/inventory/purchase-orders` | `GET /api/purchase-orders` | Purchase order list with status badges |
+| `/inventory/serial-numbers` | `GET /api/serial-numbers` | Serial tracking list with status filter |
+
+**Sidebar:** Collapsible (260px/64px) with 4 groups: Dashboard (standalone), Inventory Management (Products, Stock Levels, Stock Movements, Serial Numbers), Procurement (Suppliers, Purchase Orders), Locations (Warehouses). Same Deep Maroon chassis as erp-shell.
 
 ---
 
@@ -148,7 +182,29 @@ DATAVEX ERP utilizes a decoupled backend architecture where each business domain
 
 **Prisma Schema (7 models):** Invoice (with InvoiceItem relation), Payment, CreditNote, DebitNote, Quotation, RecurringInvoice. All models use `ownerId` for data isolation.
 
-### 3.3 FastAPI Business Backend (`services/erp-service`) — Port 8000
+### 3.3 Inventory Service (`services/inventory-service`) — Port 8004
+
+- **Framework:** FastAPI (Python 3.12+)
+- **Database ORM:** SQLAlchemy 2.0 (AsyncSession via `postgresql+asyncpg`)
+- **Migrations:** Alembic
+- **Database Target:** `erp_inventory` (PostgreSQL)
+- **Claims-Based Verification:** JWT payload decoded from shared `JWT_SECRET` — no DB queries for auth.
+
+**Models (7):** Product, Warehouse, Stock, StockMovement, Supplier, PurchaseOrder (with PurchaseOrderItem), SerialNumber. All models use `owner_id` for data isolation.
+
+**Modules & Endpoints**
+
+| Module | Endpoints | Key Features |
+|--------|-----------|-------------|
+| **Products** | `GET /products`, `GET /:id`, `POST /`, `PUT /:id`, `DELETE /:id` | Full catalog with SKU, barcode, pricing, tax, batch/serial flags |
+| **Warehouses** | `GET /warehouses`, `GET /:id`, `POST /`, `PUT /:id`, `DELETE /:id` | Location management with code, address, city/state |
+| **Stock** | `GET /stock`, `PUT /stock/adjust` | Combined stock view per product×warehouse; adjust with auto-movement log |
+| **Stock Movements** | `GET /stock/movements`, `POST /stock/movements` | In/out/adjustment logging with reference tracking |
+| **Suppliers** | `GET /suppliers`, `GET /:id`, `POST /`, `PUT /:id`, `DELETE /:id` | Vendor registry with GST, payment terms |
+| **Purchase Orders** | `GET /purchase-orders`, `GET /:id`, `POST /`, `PUT /:id/status`, `DELETE /:id` | PO with line items, auto-totaling, status lifecycle (draft→ordered→received) |
+| **Serial Numbers** | `GET /serial-numbers`, `GET /:id`, `POST /`, `PUT /:id`, `DELETE /:id` | Serial tracking per product×warehouse with status filter |
+
+### 3.4 FastAPI Business Backend (`services/erp-service`) — Port 8000
 
 - **Framework:** FastAPI (Python 3.12+)
 - **Database ORM:** SQLAlchemy 2.0 (AsyncSession via `postgresql+asyncpg`)
@@ -159,7 +215,16 @@ DATAVEX ERP utilizes a decoupled backend architecture where each business domain
 
 ---
 
-## 4. Shared Packages (`packages/ui-theme`)
+## 4. Shared Packages
+
+### `packages/auth-middleware`
+
+- **JWT Auth Client:** Shared `setAccessToken`/`getAccessToken`, auto-refresh on 401, typed `api.get/post/put/patch/delete`.
+- **Shared Types:** `User`, `ApiError`, `ApiClientError` — consumed by all frontend apps.
+- **Package Name:** `@datavex/auth-middleware`
+- **Required Dependency:** All frontend apps must list `"@datavex/auth-middleware": "workspace:*"` in `package.json` dependencies. Each app's `types/api.ts` re-exports `ApiError`/`ApiClientError` from this package (not standalone definitions).
+
+### `packages/ui-theme`
 
 - **Tailwind CSS v4 Configuration:** `components.json` handles Shadcn CLI setups.
 - **Imports & Resolution:** tsconfig maps `@/*` → `./src/*` inside the package.
@@ -172,6 +237,16 @@ DATAVEX ERP utilizes a decoupled backend architecture where each business domain
 ## 5. Development Workflows & Scripts
 
 All commands run from the repository root unless specified otherwise.
+
+### Workspace Package Resolution
+All Next.js frontends must configure `turbopack.root` in `next.config.ts` to resolve shared workspace packages (`@datavex/*`) when using Turbopack:
+```ts
+// next.config.ts
+import path from "path";
+const nextConfig: NextConfig = {
+  turbopack: { root: path.resolve(__dirname, "../..") },
+};
+```
 
 ### Run Development Servers
 

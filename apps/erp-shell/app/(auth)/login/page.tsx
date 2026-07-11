@@ -8,6 +8,7 @@ import { getAccessToken } from "@datavex/auth-middleware";
 
 const BILLING_APP_URL = process.env.NEXT_PUBLIC_BILLING_APP_URL || "http://localhost:3002";
 const CRM_APP_URL = process.env.NEXT_PUBLIC_CRM_APP_URL || "http://localhost:3001";
+const INVENTORY_APP_URL = process.env.NEXT_PUBLIC_INVENTORY_APP_URL || "http://localhost:3004";
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -56,6 +57,8 @@ export default function LoginPage() {
         window.location.href = `${BILLING_APP_URL}/dashboard${token ? `?token=${token}` : ""}`;
       } else if (role === "Sales Executive") {
         window.location.href = `${CRM_APP_URL}/dashboard${token ? `?token=${token}` : ""}`;
+      } else if (role === "Inventory Manager") {
+        window.location.href = `${INVENTORY_APP_URL}/dashboard${token ? `?token=${token}` : ""}`;
       } else {
         // Keep Admins and others on the main Executive Shell (port 3000)
         router.push("/dashboard");

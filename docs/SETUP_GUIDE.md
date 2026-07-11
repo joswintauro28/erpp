@@ -145,10 +145,15 @@ copy .env.example .env
 *Note: The default `.env` is pre-configured to communicate via a Next.js rewrite proxy at `/api` matching your local port (8000).*
 
 ### 2. Install Node Dependencies
-Install package dependencies using Bun from the root of the workspace (or inside the app folder):
+Install package dependencies using Bun from the root of the workspace. This resolves all `workspace:*` references across all apps, services, and packages:
 ```powershell
 bun install
 ```
+
+> **Important:** All three frontend apps (`erp-shell`, `billing-ui`, `inventory-ui`) depend on `@datavex/auth-middleware` and `@datavex/ui-theme` via `"workspace:*"`. If a new frontend app is added, both must be listed in its `package.json` dependencies. Each app's `next.config.ts` must also configure `turbopack.root` to resolve workspace packages:
+> ```ts
+> turbopack: { root: path.resolve(__dirname, "../..") },
+> ```
 
 ---
 

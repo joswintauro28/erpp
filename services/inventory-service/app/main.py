@@ -1,0 +1,74 @@
+from contextlib import asynccontextmanager
+
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+
+from app.core.config import settings
+from app.core.database import engine, Base
+from app.core.middleware import SecurityHeadersMiddleware
+
+from app.product.models import Product
+from app.warehouse.models import Warehouse
+from app.stock.models import Stock, StockMovement
+from app.supplier.models import Supplier
+from app.purchase_order.models import PurchaseOrder, PurchaseOrderItem
+from app.serial_number.models import SerialNumber
+
+from app.product.router import router as products_router
+from app.warehouse.router import router as warehouses_router
+from app.stock.router import router as stock_router
+from app.supplier.router import router as suppliers_router
+from app.purchase_order.router import router as purchase_orders_router
+from app.serial_number.router import router as serial_numbers_router
+from app.dashboard.router import router as dashboard_router
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+    yield
+    await engine.dispose()
+
+
+app = FastAPI(
+    title="DATAVEX Inventory API",
+    version="1.0.0",
+    lifespan=lifespan,
+    redirect_slashes=False,
+)
+
+app.add_middleware(SecurityHeadersMiddleware)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[settings.FRONTEND_URL, "http://localhost:3000", "http://localhost:3002", "http://localhost:3004"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request, exc):
+    import logging
+    logging.error(f"Unhandled exception: {str(exc)}", exc_info=True)
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Internal server error"},
+    )
+
+
+app.include_router(products_router)
+app.include_router(warehouses_router)
+app.include_router(stock_router)
+app.include_router(suppliers_router)
+app.include_router(purchase_orders_router)
+app.include_router(serial_numbers_router)
+app.include_router(dashboard_router)
+
+
+@app.get("/")
+async def health_check():
+    return {"message": "DATAVEX Inventory API Running", "status": "healthy"}
