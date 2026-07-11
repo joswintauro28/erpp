@@ -1,7 +1,8 @@
 "use client";
 
-import QuotationManagement from "@/components/QuotationManagement";
+import EntityManagement from "@/components/EntityManagement";
+import { entities } from "@/lib/entityConfig";
 
 export default function Page() {
-  return <QuotationManagement />;
+  return <EntityManagement config={entities["quotations"]} />;
 }

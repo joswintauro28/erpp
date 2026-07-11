@@ -1,7 +1,8 @@
 "use client";
 
-import DocumentManagement from "@/components/DocumentManagement";
+import EntityManagement from "@/components/EntityManagement";
+import { entities } from "@/lib/entityConfig";
 
 export default function Page() {
-  return <DocumentManagement />;
+  return <EntityManagement config={entities["documents"]} />;
 }

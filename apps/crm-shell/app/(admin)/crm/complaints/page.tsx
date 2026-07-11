@@ -1,7 +1,8 @@
 "use client";
 
-import ComplaintManagement from "@/components/ComplaintManagement";
+import EntityManagement from "@/components/EntityManagement";
+import { entities } from "@/lib/entityConfig";
 
 export default function Page() {
-  return <ComplaintManagement />;
+  return <EntityManagement config={entities["complaints"]} />;
 }

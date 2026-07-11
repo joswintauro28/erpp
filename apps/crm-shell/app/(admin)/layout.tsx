@@ -37,9 +37,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <div className="flex flex-1 flex-col overflow-hidden">
         <Header collapsed={sidebarCollapsed} onToggleSidebar={toggleSidebar} />
         <main className="flex-1 overflow-y-auto bg-[--shell-bg] p-6 lg:p-8">
-          <div className="crm-legacy-content h-full">
-            {children}
-          </div>
+          {children}
         </main>
       </div>
     </div>

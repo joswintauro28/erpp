@@ -1,7 +1,8 @@
 "use client";
 
-import LeadManagement from "@/components/LeadManagement";
+import EntityManagement from "@/components/EntityManagement";
+import { entities } from "@/lib/entityConfig";
 
 export default function Page() {
-  return <LeadManagement />;
+  return <EntityManagement config={entities["leads"]} />;
 }

@@ -1,7 +1,8 @@
 "use client";
 
-import FeedbackManagement from "@/components/FeedbackManagement";
+import EntityManagement from "@/components/EntityManagement";
+import { entities } from "@/lib/entityConfig";
 
 export default function Page() {
-  return <FeedbackManagement />;
+  return <EntityManagement config={entities["feedback"]} />;
 }

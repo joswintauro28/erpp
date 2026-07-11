@@ -46,13 +46,27 @@ export default function LoginPage() {
 
       const token = getAccessToken();
 
+      const role = user.role;
+
       if (redirectUrl) {
-        window.location.href = redirectUrl + (token ? `?token=${token}` : "");
-        return;
+        const redirectLower = redirectUrl.toLowerCase();
+        let roleMatch = true;
+
+        if (redirectLower.includes(BILLING_APP_URL.toLowerCase())) {
+          roleMatch = role === "Accountant" || role === "Auditor";
+        } else if (redirectLower.includes(CRM_APP_URL.toLowerCase())) {
+          roleMatch = role === "Sales Executive";
+        } else if (redirectLower.includes(INVENTORY_APP_URL.toLowerCase())) {
+          roleMatch = role === "Inventory Manager";
+        }
+
+        if (roleMatch) {
+          window.location.href = redirectUrl + (token ? `?token=${token}` : "");
+          return;
+        }
       }
 
       // 2. Role-based intelligent routing to workstations
-      const role = user.role;
       if (role === "Accountant" || role === "Auditor") {
         window.location.href = `${BILLING_APP_URL}/dashboard${token ? `?token=${token}` : ""}`;
       } else if (role === "Sales Executive") {

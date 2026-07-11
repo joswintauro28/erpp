@@ -1,7 +1,8 @@
 "use client";
 
-import VisitPlannerManagement from "@/components/VisitPlannerManagement";
+import EntityManagement from "@/components/EntityManagement";
+import { entities } from "@/lib/entityConfig";
 
 export default function Page() {
-  return <VisitPlannerManagement />;
+  return <EntityManagement config={entities["visit-planner"]} />;
 }

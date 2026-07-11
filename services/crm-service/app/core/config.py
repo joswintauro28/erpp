@@ -1,0 +1,15 @@
+from pydantic_settings import BaseSettings
+
+
+class Settings(BaseSettings):
+    model_config = {"env_file": ".env", "extra": "ignore"}
+
+    DATABASE_URL: str = "postgresql+asyncpg://postgres:root@localhost:5432/erp_crm"
+    JWT_SECRET: str = "development-jwt-secret-key-123"
+    JWT_ALGORITHM: str = "HS256"
+    PORT: int = 8001
+    FRONTEND_URL: str = "http://localhost:3000"
+    ENV: str = "development"
+
+
+settings = Settings()

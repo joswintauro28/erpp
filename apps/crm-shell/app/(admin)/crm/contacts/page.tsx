@@ -1,7 +1,8 @@
 "use client";
 
-import ContactManagement from "@/components/ContactManagement";
+import EntityManagement from "@/components/EntityManagement";
+import { entities } from "@/lib/entityConfig";
 
 export default function Page() {
-  return <ContactManagement />;
+  return <EntityManagement config={entities["contacts"]} />;
 }

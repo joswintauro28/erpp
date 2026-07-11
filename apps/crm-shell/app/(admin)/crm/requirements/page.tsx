@@ -1,7 +1,8 @@
 "use client";
 
-import RequirementManagement from "@/components/RequirementManagement";
+import EntityManagement from "@/components/EntityManagement";
+import { entities } from "@/lib/entityConfig";
 
 export default function Page() {
-  return <RequirementManagement />;
+  return <EntityManagement config={entities["requirements"]} />;
 }

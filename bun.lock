@@ -35,6 +35,7 @@
       "name": "crm-shell",
       "version": "0.1.0",
       "dependencies": {
+        "@datavex/auth-middleware": "workspace:*",
         "@datavex/ui-theme": "workspace:*",
         "lucide-react": "^1.23.0",
         "next": "16.2.10",

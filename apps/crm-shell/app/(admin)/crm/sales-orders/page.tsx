@@ -1,7 +1,8 @@
 "use client";
 
-import SalesOrderManagement from "@/components/SalesOrderManagement";
+import EntityManagement from "@/components/EntityManagement";
+import { entities } from "@/lib/entityConfig";
 
 export default function Page() {
-  return <SalesOrderManagement />;
+  return <EntityManagement config={entities["sales-orders"]} />;
 }

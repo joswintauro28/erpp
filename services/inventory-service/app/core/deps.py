@@ -27,7 +27,9 @@ async def get_current_token_payload(
         raise CredentialsException("Invalid authorization header format")
     token = authorization.removeprefix("Bearer ")
     try:
-        return decode_access_token(token)
+        payload = decode_access_token(token)
+        payload["_raw_token"] = token
+        return payload
     except Exception:
         raise CredentialsException("Invalid or expired access token")
 

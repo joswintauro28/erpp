@@ -1,7 +1,8 @@
 "use client";
 
-import FollowUpManagement from "@/components/FollowUpManagement";
+import EntityManagement from "@/components/EntityManagement";
+import { entities } from "@/lib/entityConfig";
 
 export default function Page() {
-  return <FollowUpManagement />;
+  return <EntityManagement config={entities["follow-ups"]} />;
 }

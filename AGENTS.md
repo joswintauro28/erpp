@@ -17,6 +17,7 @@ DATAVEX/ERP/ (Root)
 │
 ├── services/                              # BACKEND MICROSERVICES
 │   ├── erp-service/                       # FastAPI (Python 3.12+, port 8000) — Core Business Logic Gateway
+│   ├── crm-service/                       # FastAPI (Python 3.12+, port 8001) — CRM / Sales Pipeline Engine
 │   ├── core-iam/                          # NestJS (Prisma, port 8002) — Central SSO & RBAC Engine
 │   ├── billing-service/                   # NestJS (Prisma, port 8003) — Invoices, Payments, Quotations, Ledger
 │   └── inventory-service/                 # FastAPI (Python 3.12+, port 8004) — Product Catalog, Warehouses, Stock, Suppliers, POs, Serial Tracking
@@ -210,8 +211,40 @@ DATAVEX ERP utilizes a decoupled backend architecture where each business domain
 - **Database ORM:** SQLAlchemy 2.0 (AsyncSession via `postgresql+asyncpg`)
 - **Migrations:** Alembic
 - **Database Target:** `erp_db` (PostgreSQL)
-- **Claims-Based Verification:** `require_permission` dependency decodes JWT locally, inspects `role` and `permissions` claims without DB queries.
+- **Claims-Based Verification:** `decode_access_token` decodes JWT locally via shared `JWT_SECRET` + HS256 — no DB queries. `require_permission` dependency defined but not yet applied to any route (all endpoints use basic `get_current_user_id` with `owner_id` scoping).
 - **Monolithic `/auth` endpoints decommissioned** — auth handled entirely by core-iam.
+- **Inter-service Integration:** Dashboard and Notification modules forward the raw JWT to billing-service (port 8003) and inventory-service (port 8004) via `_raw_token` in the JWT payload.
+- **Active Models (3):** Client, Lead, Product — all with `owner_id` data isolation.
+- **Integration Clients:**
+  - `billing_client.py` → `http://localhost:8003/api` (dashboard KPIs, invoices, payments)
+  - `inventory_client.py` → `http://localhost:8004` (dashboard, products, warehouses)
+   - `crm_client.py` → `http://localhost:8001/api` (dashboard, customers, leads)
+
+---
+
+### 3.5 CRM Service (`services/crm-service`) — Port 8001
+
+- **Framework:** FastAPI (Python 3.12+)
+- **Database ORM:** SQLAlchemy 2.0 (sync, via `create_engine` + `SessionLocal`)
+- **Database Target:** `erp_crm` (PostgreSQL)
+- **Claims-Based Verification:** JWT payload decoded from shared `JWT_SECRET` — no DB queries for auth. Uses `get_current_token_payload` / `get_current_user_id` dependencies.
+- **Auth Pattern:** Token-verification only — no login endpoints, no credential handling. All authentication delegated to core-iam (port 8002).
+- **Data Isolation:** All models use `owner_id` (Integer, indexed) scoped from JWT `user_id` claim — no local user/Admin model or password storage.
+
+**Modules & Endpoints**
+
+| Module | Endpoints | Key Features |
+|--------|-----------|-------------|
+| **Dashboard** | `GET /api/dashboard` | Aggregated KPIs: pipeline value, open opps, active customers, open complaints, pipeline stages, recommendations, hot leads |
+| **Customer** | `GET /api/customers`, `POST /api/customers`, `PUT /api/customers/:id_str`, `DELETE /api/customers/:id_str` (via generic CRUD) | Account, industry, tier, ARR tracking, contacts, documents |
+| **Lead** | `GET /api/leads`, `POST /api/leads`, etc. (via generic CRUD) | Lead scoring, source tracking, status lifecycle (New→Qualified→Converted/Lost) |
+| **Sales** | `GET /api/sales`, `POST /api/quotations`, `POST /api/sales-orders`, etc. | Requirements, quotations, sales orders with status lifecycle |
+| **Interaction** | `GET /api/enquiries`, `POST /api/site-visits`, etc. | Enquiries, site visits, follow-ups, tasks, communications, visit plans |
+| **Service** | `GET /api/complaints`, `POST /api/feedback` | Complaint tracking, feedback scoring |
+| **AI** | `GET /api/ai-assistant` | AI assistant query log |
+| **Generic CRUD** | `GET /api/:entity_type/fields`, `POST /api/:entity_type`, `PUT /api/:entity_type/:id_str`, `DELETE /api/:entity_type/:id_str` | Dynamic CRUD for all entity types with auto-generated ID strings |
+
+All endpoints require `Authorization: Bearer <jwt>` header and validate via shared JWT secret.
 
 ---
 
@@ -248,6 +281,15 @@ const nextConfig: NextConfig = {
 };
 ```
 
+### JWT Secret Consistency
+All backend services share the same JWT secret (`JWT_SECRET`) to validate tokens issued by core-iam:
+- **core-iam** (`.env`): `JWT_SECRET="development-jwt-secret-key-123"`
+- **billing-service** (`.env`): `JWT_SECRET="development-jwt-secret-key-123"`
+- **erp-service** (`config.py` default): `JWT_SECRET: str = "development-jwt-secret-key-123"`
+- **inventory-service** (`config.py` default): `JWT_SECRET: str = "development-jwt-secret-key-123"`
+
+> **IMPORTANT:** All four values must match. If core-iam issues tokens with a different secret than a backend service uses to verify, all requests will fail with 401 Unauthorized.
+
 ### Run Development Servers
 
 | Command | Description |
@@ -255,6 +297,7 @@ const nextConfig: NextConfig = {
 | `bun nx run-many --target=dev` | Run all services (frontends + backends) |
 | `bun nx serve erp-shell` | Frontend shell only (port 3000) |
 | `bun nx serve billing-ui` | Billing workstation only (port 3002) |
+| `bun nx run crm-service:dev` | FastAPI CRM (port 8001) |
 | `bun nx run core-iam:dev` | NestJS IAM (port 8002) |
 | `bun nx run billing-service:dev` | NestJS billing (port 8003) |
 | `bun nx run erp-service:dev` | FastAPI backend (port 8000) — uses custom `run.ps1` |

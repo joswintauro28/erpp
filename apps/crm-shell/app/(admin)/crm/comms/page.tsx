@@ -1,7 +1,8 @@
 "use client";
 
-import CommsManagement from "@/components/CommsManagement";
+import EntityManagement from "@/components/EntityManagement";
+import { entities } from "@/lib/entityConfig";
 
 export default function Page() {
-  return <CommsManagement />;
+  return <EntityManagement config={entities["comms"]} />;
 }

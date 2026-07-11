@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import { Montserrat, Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
-import "./index.css";
-import "./App.css";
 import { AuthProvider } from "@/contexts/AuthContext";
 
 const montserrat = Montserrat({

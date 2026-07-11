@@ -1,7 +1,8 @@
 "use client";
 
-import SaleManagement from "@/components/SaleManagement";
+import EntityManagement from "@/components/EntityManagement";
+import { entities } from "@/lib/entityConfig";
 
 export default function Page() {
-  return <SaleManagement />;
+  return <EntityManagement config={entities["sales"]} />;
 }

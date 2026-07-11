@@ -1,7 +1,8 @@
 "use client";
 
-import EnquiryManagement from "@/components/EnquiryManagement";
+import EntityManagement from "@/components/EntityManagement";
+import { entities } from "@/lib/entityConfig";
 
 export default function Page() {
-  return <EnquiryManagement />;
+  return <EntityManagement config={entities["enquiries"]} />;
 }

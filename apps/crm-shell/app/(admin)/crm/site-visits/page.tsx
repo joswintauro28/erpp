@@ -1,7 +1,8 @@
 "use client";
 
-import SiteVisitManagement from "@/components/SiteVisitManagement";
+import EntityManagement from "@/components/EntityManagement";
+import { entities } from "@/lib/entityConfig";
 
 export default function Page() {
-  return <SiteVisitManagement />;
+  return <EntityManagement config={entities["site-visits"]} />;
 }

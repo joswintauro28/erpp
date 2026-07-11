@@ -1,7 +1,8 @@
 "use client";
 
-import OpportunityManagement from "@/components/OpportunityManagement";
+import EntityManagement from "@/components/EntityManagement";
+import { entities } from "@/lib/entityConfig";
 
 export default function Page() {
-  return <OpportunityManagement />;
+  return <EntityManagement config={entities["opportunities"]} />;
 }
