@@ -1,0 +1,31 @@
+{
+  "name": "crm-shell",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "sourceRoot": "apps/crm-shell",
+  "targets": {
+    "dev": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun next dev --port 3001",
+        "cwd": "apps/crm-shell"
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "next build",
+        "cwd": "apps/crm-shell"
+      },
+      "dependsOn": ["^build"],
+      "outputs": ["{projectRoot}/.next"]
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "eslint .",
+        "cwd": "apps/crm-shell"
+      }
+    }
+  }
+}
