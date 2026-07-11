@@ -7,6 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { getAccessToken } from "@datavex/auth-middleware";
 
 const BILLING_APP_URL = process.env.NEXT_PUBLIC_BILLING_APP_URL || "http://localhost:3002";
+const CRM_APP_URL = process.env.NEXT_PUBLIC_CRM_APP_URL || "http://localhost:3001";
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -53,8 +54,10 @@ export default function LoginPage() {
       const role = user.role;
       if (role === "Accountant" || role === "Auditor") {
         window.location.href = `${BILLING_APP_URL}/dashboard${token ? `?token=${token}` : ""}`;
+      } else if (role === "Sales Executive") {
+        window.location.href = `${CRM_APP_URL}/dashboard${token ? `?token=${token}` : ""}`;
       } else {
-        // Keep Sales Executive, Admins, and others on the main Executive Shell (port 3000)
+        // Keep Admins and others on the main Executive Shell (port 3000)
         router.push("/dashboard");
       }
     } catch (err: unknown) {
