@@ -30,7 +30,7 @@ function PortalSection({
 }) {
   if (!portalAccess) return null;
   return (
-    <Card>
+    <Card className="hover:shadow-md transition-shadow duration-200 border-[--shell-border] bg-[--shell-surface]">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <ShieldAlert className="h-4 w-4 text-[--chart-2]" />
@@ -140,7 +140,7 @@ export default function ClientDetail() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="icon-sm" onClick={() => router.push("/crm/clients")}>
@@ -156,111 +156,168 @@ export default function ClientDetail() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <Card>
-          <CardContent className="flex items-center gap-3 pt-6">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[--chart-1]/10">
-              <FileText className="h-4 w-4 text-[--chart-1]" />
-            </div>
-            <div>
-              <p className="font-heading text-xl font-semibold">{summary.invoice_count}</p>
-              <p className="text-xs text-[--shell-muted]">Invoices</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="flex items-center gap-3 pt-6">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[--chart-2]/10">
-              <DollarSign className="h-4 w-4 text-[--chart-2]" />
-            </div>
-            <div>
-              <p className="font-heading text-xl font-semibold">{money(summary.lifetime_billed)}</p>
-              <p className="text-xs text-[--shell-muted]">Lifetime Billed</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="flex items-center gap-3 pt-6">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[--chart-3]/10">
-              <Receipt className="h-4 w-4 text-[--chart-3]" />
-            </div>
-            <div>
-              <p className="font-heading text-xl font-semibold">{money(summary.lifetime_paid)}</p>
-              <p className="text-xs text-[--shell-muted]">Lifetime Paid</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="flex items-center gap-3 pt-6">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[--chart-4]/10">
-              <Clock className="h-4 w-4 text-[--chart-4]" />
-            </div>
-            <div>
-              <p className="font-heading text-xl font-semibold">{money(summary.outstanding)}</p>
-              <p className="text-xs text-[--shell-muted]">Outstanding</p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <PortalSection portalAccess={portalAccess} clientEmail={client.email ?? ""} onInvite={() => { setInviteEmail(client.email ?? ""); setInviteDialogOpen(true); }} />
-
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Building2 className="h-4 w-4 text-[--shell-muted]" />
-              Client Profile
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <dl className="space-y-3">
-              {[
-                { icon: Phone, label: "Phone", value: client.phone || "-" },
-                { icon: MapPin, label: "Address", value: client.address || "-" },
-                { icon: Globe, label: "State", value: client.state || "-" },
-                { icon: BadgeInfo, label: "GST Number", value: client.gst_number || "-" },
-                { icon: FileText, label: "Notes", value: client.notes || "-" },
-              ].map(({ icon: Icon, label, value }) => (
-                <div key={label} className="flex items-start gap-3">
-                  <Icon className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[--shell-muted]" />
-                  <div>
-                    <p className="text-xs text-[--shell-muted]">{label}</p>
-                    <p className="text-sm font-medium">{value}</p>
-                  </div>
+      {/* Client Summary */}
+      <section>
+        <div className="mb-5 flex items-center gap-2">
+          <h2 className="font-heading text-xs font-light uppercase tracking-[0.12em] text-[--shell-muted]">
+            Client Summary
+          </h2>
+          <div className="h-px flex-1 bg-[--shell-border]" />
+        </div>
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+          {[
+            { label: "Invoices", value: String(summary.invoice_count), icon: FileText, color: "var(--chart-1)" },
+            { label: "Lifetime Billed", value: money(summary.lifetime_billed), icon: DollarSign, color: "var(--chart-2)" },
+            { label: "Lifetime Paid", value: money(summary.lifetime_paid), icon: Receipt, color: "var(--chart-3)" },
+            { label: "Outstanding", value: money(summary.outstanding), icon: Clock, color: "var(--chart-4)" },
+          ].map((kpi, i) => (
+            <div
+              key={kpi.label}
+              className="animate-kpi flex flex-col gap-1.5 rounded-xl border border-[--shell-border] bg-[--shell-surface] p-5 transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1)]"
+              style={{ animationDelay: `${i * 0.05}s` }}
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-medium uppercase tracking-[0.08em] text-[--shell-muted]">
+                  {kpi.label}
+                </span>
+                <div className="flex h-7 w-7 items-center justify-center rounded-md border border-[--shell-border] bg-[--shell-bg]">
+                  <kpi.icon className="h-3.5 w-3.5" style={{ color: kpi.color }} />
                 </div>
-              ))}
-            </dl>
-          </CardContent>
-        </Card>
+              </div>
+              <span className="font-heading text-2xl font-semibold tracking-tight text-[--shell-foreground]">
+                {kpi.value}
+              </span>
+            </div>
+          ))}
+        </div>
+      </section>
 
-        <Card>
+      {/* Portal Access */}
+      <section>
+        <div className="mb-5 flex items-center gap-2">
+          <h2 className="font-heading text-xs font-light uppercase tracking-[0.12em] text-[--shell-muted]">
+            Portal Access
+          </h2>
+          <div className="h-px flex-1 bg-[--shell-border]" />
+        </div>
+        <PortalSection portalAccess={portalAccess} clientEmail={client.email ?? ""} onInvite={() => { setInviteEmail(client.email ?? ""); setInviteDialogOpen(true); }} />
+      </section>
+
+      {/* Profile & Payments */}
+      <section>
+        <div className="mb-5 flex items-center gap-2">
+          <h2 className="font-heading text-xs font-light uppercase tracking-[0.12em] text-[--shell-muted]">
+            Profile & Payments
+          </h2>
+          <div className="h-px flex-1 bg-[--shell-border]" />
+        </div>
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <Card className="hover:shadow-md transition-shadow duration-200 border-[--shell-border] bg-[--shell-surface]">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Building2 className="h-4 w-4 text-[--shell-muted]" />
+                Client Profile
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <dl className="space-y-3">
+                {[
+                  { icon: Phone, label: "Phone", value: client.phone || "-" },
+                  { icon: MapPin, label: "Address", value: client.address || "-" },
+                  { icon: Globe, label: "State", value: client.state || "-" },
+                  { icon: BadgeInfo, label: "GST Number", value: client.gst_number || "-" },
+                  { icon: FileText, label: "Notes", value: client.notes || "-" },
+                ].map(({ icon: Icon, label, value }) => (
+                  <div key={label} className="flex items-start gap-3">
+                    <Icon className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[--shell-muted]" />
+                    <div>
+                      <p className="text-xs text-[--shell-muted]">{label}</p>
+                      <p className="text-sm font-medium">{value}</p>
+                    </div>
+                  </div>
+                ))}
+              </dl>
+            </CardContent>
+          </Card>
+
+          <Card className="hover:shadow-md transition-shadow duration-200 border-[--shell-border] bg-[--shell-surface]">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Receipt className="h-4 w-4 text-[--shell-muted]" />
+                Payment History
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {payments.length === 0 ? (
+                <p className="py-8 text-center text-sm text-[--shell-muted]">No payments recorded</p>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[--shell-muted]">Reference</TableHead>
+                      <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[--shell-muted] text-right">Amount</TableHead>
+                      <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[--shell-muted]">Method</TableHead>
+                      <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[--shell-muted]">Date</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {payments.map((p) => (
+                      <TableRow key={p.reference_id ?? p.id} className="hover:bg-muted/30 transition-colors">
+                        <TableCell className="font-mono text-xs">{p.reference_id || `#${p.id}`}</TableCell>
+                        <TableCell className="font-mono text-sm font-medium text-right">{money(p.amount)}</TableCell>
+                        <TableCell className="text-[--shell-muted]">{p.payment_method || "-"}</TableCell>
+                        <TableCell className="text-[--shell-muted]">{p.payment_date || "-"}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+
+      {/* Invoice History */}
+      <section>
+        <div className="mb-5 flex items-center gap-2">
+          <h2 className="font-heading text-xs font-light uppercase tracking-[0.12em] text-[--shell-muted]">
+            Invoice History
+          </h2>
+          <div className="h-px flex-1 bg-[--shell-border]" />
+        </div>
+        <Card className="hover:shadow-md transition-shadow duration-200 border-[--shell-border] bg-[--shell-surface]">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Receipt className="h-4 w-4 text-[--shell-muted]" />
-              Payment History
+              <FileText className="h-4 w-4 text-[--shell-muted]" />
+              Invoice History
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {payments.length === 0 ? (
-              <p className="py-8 text-center text-sm text-[--shell-muted]">No payments recorded</p>
+            {invoices.length === 0 ? (
+              <p className="py-8 text-center text-sm text-[--shell-muted]">No invoices</p>
             ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Reference</TableHead>
-                    <TableHead className="text-right">Amount</TableHead>
-                    <TableHead>Method</TableHead>
-                    <TableHead>Date</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {payments.map((p) => (
-                    <TableRow key={p.reference_id ?? p.id}>
-                      <TableCell className="font-mono text-xs">{p.reference_id || `#${p.id}`}</TableCell>
-                      <TableCell className="font-mono text-sm font-medium text-right">{money(p.amount)}</TableCell>
-                      <TableCell className="text-[--shell-muted]">{p.payment_method || "-"}</TableCell>
-                      <TableCell className="text-[--shell-muted]">{p.payment_date || "-"}</TableCell>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[--shell-muted]">Invoice</TableHead>
+                      <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[--shell-muted] text-right">Total</TableHead>
+                      <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[--shell-muted] text-right">Paid</TableHead>
+                      <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[--shell-muted] text-right">Balance</TableHead>
+                      <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[--shell-muted]">Status</TableHead>
+                      <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[--shell-muted]">Due Date</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {invoices.map((inv) => (
+                      <TableRow key={inv.id} className="hover:bg-muted/30 transition-colors">
+                        <TableCell className="font-mono text-xs font-medium">{inv.invoice_number || `#${inv.id}`}</TableCell>
+                      <TableCell className="font-mono text-sm text-right">{money(inv.total)}</TableCell>
+                      <TableCell className="font-mono text-sm text-right">{money(inv.paid_amount)}</TableCell>
+                      <TableCell className="font-mono text-sm text-right">{money(inv.balance_due)}</TableCell>
+                      <TableCell>
+                        <Badge variant={statusVariant(inv.status)} className="capitalize">{inv.status.replace("_", " ")}</Badge>
+                      </TableCell>
+                      <TableCell className="text-[--shell-muted]">{inv.due_date || "-"}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -268,48 +325,7 @@ export default function ClientDetail() {
             )}
           </CardContent>
         </Card>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <FileText className="h-4 w-4 text-[--shell-muted]" />
-            Invoice History
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {invoices.length === 0 ? (
-            <p className="py-8 text-center text-sm text-[--shell-muted]">No invoices</p>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Invoice</TableHead>
-                  <TableHead className="text-right">Total</TableHead>
-                  <TableHead className="text-right">Paid</TableHead>
-                  <TableHead className="text-right">Balance</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Due Date</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {invoices.map((inv) => (
-                  <TableRow key={inv.id}>
-                    <TableCell className="font-mono text-xs font-medium">{inv.invoice_number || `#${inv.id}`}</TableCell>
-                    <TableCell className="font-mono text-sm text-right">{money(inv.total)}</TableCell>
-                    <TableCell className="font-mono text-sm text-right">{money(inv.paid_amount)}</TableCell>
-                    <TableCell className="font-mono text-sm text-right">{money(inv.balance_due)}</TableCell>
-                    <TableCell>
-                      <Badge variant={statusVariant(inv.status)} className="capitalize">{inv.status.replace("_", " ")}</Badge>
-                    </TableCell>
-                    <TableCell className="text-[--shell-muted]">{inv.due_date || "-"}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+      </section>
 
       <MultiStepDialog
         open={inviteDialogOpen}

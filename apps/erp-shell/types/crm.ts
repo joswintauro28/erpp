@@ -64,3 +64,27 @@ export interface ApiClient {
   state: string | null; notes: string | null;
   created_at: string;
 }
+
+export interface CrmCustomer {
+  id: number;
+  id_str: string;
+  account: string;
+  industry: string;
+  tier: string;
+  arr: number;
+  status: string;
+  organization_id: number;
+  updated_at: string;
+}
+
+export interface CrmCustomerSummary {
+  total_customers: number;
+  open: number;
+  overdue_at_risk: number;
+  owners: number;
+}
+
+export interface CrmCustomersResponse {
+  summary: CrmCustomerSummary;
+  customers: CrmCustomer[];
+}

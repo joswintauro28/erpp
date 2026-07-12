@@ -26,18 +26,19 @@ const PERMISSION_CODES = [
 const SYSTEM_ROLES: Record<string, string[]> = {
   'Organization Owner': PERMISSION_CODES,
   'Accountant': [
-    'clients.view', 'clients.create', 'clients.edit',
     'invoices.view', 'invoices.create', 'invoices.edit', 'invoices.delete',
-    'payments.view', 'payments.create', 'payments.edit',
+    'payments.view', 'payments.create', 'payments.edit', 'payments.delete',
+    'expenses.view', 'expenses.create', 'expenses.edit',
+    'accounting.view', 'accounting.create', 'accounting.edit', 'accounting.delete',
     'reports.view', 'reports.export',
-    'accounting.view', 'accounting.create', 'accounting.edit',
-    'quotations.view',
     'dashboard.view',
+    'workflow.manage',
   ],
   'Sales Executive': [
+    'clients.view', 'clients.create', 'clients.edit',
     'quotations.view', 'quotations.create', 'quotations.edit',
-    'products.view',
     'crm.view', 'crm.edit',
+    'dashboard.view',
   ],
   'Inventory Manager': [
     'products.view', 'products.create', 'products.edit', 'products.delete',
@@ -45,7 +46,6 @@ const SYSTEM_ROLES: Record<string, string[]> = {
     'suppliers.view', 'suppliers.create', 'suppliers.manage',
     'warehouses.view', 'warehouses.manage',
     'dashboard.view',
-    'reports.view',
   ],
   'Auditor': [
     'reports.view', 'reports.export',

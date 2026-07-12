@@ -27,6 +27,28 @@ const CHART_COLORS = [
   "var(--chart-5)",
 ];
 
+const STATUS_COLORS: Record<string, string> = {
+  paid: "var(--chart-2)",
+  sent: "var(--chart-1)",
+  pending: "var(--chart-3)",
+  overdue: "var(--shell-danger)",
+  draft: "var(--chart-4)",
+  cancelled: "var(--chart-5)",
+  void: "var(--chart-4)",
+};
+
+function statusColor(status: string): string {
+  return STATUS_COLORS[status.toLowerCase()] ?? "var(--chart-4)";
+}
+
+const tooltipStyle = {
+  background: "var(--shell-popover)",
+  border: "1px solid var(--shell-border)",
+  borderRadius: 8,
+  fontSize: 13,
+  boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+};
+
 const f = (v: number) => `₹${(v / 100000).toFixed(1)}L`;
 
 const statusVariant = (status: string) => {
@@ -42,7 +64,7 @@ function KpiCard({ label, value, subtitle, icon: Icon, trend, color, index }: {
 }) {
   return (
     <div
-      className="animate-kpi flex flex-col gap-1 rounded-xl border border-[--shell-border] bg-[--shell-surface] p-4 transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1)]"
+      className="animate-kpi flex flex-col gap-1.5 rounded-xl border border-[--shell-border] bg-[--shell-surface] p-5 transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1)]"
       style={{ animationDelay: `${index * 0.05}s` }}
     >
       <div className="flex items-center justify-between">
@@ -103,6 +125,7 @@ export default function Dashboard() {
         const invoiceSummary = Object.entries(summary ?? {}).map(([name, val]) => ({
           name: name.charAt(0).toUpperCase() + name.slice(1).replace(/_/g, " "),
           value: val.percentage,
+          count: val.count,
         }));
 
         setData({
@@ -147,7 +170,7 @@ export default function Dashboard() {
     : 0;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-10 lg:space-y-12">
       {/* Alert Banner */}
       {hasAlerts && (
         <div className="flex flex-wrap items-center gap-3 rounded-xl border border-[--shell-accent]/20 bg-gradient-to-r from-[--shell-accent]/5 to-transparent px-5 py-3.5">
@@ -172,7 +195,7 @@ export default function Dashboard() {
 
       {/* Primary KPIs */}
       <section>
-        <div className="mb-4 flex items-center gap-2">
+        <div className="mb-5 flex items-center gap-2">
           <h2 className="font-heading text-xs font-light uppercase tracking-[0.12em] text-[--shell-muted]">
             Overview
           </h2>
@@ -216,7 +239,7 @@ export default function Dashboard() {
 
       {/* Quick Actions */}
       <section>
-        <div className="mb-4 flex items-center gap-2">
+        <div className="mb-5 flex items-center gap-2">
           <h2 className="font-heading text-xs font-light uppercase tracking-[0.12em] text-[--shell-muted]">
             Quick Actions
           </h2>
@@ -240,7 +263,7 @@ export default function Dashboard() {
 
       {/* Charts */}
       <section>
-        <div className="mb-4 flex items-center gap-2">
+        <div className="mb-5 flex items-center gap-2">
           <h2 className="font-heading text-xs font-light uppercase tracking-[0.12em] text-[--shell-muted]">
             Analytics
           </h2>
@@ -248,7 +271,7 @@ export default function Dashboard() {
         </div>
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           {/* Revenue Trend */}
-          <Card>
+          <Card className="hover:shadow-md transition-shadow duration-200 border-[--shell-border] bg-[--shell-surface]">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <div>
                 <CardTitle className="flex items-center gap-2 text-sm">
@@ -271,18 +294,15 @@ export default function Dashboard() {
                     <AreaChart data={data.revenueTrend} margin={{ top: 8, right: 8, bottom: 0, left: -16 }}>
                       <defs>
                         <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="var(--chart-1)" stopOpacity={0.2} />
+                          <stop offset="5%" stopColor="var(--chart-1)" stopOpacity={0.25} />
                           <stop offset="95%" stopColor="var(--chart-1)" stopOpacity={0} />
                         </linearGradient>
                       </defs>
-                      <CartesianGrid strokeDasharray="4 4" stroke="var(--shell-border)" strokeOpacity={0.5} />
+                      <CartesianGrid strokeDasharray="4 4" stroke="var(--shell-border)" strokeOpacity={0.4} />
                       <XAxis dataKey="month" tick={{ fontSize: 11, fill: "var(--shell-muted)" }} stroke="var(--shell-border)" axisLine={false} tickLine={false} />
                       <YAxis tick={{ fontSize: 11, fill: "var(--shell-muted)" }} stroke="var(--shell-border)" axisLine={false} tickLine={false} tickFormatter={(v) => `${(v / 100000).toFixed(0)}L`} />
                       <Tooltip
-                        contentStyle={{
-                          background: "var(--shell-popover)", border: "1px solid var(--shell-border)",
-                          borderRadius: 8, fontSize: 13, boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
-                        }}
+                        contentStyle={tooltipStyle}
                         formatter={(value) => [`₹${Number(value).toLocaleString()}`, "Revenue"]}
                         labelStyle={{ fontWeight: 600, marginBottom: 4, color: "var(--shell-foreground)" }}
                       />
@@ -303,76 +323,106 @@ export default function Dashboard() {
           </Card>
 
           {/* Invoice Summary (Donut) */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
+          <Card className="hover:shadow-md transition-shadow duration-200 border-[--shell-border] bg-[--shell-surface]">
+            <CardHeader className="flex flex-row items-center justify-between pb-2 border-b border-[--shell-border]/20">
               <div>
-                <CardTitle className="flex items-center gap-2 text-sm">
-                  <BarChart3 className="h-4 w-4 text-[--chart-2]" />
-                  Invoice Status
+                <CardTitle className="flex items-center gap-2 text-sm font-semibold text-[--shell-foreground]">
+                  <BarChart3 className="h-4 w-4 text-[--shell-accent]" />
+                  Invoice Distribution
                 </CardTitle>
-                <CardDescription>Distribution by status</CardDescription>
+                <CardDescription className="text-xs text-[--shell-muted]">Real-time invoice lifecycle breakdown</CardDescription>
               </div>
             </CardHeader>
-            <CardContent>
-              <div className="h-[280px]">
-                {data?.invoiceSummary && data.invoiceSummary.length > 0 ? (
-                  <div className="relative h-full">
-                    <ResponsiveContainer width="100%" height="100%">
+            <CardContent className="pt-4">
+              {data?.invoiceSummary && data.invoiceSummary.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center min-h-[300px]">
+                  {/* Left Side: Donut Chart */}
+                  <div className="col-span-12 md:col-span-7 flex justify-center items-center relative h-[250px] md:h-[280px]">
+                    {/* Glassmorphic Center Label */}
+                    <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-0">
+                      <div className="flex flex-col items-center justify-center bg-[--shell-surface] border border-[--shell-border] rounded-full h-32 w-32 shadow-engineered">
+                        <span className="font-heading text-4xl font-bold tracking-tight text-[--shell-foreground] leading-none">
+                          {s?.total_invoices ?? 0}
+                        </span>
+                        <span className="text-[11px] font-heading font-semibold uppercase tracking-[0.12em] text-[--shell-muted] mt-1">Invoices</span>
+                      </div>
+                    </div>
+
+                    <ResponsiveContainer width="100%" height="100%" className="relative z-10">
                       <PieChart>
                         <Pie
                           data={data.invoiceSummary}
-                          cx="50%" cy="45%"
-                          innerRadius={65}
-                          outerRadius={105}
-                          paddingAngle={2}
+                          cx="50%" cy="50%"
+                          innerRadius={78}
+                          outerRadius={108}
+                          paddingAngle={3}
                           dataKey="value"
-                          stroke="none"
+                          stroke="var(--shell-surface)"
+                          strokeWidth={2}
                         >
-                          {data.invoiceSummary.map((_, i) => (
-                            <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
+                          {data.invoiceSummary.map((item) => (
+                            <Cell key={item.name} fill={statusColor(item.name)} className="outline-none hover:opacity-90 transition-opacity" />
                           ))}
                         </Pie>
                         <Tooltip
-                          contentStyle={{
-                            background: "var(--shell-popover)", border: "1px solid var(--shell-border)",
-                            borderRadius: 8, fontSize: 13, boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+                          contentStyle={tooltipStyle}
+                          formatter={(value: unknown, _name: unknown, entry: unknown) => {
+                            const p = (entry as { payload: { count: number; value: number; name: string } }).payload;
+                            return [`${p.count} invoices (${p.value}%)`, p.name];
                           }}
-                          formatter={(value, name) => [`${value}%`, name]}
                         />
                       </PieChart>
                     </ResponsiveContainer>
-                    {/* Center label */}
-                    <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center" style={{ paddingTop: "calc(45% - 30px)" }}>
-                      <span className="font-heading text-2xl font-semibold tracking-tight text-[--shell-foreground]">
-                        {s?.total_invoices ?? 0}
-                      </span>
-                      <span className="text-[11px] text-[--shell-muted]">Total</span>
+                  </div>
+
+                  {/* Right Side: High-end Progress Legend */}
+                  <div className="col-span-12 md:col-span-5 space-y-3">
+                    <div className="text-[11px] font-heading font-semibold uppercase tracking-[0.12em] text-[--shell-muted] border-b border-[--shell-border]/20 pb-1.5 mb-3">
+                      Lifecycle Summary
+                    </div>
+                    <div className="space-y-2.5 max-h-[250px] overflow-y-auto pr-1">
+                      {data.invoiceSummary.map((item) => (
+                        <div key={item.name} className="flex flex-col gap-1.5 p-2 rounded-lg hover:bg-[--shell-border]/10 transition-all duration-150 group">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <span className="h-2.5 w-2.5 rounded-full shrink-0 transition-transform group-hover:scale-110" style={{ background: statusColor(item.name) }} />
+                              <span className="text-xs font-heading font-semibold tracking-tight text-[--shell-foreground]">{item.name}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-mono font-bold text-[--shell-foreground]">{item.count}</span>
+                              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[--shell-border]/30 text-[--shell-muted] font-medium">{item.value}%</span>
+                            </div>
+                          </div>
+                          {/* Segment Progress Bar */}
+                          <div className="h-1 w-full bg-[--shell-border]/20 rounded-full overflow-hidden">
+                            <div className="h-full rounded-full transition-all duration-500" style={{ width: `${item.value}%`, background: statusColor(item.name) }} />
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
-                ) : (
-                  <div className="flex h-full items-center justify-center text-sm text-[--shell-muted]">No invoice data yet</div>
-                )}
-                {data?.invoiceSummary && data.invoiceSummary.length > 0 && (
-                  <div className="flex flex-wrap justify-center gap-x-4 gap-y-1.5 pb-2">
-                    {data.invoiceSummary.map((item, i) => (
-                      <div key={item.name} className="flex items-center gap-1.5">
-                        <div className="h-2.5 w-2.5 rounded-sm" style={{ backgroundColor: CHART_COLORS[i % CHART_COLORS.length] }} />
-                        <span className="text-xs text-[--shell-muted]">{item.name}</span>
-                        <span className="text-xs font-medium text-[--shell-foreground]">{item.value}%</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+                </div>
+              ) : (
+                <div className="flex min-h-[300px] items-center justify-center text-sm text-[--shell-muted] border border-dashed border-[--shell-border] rounded-lg">
+                  No lifecycle metrics available
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
       </section>
 
       {/* Transactions & Monitoring */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+      <section>
+        <div className="mb-4 lg:mb-5 flex items-center gap-2">
+          <h2 className="font-heading text-xs font-light uppercase tracking-[0.12em] text-[--shell-muted]">
+            Activity
+          </h2>
+          <div className="h-px flex-1 bg-[--shell-border]" />
+        </div>
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Recent Invoices */}
-        <Card>
+        <Card className="hover:shadow-md transition-shadow duration-200 border-[--shell-border] bg-[--shell-surface]">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <div>
               <CardTitle className="flex items-center gap-2 text-sm">
@@ -418,7 +468,7 @@ export default function Dashboard() {
         </Card>
 
         {/* Low Stock / Alerts */}
-        <Card>
+        <Card className="hover:shadow-md transition-shadow duration-200 border-[--shell-border] bg-[--shell-surface]">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <div>
               <CardTitle className="flex items-center gap-2 text-sm">
@@ -454,11 +504,19 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       </div>
+      </section>
 
       {/* Bottom Row */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+      <section>
+        <div className="mb-4 lg:mb-5 flex items-center gap-2">
+          <h2 className="font-heading text-xs font-light uppercase tracking-[0.12em] text-[--shell-muted]">
+            Payments & Growth
+          </h2>
+          <div className="h-px flex-1 bg-[--shell-border]" />
+        </div>
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Payment Analytics */}
-        <Card>
+        <Card className="hover:shadow-md transition-shadow duration-200 border-[--shell-border] bg-[--shell-surface]">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <div>
               <CardTitle className="flex items-center gap-2 text-sm">
@@ -481,14 +539,11 @@ export default function Dashboard() {
               {data?.paymentAnalytics && data.paymentAnalytics.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={[...data.paymentAnalytics].sort((a, b) => b.amount - a.amount)} margin={{ top: 16, right: 8, bottom: 0, left: -16 }}>
-                    <CartesianGrid strokeDasharray="4 4" stroke="var(--shell-border)" strokeOpacity={0.5} />
+                    <CartesianGrid strokeDasharray="4 4" stroke="var(--shell-border)" strokeOpacity={0.4} />
                     <XAxis dataKey="method" tick={{ fontSize: 11, fill: "var(--shell-muted)" }} stroke="var(--shell-border)" axisLine={false} tickLine={false} />
                     <YAxis tick={{ fontSize: 11, fill: "var(--shell-muted)" }} stroke="var(--shell-border)" axisLine={false} tickLine={false} tickFormatter={(v) => `${(v / 100000).toFixed(0)}L`} />
                     <Tooltip
-                      contentStyle={{
-                        background: "var(--shell-popover)", border: "1px solid var(--shell-border)",
-                        borderRadius: 8, fontSize: 13, boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
-                      }}
+                      contentStyle={tooltipStyle}
                       formatter={(value) => [`₹${Number(value).toLocaleString()}`, "Amount"]}
                     />
                     <Bar dataKey="amount" radius={[4, 4, 0, 0]} maxBarSize={48}>
@@ -512,7 +567,7 @@ export default function Dashboard() {
         </Card>
 
         {/* Client Growth */}
-        <Card>
+        <Card className="hover:shadow-md transition-shadow duration-200 border-[--shell-border] bg-[--shell-surface]">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <div>
               <CardTitle className="flex items-center gap-2 text-sm">
@@ -541,14 +596,11 @@ export default function Dashboard() {
                         <stop offset="95%" stopColor="var(--chart-4)" stopOpacity={0} />
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="4 4" stroke="var(--shell-border)" strokeOpacity={0.5} />
+                    <CartesianGrid strokeDasharray="4 4" stroke="var(--shell-border)" strokeOpacity={0.4} />
                     <XAxis dataKey="month" tick={{ fontSize: 11, fill: "var(--shell-muted)" }} stroke="var(--shell-border)" axisLine={false} tickLine={false} />
                     <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: "var(--shell-muted)" }} stroke="var(--shell-border)" axisLine={false} tickLine={false} />
                     <Tooltip
-                      contentStyle={{
-                        background: "var(--shell-popover)", border: "1px solid var(--shell-border)",
-                        borderRadius: 8, fontSize: 13, boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
-                      }}
+                      contentStyle={tooltipStyle}
                       formatter={(value) => [value, "New Clients"]}
                       labelStyle={{ fontWeight: 600, marginBottom: 4, color: "var(--shell-foreground)" }}
                     />
@@ -568,14 +620,23 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       </div>
+      </section>
 
       {/* Footer Stats */}
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <MiniStat icon={AlertTriangle} label="Overdue Amount" value={f(s?.overdue_amount ?? 0)} color={hasOverdue ? "var(--shell-danger)" : "var(--chart-2)"} />
-        <MiniStat icon={ShoppingCart} label="Total Products" value={String(s?.total_products ?? 0)} color="var(--chart-1)" />
-        <MiniStat icon={BarChart3} label="Outstanding" value={f(s?.outstanding_revenue ?? 0)} color="var(--chart-3)" />
-        <MiniStat icon={Wallet} label="Overdue" value={f(s?.overdue_amount ?? 0)} color={hasOverdue ? "var(--shell-danger)" : "var(--chart-2)"} />
-      </div>
+      <section>
+        <div className="mb-4 lg:mb-5 flex items-center gap-2">
+          <h2 className="font-heading text-xs font-light uppercase tracking-[0.12em] text-[--shell-muted]">
+            Summary
+          </h2>
+          <div className="h-px flex-1 bg-[--shell-border]" />
+        </div>
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+          <MiniStat icon={AlertTriangle} label="Overdue Amount" value={f(s?.overdue_amount ?? 0)} color={hasOverdue ? "var(--shell-danger)" : "var(--chart-2)"} />
+          <MiniStat icon={ShoppingCart} label="Total Products" value={String(s?.total_products ?? 0)} color="var(--chart-1)" />
+          <MiniStat icon={BarChart3} label="Outstanding" value={f(s?.outstanding_revenue ?? 0)} color="var(--chart-3)" />
+          <MiniStat icon={DollarSign} label="Total Revenue" value={f(totalRevenue)} color="var(--chart-1)" />
+        </div>
+      </section>
     </div>
   );
 }

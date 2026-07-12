@@ -9,7 +9,7 @@ export interface DashboardData {
     low_stock_count: number;
   } | null;
   revenueTrend: { month: string; revenue: number }[];
-  invoiceSummary: { name: string; value: number }[];
+  invoiceSummary: { name: string; value: number; count: number }[];
   paymentAnalytics: { method: string; amount: number }[];
   recentInvoices: {
     id: number;

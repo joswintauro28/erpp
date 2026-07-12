@@ -206,7 +206,7 @@ export default function Leads() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -223,153 +223,161 @@ export default function Leads() {
         </Button>
       </div>
 
-      {/* Analytics cards */}
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <Card>
-          <CardContent className="flex items-center gap-3 pt-6">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[--chart-1]/10">
-              <UserPlus className="h-4 w-4 text-[--chart-1]" />
-            </div>
-            <div>
-              <p className="font-heading text-xl font-semibold">{analytics.totalLeads}</p>
-              <p className="text-xs text-[--shell-muted]">Total Leads</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="flex items-center gap-3 pt-6">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[--chart-2]/10">
-              <TrendingUp className="h-4 w-4 text-[--chart-2]" />
-            </div>
-            <div>
-              <p className="font-heading text-xl font-semibold">{analytics.conversionRate}%</p>
-              <p className="text-xs text-[--shell-muted]">Conversion Rate</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="flex items-center gap-3 pt-6">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[--chart-3]/10">
-              <Target className="h-4 w-4 text-[--chart-3]" />
-            </div>
-            <div>
-              <p className="font-heading text-xl font-semibold">{analytics.avgScore}</p>
-              <p className="text-xs text-[--shell-muted]">Avg. Score</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="flex items-center gap-3 pt-6">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[--chart-4]/10">
-              <DollarSign className="h-4 w-4 text-[--chart-4]" />
-            </div>
-            <div>
-              <p className="font-heading text-xl font-semibold">{money(analytics.pipelineValue)}</p>
-              <p className="text-xs text-[--shell-muted]">Pipeline Value</p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Toolbar */}
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="relative flex-1 max-w-xs">
-          <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[--shell-muted]" />
-          <Input
-            placeholder="Search leads..."
-            className="pl-8"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
+      {/* Pipeline Analytics */}
+      <section>
+        <div className="mb-5 flex items-center gap-2">
+          <h2 className="font-heading text-xs font-light uppercase tracking-[0.12em] text-[--shell-muted]">
+            Pipeline Analytics
+          </h2>
+          <div className="h-px flex-1 bg-[--shell-border]" />
         </div>
-        <Select value={statusFilter} onValueChange={(v) => v !== null && setStatusFilter(v)}>
-          <SelectTrigger className="w-36">
-            <SelectValue placeholder="All statuses" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="">All statuses</SelectItem>
-            {statusOptions.map((s) => (
-              <SelectItem key={s} value={s}>{s}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        {leads.length > 0 && (
-          <Button variant="ghost" size="sm" onClick={fetchLeads}>
-            Reset
-          </Button>
-        )}
-      </div>
-
-      {/* Table */}
-      <Card>
-        <CardContent className="p-0">
-          {filtered.length === 0 ? (
-            <div className="flex flex-col items-center gap-2 py-16 text-[--shell-muted]">
-              <UserPlus className="h-10 w-10" />
-              <p className="text-sm">No leads found</p>
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+          {[
+            { label: "Total Leads", value: String(analytics.totalLeads), icon: UserPlus, color: "var(--chart-1)" },
+            { label: "Conversion Rate", value: `${analytics.conversionRate}%`, icon: TrendingUp, color: "var(--chart-2)" },
+            { label: "Avg. Score", value: analytics.avgScore, icon: Target, color: "var(--chart-3)" },
+            { label: "Pipeline Value", value: money(analytics.pipelineValue), icon: DollarSign, color: "var(--chart-4)" },
+          ].map((kpi, i) => (
+            <div
+              key={kpi.label}
+              className="animate-kpi flex flex-col gap-1.5 rounded-xl border border-[--shell-border] bg-[--shell-surface] p-5 transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1)]"
+              style={{ animationDelay: `${i * 0.05}s` }}
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-medium uppercase tracking-[0.08em] text-[--shell-muted]">
+                  {kpi.label}
+                </span>
+                <div className="flex h-7 w-7 items-center justify-center rounded-md border border-[--shell-border] bg-[--shell-bg]">
+                  <kpi.icon className="h-3.5 w-3.5" style={{ color: kpi.color }} />
+                </div>
+              </div>
+              <span className="font-heading text-2xl font-semibold tracking-tight text-[--shell-foreground]">
+                {kpi.value}
+              </span>
             </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Company</TableHead>
-                  <TableHead>Contact</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Score</TableHead>
-                  <TableHead>Value</TableHead>
-                  <TableHead>Source</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filtered.map((l) => (
-                  <TableRow key={l.id}>
-                    <TableCell>
-                      <div className="font-medium">{l.company_name}</div>
-                      <div className="text-xs text-[--shell-muted]">{l.email}</div>
-                    </TableCell>
-                    <TableCell>
-                      <div>{l.contact_person}</div>
-                      <div className="text-xs text-[--shell-muted]">{l.phone}</div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={statusVariant(l.status)} className="capitalize">
-                        {l.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <ScoreDot score={l.lead_score} />
-                    </TableCell>
-                    <TableCell className="font-mono text-sm">{money(l.expected_value)}</TableCell>
-                    <TableCell>
-                      <span className="text-xs text-[--shell-muted]">{l.source}</span>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center justify-end gap-1">
-                        <Button variant="ghost" size="icon-sm" onClick={() => openEdit(l)}>
-                          <Edit className="h-3.5 w-3.5" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon-sm"
-                          onClick={() => handleConvert(l)}
-                          disabled={!!l.converted_client_id}
-                          title={l.converted_client_id ? "Already converted" : "Convert to client"}
-                        >
-                          <CheckCircle className="h-3.5 w-3.5" />
-                        </Button>
-                        <Button variant="ghost" size="icon-sm" onClick={() => handleDelete(l.id)}>
-                          <Trash2 className="h-3.5 w-3.5 text-[--shell-danger]" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+          ))}
+        </div>
+      </section>
+
+      {/* Lead Registry */}
+      <section>
+        <div className="mb-5 flex items-center gap-2">
+          <h2 className="font-heading text-xs font-light uppercase tracking-[0.12em] text-[--shell-muted]">
+            Lead Registry
+          </h2>
+          <div className="h-px flex-1 bg-[--shell-border]" />
+        </div>
+
+        <div className="mb-5 flex flex-wrap items-center gap-3">
+          <div className="relative flex-1 max-w-xs">
+            <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[--shell-muted]" />
+            <Input
+              placeholder="Search leads..."
+              className="pl-8"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+          <Select value={statusFilter} onValueChange={(v) => v !== null && setStatusFilter(v)}>
+            <SelectTrigger className="w-36">
+              <SelectValue placeholder="All statuses" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">All statuses</SelectItem>
+              {statusOptions.map((s) => (
+                <SelectItem key={s} value={s}>{s}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {leads.length > 0 && (
+            <Button variant="ghost" size="sm" onClick={fetchLeads}>
+              Reset
+            </Button>
           )}
-        </CardContent>
-      </Card>
+        </div>
+
+        <Card className="hover:shadow-md transition-shadow duration-200 border-[--shell-border] bg-[--shell-surface]">
+          <CardContent className="p-0">
+            {filtered.length === 0 ? (
+              <div className="flex flex-col items-center gap-3 py-20 text-[--shell-muted]">
+                <UserPlus className="h-12 w-12" />
+                <p className="text-base font-medium text-[--shell-foreground]">
+                  {leads.length === 0 ? "No leads yet" : "No leads match your search"}
+                </p>
+                <p className="text-sm">
+                  {leads.length === 0
+                    ? "Create your first lead to start building your pipeline."
+                    : "Try adjusting your search or filters."}
+                </p>
+                {leads.length === 0 && (
+                  <Button size="sm" onClick={openCreate} className="mt-2">
+                    <Plus className="mr-1 h-4 w-4" /> Add Lead
+                  </Button>
+                )}
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[--shell-muted]">Company</TableHead>
+                    <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[--shell-muted]">Contact</TableHead>
+                    <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[--shell-muted]">Status</TableHead>
+                    <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[--shell-muted]">Score</TableHead>
+                    <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[--shell-muted]">Value</TableHead>
+                    <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[--shell-muted]">Source</TableHead>
+                    <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[--shell-muted] text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filtered.map((l) => (
+                    <TableRow key={l.id} className="hover:bg-muted/30 transition-colors">
+                      <TableCell>
+                        <div className="font-medium">{l.company_name}</div>
+                        <div className="text-xs text-[--shell-muted]">{l.email}</div>
+                      </TableCell>
+                      <TableCell>
+                        <div>{l.contact_person}</div>
+                        <div className="text-xs text-[--shell-muted]">{l.phone}</div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={statusVariant(l.status)} className="capitalize">
+                          {l.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <ScoreDot score={l.lead_score} />
+                      </TableCell>
+                      <TableCell className="font-mono text-sm">{money(l.expected_value)}</TableCell>
+                      <TableCell>
+                        <span className="text-xs text-[--shell-muted]">{l.source}</span>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center justify-end gap-1">
+                          <Button variant="ghost" size="icon-sm" onClick={() => openEdit(l)}>
+                            <Edit className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon-sm"
+                            onClick={() => handleConvert(l)}
+                            disabled={!!l.converted_client_id}
+                            title={l.converted_client_id ? "Already converted" : "Convert to client"}
+                          >
+                            <CheckCircle className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button variant="ghost" size="icon-sm" onClick={() => handleDelete(l.id)}>
+                            <Trash2 className="h-3.5 w-3.5 text-[--shell-danger]" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
+      </section>
 
       <MultiStepDialog
         open={dialogOpen}

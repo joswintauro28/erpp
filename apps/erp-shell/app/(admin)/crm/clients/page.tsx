@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { Plus, Search, Edit, Trash2, Users, Eye, Loader2, Building2, Mail, Phone, MapPin, BadgeInfo } from "lucide-react";
+import {
+  Plus, Search, Edit, Trash2, Users, UserCheck, AlertTriangle, Building2,
+  DollarSign, Loader2, UserPlus,
+} from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -12,52 +14,87 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 import { MultiStepDialog } from "@/components/multi-step-dialog";
-import { money } from "@/utils/format";
 import { api } from "@/services/api";
-import type { ApiClient } from "@/types/crm";
+import type { CrmCustomer, CrmCustomersResponse } from "@/types/crm";
 
-function localSearch(items: ApiClient[], q: string): ApiClient[] {
+const STATUS_OPTIONS = ["Active", "Prospect", "Dormant", "Churned"] as const;
+const TIER_OPTIONS = ["Platinum", "Gold", "Silver"] as const;
+
+const tierVariant = (tier: string) => {
+  if (tier === "Platinum") return "default" as const;
+  if (tier === "Gold") return "secondary" as const;
+  return "outline" as const;
+};
+
+const statusVariant = (status: string) => {
+  if (status === "Active") return "default" as const;
+  if (status === "Prospect") return "secondary" as const;
+  if (status === "Dormant") return "outline" as const;
+  return "destructive" as const;
+};
+
+const f = (v: number) => `₹${(v / 100000).toFixed(1)}L`;
+
+type ClientForm = {
+  name: string;
+  email: string;
+  phone: string;
+  address: string;
+  notes: string;
+};
+
+const emptyForm: ClientForm = { name: "", email: "", phone: "", address: "", notes: "" };
+
+function localSearch(items: CrmCustomer[], q: string): CrmCustomer[] {
   if (!q.trim()) return items;
   const lower = q.toLowerCase();
   return items.filter(
     (c) =>
-      c.name.toLowerCase().includes(lower) ||
-      (c.email ?? "").toLowerCase().includes(lower) ||
-      (c.phone ?? "").includes(lower) ||
-      (c.gst_number ?? "").toLowerCase().includes(lower),
+      c.account.toLowerCase().includes(lower) ||
+      c.id_str.toLowerCase().includes(lower) ||
+      c.industry.toLowerCase().includes(lower) ||
+      c.tier.toLowerCase().includes(lower) ||
+      c.status.toLowerCase().includes(lower),
   );
 }
 
-const emptyForm = { name: "", email: "", phone: "", gst_number: "", state: "", address: "", notes: "" };
-
 export default function Clients() {
-  const router = useRouter();
-  const [clients, setClients] = useState<ApiClient[]>([]);
+  const [data, setData] = useState<CrmCustomersResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState("");
-  const [gstFilter, setGstFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [tierFilter, setTierFilter] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [step, setStep] = useState(0);
-  const [editing, setEditing] = useState<ApiClient | null>(null);
+  const [editing, setEditing] = useState<CrmCustomer | null>(null);
   const [form, setForm] = useState(emptyForm);
 
   useEffect(() => {
-    api.get<ApiClient[]>("/clients")
-      .then((data) => {
-        setClients(data);
-      })
-      .catch(() => setClients([]))
-      .finally(() => setLoading(false));
+    let cancelled = false;
+    (async () => {
+      try {
+        const result = await api.get<CrmCustomersResponse>("/crm/customers");
+        if (!cancelled) setData(result);
+      } catch {
+        if (!cancelled) setData(null);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
   }, []);
 
   const filtered = useMemo(() => {
-    const searched = localSearch(clients, search);
-    if (gstFilter === "true") return searched.filter((c) => c.gst_number);
-    if (gstFilter === "false") return searched.filter((c) => !c.gst_number);
-    return searched;
-  }, [clients, search, gstFilter]);
+    if (!data) return [];
+    let items = data.customers;
+    if (search) items = localSearch(items, search);
+    if (statusFilter) items = items.filter((c) => c.status === statusFilter);
+    if (tierFilter) items = items.filter((c) => c.tier === tierFilter);
+    return items;
+  }, [data, search, statusFilter, tierFilter]);
 
   const openCreate = () => {
     setEditing(null);
@@ -66,11 +103,14 @@ export default function Clients() {
     setDialogOpen(true);
   };
 
-  const openEdit = (c: ApiClient) => {
+  const openEdit = (c: CrmCustomer) => {
     setEditing(c);
     setForm({
-      name: c.name, email: c.email ?? "", phone: c.phone ?? "",
-      gst_number: c.gst_number ?? "", state: c.state ?? "", address: c.address ?? "", notes: c.notes ?? "",
+      name: c.account,
+      email: "",
+      phone: "",
+      address: "",
+      notes: "",
     });
     setStep(0);
     setDialogOpen(true);
@@ -80,30 +120,41 @@ export default function Clients() {
     e.preventDefault();
     setSaving(true);
     try {
-      const body: Record<string, string> = {};
-      for (const [k, v] of Object.entries(form)) {
-        if (v) body[k] = v;
-      }
       if (editing) {
-        const updated = await api.put<ApiClient>(`/clients/${editing.id}`, body);
-        setClients((prev) => prev.map((c) => c.id === updated.id ? updated : c));
+        await api.put(`/clients/${editing.id_str}`, { name: form.name });
       } else {
-        const created = await api.post<ApiClient>("/clients", body);
-        setClients((prev) => [...prev, created]);
+        await api.post("/clients", form);
       }
+      const result = await api.get<CrmCustomersResponse>("/crm/customers");
+      setData(result);
       setDialogOpen(false);
-    } catch { /* keep dialog open on error */ }
-    finally { setSaving(false); }
+    } catch {
+      // persist error
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (idStr: string) => {
     try {
-      await api.delete(`/clients/${id}`);
-      setClients((prev) => prev.filter((c) => c.id !== id));
-    } catch { /* ignore */ }
+      await api.delete(`/clients/${idStr}`);
+      setData((prev) => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          customers: prev.customers.filter((c) => c.id_str !== idStr),
+          summary: {
+            ...prev.summary,
+            total_customers: prev.summary.total_customers - 1,
+          },
+        };
+      });
+    } catch {
+      // ignore
+    }
   };
 
-  const updateField = (key: string, value: string) => {
+  const updateField = (key: keyof ClientForm, value: string) => {
     setForm((prev) => ({ ...prev, [key]: value }));
   };
 
@@ -115,100 +166,185 @@ export default function Clients() {
     );
   }
 
+  const summary = data?.summary;
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-heading text-xl font-semibold tracking-tight text-[--shell-foreground]">Clients</h1>
-          <p className="mt-0.5 text-sm text-[--shell-muted]">Manage client profiles, GST details, and billing history</p>
+          <h1 className="font-heading text-xl font-semibold tracking-tight text-[--shell-foreground]">
+            Clients
+          </h1>
+          <p className="mt-0.5 text-sm text-[--shell-muted]">
+            Central directory of every account you serve
+          </p>
         </div>
-        <Button onClick={openCreate}><Plus className="h-4 w-4" /> Add Client</Button>
+        <Button onClick={openCreate}>
+          <Plus className="h-4 w-4" />
+          Add Client
+        </Button>
       </div>
 
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="relative flex-1 max-w-xs">
-          <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[--shell-muted]" />
-          <Input placeholder="Search name, email, phone, GST..." className="pl-8" value={search}
-            onChange={(e) => setSearch(e.target.value)} />
+      {/* Client Overview KPIs */}
+      <section>
+        <div className="mb-5 flex items-center gap-2">
+          <h2 className="font-heading text-xs font-light uppercase tracking-[0.12em] text-[--shell-muted]">
+            Client Overview
+          </h2>
+          <div className="h-px flex-1 bg-[--shell-border]" />
         </div>
-        <Select value={gstFilter} onValueChange={(v) => v !== null && setGstFilter(v)}>
-          <SelectTrigger className="w-36"><SelectValue placeholder="All clients" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="">All clients</SelectItem>
-            <SelectItem value="true">GST clients</SelectItem>
-            <SelectItem value="false">No GST</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      <Card>
-        <CardContent className="p-0">
-          {filtered.length === 0 ? (
-            <div className="flex flex-col items-center gap-3 py-20 text-[--shell-muted]">
-              <Users className="h-12 w-12" />
-              <p className="text-base font-medium text-[--shell-foreground]">
-                {clients.length === 0 ? "No clients yet" : "No clients match your search"}
-              </p>
-              <p className="text-sm">
-                {clients.length === 0
-                  ? "Create your first client to get started."
-                  : "Try adjusting your search or filters."}
-              </p>
-              {clients.length === 0 && (
-                <Button size="sm" onClick={openCreate} className="mt-2">
-                  <Plus className="mr-1 h-4 w-4" /> Add Client
-                </Button>
-              )}
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+          {[
+            { label: "Total Customers", value: String(summary?.total_customers ?? 0), icon: Users, color: "var(--chart-1)" },
+            { label: "Active / Open", value: String(summary?.open ?? 0), icon: UserCheck, color: "var(--chart-2)" },
+            { label: "Overdue / At Risk", value: String(summary?.overdue_at_risk ?? 0), icon: AlertTriangle, color: "var(--shell-danger)" },
+            { label: "Representatives", value: String(summary?.owners ?? 0), icon: Building2, color: "var(--chart-4)" },
+          ].map((kpi, i) => (
+            <div
+              key={kpi.label}
+              className="animate-kpi flex flex-col gap-1.5 rounded-xl border border-[--shell-border] bg-[--shell-surface] p-5 transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1)]"
+              style={{ animationDelay: `${i * 0.05}s` }}
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-medium uppercase tracking-[0.08em] text-[--shell-muted]">
+                  {kpi.label}
+                </span>
+                <div className="flex h-7 w-7 items-center justify-center rounded-md border border-[--shell-border] bg-[--shell-bg]">
+                  <kpi.icon className="h-3.5 w-3.5" style={{ color: kpi.color }} />
+                </div>
+              </div>
+              <span className="font-heading text-2xl font-semibold tracking-tight text-[--shell-foreground]">
+                {kpi.value}
+              </span>
             </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Phone</TableHead>
-                  <TableHead>GST</TableHead>
-                  <TableHead>State</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filtered.map((c) => (
-                  <TableRow key={c.id}>
-                    <TableCell className="font-medium">{c.name}</TableCell>
-                    <TableCell className="text-[--shell-muted]">{c.email || "-"}</TableCell>
-                    <TableCell className="text-[--shell-muted]">{c.phone || "-"}</TableCell>
-                    <TableCell>
-                      {c.gst_number ? <span className="font-mono text-xs">{c.gst_number}</span>
-                        : <span className="text-xs text-[--shell-muted]">-</span>}
-                    </TableCell>
-                    <TableCell className="text-[--shell-muted]">{c.state || "-"}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center justify-end gap-1">
-                        <Button variant="ghost" size="icon-sm" onClick={() => router.push(`/crm/clients/${c.id}`)}>
-                          <Eye className="h-3.5 w-3.5" />
-                        </Button>
-                        <Button variant="ghost" size="icon-sm" onClick={() => openEdit(c)}>
-                          <Edit className="h-3.5 w-3.5" />
-                        </Button>
-                        <Button variant="ghost" size="icon-sm" onClick={() => handleDelete(c.id)}>
-                          <Trash2 className="h-3.5 w-3.5 text-[--shell-danger]" />
-                        </Button>
-                      </div>
-                    </TableCell>
+          ))}
+        </div>
+      </section>
+
+      {/* Client Registry */}
+      <section>
+        <div className="mb-5 flex items-center gap-2">
+          <h2 className="font-heading text-xs font-light uppercase tracking-[0.12em] text-[--shell-muted]">
+            Client Registry
+          </h2>
+          <div className="h-px flex-1 bg-[--shell-border]" />
+        </div>
+
+        <div className="mb-5 flex flex-wrap items-center gap-3">
+          <div className="relative flex-1 max-w-xs">
+            <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[--shell-muted]" />
+            <Input
+              placeholder="Search by name, ID, industry..."
+              className="pl-8"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+          <Select value={statusFilter} onValueChange={(v) => v !== null && setStatusFilter(v)}>
+            <SelectTrigger className="w-32">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">All statuses</SelectItem>
+              {STATUS_OPTIONS.map((s) => (
+                <SelectItem key={s} value={s}>{s}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={tierFilter} onValueChange={(v) => v !== null && setTierFilter(v)}>
+            <SelectTrigger className="w-32">
+              <SelectValue placeholder="Tier" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">All tiers</SelectItem>
+              {TIER_OPTIONS.map((t) => (
+                <SelectItem key={t} value={t}>{t}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <Card className="hover:shadow-md transition-shadow duration-200 border-[--shell-border] bg-[--shell-surface]">
+          <CardContent className="p-0">
+            {filtered.length === 0 ? (
+              <div className="flex flex-col items-center gap-3 py-20 text-[--shell-muted]">
+                <Users className="h-12 w-12" />
+                <p className="text-base font-medium text-[--shell-foreground]">
+                  {data?.customers.length === 0 ? "No clients yet" : "No clients match your search"}
+                </p>
+                <p className="text-sm">
+                  {data?.customers.length === 0
+                    ? "Create your first client to start building your account directory."
+                    : "Try adjusting your search or filters."}
+                </p>
+                {data?.customers.length === 0 && (
+                  <Button size="sm" onClick={openCreate} className="mt-2">
+                    <Plus className="mr-1 h-4 w-4" /> Add Client
+                  </Button>
+                )}
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[--shell-muted]">ID</TableHead>
+                    <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[--shell-muted]">Account</TableHead>
+                    <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[--shell-muted]">Industry</TableHead>
+                    <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[--shell-muted]">Tier</TableHead>
+                    <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[--shell-muted] text-right">ARR</TableHead>
+                    <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[--shell-muted]">Status</TableHead>
+                    <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[--shell-muted]">Updated</TableHead>
+                    <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[--shell-muted] text-right">Actions</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+                </TableHeader>
+                <TableBody>
+                  {filtered.map((c) => (
+                    <TableRow key={c.id} className="hover:bg-muted/30 transition-colors">
+                      <TableCell>
+                        <span className="font-mono text-xs text-[--shell-muted]">{c.id_str}</span>
+                      </TableCell>
+                      <TableCell className="font-medium">{c.account}</TableCell>
+                      <TableCell className="text-[--shell-muted]">{c.industry}</TableCell>
+                      <TableCell>
+                        <Badge variant={tierVariant(c.tier)} className="uppercase text-[10px]">
+                          {c.tier}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="font-mono text-sm font-medium text-right">{f(c.arr)}</TableCell>
+                      <TableCell>
+                        <Badge variant={statusVariant(c.status)} className="uppercase text-[10px]">
+                          {c.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-[--shell-muted] text-xs">{c.updated_at}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center justify-end gap-1">
+                          <Button variant="ghost" size="icon-sm" onClick={() => openEdit(c)}>
+                            <Edit className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button variant="ghost" size="icon-sm" onClick={() => handleDelete(c.id_str)}>
+                            <Trash2 className="h-3.5 w-3.5 text-[--shell-danger]" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
+      </section>
 
       <MultiStepDialog
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         title={editing ? "Edit Client" : "Add Client"}
-        steps={[{ title: "Contact", description: "Basic contact information" }, { title: "Address", description: "Location and tax details" }]}
+        steps={[
+          { title: "Contact", description: "Account and contact information" },
+          { title: "Address", description: "Location and additional details" },
+        ]}
         currentStep={step}
         onStepChange={setStep}
         onSubmit={handleSave}
@@ -217,31 +353,35 @@ export default function Clients() {
         submitLabel={editing ? "Update Client" : "Create Client"}
       >
         {step === 0 && (
-          <div className="space-y-5">
-            <div className="grid grid-cols-2 gap-5">
-              {(["name", "email", "phone"] as const).map((f) => (
-                <div key={f} className="space-y-2">
-                  <Label htmlFor={f} className="text-sm font-medium text-[--shell-muted] capitalize">{f.replace(/_/g, " ")}</Label>
-                  <Input id={f} value={form[f]} onChange={(e) => updateField(f, e.target.value)}
-                    required={f === "name"} type={f === "email" ? "email" : "text"} />
-                </div>
-              ))}
+          <div className="grid grid-cols-2 gap-5">
+            <div className="space-y-2">
+              <Label htmlFor="name">Account Name</Label>
+              <Input id="name" value={form.name}
+                onChange={(e) => updateField("name", e.target.value)} required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input id="email" type="email" value={form.email}
+                onChange={(e) => updateField("email", e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="phone">Phone</Label>
+              <Input id="phone" value={form.phone}
+                onChange={(e) => updateField("phone", e.target.value)} />
             </div>
           </div>
         )}
         {step === 1 && (
-          <div className="space-y-5">
-            <div className="grid grid-cols-2 gap-5">
-              {(["gst_number", "state", "address"] as const).map((f) => (
-                <div key={f} className={f === "address" ? "col-span-2 space-y-2" : "space-y-2"}>
-                  <Label htmlFor={f} className="text-sm font-medium text-[--shell-muted] capitalize">{f.replace(/_/g, " ")}</Label>
-                  <Input id={f} value={form[f]} onChange={(e) => updateField(f, e.target.value)} />
-                </div>
-              ))}
-              <div className="col-span-2 space-y-2">
-                <Label htmlFor="notes" className="text-[--shell-muted]">Notes</Label>
-                <Textarea id="notes" value={form.notes} onChange={(e) => updateField("notes", e.target.value)} rows={3} />
-              </div>
+          <div className="grid grid-cols-1 gap-5">
+            <div className="space-y-2">
+              <Label htmlFor="address">Address</Label>
+              <Input id="address" value={form.address}
+                onChange={(e) => updateField("address", e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="notes">Notes</Label>
+              <Textarea id="notes" value={form.notes}
+                onChange={(e) => updateField("notes", e.target.value)} rows={3} />
             </div>
           </div>
         )}

@@ -16,6 +16,7 @@ from app.lead.router import router as leads_router
 from app.product.router import router as products_router
 from app.dashboard.router import router as dashboard_router
 from app.notification.router import router as notifications_router
+from app.crm.router import router as crm_router
 
 
 @asynccontextmanager
@@ -68,6 +69,7 @@ app.include_router(leads_router)
 app.include_router(products_router)
 app.include_router(dashboard_router)
 app.include_router(notifications_router)
+app.include_router(crm_router)
 
 
 @app.get("/")
