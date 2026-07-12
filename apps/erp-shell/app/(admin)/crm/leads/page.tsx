@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import {
-  UserPlus, Plus, Search, Edit, Trash2, CheckCircle, Loader2,
+  UserPlus, Plus, Search, Edit, Trash2, CheckCircle, 
   TrendingUp, Target, DollarSign,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  Select, SelectContent, SelectGroup, SelectItem, SelectLabel,
+  Select, SelectContent, SelectItem, 
   SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
@@ -20,6 +20,7 @@ import { MultiStepDialog } from "@/components/multi-step-dialog";
 import { searchLeads, money } from "@/utils/format";
 import { api } from "@/services/api";
 import type { Lead } from "@/types/crm";
+import LeadsLoading from "./loading";
 
 type LeadForm = {
   company_name: string;
@@ -198,11 +199,7 @@ export default function Leads() {
   };
 
   if (leadsLoading) {
-    return (
-      <div className="flex items-center justify-center py-16">
-        <Loader2 className="h-8 w-8 animate-spin text-[--shell-muted]" />
-      </div>
-    );
+    return <LeadsLoading />;
   }
 
   return (

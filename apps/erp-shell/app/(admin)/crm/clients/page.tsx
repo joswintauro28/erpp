@@ -3,7 +3,6 @@
 import { useState, useMemo, useEffect } from "react";
 import {
   Plus, Search, Edit, Trash2, Users, UserCheck, AlertTriangle, Building2,
-  DollarSign, Loader2, UserPlus,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
@@ -18,6 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { MultiStepDialog } from "@/components/multi-step-dialog";
 import { api } from "@/services/api";
 import type { CrmCustomer, CrmCustomersResponse } from "@/types/crm";
+import ClientsLoading from "./loading";
 
 const STATUS_OPTIONS = ["Active", "Prospect", "Dormant", "Churned"] as const;
 const TIER_OPTIONS = ["Platinum", "Gold", "Silver"] as const;
@@ -159,11 +159,7 @@ export default function Clients() {
   };
 
   if (loading) {
-    return (
-      <div className="flex h-[60vh] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-[--shell-muted]" />
-      </div>
-    );
+    return <ClientsLoading />;
   }
 
   const summary = data?.summary;

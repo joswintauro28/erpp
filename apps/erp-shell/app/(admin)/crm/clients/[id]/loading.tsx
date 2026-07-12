@@ -1,0 +1,119 @@
+export default function ClientDetailLoading() {
+  return (
+    <div className="relative space-y-10 lg:space-y-12">
+      {/* Brand progress sweep bar */}
+      <span className="absolute -top-6 left-0 h-0.5 w-1/3 rounded-full bg-[--shell-brand] shimmer-glow" />
+
+      {/* Header */}
+      <div className="flex items-center gap-3">
+        <div className="h-9 w-9 rounded-lg shimmer-glow" />
+        <div className="space-y-2">
+          <div className="h-6 w-48 rounded-md shimmer-glow" />
+          <div className="h-4 w-60 rounded shimmer-glow" />
+        </div>
+      </div>
+
+      {/* Client Summary KPIs */}
+      <section className="space-y-5">
+        <div className="flex items-center gap-2">
+          <div className="h-4 w-28 rounded shimmer-glow" />
+          <div className="h-px flex-1 bg-[--shell-border]/20" />
+        </div>
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div
+              key={i}
+              className="flex flex-col gap-3 rounded-xl border border-[--shell-border] bg-[--shell-surface] p-5 shadow-sm"
+            >
+              <div className="flex items-center justify-between">
+                <div className="h-4 w-20 rounded shimmer-glow" />
+                <div className="h-7 w-7 rounded-lg shimmer-glow" />
+              </div>
+              <div className="h-7 w-12 rounded-md shimmer-glow mt-1" />
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Portal Access */}
+      <section className="space-y-5">
+        <div className="flex items-center gap-2">
+          <div className="h-4 w-24 rounded shimmer-glow" />
+          <div className="h-px flex-1 bg-[--shell-border]/20" />
+        </div>
+        <div className="h-24 rounded-xl border border-[--shell-border] bg-[--shell-surface] shimmer-glow" />
+      </section>
+
+      {/* Profile & Payments */}
+      <section className="space-y-5">
+        <div className="flex items-center gap-2">
+          <div className="h-4 w-32 rounded shimmer-glow" />
+          <div className="h-px flex-1 bg-[--shell-border]/20" />
+        </div>
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          {/* Client Profile */}
+          <div className="rounded-xl border border-[--shell-border] bg-[--shell-surface] p-5 space-y-4">
+            <div className="h-4 w-28 rounded shimmer-glow mb-2" />
+            {Array.from({ length: 5 }).map((_, j) => (
+              <div key={j} className="flex gap-3">
+                <div className="h-7 w-7 rounded-md shimmer-glow shrink-0" />
+                <div className="space-y-1.5 flex-1">
+                  <div className="h-3.5 w-16 rounded shimmer-glow" />
+                  <div className="h-4.5 w-2/3 rounded shimmer-glow" />
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Payment History Table */}
+          <div className="rounded-xl border border-[--shell-border] bg-[--shell-surface] p-5 space-y-4">
+            <div className="h-4 w-32 rounded shimmer-glow mb-2" />
+            <div className="space-y-3.5">
+              {Array.from({ length: 4 }).map((_, j) => (
+                <div key={j} className="flex justify-between items-center py-2 border-b border-[--shell-border]/10 last:border-0">
+                  <div className="space-y-1.5">
+                    <div className="h-4 w-24 rounded shimmer-glow" />
+                    <div className="h-3.5 w-16 rounded shimmer-glow" />
+                  </div>
+                  <div className="h-4 w-12 rounded shimmer-glow" />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Invoice History */}
+      <section className="space-y-5">
+        <div className="flex items-center gap-2">
+          <div className="h-4 w-28 rounded shimmer-glow" />
+          <div className="h-px flex-1 bg-[--shell-border]/20" />
+        </div>
+        <div className="rounded-xl border border-[--shell-border] bg-[--shell-surface] overflow-hidden">
+          {/* Table Header */}
+          <div className="grid grid-cols-12 gap-4 border-b border-[--shell-border] bg-[--shell-surface-alt]/50 px-6 py-3">
+            <div className="col-span-3"><div className="h-3.5 w-16 rounded shimmer-glow" /></div>
+            <div className="col-span-2 text-right"><div className="h-3.5 w-12 rounded shimmer-glow ml-auto" /></div>
+            <div className="col-span-2 text-right"><div className="h-3.5 w-12 rounded shimmer-glow ml-auto" /></div>
+            <div className="col-span-2 text-right"><div className="h-3.5 w-12 rounded shimmer-glow ml-auto" /></div>
+            <div className="col-span-2"><div className="h-3.5 w-12 rounded shimmer-glow" /></div>
+            <div className="col-span-1 text-right flex justify-end"><div className="h-3.5 w-8 rounded shimmer-glow" /></div>
+          </div>
+          {/* Table Rows */}
+          <div className="divide-y divide-[--shell-border]/40">
+            {Array.from({ length: 4 }).map((_, idx) => (
+              <div key={idx} className="grid grid-cols-12 gap-4 px-6 py-4 items-center">
+                <div className="col-span-3"><div className="h-4 w-28 rounded shimmer-glow" /></div>
+                <div className="col-span-2 text-right"><div className="h-4 w-16 rounded shimmer-glow ml-auto" /></div>
+                <div className="col-span-2 text-right"><div className="h-4 w-16 rounded shimmer-glow ml-auto" /></div>
+                <div className="col-span-2 text-right"><div className="h-4 w-16 rounded shimmer-glow ml-auto" /></div>
+                <div className="col-span-2"><div className="h-5 w-14 rounded-full shimmer-glow" /></div>
+                <div className="col-span-1 flex justify-end"><div className="h-6 w-6 rounded shimmer-glow ml-auto" /></div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}

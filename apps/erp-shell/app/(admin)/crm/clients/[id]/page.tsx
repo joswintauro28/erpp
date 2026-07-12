@@ -14,6 +14,7 @@ import { money } from "@/utils/format";
 import { api } from "@/services/api";
 import type { ApiClient, PortalAccess } from "@/types/crm";
 import type { ApiInvoice, ApiPayment } from "@/types/billing";
+import ClientDetailLoading from "./loading";
 
 const statusVariant = (status: string) => {
   const s = status.toLowerCase();
@@ -122,11 +123,7 @@ export default function ClientDetail() {
   const portalAccess: PortalAccess | null = null;
 
   if (loading) {
-    return (
-      <div className="flex h-[60vh] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-[--shell-muted]" />
-      </div>
-    );
+    return <ClientDetailLoading />;
   }
 
   if (!client) {

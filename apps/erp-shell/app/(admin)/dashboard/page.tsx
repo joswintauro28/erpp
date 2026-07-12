@@ -15,9 +15,9 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
-import { Spinner } from "@/components/ui/spinner";
 import { api } from "@/services/api";
 import type { DashboardData } from "@/types/dashboard";
+import DashboardLoading from "./loading";
 
 const CHART_COLORS = [
   "var(--chart-1)",
@@ -107,8 +107,15 @@ function MiniStat({ icon: Icon, label, value, color }: { icon: typeof Package; l
 
 export default function Dashboard() {
   const router = useRouter();
-  const [data, setData] = useState<DashboardData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState<DashboardData>({
+    stats: null,
+    revenueTrend: [],
+    invoiceSummary: [],
+    paymentAnalytics: [],
+    recentInvoices: [],
+    alerts: { overdue_invoices: 0, low_stock_products: 0 },
+    clientGrowth: [],
+  });
 
   useEffect(() => {
     async function fetchDashboard() {
@@ -122,10 +129,10 @@ export default function Dashboard() {
           api.get<{ month: string; count: number }[]>("/dashboard/client-growth"),
         ]);
 
-        const invoiceSummary = Object.entries(summary ?? {}).map(([name, val]) => ({
-          name: name.charAt(0).toUpperCase() + name.slice(1).replace(/_/g, " "),
-          value: val.percentage,
-          count: val.count,
+        const invoiceSummary = Object.entries(summary ?? {}).map(([name, item]) => ({
+          name,
+          count: item.count,
+          value: item.percentage,
         }));
 
         setData({
@@ -143,26 +150,20 @@ export default function Dashboard() {
           clientGrowth: growth ?? [],
         });
       } catch {
-        setData(null);
-      } finally {
-        setLoading(false);
+        // Keep initial state
       }
     }
     fetchDashboard();
   }, []);
 
-  if (loading) {
-    return (
-      <div className="flex h-[60vh] items-center justify-center">
-        <Spinner className="h-8 w-8 text-[--shell-muted]" />
-      </div>
-    );
+  if (data.stats === null) {
+    return <DashboardLoading />;
   }
 
-  const s = data?.stats;
-  const hasAlerts = data && (data.alerts.overdue_invoices > 0 || data.alerts.low_stock_products > 0);
+  const s = data.stats;
+  const hasAlerts = (data.alerts.overdue_invoices > 0 || data.alerts.low_stock_products > 0);
   const hasLowStock = (s?.low_stock_count ?? 0) > 0;
-  const hasOverdue = (data?.alerts.overdue_invoices ?? 0) > 0;
+  const hasOverdue = (data.alerts.overdue_invoices ?? 0) > 0;
 
   const totalRevenue = s?.total_revenue ?? 0;
   const clientGrowthCount = data?.clientGrowth?.length
@@ -366,7 +367,7 @@ export default function Dashboard() {
                         </Pie>
                         <Tooltip
                           contentStyle={tooltipStyle}
-                          formatter={(value: unknown, _name: unknown, entry: unknown) => {
+                          formatter={(_value: unknown, _name: unknown, entry: unknown) => {
                             const p = (entry as { payload: { count: number; value: number; name: string } }).payload;
                             return [`${p.count} invoices (${p.value}%)`, p.name];
                           }}
