@@ -1,11 +1,14 @@
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+import logging
+
+from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.core.config import settings
 from app.core.database import engine, Base
+from app.core.deps import require_permission
 
 from app.dashboard.models import Metric, PipelineStage, Recommendation, HotLead, Report
 from app.customer.models import Customer, Contact, Document
@@ -49,9 +52,16 @@ app.add_middleware(
 )
 
 
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request, exc):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"detail": exc.detail},
+    )
+
+
 @app.exception_handler(Exception)
-async def global_exception_handler(request, exc):
-    import logging
+async def unhandled_exception_handler(request, exc):
     logging.error(f"Unhandled exception: {str(exc)}", exc_info=True)
     return JSONResponse(
         status_code=500,
@@ -59,14 +69,16 @@ async def global_exception_handler(request, exc):
     )
 
 
-app.include_router(dashboard_router)
-app.include_router(customer_router)
-app.include_router(lead_router)
-app.include_router(sales_router)
-app.include_router(interaction_router)
-app.include_router(service_router)
-app.include_router(ai_router)
-app.include_router(generic_router)
+crm_view = [Depends(require_permission("crm.view"))]
+
+app.include_router(dashboard_router, dependencies=crm_view)
+app.include_router(customer_router, dependencies=crm_view)
+app.include_router(lead_router, dependencies=crm_view)
+app.include_router(sales_router, dependencies=crm_view)
+app.include_router(interaction_router, dependencies=crm_view)
+app.include_router(service_router, dependencies=crm_view)
+app.include_router(ai_router, dependencies=crm_view)
+app.include_router(generic_router, dependencies=crm_view)
 
 
 @app.get("/")

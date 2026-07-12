@@ -1,23 +1,7 @@
-from typing import AsyncGenerator
-
 from fastapi import Depends, Header
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import CredentialsException, ForbiddenException
 from app.core.security import decode_access_token
-from app.core.database import async_session_factory
-
-
-async def get_db() -> AsyncGenerator[AsyncSession, None]:
-    async with async_session_factory() as session:
-        try:
-            yield session
-            await session.commit()
-        except Exception:
-            await session.rollback()
-            raise
-        finally:
-            await session.close()
 
 
 async def get_current_token_payload(
@@ -58,11 +42,10 @@ def require_permission(permission_code: str):
     ) -> bool:
         role = payload.get("role")
         permissions = payload.get("permissions", [])
-        
-        # Super admin role (Organization Owner) bypasses permission checks
+
         if role == "Organization Owner" or permission_code in permissions:
             return True
-            
+
         raise ForbiddenException(f"Missing required permission: {permission_code}")
 
     return permission_dep

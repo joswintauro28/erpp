@@ -23,18 +23,18 @@ class PurchaseOrderService:
         self.repo = PurchaseOrderRepository(db)
         self.item_repo = PurchaseOrderItemRepository(db)
 
-    async def list_purchase_orders(self, owner_id: int) -> list[PurchaseOrder]:
-        stmt = sa.select(PurchaseOrder).where(PurchaseOrder.owner_id == owner_id).order_by(PurchaseOrder.created_at.desc())
+    async def list_purchase_orders(self, organization_id: int) -> list[PurchaseOrder]:
+        stmt = sa.select(PurchaseOrder).where(PurchaseOrder.organization_id == organization_id).order_by(PurchaseOrder.created_at.desc())
         result = await self.db.execute(stmt)
         return list(result.scalars().all())
 
-    async def get_purchase_order(self, po_id: int, owner_id: int) -> PurchaseOrder | None:
-        stmt = sa.select(PurchaseOrder).where(PurchaseOrder.id == po_id, PurchaseOrder.owner_id == owner_id)
+    async def get_purchase_order(self, po_id: int, organization_id: int) -> PurchaseOrder | None:
+        stmt = sa.select(PurchaseOrder).where(PurchaseOrder.id == po_id, PurchaseOrder.organization_id == organization_id)
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
 
-    async def get_purchase_order_with_items(self, po_id: int, owner_id: int) -> PurchaseOrder | None:
-        po = await self.get_purchase_order(po_id, owner_id)
+    async def get_purchase_order_with_items(self, po_id: int, organization_id: int) -> PurchaseOrder | None:
+        po = await self.get_purchase_order(po_id, organization_id)
         if not po:
             return None
         items_stmt = sa.select(PurchaseOrderItem).where(PurchaseOrderItem.purchase_order_id == po_id)
@@ -42,10 +42,10 @@ class PurchaseOrderService:
         po.items = list(items_result.scalars().all())
         return po
 
-    async def create_purchase_order(self, owner_id: int, order_number: str, items: list[dict], **data) -> PurchaseOrder:
+    async def create_purchase_order(self, organization_id: int, order_number: str, items: list[dict], **data) -> PurchaseOrder:
         subtotal = sum(item["quantity"] * item["unit_price"] for item in items)
         po = await self.repo.create(
-            owner_id=owner_id,
+            organization_id=organization_id,
             order_number=order_number,
             subtotal=subtotal,
             total=subtotal,
@@ -65,8 +65,8 @@ class PurchaseOrderService:
         po.items = list(items_result.scalars().all())
         return po
 
-    async def update_purchase_order_status(self, po_id: int, owner_id: int, status: str) -> PurchaseOrder | None:
-        po = await self.get_purchase_order(po_id, owner_id)
+    async def update_purchase_order_status(self, po_id: int, organization_id: int, status: str) -> PurchaseOrder | None:
+        po = await self.get_purchase_order(po_id, organization_id)
         if not po:
             return None
         po.status = status
@@ -78,16 +78,16 @@ class PurchaseOrderService:
         await self.db.flush()
         return po
 
-    async def delete_purchase_order(self, po_id: int, owner_id: int) -> bool:
-        po = await self.get_purchase_order(po_id, owner_id)
+    async def delete_purchase_order(self, po_id: int, organization_id: int) -> bool:
+        po = await self.get_purchase_order(po_id, organization_id)
         if not po:
             return False
         del_stmt = sa.delete(PurchaseOrderItem).where(PurchaseOrderItem.purchase_order_id == po_id)
         await self.db.execute(del_stmt)
         return await self.repo.delete(po_id)
 
-    async def count_purchase_orders(self, owner_id: int, status: str | None = None) -> int:
-        stmt = sa.select(sa.func.count()).select_from(PurchaseOrder).where(PurchaseOrder.owner_id == owner_id)
+    async def count_purchase_orders(self, organization_id: int, status: str | None = None) -> int:
+        stmt = sa.select(sa.func.count()).select_from(PurchaseOrder).where(PurchaseOrder.organization_id == organization_id)
         if status:
             stmt = stmt.where(PurchaseOrder.status == status)
         result = await self.db.execute(stmt)

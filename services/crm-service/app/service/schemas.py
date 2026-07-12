@@ -15,7 +15,7 @@ class ComplaintBase(BaseModel):
     customer: str
     date_raised: str
     status: str
-    owner_id: int
+    organization_id: int
 
 
 class Complaint(ComplaintBase):
@@ -35,7 +35,7 @@ class FeedbackBase(BaseModel):
     comment: str
     customer: str
     date: str
-    owner_id: int
+    organization_id: int
 
 
 class Feedback(FeedbackBase):

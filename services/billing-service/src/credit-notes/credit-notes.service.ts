@@ -20,9 +20,9 @@ export class CreditNotesService {
     };
   }
 
-  async findAll(ownerId: number) {
+  async findAll(organizationId: number) {
     const notes = await this.prisma.creditNote.findMany({
-      where: { ownerId },
+      where: { organizationId },
       orderBy: { createdAt: "desc" },
       include: {
         invoice: {
@@ -33,16 +33,15 @@ export class CreditNotesService {
     return notes.map((n) => this.flatten(n));
   }
 
-  async create(ownerId: number, dto: CreateCreditNoteDto, organizationId?: number) {
+  async create(organizationId: number, dto: CreateCreditNoteDto) {
     return this.prisma.$transaction(async (tx) => {
       const invoice = await tx.invoice.findFirst({
-        where: { id: dto.invoiceId, ownerId },
+        where: { id: dto.invoiceId, organizationId },
       });
       if (!invoice) throw new NotFoundException("Invoice not found");
 
       const creditNote = await tx.creditNote.create({
         data: {
-          ownerId,
           organizationId,
           invoiceId: dto.invoiceId,
           amount: new Prisma.Decimal(dto.amount),
@@ -86,9 +85,9 @@ export class CreditNotesService {
     });
   }
 
-  async remove(id: number, ownerId: number) {
+  async remove(id: number, organizationId: number) {
     const note = await this.prisma.creditNote.findFirst({
-      where: { id, ownerId },
+      where: { id, organizationId },
     });
     if (!note) throw new NotFoundException("Credit note not found");
     await this.prisma.creditNote.delete({ where: { id } });

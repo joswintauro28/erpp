@@ -3,7 +3,7 @@ from typing import AsyncGenerator
 from fastapi import Depends, Header
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.exceptions import CredentialsException
+from app.core.exceptions import CredentialsException, ForbiddenException
 from app.core.security import decode_access_token
 from app.core.database import async_session_factory
 
@@ -38,7 +38,7 @@ def generic_summary(data, status_field='status', active_vals=None, attention_val
 
     unique_owners = set()
     for d in data:
-        owner = getattr(d, 'owner_id', None)
+        owner = getattr(d, 'organization_id', None)
         if owner:
             unique_owners.add(owner)
 
@@ -60,7 +60,22 @@ async def get_current_token_payload(
         raise CredentialsException("Invalid or expired access token")
 
 
-async def get_current_user_id(
+async def get_current_org_id(
     payload: dict = Depends(get_current_token_payload),
 ) -> int:
-    return payload["user_id"]
+    return payload.get("organization_id", payload["user_id"])
+
+
+def require_permission(permission_code: str):
+    async def permission_dep(
+        payload: dict = Depends(get_current_token_payload),
+    ) -> bool:
+        role = payload.get("role")
+        permissions = payload.get("permissions", [])
+
+        if role == "Organization Owner" or permission_code in permissions:
+            return True
+
+        raise ForbiddenException(f"Missing required permission: {permission_code}")
+
+    return permission_dep

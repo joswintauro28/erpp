@@ -10,7 +10,7 @@ class Warehouse(Base):
     __tablename__ = "warehouses"
 
     id: Mapped[int] = mapped_column(sa.Integer, primary_key=True)
-    owner_id: Mapped[int] = mapped_column(sa.Integer, nullable=False, index=True)
+    organization_id: Mapped[int] = mapped_column(sa.Integer, nullable=False, index=True)
     name: Mapped[str] = mapped_column(sa.String(255), nullable=False)
     code: Mapped[str] = mapped_column(sa.String(50), nullable=False)
     address: Mapped[str | None] = mapped_column(sa.Text, nullable=True)

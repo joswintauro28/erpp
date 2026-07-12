@@ -14,22 +14,59 @@ export class InvoicesService {
 
   constructor(private readonly prisma: PrismaService) {}
 
-  async findAll(ownerId: number): Promise<any[]> {
-    this.logger.log(`Fetching all invoices for owner: ${ownerId}`);
+  private toNumber(value: any): number {
+    return value != null ? Number(value) : 0;
+  }
+
+  private flattenItem(item: any) {
+    return {
+      ...item,
+      quantity: this.toNumber(item.quantity),
+      unitPrice: this.toNumber(item.unitPrice),
+      gstRate: this.toNumber(item.gstRate),
+      amount: this.toNumber(item.amount),
+      cgst: this.toNumber(item.cgst),
+      sgst: this.toNumber(item.sgst),
+      igst: this.toNumber(item.igst),
+    };
+  }
+
+  private flattenInvoice(invoice: any) {
+    return {
+      ...invoice,
+      subtotal: this.toNumber(invoice.subtotal),
+      cgst: this.toNumber(invoice.cgst),
+      sgst: this.toNumber(invoice.sgst),
+      igst: this.toNumber(invoice.igst),
+      taxTotal: this.toNumber(invoice.taxTotal),
+      total: this.toNumber(invoice.total),
+      paidAmount: this.toNumber(invoice.paidAmount),
+      balanceDue: this.toNumber(invoice.balanceDue),
+      items: invoice.items?.map((i: any) => this.flattenItem(i)) ?? [],
+      payments: invoice.payments?.map((p: any) => ({
+        ...p,
+        amount: this.toNumber(p.amount),
+        refundedAmount: this.toNumber(p.refundedAmount),
+      })) ?? [],
+    };
+  }
+
+  async findAll(organizationId: number): Promise<any[]> {
+    this.logger.log(`Fetching all invoices for org: ${organizationId}`);
     const invoices = await this.prisma.invoice.findMany({
-      where: { ownerId },
+      where: { organizationId },
       orderBy: { createdAt: "desc" },
       include: {
         items: true,
       },
     });
-    return invoices;
+    return invoices.map((inv) => this.flattenInvoice(inv));
   }
 
-  async findOne(id: number, ownerId: number): Promise<any> {
-    this.logger.log(`Fetching invoice ${id} for owner: ${ownerId}`);
+  async findOne(id: number, organizationId: number): Promise<any> {
+    this.logger.log(`Fetching invoice ${id} for org: ${organizationId}`);
     const invoice = await this.prisma.invoice.findFirst({
-      where: { id, ownerId },
+      where: { id, organizationId },
       include: {
         items: true,
         payments: {
@@ -38,11 +75,11 @@ export class InvoicesService {
       },
     });
     if (!invoice) throw new NotFoundException("Invoice not found");
-    return invoice;
+    return this.flattenInvoice(invoice);
   }
 
-  async create(ownerId: number, dto: CreateInvoiceDto, organizationId?: number): Promise<any> {
-    this.logger.log(`Creating new invoice for client: ${dto.clientName} under owner: ${ownerId}`);
+  async create(organizationId: number, dto: CreateInvoiceDto): Promise<any> {
+    this.logger.log(`Creating new invoice for client: ${dto.clientName} under org: ${organizationId}`);
     const gstTreatment = dto.gstTreatment ?? GstTreatment.intrastate;
 
     let subtotal = 0;
@@ -78,9 +115,8 @@ export class InvoicesService {
     const taxTotal = cgst + sgst + igst;
     const total = subtotal + taxTotal;
 
-    const invoice = await this.prisma.invoice.create({
+    const raw = await this.prisma.invoice.create({
       data: {
-        ownerId,
         organizationId,
         clientId: dto.clientId,
         clientName: dto.clientName,
@@ -107,13 +143,13 @@ export class InvoicesService {
       },
     });
 
-    return invoice;
+    return this.flattenInvoice(raw);
   }
 
-  async updateStatus(id: number, ownerId: number, status: InvoiceStatus): Promise<any> {
-    this.logger.log(`Updating status of invoice ${id} to ${status} for owner: ${ownerId}`);
+  async updateStatus(id: number, organizationId: number, status: InvoiceStatus): Promise<any> {
+    this.logger.log(`Updating status of invoice ${id} to ${status} for org: ${organizationId}`);
     const invoice = await this.prisma.invoice.findFirst({
-      where: { id, ownerId },
+      where: { id, organizationId },
     });
     if (!invoice) throw new NotFoundException("Invoice not found");
 
@@ -123,7 +159,7 @@ export class InvoicesService {
       );
     }
 
-    return this.prisma.invoice.update({
+    const updated = await this.prisma.invoice.update({
       where: { id },
       data: { status },
       include: {
@@ -131,25 +167,26 @@ export class InvoicesService {
         payments: true,
       },
     });
+    return this.flattenInvoice(updated);
   }
 
-  async delete(id: number, ownerId: number) {
+  async delete(id: number, organizationId: number) {
     const invoice = await this.prisma.invoice.findFirst({
-      where: { id, ownerId },
+      where: { id, organizationId },
     });
     if (!invoice) throw new NotFoundException("Invoice not found");
 
     await this.prisma.invoice.delete({ where: { id } });
   }
 
-  async countByOwner(ownerId: number): Promise<number> {
-    return this.prisma.invoice.count({ where: { ownerId } });
+  async countByOwner(organizationId: number): Promise<number> {
+    return this.prisma.invoice.count({ where: { organizationId } });
   }
 
-  async sumRevenue(ownerId: number): Promise<number> {
+  async sumRevenue(organizationId: number): Promise<number> {
     const result = await this.prisma.invoice.aggregate({
       where: {
-        ownerId,
+        organizationId,
         status: { in: ["paid", "sent"] },
       },
       _sum: { total: true },
@@ -157,10 +194,10 @@ export class InvoicesService {
     return Number(result._sum.total ?? 0);
   }
 
-  async sumOutstanding(ownerId: number): Promise<number> {
+  async sumOutstanding(organizationId: number): Promise<number> {
     const result = await this.prisma.invoice.aggregate({
       where: {
-        ownerId,
+        organizationId,
         status: { in: ["sent", "overdue"] },
       },
       _sum: { balanceDue: true },
@@ -168,11 +205,11 @@ export class InvoicesService {
     return Number(result._sum.balanceDue ?? 0);
   }
 
-  async sumOverdue(ownerId: number): Promise<number> {
+  async sumOverdue(organizationId: number): Promise<number> {
     const now = new Date();
     const result = await this.prisma.invoice.aggregate({
       where: {
-        ownerId,
+        organizationId,
         status: "sent",
         dueDate: { lt: now },
       },
@@ -181,28 +218,28 @@ export class InvoicesService {
     return Number(result._sum.balanceDue ?? 0);
   }
 
-  async getInvoiceSummary(ownerId: number) {
+  async getInvoiceSummary(organizationId: number) {
     const invoices = await this.prisma.invoice.findMany({
-      where: { ownerId },
+      where: { organizationId },
       select: { status: true },
     });
     const total = invoices.length || 1;
-    const counts: Record<string, { count: number; percentage: number }> = {};
+    const counts: Record<string, number> = {};
     for (const inv of invoices) {
       const s = inv.status;
-      if (!counts[s]) counts[s] = { count: 0, percentage: 0 };
-      counts[s].count++;
+      counts[s] = (counts[s] || 0) + 1;
     }
-    for (const key of Object.keys(counts)) {
-      counts[key].percentage = Math.round((counts[key].count / total) * 1000) / 10;
-    }
-    return counts;
+    return Object.entries(counts).map(([status, count]) => ({
+      status,
+      count,
+      percentage: Math.round((count / total) * 1000) / 10,
+    }));
   }
 
-  async getRecentInvoices(ownerId: number, limit = 5) {
+  async getRecentInvoices(organizationId: number, limit = 5) {
     const today = new Date();
     const invoices = await this.prisma.invoice.findMany({
-      where: { ownerId },
+      where: { organizationId },
       orderBy: { createdAt: "desc" },
       take: limit,
       select: {
@@ -237,12 +274,12 @@ export class InvoicesService {
     });
   }
 
-  async getRevenueTrend(ownerId: number) {
+  async getRevenueTrend(organizationId: number) {
     const payments = await this.prisma.payment.findMany({
       where: {
-        ownerId,
+        organizationId,
         status: "completed",
-        invoice: { ownerId },
+        invoice: { organizationId },
       },
       select: {
         amount: true,

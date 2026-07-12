@@ -38,7 +38,7 @@ class RequirementBase(BaseModel):
     category: str
     priority: str
     status: str
-    owner_id: int
+    organization_id: int
 
 
 class Requirement(RequirementBase):
@@ -66,7 +66,7 @@ class QuotationBase(BaseModel):
     value: str
     valid_until: str
     status: str
-    owner_id: int
+    organization_id: int
     file_data: Optional[str] = None
     file_name: Optional[str] = None
 
@@ -97,7 +97,7 @@ class SalesOrderBase(BaseModel):
     value: str
     eta: str
     status: str
-    owner_id: int
+    organization_id: int
     file_data: Optional[str] = None
     file_name: Optional[str] = None
 

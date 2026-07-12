@@ -15,7 +15,7 @@ class EnquiryBase(BaseModel):
     customer: str
     date: str
     status: str
-    owner_id: int
+    organization_id: int
 
 
 class Enquiry(EnquiryBase):
@@ -35,7 +35,7 @@ class SiteVisitBase(BaseModel):
     customer: str
     date: str
     status: str
-    owner_id: int
+    organization_id: int
 
 
 class SiteVisit(SiteVisitBase):
@@ -55,7 +55,7 @@ class FollowUpBase(BaseModel):
     customer: str
     due_date: str
     status: str
-    owner_id: int
+    organization_id: int
 
 
 class FollowUp(FollowUpBase):
@@ -75,7 +75,7 @@ class TaskBase(BaseModel):
     related_to: str
     due_date: str
     status: str
-    owner_id: int
+    organization_id: int
 
 
 class Task(TaskBase):
@@ -95,7 +95,7 @@ class CommunicationBase(BaseModel):
     subject: str
     customer: str
     date: str
-    owner_id: int
+    organization_id: int
 
 
 class Communication(CommunicationBase):
@@ -115,7 +115,7 @@ class VisitPlanBase(BaseModel):
     customer: str
     date: str
     status: str
-    owner_id: int
+    organization_id: int
 
 
 class VisitPlan(VisitPlanBase):

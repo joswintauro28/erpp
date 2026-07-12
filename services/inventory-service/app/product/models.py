@@ -10,7 +10,7 @@ class Product(Base):
     __tablename__ = "products"
 
     id: Mapped[int] = mapped_column(sa.Integer, primary_key=True)
-    owner_id: Mapped[int] = mapped_column(sa.Integer, nullable=False, index=True)
+    organization_id: Mapped[int] = mapped_column(sa.Integer, nullable=False, index=True)
     name: Mapped[str] = mapped_column(sa.String(255), nullable=False)
     sku: Mapped[str | None] = mapped_column(sa.String(100), unique=True, nullable=True)
     barcode: Mapped[str | None] = mapped_column(sa.String(100), nullable=True)

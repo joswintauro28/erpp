@@ -12,4 +12,4 @@ class AIAssistantLog(Base):
     category = Column(String)
     date = Column(String)
     status = Column(String)
-    owner_id = Column(Integer, nullable=False, index=True)
+    organization_id = Column(Integer, nullable=False, index=True)

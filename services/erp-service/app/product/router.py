@@ -1,69 +1,56 @@
 from fastapi import APIRouter, Depends
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.deps import get_db, get_current_user_id
-from app.core.exceptions import NotFoundException
-from app.product.schemas import ProductCreate, ProductOut, ProductUpdate
-from app.product.services import ProductService
+from app.core.deps import get_current_token_payload
+from app.integrations.inventory_client import get_products, create_product_inv, update_product_inv, delete_product_inv
 
 router = APIRouter(prefix="/products", tags=["products"])
 
 
-@router.get("", response_model=list[ProductOut])
+@router.get("", response_model=list[dict])
 async def list_products(
-    db: AsyncSession = Depends(get_db),
-    user_id: int = Depends(get_current_user_id),
+    payload: dict = Depends(get_current_token_payload),
 ):
-    service = ProductService(db)
-    return await service.list_products(user_id)
+    token = payload.get("_raw_token", "")
+    return await get_products(token)
 
 
-@router.post("", response_model=ProductOut, status_code=201)
+@router.post("", response_model=dict, status_code=201)
 async def create_product(
-    req: ProductCreate,
-    db: AsyncSession = Depends(get_db),
-    user_id: int = Depends(get_current_user_id),
+    body: dict,
+    payload: dict = Depends(get_current_token_payload),
 ):
-    service = ProductService(db)
-    return await service.create_product(user_id, **req.model_dump())
+    token = payload.get("_raw_token", "")
+    return await create_product_inv(token, body)
 
 
-@router.get("/{product_id}", response_model=ProductOut)
+@router.get("/{product_id}", response_model=dict)
 async def get_product(
     product_id: int,
-    db: AsyncSession = Depends(get_db),
-    user_id: int = Depends(get_current_user_id),
+    payload: dict = Depends(get_current_token_payload),
 ):
-    service = ProductService(db)
-    product = await service.get_product(product_id, user_id)
-    if not product:
-        raise NotFoundException("Product not found")
-    return product
+    token = payload.get("_raw_token", "")
+    products = await get_products(token)
+    for p in products:
+        if p.get("id") == product_id:
+            return p
+    from app.core.exceptions import NotFoundException
+    raise NotFoundException("Product not found")
 
 
-@router.put("/{product_id}", response_model=ProductOut)
+@router.put("/{product_id}", response_model=dict)
 async def update_product(
     product_id: int,
-    req: ProductUpdate,
-    db: AsyncSession = Depends(get_db),
-    user_id: int = Depends(get_current_user_id),
+    body: dict,
+    payload: dict = Depends(get_current_token_payload),
 ):
-    service = ProductService(db)
-    product = await service.update_product(
-        product_id, user_id, **{k: v for k, v in req.model_dump().items() if v is not None}
-    )
-    if not product:
-        raise NotFoundException("Product not found")
-    return product
+    token = payload.get("_raw_token", "")
+    return await update_product_inv(token, product_id, body)
 
 
 @router.delete("/{product_id}", status_code=204)
 async def delete_product(
     product_id: int,
-    db: AsyncSession = Depends(get_db),
-    user_id: int = Depends(get_current_user_id),
+    payload: dict = Depends(get_current_token_payload),
 ):
-    service = ProductService(db)
-    deleted = await service.delete_product(product_id, user_id)
-    if not deleted:
-        raise NotFoundException("Product not found")
+    token = payload.get("_raw_token", "")
+    await delete_product_inv(token, product_id)

@@ -37,7 +37,7 @@ class PurchaseOrderUpdate(BaseModel):
 
 class PurchaseOrderOut(BaseModel):
     id: int
-    owner_id: int
+    organization_id: int
     supplier_id: int
     warehouse_id: int
     order_number: str

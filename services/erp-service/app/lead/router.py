@@ -1,82 +1,137 @@
 from fastapi import APIRouter, Depends
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.deps import get_db, get_current_user_id
-from app.core.exceptions import NotFoundException
-from app.lead.schemas import LeadCreate, LeadOut, LeadUpdate
-from app.lead.services import LeadService
+from app.core.deps import get_current_token_payload
+from app.integrations.crm_client import get_leads, create_lead_crm, update_lead_crm, delete_lead_crm
 
 router = APIRouter(prefix="/leads", tags=["leads"])
 
 
-@router.get("", response_model=list[LeadOut])
+def _map_lead(l: dict) -> dict:
+    return {
+        "id": l.get("id"),
+        "owner_id": l.get("owner_id"),
+        "company_name": l.get("company"),
+        "contact_person": l.get("name"),
+        "email": None,
+        "phone": None,
+        "lead_score": 0,
+        "assigned_to": None,
+        "source": l.get("source"),
+        "expected_value": l.get("est_value", 0),
+        "status": l.get("status"),
+        "gst_number": None,
+        "state": None,
+        "address": None,
+        "website": None,
+        "industry": None,
+        "notes": None,
+        "converted_client_id": None,
+        "converted_at": None,
+        "created_at": l.get("updated_at"),
+    }
+
+
+@router.get("", response_model=list[dict])
 async def list_leads(
-    db: AsyncSession = Depends(get_db),
-    user_id: int = Depends(get_current_user_id),
+    payload: dict = Depends(get_current_token_payload),
 ):
-    service = LeadService(db)
-    return await service.list_leads(user_id)
+    token = payload.get("_raw_token", "")
+    data = await get_leads(token)
+    return [_map_lead(l) for l in data]
 
 
-@router.post("", response_model=LeadOut, status_code=201)
+@router.post("", response_model=dict, status_code=201)
 async def create_lead(
-    req: LeadCreate,
-    db: AsyncSession = Depends(get_db),
-    user_id: int = Depends(get_current_user_id),
+    body: dict,
+    payload: dict = Depends(get_current_token_payload),
 ):
-    service = LeadService(db)
-    return await service.create_lead(user_id, **req.model_dump())
+    token = payload.get("_raw_token", "")
+    crm_body = {
+        "name": body.get("contact_person", ""),
+        "company": body.get("company_name", ""),
+        "source": body.get("source", "Website"),
+        "est_value": body.get("expected_value", 0),
+        "status": body.get("status", "New"),
+    }
+    result = await create_lead_crm(token, crm_body)
+    return _map_lead(result)
 
 
-@router.get("/{lead_id}", response_model=LeadOut)
+@router.get("/{lead_id}", response_model=dict)
 async def get_lead(
-    lead_id: int,
-    db: AsyncSession = Depends(get_db),
-    user_id: int = Depends(get_current_user_id),
+    lead_id: str,
+    payload: dict = Depends(get_current_token_payload),
 ):
-    service = LeadService(db)
-    lead = await service.get_lead(lead_id, user_id)
-    if not lead:
-        raise NotFoundException("Lead not found")
-    return lead
+    token = payload.get("_raw_token", "")
+    data = await get_leads(token)
+    for l in data:
+        if str(l.get("id")) == str(lead_id) or l.get("id_str") == lead_id:
+            return _map_lead(l)
+    from app.core.exceptions import NotFoundException
+    raise NotFoundException("Lead not found")
 
 
-@router.put("/{lead_id}", response_model=LeadOut)
+@router.put("/{lead_id}", response_model=dict)
 async def update_lead(
-    lead_id: int,
-    req: LeadUpdate,
-    db: AsyncSession = Depends(get_db),
-    user_id: int = Depends(get_current_user_id),
+    lead_id: str,
+    body: dict,
+    payload: dict = Depends(get_current_token_payload),
 ):
-    service = LeadService(db)
-    lead = await service.update_lead(
-        lead_id, user_id, **{k: v for k, v in req.model_dump().items() if v is not None}
-    )
-    if not lead:
+    token = payload.get("_raw_token", "")
+    data = await get_leads(token)
+    id_str = None
+    for l in data:
+        if str(l.get("id")) == str(lead_id) or l.get("id_str") == lead_id:
+            id_str = l.get("id_str")
+            break
+    if not id_str:
+        from app.core.exceptions import NotFoundException
         raise NotFoundException("Lead not found")
-    return lead
+    crm_body = {}
+    if "company_name" in body:
+        crm_body["company"] = body["company_name"]
+    if "contact_person" in body:
+        crm_body["name"] = body["contact_person"]
+    if "source" in body:
+        crm_body["source"] = body["source"]
+    if "expected_value" in body:
+        crm_body["est_value"] = body["expected_value"]
+    if "status" in body:
+        crm_body["status"] = body["status"]
+    result = await update_lead_crm(token, id_str, crm_body)
+    return _map_lead(result)
 
 
 @router.delete("/{lead_id}", status_code=204)
 async def delete_lead(
-    lead_id: int,
-    db: AsyncSession = Depends(get_db),
-    user_id: int = Depends(get_current_user_id),
+    lead_id: str,
+    payload: dict = Depends(get_current_token_payload),
 ):
-    service = LeadService(db)
-    deleted = await service.delete_lead(lead_id, user_id)
-    if not deleted:
+    token = payload.get("_raw_token", "")
+    data = await get_leads(token)
+    id_str = None
+    for l in data:
+        if str(l.get("id")) == str(lead_id) or l.get("id_str") == lead_id:
+            id_str = l.get("id_str")
+            break
+    if not id_str:
+        from app.core.exceptions import NotFoundException
         raise NotFoundException("Lead not found")
+    await delete_lead_crm(token, id_str)
 
 
-@router.post("/{lead_id}/convert", response_model=LeadOut)
+@router.post("/{lead_id}/convert", response_model=dict)
 async def convert_lead(
-    lead_id: int,
-    db: AsyncSession = Depends(get_db),
-    user_id: int = Depends(get_current_user_id),
+    lead_id: str,
+    payload: dict = Depends(get_current_token_payload),
 ):
-    service = LeadService(db)
-    lead = await service.convert_lead(lead_id, user_id)
-    if not lead:
-        raise NotFoundException("Lead not found")
-    return lead
+    token = payload.get("_raw_token", "")
+    data = await get_leads(token)
+    for l in data:
+        if str(l.get("id")) == str(lead_id) or l.get("id_str") == lead_id:
+            crm_body = {**l, "status": "Converted"}
+            id_str = l.get("id_str")
+            result = await update_lead_crm(token, id_str, crm_body)
+            return _map_lead(result)
+    from app.core.exceptions import NotFoundException
+    raise NotFoundException("Lead not found")

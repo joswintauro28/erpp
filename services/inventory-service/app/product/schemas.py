@@ -40,7 +40,7 @@ class ProductUpdate(BaseModel):
 
 class ProductOut(BaseModel):
     id: int
-    owner_id: int
+    organization_id: int
     name: str
     sku: str | None
     barcode: str | None

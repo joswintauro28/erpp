@@ -9,7 +9,7 @@ class LeadBase(BaseModel):
     source: str
     est_value: int
     status: str
-    owner_id: int
+    organization_id: int
     updated_at: str
 
 
@@ -39,7 +39,7 @@ class OpportunityBase(BaseModel):
     probability: str
     close_date: str
     stage: str
-    owner_id: int
+    organization_id: int
 
 
 class Opportunity(OpportunityBase):

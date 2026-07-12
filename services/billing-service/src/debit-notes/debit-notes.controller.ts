@@ -24,7 +24,7 @@ export class DebitNotesController {
   @Get()
   @Permissions("invoices.view")
   async findAll(@CurrentUser() user: JwtPayload) {
-    return this.debitNotesService.findAll(user.user_id);
+    return this.debitNotesService.findAll(user.organization_id);
   }
 
   @Post()
@@ -33,11 +33,7 @@ export class DebitNotesController {
     @Body() dto: CreateDebitNoteDto,
     @CurrentUser() user: JwtPayload,
   ) {
-    return this.debitNotesService.create(
-      user.user_id,
-      dto,
-      user.organization_id,
-    );
+    return this.debitNotesService.create(user.organization_id, dto);
   }
 
   @Delete(":id")
@@ -46,6 +42,6 @@ export class DebitNotesController {
     @Param("id", ParseIntPipe) id: number,
     @CurrentUser() user: JwtPayload,
   ) {
-    await this.debitNotesService.remove(id, user.user_id);
+    await this.debitNotesService.remove(id, user.organization_id);
   }
 }

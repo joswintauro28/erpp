@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   Search, CreditCard, DollarSign, Receipt,
-  ArrowUpRight, ArrowDownLeft, Wallet, XCircle, Ban,
+  ArrowUpRight, ArrowDownLeft, Wallet, XCircle, Ban, Loader2,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
@@ -16,21 +16,46 @@ import {
 } from "@/components/ui/select";
 import { MultiStepDialog } from "@/components/multi-step-dialog";
 import { searchBilling, money } from "@/utils/format";
+import { api } from "@/services/api";
 import type { BillingPayment } from "@/types/billing";
 
-const paymentMetrics = {
-  today: 156000,
-  thisMonth: 1124000,
-  outstanding: 1912500,
-  refunds: 5500,
-  failed: 2,
-};
+interface PaymentMetrics {
+  today: number; thisMonth: number; outstanding: number; refunds: number; failed: number;
+}
 
 export default function Payments() {
   const [payments, setPayments] = useState<BillingPayment[]>([]);
+  const [metrics, setMetrics] = useState<PaymentMetrics>({ today: 0, thisMonth: 0, outstanding: 0, refunds: 0, failed: 0 });
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [recordOpen, setRecordOpen] = useState(false);
   const [payStep, setPayStep] = useState(0);
+
+  useEffect(() => {
+    Promise.all([
+      api.get<any[]>("/payments"),
+      api.get<any>("/payments/metrics").catch(() => ({})),
+    ])
+      .then(([pmts, m]) => {
+        setPayments(pmts.map((p: any) => ({
+          id: p.id, payment_id: p.payment_id,
+          invoice_number: p.invoice_number ?? `INV-${p.invoice_id}`,
+          client_name: p.client_name ?? "Unknown",
+          amount: Number(p.amount), refunded_amount: Number(p.refunded_amount ?? 0),
+          method: p.method ?? "Unknown", reference: p.reference ?? "",
+          date: p.date ?? "",
+        })));
+        setMetrics({
+          today: Number(m?.today ?? 0),
+          thisMonth: Number(m?.this_month ?? m?.thisMonth ?? 0),
+          outstanding: Number(m?.outstanding ?? 0),
+          refunds: Number(m?.refunds ?? 0),
+          failed: Number(m?.failed ?? 0),
+        });
+      })
+      .catch(() => { setPayments([]); })
+      .finally(() => setLoading(false));
+  }, []);
 
   const filtered = useMemo(() => searchBilling(payments, search), [payments, search]);
 
@@ -69,7 +94,7 @@ export default function Payments() {
               <ArrowDownLeft className="h-4 w-4 text-[--chart-1]" />
             </div>
             <div>
-              <p className="font-heading text-base font-semibold">{money(paymentMetrics.today)}</p>
+              <p className="font-heading text-base font-semibold">{money(metrics.today)}</p>
               <p className="text-xs text-[--shell-muted]">Today</p>
             </div>
           </CardContent>
@@ -80,7 +105,7 @@ export default function Payments() {
               <DollarSign className="h-4 w-4 text-[--chart-2]" />
             </div>
             <div>
-              <p className="font-heading text-base font-semibold">{money(paymentMetrics.thisMonth)}</p>
+              <p className="font-heading text-base font-semibold">{money(metrics.thisMonth)}</p>
               <p className="text-xs text-[--shell-muted]">This Month</p>
             </div>
           </CardContent>
@@ -91,7 +116,7 @@ export default function Payments() {
               <ArrowUpRight className="h-4 w-4 text-[--chart-3]" />
             </div>
             <div>
-              <p className="font-heading text-base font-semibold">{money(paymentMetrics.outstanding)}</p>
+              <p className="font-heading text-base font-semibold">{money(metrics.outstanding)}</p>
               <p className="text-xs text-[--shell-muted]">Outstanding</p>
             </div>
           </CardContent>
@@ -102,7 +127,7 @@ export default function Payments() {
               <Ban className="h-4 w-4" style={{ color: "var(--shell-warning)" }} />
             </div>
             <div>
-              <p className="font-heading text-base font-semibold">{money(paymentMetrics.refunds)}</p>
+              <p className="font-heading text-base font-semibold">{money(metrics.refunds)}</p>
               <p className="text-xs text-[--shell-muted]">Refunds</p>
             </div>
           </CardContent>
@@ -113,7 +138,7 @@ export default function Payments() {
               <XCircle className="h-4 w-4 text-[--shell-danger]" />
             </div>
             <div>
-              <p className="font-heading text-base font-semibold">{paymentMetrics.failed}</p>
+              <p className="font-heading text-base font-semibold">{metrics.failed}</p>
               <p className="text-xs text-[--shell-muted]">Failed</p>
             </div>
           </CardContent>

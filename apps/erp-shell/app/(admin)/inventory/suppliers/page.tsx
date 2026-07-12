@@ -1,18 +1,34 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { Search, Plus, Pencil, Truck, Power, PowerOff } from "lucide-react";
+import { useState, useMemo, useEffect } from "react";
+import { Search, Plus, Pencil, Truck, Power, PowerOff, Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 
+import { api } from "@/services/api";
 import type { Supplier } from "@/types/inventory";
 
 export default function Suppliers() {
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+
+  useEffect(() => {
+    api.get<any[]>("/suppliers")
+      .then((data) => setSuppliers(data.map((s) => ({
+        id: s.id, name: s.name,
+        contact_person: s.contact_person ?? "",
+        email: s.email ?? "", phone: s.phone ?? "",
+        gst_number: s.gst_number ?? "", state: s.state ?? "",
+        address: s.address ?? "", payment_terms: s.payment_terms ?? "",
+        supply_categories: [], is_active: s.is_active,
+      }))))
+      .catch(() => setSuppliers([]))
+      .finally(() => setLoading(false));
+  }, []);
 
   const filtered = useMemo(() => {
     if (!search.trim()) return suppliers;
@@ -22,8 +38,7 @@ export default function Suppliers() {
         s.name.toLowerCase().includes(q) ||
         s.contact_person.toLowerCase().includes(q) ||
         s.email.toLowerCase().includes(q) ||
-        s.gst_number.toLowerCase().includes(q) ||
-        s.supply_categories.some((c) => c.toLowerCase().includes(q))
+        s.gst_number.toLowerCase().includes(q)
     );
   }, [suppliers, search]);
 
@@ -32,6 +47,14 @@ export default function Suppliers() {
       prev.map((s) => (s.id === id ? { ...s, is_active: !s.is_active } : s))
     );
   };
+
+  if (loading) {
+    return (
+      <div className="flex h-[60vh] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-[--shell-muted]" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -82,13 +105,7 @@ export default function Suppliers() {
                   <TableCell className="font-mono text-xs text-[--shell-muted]">{s.gst_number}</TableCell>
                   <TableCell className="text-xs">{s.state}</TableCell>
                   <TableCell className="text-xs text-[--shell-muted]">{s.payment_terms}</TableCell>
-                  <TableCell>
-                    <div className="flex flex-wrap gap-1">
-                      {s.supply_categories.map((c) => (
-                        <Badge key={c} variant="outline" className="text-xs">{c}</Badge>
-                      ))}
-                    </div>
-                  </TableCell>
+                  <TableCell className="text-xs text-[--shell-muted]">-</TableCell>
                   <TableCell>
                     <Badge variant={s.is_active ? "default" : "secondary"} className="text-xs">
                       {s.is_active ? "Active" : "Inactive"}

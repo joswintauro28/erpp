@@ -30,7 +30,7 @@ class SupplierUpdate(BaseModel):
 
 class SupplierOut(BaseModel):
     id: int
-    owner_id: int
+    organization_id: int
     name: str
     email: str | None
     phone: str | None

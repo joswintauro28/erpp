@@ -28,7 +28,7 @@ def upgrade() -> None:
         sa.Column("tier", sa.String()),
         sa.Column("arr", sa.Integer()),
         sa.Column("status", sa.String()),
-        sa.Column("owner_id", sa.Integer(), nullable=False, index=True),
+        sa.Column("organization_id", sa.Integer(), nullable=False, index=True),
         sa.Column("updated_at", sa.String()),
     )
     op.create_table(
@@ -42,7 +42,7 @@ def upgrade() -> None:
         sa.Column("phone", sa.String()),
         sa.Column("type", sa.String()),
         sa.Column("last_contact", sa.String()),
-        sa.Column("owner_id", sa.Integer(), nullable=False, index=True),
+        sa.Column("organization_id", sa.Integer(), nullable=False, index=True),
     )
     op.create_table(
         "documents",
@@ -53,7 +53,7 @@ def upgrade() -> None:
         sa.Column("account", sa.String()),
         sa.Column("size", sa.String()),
         sa.Column("status", sa.String()),
-        sa.Column("owner_id", sa.Integer(), nullable=False, index=True),
+        sa.Column("organization_id", sa.Integer(), nullable=False, index=True),
         sa.Column("updated_at", sa.String()),
         sa.Column("file_data", sa.String(), nullable=True),
         sa.Column("summary", sa.String(), nullable=True),
@@ -68,7 +68,7 @@ def upgrade() -> None:
         sa.Column("source", sa.String()),
         sa.Column("est_value", sa.Integer()),
         sa.Column("status", sa.String()),
-        sa.Column("owner_id", sa.Integer(), nullable=False, index=True),
+        sa.Column("organization_id", sa.Integer(), nullable=False, index=True),
         sa.Column("updated_at", sa.String()),
     )
     op.create_table(
@@ -81,7 +81,7 @@ def upgrade() -> None:
         sa.Column("probability", sa.String()),
         sa.Column("close_date", sa.String()),
         sa.Column("stage", sa.String()),
-        sa.Column("owner_id", sa.Integer(), nullable=False, index=True),
+        sa.Column("organization_id", sa.Integer(), nullable=False, index=True),
     )
     op.create_table(
         "sales",
@@ -104,7 +104,7 @@ def upgrade() -> None:
         sa.Column("category", sa.String()),
         sa.Column("priority", sa.String()),
         sa.Column("status", sa.String()),
-        sa.Column("owner_id", sa.Integer(), nullable=False, index=True),
+        sa.Column("organization_id", sa.Integer(), nullable=False, index=True),
     )
     op.create_table(
         "quotations",
@@ -115,7 +115,7 @@ def upgrade() -> None:
         sa.Column("value", sa.String()),
         sa.Column("valid_until", sa.String()),
         sa.Column("status", sa.String()),
-        sa.Column("owner_id", sa.Integer(), nullable=False, index=True),
+        sa.Column("organization_id", sa.Integer(), nullable=False, index=True),
         sa.Column("file_data", sa.String(), nullable=True),
         sa.Column("file_name", sa.String(), nullable=True),
     )
@@ -129,7 +129,7 @@ def upgrade() -> None:
         sa.Column("value", sa.String()),
         sa.Column("eta", sa.String()),
         sa.Column("status", sa.String()),
-        sa.Column("owner_id", sa.Integer(), nullable=False, index=True),
+        sa.Column("organization_id", sa.Integer(), nullable=False, index=True),
         sa.Column("file_data", sa.String(), nullable=True),
         sa.Column("file_name", sa.String(), nullable=True),
     )
@@ -141,7 +141,7 @@ def upgrade() -> None:
         sa.Column("customer", sa.String()),
         sa.Column("date", sa.String()),
         sa.Column("status", sa.String()),
-        sa.Column("owner_id", sa.Integer(), nullable=False, index=True),
+        sa.Column("organization_id", sa.Integer(), nullable=False, index=True),
     )
     op.create_table(
         "site_visits",
@@ -151,7 +151,7 @@ def upgrade() -> None:
         sa.Column("customer", sa.String()),
         sa.Column("date", sa.String()),
         sa.Column("status", sa.String()),
-        sa.Column("owner_id", sa.Integer(), nullable=False, index=True),
+        sa.Column("organization_id", sa.Integer(), nullable=False, index=True),
     )
     op.create_table(
         "follow_ups",
@@ -161,7 +161,7 @@ def upgrade() -> None:
         sa.Column("customer", sa.String()),
         sa.Column("due_date", sa.String()),
         sa.Column("status", sa.String()),
-        sa.Column("owner_id", sa.Integer(), nullable=False, index=True),
+        sa.Column("organization_id", sa.Integer(), nullable=False, index=True),
     )
     op.create_table(
         "tasks",
@@ -171,7 +171,7 @@ def upgrade() -> None:
         sa.Column("related_to", sa.String()),
         sa.Column("due_date", sa.String()),
         sa.Column("status", sa.String()),
-        sa.Column("owner_id", sa.Integer(), nullable=False, index=True),
+        sa.Column("organization_id", sa.Integer(), nullable=False, index=True),
     )
     op.create_table(
         "communications",
@@ -181,7 +181,7 @@ def upgrade() -> None:
         sa.Column("subject", sa.String()),
         sa.Column("customer", sa.String()),
         sa.Column("date", sa.String()),
-        sa.Column("owner_id", sa.Integer(), nullable=False, index=True),
+        sa.Column("organization_id", sa.Integer(), nullable=False, index=True),
     )
     op.create_table(
         "visit_plans",
@@ -191,7 +191,7 @@ def upgrade() -> None:
         sa.Column("customer", sa.String()),
         sa.Column("date", sa.String()),
         sa.Column("status", sa.String()),
-        sa.Column("owner_id", sa.Integer(), nullable=False, index=True),
+        sa.Column("organization_id", sa.Integer(), nullable=False, index=True),
     )
     op.create_table(
         "complaints",
@@ -201,7 +201,7 @@ def upgrade() -> None:
         sa.Column("customer", sa.String()),
         sa.Column("date_raised", sa.String()),
         sa.Column("status", sa.String()),
-        sa.Column("owner_id", sa.Integer(), nullable=False, index=True),
+        sa.Column("organization_id", sa.Integer(), nullable=False, index=True),
     )
     op.create_table(
         "feedback",
@@ -211,7 +211,7 @@ def upgrade() -> None:
         sa.Column("comment", sa.String()),
         sa.Column("customer", sa.String()),
         sa.Column("date", sa.String()),
-        sa.Column("owner_id", sa.Integer(), nullable=False, index=True),
+        sa.Column("organization_id", sa.Integer(), nullable=False, index=True),
     )
     op.create_table(
         "ai_logs",
@@ -221,7 +221,7 @@ def upgrade() -> None:
         sa.Column("category", sa.String()),
         sa.Column("date", sa.String()),
         sa.Column("status", sa.String()),
-        sa.Column("owner_id", sa.Integer(), nullable=False, index=True),
+        sa.Column("organization_id", sa.Integer(), nullable=False, index=True),
     )
     op.create_table(
         "metrics",
@@ -260,7 +260,7 @@ def upgrade() -> None:
         sa.Column("category", sa.String()),
         sa.Column("last_run", sa.String()),
         sa.Column("status", sa.String()),
-        sa.Column("owner_id", sa.Integer(), nullable=False, index=True),
+        sa.Column("organization_id", sa.Integer(), nullable=False, index=True),
     )
 
 

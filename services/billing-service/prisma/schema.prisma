@@ -63,8 +63,7 @@ enum RecurringStatus {
 
 model Invoice {
   id              Int            @id @default(autoincrement())
-  ownerId         Int            @map("owner_id")
-  organizationId  Int?           @map("organization_id")
+  organizationId  Int            @map("organization_id")
   clientId        Int            @map("client_id")
   clientName      String         @map("client_name")
   invoiceNumber   String?        @unique @map("invoice_number")
@@ -90,10 +89,10 @@ model Invoice {
   creditNotes CreditNote[]
   debitNotes  DebitNote[]
 
-  @@index([ownerId])
+  @@index([organizationId])
   @@index([status])
   @@index([dueDate])
-  @@index([ownerId, status])
+  @@index([organizationId, status])
   @@map("invoices")
 }
 
@@ -115,8 +114,7 @@ model InvoiceItem {
 
 model Payment {
   id            Int           @id @default(autoincrement())
-  ownerId       Int           @map("owner_id")
-  organizationId Int?         @map("organization_id")
+  organizationId Int          @map("organization_id")
   invoiceId     Int?          @map("invoice_id")
   amount        Decimal       @db.Decimal(12, 2)
   paymentMethod PaymentMethod? @map("payment_method")
@@ -128,18 +126,17 @@ model Payment {
 
   invoice Invoice? @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
 
-  @@index([ownerId])
+  @@index([organizationId])
   @@index([invoiceId])
   @@index([status])
   @@index([paymentDate])
-  @@index([ownerId, status, paymentDate])
+  @@index([organizationId, status, paymentDate])
   @@map("payments")
 }
 
 model CreditNote {
   id                Int        @id @default(autoincrement())
-  ownerId           Int        @map("owner_id")
-  organizationId    Int?       @map("organization_id")
+  organizationId    Int        @map("organization_id")
   invoiceId         Int        @map("invoice_id")
   creditNoteNumber  String?    @map("credit_note_number")
   amount            Decimal    @db.Decimal(12, 2)
@@ -150,15 +147,14 @@ model CreditNote {
 
   invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
 
-  @@index([ownerId])
+  @@index([organizationId])
   @@index([invoiceId])
   @@map("credit_notes")
 }
 
 model DebitNote {
   id               Int        @id @default(autoincrement())
-  ownerId          Int        @map("owner_id")
-  organizationId   Int?       @map("organization_id")
+  organizationId   Int        @map("organization_id")
   invoiceId        Int        @map("invoice_id")
   debitNoteNumber  String?    @map("debit_note_number")
   amount           Decimal    @db.Decimal(12, 2)
@@ -169,15 +165,14 @@ model DebitNote {
 
   invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
 
-  @@index([ownerId])
+  @@index([organizationId])
   @@index([invoiceId])
   @@map("debit_notes")
 }
 
 model Quotation {
   id                  Int              @id @default(autoincrement())
-  ownerId             Int              @map("owner_id")
-  organizationId      Int?             @map("organization_id")
+  organizationId      Int              @map("organization_id")
   clientId            Int              @map("client_id")
   clientName          String           @map("client_name")
   quoteNumber         String           @unique @map("quote_number")
@@ -189,14 +184,13 @@ model Quotation {
   convertedInvoiceId  Int?             @map("converted_invoice_id")
   createdAt           DateTime         @default(now()) @map("created_at")
 
-  @@index([ownerId])
+  @@index([organizationId])
   @@map("quotations")
 }
 
 model RecurringInvoice {
   id              Int                @id @default(autoincrement())
-  ownerId         Int                @map("owner_id")
-  organizationId  Int?               @map("organization_id")
+  organizationId  Int                @map("organization_id")
   clientId        Int                @map("client_id")
   clientName      String             @map("client_name")
   templateName    String             @map("template_name")
@@ -211,6 +205,6 @@ model RecurringInvoice {
   createdAt       DateTime           @default(now()) @map("created_at")
   updatedAt       DateTime           @updatedAt @map("updated_at")
 
-  @@index([ownerId])
+  @@index([organizationId])
   @@map("recurring_invoices")
 }

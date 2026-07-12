@@ -11,9 +11,9 @@ import { CreatePaymentDto } from "./dto/create-payment.dto";
 export class PaymentsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findAll(ownerId: number) {
+  async findAll(organizationId: number) {
     const payments = await this.prisma.payment.findMany({
-      where: { ownerId },
+      where: { organizationId },
       orderBy: { createdAt: "desc" },
       include: {
         invoice: {
@@ -40,10 +40,10 @@ export class PaymentsService {
     }));
   }
 
-  async create(ownerId: number, dto: CreatePaymentDto, organizationId?: number) {
+  async create(organizationId: number, dto: CreatePaymentDto) {
     return this.prisma.$transaction(async (tx) => {
       const invoice = await tx.invoice.findFirst({
-        where: { id: dto.invoiceId, ownerId },
+        where: { id: dto.invoiceId, organizationId },
       });
       if (!invoice) throw new NotFoundException("Invoice not found");
 
@@ -59,7 +59,6 @@ export class PaymentsService {
 
       const payment = await tx.payment.create({
         data: {
-          ownerId,
           organizationId,
           invoiceId: dto.invoiceId,
           amount: new Prisma.Decimal(dto.amount),
@@ -84,10 +83,10 @@ export class PaymentsService {
     });
   }
 
-  async refund(id: number, ownerId: number) {
+  async refund(id: number, organizationId: number) {
     return this.prisma.$transaction(async (tx) => {
       const payment = await tx.payment.findFirst({
-        where: { id, ownerId },
+        where: { id, organizationId },
       });
       if (!payment) throw new NotFoundException("Payment not found");
       if (payment.status === "refunded") {
@@ -130,7 +129,7 @@ export class PaymentsService {
     });
   }
 
-  async getMetrics(ownerId: number) {
+  async getMetrics(organizationId: number) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
@@ -139,7 +138,7 @@ export class PaymentsService {
       await Promise.all([
         this.prisma.payment.aggregate({
           where: {
-            ownerId,
+            organizationId,
             status: "completed",
             paymentDate: { gte: today },
           },
@@ -147,7 +146,7 @@ export class PaymentsService {
         }),
         this.prisma.payment.aggregate({
           where: {
-            ownerId,
+            organizationId,
             status: "completed",
             paymentDate: { gte: startOfMonth },
           },
@@ -155,21 +154,21 @@ export class PaymentsService {
         }),
         this.prisma.invoice.aggregate({
           where: {
-            ownerId,
+            organizationId,
             status: { in: ["sent", "overdue"] },
           },
           _sum: { balanceDue: true },
         }),
         this.prisma.payment.aggregate({
           where: {
-            ownerId,
+            organizationId,
             status: "refunded",
           },
           _sum: { amount: true },
         }),
         this.prisma.payment.count({
           where: {
-            ownerId,
+            organizationId,
             status: "failed",
           },
         }),

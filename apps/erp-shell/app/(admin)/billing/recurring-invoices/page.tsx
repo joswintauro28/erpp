@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
-  Search, Repeat, Play, Pause, Trash2,
+  Search, Repeat, Play, Pause, Trash2, Loader2,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { searchBilling, money } from "@/utils/format";
+import { api } from "@/services/api";
 import type { RecurringInvoice } from "@/types/billing";
 
 const frequencyColors: Record<string, string> = {
@@ -21,7 +22,25 @@ const frequencyColors: Record<string, string> = {
 
 export default function RecurringInvoices() {
   const [recurring, setRecurring] = useState<RecurringInvoice[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+
+  useEffect(() => {
+    api.get<any[]>("/invoices/recurring")
+      .then((data) => setRecurring(data.map((r) => ({
+        id: r.id,
+        invoice_number: r.invoice_number,
+        client_id: r.client_id,
+        client_name: r.client_name,
+        frequency: r.frequency,
+        next_run: r.next_run ?? "",
+        last_generated: r.last_generated ?? "",
+        auto_email: r.auto_email,
+        status: r.status === "paused" ? "paused" : "active",
+      }))))
+      .catch(() => setRecurring([]))
+      .finally(() => setLoading(false));
+  }, []);
 
   const filtered = useMemo(() => searchBilling(recurring, search), [recurring, search]);
 
@@ -34,6 +53,14 @@ export default function RecurringInvoices() {
       )
     );
   };
+
+  if (loading) {
+    return (
+      <div className="flex h-[60vh] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-[--shell-muted]" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

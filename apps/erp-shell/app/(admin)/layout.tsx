@@ -6,9 +6,21 @@ import { Loader2 } from "lucide-react";
 import Sidebar from "@/components/Sidebar";
 import Header from "@/components/Header";
 import { useAuth } from "@/contexts/AuthContext";
+import { getAccessToken } from "@datavex/auth-middleware";
+
+const BILLING_URL = "http://localhost:3002";
+const CRM_URL = "http://localhost:3001";
+const INVENTORY_URL = "http://localhost:3004";
+
+const WORKSTATION_ROUTES: Record<string, string> = {
+  "Sales Executive": `${CRM_URL}/dashboard`,
+  "Accountant": `${BILLING_URL}/dashboard`,
+  "Auditor": `${BILLING_URL}/dashboard`,
+  "Inventory Manager": `${INVENTORY_URL}/dashboard`,
+};
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, loading } = useAuth();
+  const { user, isAuthenticated, loading } = useAuth();
   const router = useRouter();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -18,10 +30,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, []);
 
   useEffect(() => {
-    if (mounted && !loading && !isAuthenticated) {
+    if (!mounted || loading) return;
+
+    if (!isAuthenticated) {
       router.push("/login");
+      return;
     }
-  }, [mounted, loading, isAuthenticated, router]);
+
+    const target = WORKSTATION_ROUTES[user?.role ?? ""];
+    if (target) {
+      const token = getAccessToken();
+      window.location.href = token ? `${target}?token=${token}` : target;
+    }
+  }, [mounted, loading, isAuthenticated, user?.role, router]);
 
   const toggleSidebar = useCallback(() => {
     setSidebarCollapsed((prev) => !prev);

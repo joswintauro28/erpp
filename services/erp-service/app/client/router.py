@@ -1,69 +1,101 @@
 from fastapi import APIRouter, Depends
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.deps import get_db, get_current_user_id
-from app.core.exceptions import NotFoundException
-from app.client.schemas import ClientCreate, ClientOut, ClientUpdate
-from app.client.services import ClientService
+from app.core.deps import get_current_token_payload
+from app.integrations.crm_client import get_customers, create_customer, update_customer, delete_customer
 
 router = APIRouter(prefix="/clients", tags=["clients"])
 
 
-@router.get("", response_model=list[ClientOut])
+def _map_customer(c: dict) -> dict:
+    return {
+        "id": c.get("id"),
+        "name": c.get("name") or c.get("account") or f"Client #{c.get('id')}",
+        "email": c.get("email"),
+        "phone": c.get("phone"),
+        "address": c.get("address"),
+        "gst_number": None,
+        "state": None,
+        "notes": c.get("notes"),
+        "created_at": c.get("updated_at") or c.get("created_at"),
+    }
+
+
+@router.get("", response_model=list[dict])
 async def list_clients(
-    db: AsyncSession = Depends(get_db),
-    user_id: int = Depends(get_current_user_id),
+    payload: dict = Depends(get_current_token_payload),
 ):
-    service = ClientService(db)
-    return await service.list_clients(user_id)
+    token = payload.get("_raw_token", "")
+    data = await get_customers(token)
+    return [_map_customer(c) for c in data]
 
 
-@router.post("", response_model=ClientOut, status_code=201)
+@router.post("", response_model=dict, status_code=201)
 async def create_client(
-    req: ClientCreate,
-    db: AsyncSession = Depends(get_db),
-    user_id: int = Depends(get_current_user_id),
+    body: dict,
+    payload: dict = Depends(get_current_token_payload),
 ):
-    service = ClientService(db)
-    return await service.create_client(user_id, **req.model_dump())
+    token = payload.get("_raw_token", "")
+    crm_body = {"account": body.get("name", "")}
+    if body.get("email"):
+        crm_body["email"] = body["email"]
+    if body.get("phone"):
+        crm_body["phone"] = body["phone"]
+    if body.get("notes"):
+        crm_body["notes"] = body["notes"]
+    result = await create_customer(token, crm_body)
+    return _map_customer(result)
 
 
-@router.get("/{client_id}", response_model=ClientOut)
+@router.get("/{client_id}", response_model=dict)
 async def get_client(
-    client_id: int,
-    db: AsyncSession = Depends(get_db),
-    user_id: int = Depends(get_current_user_id),
+    client_id: str,
+    payload: dict = Depends(get_current_token_payload),
 ):
-    service = ClientService(db)
-    client = await service.get_client(client_id, user_id)
-    if not client:
-        raise NotFoundException("Client not found")
-    return client
+    token = payload.get("_raw_token", "")
+    data = await get_customers(token)
+    for c in data:
+        if str(c.get("id")) == str(client_id) or c.get("id_str") == client_id:
+            return _map_customer(c)
+    from app.core.exceptions import NotFoundException
+    raise NotFoundException("Client not found")
 
 
-@router.put("/{client_id}", response_model=ClientOut)
+@router.put("/{client_id}", response_model=dict)
 async def update_client(
-    client_id: int,
-    req: ClientUpdate,
-    db: AsyncSession = Depends(get_db),
-    user_id: int = Depends(get_current_user_id),
+    client_id: str,
+    body: dict,
+    payload: dict = Depends(get_current_token_payload),
 ):
-    service = ClientService(db)
-    client = await service.update_client(
-        client_id, user_id, **{k: v for k, v in req.model_dump().items() if v is not None}
-    )
-    if not client:
+    token = payload.get("_raw_token", "")
+    data = await get_customers(token)
+    id_str = None
+    for c in data:
+        if str(c.get("id")) == str(client_id) or c.get("id_str") == client_id:
+            id_str = c.get("id_str")
+            break
+    if not id_str:
+        from app.core.exceptions import NotFoundException
         raise NotFoundException("Client not found")
-    return client
+    crm_body = {}
+    if "name" in body:
+        crm_body["account"] = body["name"]
+    result = await update_customer(token, id_str, crm_body)
+    return _map_customer(result)
 
 
 @router.delete("/{client_id}", status_code=204)
 async def delete_client(
-    client_id: int,
-    db: AsyncSession = Depends(get_db),
-    user_id: int = Depends(get_current_user_id),
+    client_id: str,
+    payload: dict = Depends(get_current_token_payload),
 ):
-    service = ClientService(db)
-    deleted = await service.delete_client(client_id, user_id)
-    if not deleted:
+    token = payload.get("_raw_token", "")
+    data = await get_customers(token)
+    id_str = None
+    for c in data:
+        if str(c.get("id")) == str(client_id) or c.get("id_str") == client_id:
+            id_str = c.get("id_str")
+            break
+    if not id_str:
+        from app.core.exceptions import NotFoundException
         raise NotFoundException("Client not found")
+    await delete_customer(token, id_str)

@@ -1,39 +1,60 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { Search, ArrowUpDown, ArrowDown, ArrowUp, Warehouse } from "lucide-react";
+import { useState, useMemo, useEffect } from "react";
+import { Search, ArrowUpDown, ArrowDown, ArrowUp, Loader2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { api } from "@/services/api";
 
-import type { StockMovement } from "@/types/inventory";
+interface StockMovement {
+  id: number; date: string; product_name: string;
+  movement_type: "In" | "Out"; quantity: number; notes: string | null;
+}
 
 export default function StockMovements() {
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState<"In" | "Out" | "">("");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   const [stockMovements, setStockMovements] = useState<StockMovement[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    api.get<any[]>("/dashboard/inventory/movements")
+      .then((data) => setStockMovements(data.map((m) => ({
+        id: m.id,
+        date: m.created_at ? m.created_at.split("T")[0] : "",
+        product_name: m.product_name ?? `Product #${m.product_id}`,
+        movement_type: (m.type === "in" ? "In" : m.type === "out" ? "Out" : "In") as "In" | "Out",
+        quantity: m.quantity,
+        notes: m.notes ?? null,
+      }))))
+      .catch(() => setStockMovements([]))
+      .finally(() => setLoading(false));
+  }, []);
 
   const filtered = useMemo(() => {
     let res = stockMovements;
     if (typeFilter) res = res.filter((m) => m.movement_type === typeFilter);
     if (search.trim()) {
       const q = search.toLowerCase();
-      res = res.filter(
-        (m) =>
-          m.product_name.toLowerCase().includes(q) ||
-          m.sku.toLowerCase().includes(q) ||
-          m.reference.toLowerCase().includes(q) ||
-          m.warehouse.toLowerCase().includes(q)
-      );
+      res = res.filter((m) => m.product_name.toLowerCase().includes(q));
     }
     return [...res].sort((a, b) => {
       const cmp = a.date.localeCompare(b.date);
       return sortDir === "desc" ? -cmp : cmp;
     });
-  }, [search, typeFilter, sortDir]);
+  }, [search, typeFilter, sortDir, stockMovements]);
+
+  if (loading) {
+    return (
+      <div className="flex h-[60vh] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-[--shell-muted]" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -70,45 +91,39 @@ export default function StockMovements() {
 
       <Card>
         <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Date</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Product</TableHead>
-                <TableHead>SKU</TableHead>
-                <TableHead className="text-right">Qty</TableHead>
-                <TableHead>Reference</TableHead>
-                <TableHead>Warehouse</TableHead>
-                <TableHead className="max-w-xs">Notes</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filtered.map((m) => (
-                <TableRow key={m.id}>
-                  <TableCell className="font-mono text-xs text-[--shell-muted]">{m.date}</TableCell>
-                  <TableCell>
-                    <Badge
-                      variant={m.movement_type === "In" ? "default" : "secondary"}
-                      className="text-xs"
-                    >
-                      {m.movement_type === "In" ? <ArrowDown className="mr-0.5 h-3 w-3 inline" /> : <ArrowUp className="mr-0.5 h-3 w-3 inline" />}
-                      {m.movement_type}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-sm font-medium">{m.product_name}</TableCell>
-                  <TableCell className="font-mono text-xs text-[--shell-muted]">{m.sku}</TableCell>
-                  <TableCell className="font-mono text-sm text-right">{m.quantity.toLocaleString()}</TableCell>
-                  <TableCell>
-                    <span className="font-mono text-xs text-[--shell-muted]">{m.reference_type}</span>
-                    <span className="ml-1 font-mono text-xs">{m.reference}</span>
-                  </TableCell>
-                  <TableCell className="text-xs">{m.warehouse}</TableCell>
-                  <TableCell className="text-xs text-[--shell-muted] max-w-xs truncate">{m.notes}</TableCell>
+          {filtered.length === 0 ? (
+            <div className="flex flex-col items-center gap-2 py-16 text-[--shell-muted]">
+              <p className="text-sm">No stock movements found</p>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Product</TableHead>
+                  <TableHead className="text-right">Qty</TableHead>
+                  <TableHead className="max-w-xs">Notes</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {filtered.map((m) => (
+                  <TableRow key={m.id}>
+                    <TableCell className="font-mono text-xs text-[--shell-muted]">{m.date}</TableCell>
+                    <TableCell>
+                      <Badge variant={m.movement_type === "In" ? "default" : "secondary"} className="text-xs">
+                        {m.movement_type === "In" ? <ArrowDown className="mr-0.5 h-3 w-3 inline" /> : <ArrowUp className="mr-0.5 h-3 w-3 inline" />}
+                        {m.movement_type}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-sm font-medium">{m.product_name}</TableCell>
+                    <TableCell className="font-mono text-sm text-right">{m.quantity.toLocaleString()}</TableCell>
+                    <TableCell className="text-xs text-[--shell-muted] max-w-xs truncate">{m.notes ?? "-"}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
     </div>

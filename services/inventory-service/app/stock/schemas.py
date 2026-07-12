@@ -5,7 +5,7 @@ from pydantic import BaseModel
 
 class StockOut(BaseModel):
     id: int
-    owner_id: int
+    organization_id: int
     product_id: int
     warehouse_id: int
     quantity: int
@@ -28,7 +28,7 @@ class StockMovementCreate(BaseModel):
 
 class StockMovementOut(BaseModel):
     id: int
-    owner_id: int
+    organization_id: int
     product_id: int
     warehouse_id: int
     type: str

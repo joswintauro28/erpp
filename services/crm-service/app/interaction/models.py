@@ -12,7 +12,7 @@ class Enquiry(Base):
     customer = Column(String)
     date = Column(String)
     status = Column(String)
-    owner_id = Column(Integer, nullable=False, index=True)
+    organization_id = Column(Integer, nullable=False, index=True)
 
 
 class SiteVisit(Base):
@@ -24,7 +24,7 @@ class SiteVisit(Base):
     customer = Column(String)
     date = Column(String)
     status = Column(String)
-    owner_id = Column(Integer, nullable=False, index=True)
+    organization_id = Column(Integer, nullable=False, index=True)
 
 
 class FollowUp(Base):
@@ -36,7 +36,7 @@ class FollowUp(Base):
     customer = Column(String)
     due_date = Column(String)
     status = Column(String)
-    owner_id = Column(Integer, nullable=False, index=True)
+    organization_id = Column(Integer, nullable=False, index=True)
 
 
 class Task(Base):
@@ -48,7 +48,7 @@ class Task(Base):
     related_to = Column(String)
     due_date = Column(String)
     status = Column(String)
-    owner_id = Column(Integer, nullable=False, index=True)
+    organization_id = Column(Integer, nullable=False, index=True)
 
 
 class Communication(Base):
@@ -60,7 +60,7 @@ class Communication(Base):
     subject = Column(String)
     customer = Column(String)
     date = Column(String)
-    owner_id = Column(Integer, nullable=False, index=True)
+    organization_id = Column(Integer, nullable=False, index=True)
 
 
 class VisitPlan(Base):
@@ -72,4 +72,4 @@ class VisitPlan(Base):
     customer = Column(String)
     date = Column(String)
     status = Column(String)
-    owner_id = Column(Integer, nullable=False, index=True)
+    organization_id = Column(Integer, nullable=False, index=True)

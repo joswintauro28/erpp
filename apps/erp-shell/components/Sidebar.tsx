@@ -67,18 +67,18 @@ const navItems: NavItem[] = [
   },
 
   // 4. Back-Office & Supply Chain Logistics
-  {
+    {
     name: "Logistics & Stock",
     icon: Package,
     children: [
       { name: "Product Master", href: "/inventory/products", icon: Package },
       { name: "Stock Movements", href: "/inventory/stock", icon: Warehouse },
-      { name: "Stock Adjustments", href: "/inventory/stock/adjustments", icon: SlidersHorizontal },
-      { name: "Inventory Valuation", href: "/inventory/valuation", icon: BarChart2 },
+      { name: "Stock Adjustments", href: "#", icon: SlidersHorizontal, soon: true },
+      { name: "Inventory Valuation", href: "#", icon: BarChart2, soon: true },
       { name: "Warehouse Locations", href: "/inventory/warehouses", icon: Warehouse },
       { name: "Purchase Orders", href: "/inventory/purchase-orders", icon: ShoppingCart },
       { name: "Supplier Registry", href: "/inventory/suppliers", icon: Truck },
-      { name: "Batch Tracking", href: "/inventory/batches", icon: Boxes },
+      { name: "Batch Tracking", href: "#", icon: Boxes, soon: true },
       { name: "Serial Tracking", href: "/inventory/serials", icon: ScanBarcode },
     ],
   },
@@ -296,13 +296,14 @@ export default function Sidebar({ collapsed }: { collapsed: boolean }) {
                   <div className="pl-4.5 mt-1 space-y-1 border-l border-sidebar-border ml-4">
                     {item.children.map((child) => {
                       const childActive = activeChild(item, pathname) === child.href;
+                      const Comp = child.href === "#" ? "span" : Link;
                       return (
-                        <Link
+                        <Comp
                           key={child.href}
-                          href={child.href}
-                          title={child.name}
+                          {...(child.href !== "#" ? { href: child.href, title: child.name } : {})}
                           className={cn(
                             "relative flex items-center gap-3 rounded-md px-2.5 py-1.5 text-xs transition-all duration-200 group/link",
+                            child.soon && "opacity-60",
                             childActive
                               ? "text-sidebar-primary-foreground font-medium bg-sidebar-primary/80"
                               : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
@@ -315,7 +316,12 @@ export default function Sidebar({ collapsed }: { collapsed: boolean }) {
                             )}
                           />
                           <span>{child.name}</span>
-                        </Link>
+                          {child.soon && (
+                            <span className="ml-auto rounded-full border border-sidebar-primary/30 bg-sidebar-primary/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-sidebar-primary">
+                              Soon
+                            </span>
+                          )}
+                        </Comp>
                       );
                     })}
                   </div>
@@ -385,12 +391,14 @@ export default function Sidebar({ collapsed }: { collapsed: boolean }) {
           <div className="space-y-1">
             {hoveredGroup.children.map((child) => {
               const childActive = isActive(child.href, pathname);
+              const Comp = child.href === "#" ? "span" : Link;
               return (
-                <Link
+                <Comp
                   key={`fly-${child.href}`}
-                  href={child.href}
+                  {...(child.href !== "#" ? { href: child.href } : {})}
                   className={cn(
                     "flex items-center gap-2.5 rounded-md px-3 py-1.5 text-xs transition-all duration-150 group/flylink",
+                    child.soon && "opacity-60",
                     childActive
                       ? "bg-sidebar-primary text-sidebar-primary-foreground font-medium"
                       : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
@@ -403,7 +411,12 @@ export default function Sidebar({ collapsed }: { collapsed: boolean }) {
                     )}
                   />
                   <span>{child.name}</span>
-                </Link>
+                  {child.soon && (
+                    <span className="ml-auto rounded-full border border-sidebar-primary/30 bg-sidebar-primary/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-sidebar-primary">
+                      Soon
+                    </span>
+                  )}
+                </Comp>
               );
             })}
           </div>

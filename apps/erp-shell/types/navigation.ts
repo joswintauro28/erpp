@@ -4,6 +4,7 @@ export interface NavChild {
   name: string;
   href: string;
   icon: LucideIcon;
+  soon?: boolean;
 }
 
 export interface NavGroup {

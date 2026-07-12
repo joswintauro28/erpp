@@ -1,19 +1,15 @@
 from datetime import date, timedelta
 
-import sqlalchemy as sa
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.integrations.billing_client import get_invoices, get_payments_metrics
-from app.client.models import Client
-from app.product.models import Product
+from app.integrations.crm_client import get_complaints as get_crm_complaints, get_enquiries as get_crm_enquiries, get_customers
+from app.integrations.inventory_client import get_low_stock_products as get_inv_low_stock
 
 
 class NotificationService:
-    def __init__(self, db: AsyncSession, token: str):
-        self.db = db
+    def __init__(self, token: str):
         self.token = token
 
-    async def get_notifications(self, owner_id: int) -> dict:
+    async def get_notifications(self) -> dict:
         today = date.today()
         seven_days_ago = today - timedelta(days=7)
         notifications = []
@@ -54,27 +50,24 @@ class NotificationService:
             summary["overdue_invoices"] = 0
             summary["due_soon_invoices"] = 0
 
-        # Low stock (local DB)
-        low_stock_stmt = sa.select(Product).where(
-            Product.owner_id == owner_id,
-            Product.track_inventory == True,
-            Product.stock <= Product.low_stock_threshold,
-        )
-        low_stock_result = await self.db.execute(low_stock_stmt)
-        low_stock = low_stock_result.scalars().all()
-        summary["low_stock_items"] = len(low_stock)
-        if low_stock:
-            notifications.append({
-                "type": "low_stock",
-                "title": f"{len(low_stock)} product(s) below minimum stock level",
-                "severity": "medium",
-                "count": len(low_stock),
-            })
+        # Low stock via inventory-service
+        try:
+            low_stock = await get_inv_low_stock(self.token)
+            summary["low_stock_items"] = len(low_stock)
+            if low_stock:
+                notifications.append({
+                    "type": "low_stock",
+                    "title": f"{len(low_stock)} product(s) below minimum stock level",
+                    "severity": "medium",
+                    "count": len(low_stock),
+                })
+        except Exception:
+            summary["low_stock_items"] = 0
 
         # Recent payments via billing-service
         try:
             metrics = await get_payments_metrics(self.token)
-            recent_count = metrics.get("thisMonth", 0)  # approximate
+            recent_count = metrics.get("thisMonth", 0)
             summary["recent_payments"] = recent_count
             if recent_count > 0:
                 notifications.append({
@@ -86,21 +79,60 @@ class NotificationService:
         except Exception:
             summary["recent_payments"] = 0
 
-        # New clients (local DB)
-        new_clients_stmt = sa.select(sa.func.count()).select_from(Client).where(
-            Client.owner_id == owner_id,
-            Client.created_at >= seven_days_ago,
-        )
-        new_clients_result = await self.db.execute(new_clients_stmt)
-        new_clients = new_clients_result.scalar() or 0
-        summary["new_clients"] = new_clients
-        if new_clients > 0:
-            notifications.append({
-                "type": "new_clients",
-                "title": f"{new_clients} new client(s) added this week",
-                "severity": "info",
-                "count": new_clients,
-            })
+        # New clients via CRM service
+        try:
+            customers = await get_customers(self.token)
+            new_clients = sum(
+                1 for c in customers
+                if c.get("updated_at") and date.fromisoformat(c["updated_at"][:10]) >= seven_days_ago
+            )
+            summary["new_clients"] = new_clients
+            if new_clients > 0:
+                notifications.append({
+                    "type": "new_clients",
+                    "title": f"{new_clients} new client(s) added this week",
+                    "severity": "info",
+                    "count": new_clients,
+                })
+        except Exception:
+            summary["new_clients"] = 0
+
+        # Open CRM complaints
+        try:
+            complaints = await get_crm_complaints(self.token)
+            open_complaints = [c for c in complaints if c.get("status") in ("Open", "In Progress")]
+            summary["open_complaints"] = len(open_complaints)
+            if open_complaints:
+                notifications.append({
+                    "type": "open_complaints",
+                    "title": f"{len(open_complaints)} open complaint(s) requiring attention",
+                    "severity": "high",
+                    "count": len(open_complaints),
+                })
+        except Exception:
+            summary["open_complaints"] = 0
+
+        # Pending CRM enquiries
+        try:
+            enquiries = await get_crm_enquiries(self.token)
+            pending_enquiries = [e for e in enquiries if e.get("status") == "New"]
+            summary["pending_enquiries"] = len(pending_enquiries)
+            if pending_enquiries:
+                notifications.append({
+                    "type": "pending_enquiries",
+                    "title": f"{len(pending_enquiries)} new enquiry(ies) awaiting reply",
+                    "severity": "medium",
+                    "count": len(pending_enquiries),
+                })
+        except Exception:
+            summary["pending_enquiries"] = 0
+
+        # Inventory low stock from service
+        try:
+            low_stock_service = await get_inv_low_stock(self.token)
+            summary["low_stock_service"] = len(low_stock_service)
+        except Exception:
+            summary["low_stock_service"] = 0
 
         return {
             "notifications": notifications,

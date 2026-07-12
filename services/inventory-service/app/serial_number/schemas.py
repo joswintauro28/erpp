@@ -17,7 +17,7 @@ class SerialNumberUpdate(BaseModel):
 
 class SerialNumberOut(BaseModel):
     id: int
-    owner_id: int
+    organization_id: int
     product_id: int
     warehouse_id: int
     serial_number: str

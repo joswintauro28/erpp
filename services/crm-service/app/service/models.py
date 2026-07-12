@@ -12,7 +12,7 @@ class Complaint(Base):
     customer = Column(String)
     date_raised = Column(String)
     status = Column(String)
-    owner_id = Column(Integer, nullable=False, index=True)
+    organization_id = Column(Integer, nullable=False, index=True)
 
 
 class Feedback(Base):
@@ -24,4 +24,4 @@ class Feedback(Base):
     comment = Column(String)
     customer = Column(String)
     date = Column(String)
-    owner_id = Column(Integer, nullable=False, index=True)
+    organization_id = Column(Integer, nullable=False, index=True)

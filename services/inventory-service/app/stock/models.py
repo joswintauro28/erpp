@@ -10,7 +10,7 @@ class Stock(Base):
     __tablename__ = "stock"
 
     id: Mapped[int] = mapped_column(sa.Integer, primary_key=True)
-    owner_id: Mapped[int] = mapped_column(sa.Integer, nullable=False, index=True)
+    organization_id: Mapped[int] = mapped_column(sa.Integer, nullable=False, index=True)
     product_id: Mapped[int] = mapped_column(sa.Integer, nullable=False, index=True)
     warehouse_id: Mapped[int] = mapped_column(sa.Integer, nullable=False, index=True)
     quantity: Mapped[int] = mapped_column(sa.Integer, default=0)
@@ -28,7 +28,7 @@ class StockMovement(Base):
     __tablename__ = "stock_movements"
 
     id: Mapped[int] = mapped_column(sa.Integer, primary_key=True)
-    owner_id: Mapped[int] = mapped_column(sa.Integer, nullable=False, index=True)
+    organization_id: Mapped[int] = mapped_column(sa.Integer, nullable=False, index=True)
     product_id: Mapped[int] = mapped_column(sa.Integer, nullable=False, index=True)
     warehouse_id: Mapped[int] = mapped_column(sa.Integer, nullable=False, index=True)
     type: Mapped[str] = mapped_column(sa.String(20), nullable=False)

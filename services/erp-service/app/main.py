@@ -1,18 +1,14 @@
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+import logging
+
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.core.config import settings
 from app.core.exceptions import TooManyRequestsException
-from app.core.database import engine, Base
 from app.core.middleware import SecurityHeadersMiddleware
-
-# Import models to ensure they are registered in Base metadata
-from app.client.models import Client
-from app.lead.models import Lead
-from app.product.models import Product
 
 # Import feature routers
 from app.client.router import router as clients_router
@@ -24,14 +20,7 @@ from app.notification.router import router as notifications_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup: Create tables if they don't exist
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-
     yield
-
-    # Shutdown
-    await engine.dispose()
 
 
 app = FastAPI(
@@ -54,18 +43,19 @@ app.add_middleware(
 )
 
 
-@app.exception_handler(TooManyRequestsException)
-async def too_many_requests_handler(request, exc):
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request, exc):
+    if exc.status_code == 429:
+        return JSONResponse(status_code=429, content={"detail": exc.detail})
     return JSONResponse(
-        status_code=429,
+        status_code=exc.status_code,
         content={"detail": exc.detail},
     )
 
 
 @app.exception_handler(Exception)
-async def global_exception_handler(request, exc):
-    import logging
-    logging.error(f"Unhandled exception occurred: {str(exc)}", exc_info=True)
+async def unhandled_exception_handler(request, exc):
+    logging.error(f"Unhandled exception: {str(exc)}", exc_info=True)
     return JSONResponse(
         status_code=500,
         content={"detail": "Internal server error"},

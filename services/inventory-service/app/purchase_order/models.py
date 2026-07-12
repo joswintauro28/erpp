@@ -10,7 +10,7 @@ class PurchaseOrder(Base):
     __tablename__ = "purchase_orders"
 
     id: Mapped[int] = mapped_column(sa.Integer, primary_key=True)
-    owner_id: Mapped[int] = mapped_column(sa.Integer, nullable=False, index=True)
+    organization_id: Mapped[int] = mapped_column(sa.Integer, nullable=False, index=True)
     supplier_id: Mapped[int] = mapped_column(sa.Integer, nullable=False, index=True)
     warehouse_id: Mapped[int] = mapped_column(sa.Integer, nullable=False, index=True)
     order_number: Mapped[str] = mapped_column(sa.String(100), unique=True, nullable=False)

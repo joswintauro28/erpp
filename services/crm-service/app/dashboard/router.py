@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.core.database import Base, BaseRepository
-from app.core.deps import get_db, get_current_user_id
+from app.core.deps import get_db, get_current_org_id
 from app.customer.models import Customer
 from app.lead.models import Lead, Opportunity
 from app.interaction.models import Enquiry, FollowUp, Task
@@ -18,7 +18,7 @@ router = APIRouter(prefix="/api", tags=["dashboard"])
 @router.get("/dashboard")
 async def get_dashboard_data(
     db: AsyncSession = Depends(get_db),
-    user_id: int = Depends(get_current_user_id),
+    user_id: int = Depends(get_current_org_id),
 ):
     result = await db.execute(sa.select(Metric))
     metrics = list(result.scalars().all())
@@ -32,16 +32,16 @@ async def get_dashboard_data(
     result = await db.execute(sa.select(HotLead))
     hot_leads = list(result.scalars().all())
 
-    result = await db.execute(sa.select(Customer).where(Customer.owner_id == user_id))
+    result = await db.execute(sa.select(Customer).where(Customer.organization_id == user_id))
     customers = list(result.scalars().all())
     total_customers = len(customers)
 
-    result = await db.execute(sa.select(Opportunity).where(Opportunity.owner_id == user_id))
+    result = await db.execute(sa.select(Opportunity).where(Opportunity.organization_id == user_id))
     opportunities = list(result.scalars().all())
     pipeline_value = sum(int(o.value) for o in opportunities if o.value and o.value.isdigit())
     open_opportunities = len([o for o in opportunities if o.stage not in ("Closed Won", "Lost")])
 
-    result = await db.execute(sa.select(Complaint).where(Complaint.owner_id == user_id))
+    result = await db.execute(sa.select(Complaint).where(Complaint.organization_id == user_id))
     complaints = list(result.scalars().all())
     open_complaints = len([c for c in complaints if c.status in ("Open", "In Progress")])
 
@@ -60,10 +60,10 @@ async def get_dashboard_data(
 @router.get("/reports/dashboard")
 async def get_reports_dashboard(
     db: AsyncSession = Depends(get_db),
-    user_id: int = Depends(get_current_user_id),
+    user_id: int = Depends(get_current_org_id),
 ):
     result = await db.execute(
-        sa.select(Opportunity).where(Opportunity.owner_id == user_id)
+        sa.select(Opportunity).where(Opportunity.organization_id == user_id)
     )
     opportunities = list(result.scalars().all())
     total_opps = len(opportunities)
@@ -72,7 +72,7 @@ async def get_reports_dashboard(
     open_opps = len([o for o in opportunities if o.stage not in ("Won", "Lost")])
 
     result = await db.execute(
-        sa.select(Lead).where(Lead.owner_id == user_id)
+        sa.select(Lead).where(Lead.organization_id == user_id)
     )
     leads = list(result.scalars().all())
     total_leads = len(leads)

@@ -9,7 +9,7 @@ class CustomerBase(BaseModel):
     tier: str
     arr: int
     status: str
-    owner_id: int
+    organization_id: int
     updated_at: str
 
 
@@ -67,7 +67,7 @@ class DocumentBase(BaseModel):
     account: str
     size: str
     status: str
-    owner_id: int
+    organization_id: int
     updated_at: str
     file_data: Optional[str] = None
     summary: Optional[str] = None

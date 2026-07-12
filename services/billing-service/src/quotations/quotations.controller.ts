@@ -25,72 +25,64 @@ export class QuotationsController {
   constructor(private readonly quotationsService: QuotationsService) {}
 
   @Get()
-  @Permissions("invoices.quotations.view")
+  @Permissions("quotations.view")
   async findAll(@CurrentUser() user: JwtPayload) {
-    return this.quotationsService.findAll(user.user_id);
+    return this.quotationsService.findAll(user.organization_id);
   }
 
   @Get(":id")
-  @Permissions("invoices.quotations.view")
+  @Permissions("quotations.view")
   async findOne(
     @Param("id", ParseIntPipe) id: number,
     @CurrentUser() user: JwtPayload,
   ) {
-    return this.quotationsService.findOne(id, user.user_id);
+    return this.quotationsService.findOne(id, user.organization_id);
   }
 
   @Post()
-  @Permissions("invoices.quotations.create")
+  @Permissions("quotations.create")
   async create(
     @Body() dto: CreateQuotationDto,
     @CurrentUser() user: JwtPayload,
   ) {
-    return this.quotationsService.create(
-      user.user_id,
-      dto,
-      user.organization_id,
-    );
+    return this.quotationsService.create(user.organization_id, dto);
   }
 
   @Put(":id")
-  @Permissions("invoices.quotations.update")
+  @Permissions("quotations.edit")
   async update(
     @Param("id", ParseIntPipe) id: number,
     @Body() dto: Partial<CreateQuotationDto>,
     @CurrentUser() user: JwtPayload,
   ) {
-    return this.quotationsService.update(id, user.user_id, dto);
+    return this.quotationsService.update(id, user.organization_id, dto);
   }
 
   @Put(":id/status")
-  @Permissions("invoices.quotations.update")
+  @Permissions("quotations.edit")
   async updateStatus(
     @Param("id", ParseIntPipe) id: number,
     @Query("status") status: QuotationStatus,
     @CurrentUser() user: JwtPayload,
   ) {
-    return this.quotationsService.updateStatus(id, user.user_id, status);
+    return this.quotationsService.updateStatus(id, user.organization_id, status);
   }
 
   @Delete(":id")
-  @Permissions("invoices.quotations.delete")
+  @Permissions("quotations.delete")
   async remove(
     @Param("id", ParseIntPipe) id: number,
     @CurrentUser() user: JwtPayload,
   ) {
-    await this.quotationsService.remove(id, user.user_id);
+    await this.quotationsService.remove(id, user.organization_id);
   }
 
   @Post(":id/convert")
-  @Permissions("invoices.quotations.convert")
+  @Permissions("quotations.edit")
   async convertToInvoice(
     @Param("id", ParseIntPipe) id: number,
     @CurrentUser() user: JwtPayload,
   ) {
-    return this.quotationsService.convertToInvoice(
-      id,
-      user.user_id,
-      user.organization_id,
-    );
+    return this.quotationsService.convertToInvoice(id, user.organization_id);
   }
 }

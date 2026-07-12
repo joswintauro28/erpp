@@ -71,7 +71,7 @@ class ReportBase(BaseModel):
     category: str
     last_run: str
     status: str
-    owner_id: int
+    organization_id: int
 
 
 class Report(ReportBase):

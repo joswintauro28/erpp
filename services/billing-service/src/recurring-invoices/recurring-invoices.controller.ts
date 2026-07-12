@@ -27,7 +27,7 @@ export class RecurringInvoicesController {
   @Get()
   @Permissions("invoices.view")
   async findAll(@CurrentUser() user: JwtPayload) {
-    return this.recurringInvoicesService.findAll(user.user_id);
+    return this.recurringInvoicesService.findAll(user.organization_id);
   }
 
   @Get(":id")
@@ -36,7 +36,7 @@ export class RecurringInvoicesController {
     @Param("id", ParseIntPipe) id: number,
     @CurrentUser() user: JwtPayload,
   ) {
-    return this.recurringInvoicesService.findOne(id, user.user_id);
+    return this.recurringInvoicesService.findOne(id, user.organization_id);
   }
 
   @Post()
@@ -45,11 +45,7 @@ export class RecurringInvoicesController {
     @Body() dto: CreateRecurringInvoiceDto,
     @CurrentUser() user: JwtPayload,
   ) {
-    return this.recurringInvoicesService.create(
-      user.user_id,
-      dto,
-      user.organization_id,
-    );
+    return this.recurringInvoicesService.create(user.organization_id, dto);
   }
 
   @Delete(":id")
@@ -58,6 +54,6 @@ export class RecurringInvoicesController {
     @Param("id", ParseIntPipe) id: number,
     @CurrentUser() user: JwtPayload,
   ) {
-    await this.recurringInvoicesService.remove(id, user.user_id);
+    await this.recurringInvoicesService.remove(id, user.organization_id);
   }
 }

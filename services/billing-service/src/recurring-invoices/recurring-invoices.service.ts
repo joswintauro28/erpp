@@ -22,23 +22,23 @@ export class RecurringInvoicesService {
     };
   }
 
-  async findAll(ownerId: number) {
+  async findAll(organizationId: number) {
     const items = await this.prisma.recurringInvoice.findMany({
-      where: { ownerId },
+      where: { organizationId },
       orderBy: { createdAt: "desc" },
     });
     return items.map((r) => this.flatten(r));
   }
 
-  async findOne(id: number, ownerId: number) {
+  async findOne(id: number, organizationId: number) {
     const item = await this.prisma.recurringInvoice.findFirst({
-      where: { id, ownerId },
+      where: { id, organizationId },
     });
     if (!item) throw new NotFoundException("Recurring invoice not found");
     return this.flatten(item);
   }
 
-  async create(ownerId: number, dto: CreateRecurringInvoiceDto, organizationId?: number) {
+  async create(organizationId: number, dto: CreateRecurringInvoiceDto) {
     const total = dto.items.reduce(
       (sum, item) => sum + Number(item.quantity) * Number(item.unitPrice),
       0,
@@ -46,7 +46,6 @@ export class RecurringInvoicesService {
 
     const item = await this.prisma.recurringInvoice.create({
       data: {
-        ownerId,
         organizationId,
         clientId: dto.clientId,
         clientName: dto.clientName,
@@ -63,9 +62,9 @@ export class RecurringInvoicesService {
     return this.flatten(item);
   }
 
-  async remove(id: number, ownerId: number) {
+  async remove(id: number, organizationId: number) {
     const item = await this.prisma.recurringInvoice.findFirst({
-      where: { id, ownerId },
+      where: { id, organizationId },
     });
     if (!item) throw new NotFoundException("Recurring invoice not found");
     await this.prisma.recurringInvoice.delete({ where: { id } });

@@ -1,67 +1,83 @@
-from datetime import date
-
-import sqlalchemy as sa
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.integrations.billing_client import get_dashboard_billing, get_invoice_summary
-from app.client.models import Client
-from app.product.models import Product
+from app.integrations.crm_client import get_dashboard_crm, get_customers, get_leads
+from app.integrations.inventory_client import get_dashboard_inventory
 
 
 class DashboardService:
-    def __init__(self, db: AsyncSession, token: str):
-        self.db = db
+    def __init__(self, token: str):
         self.token = token
 
-    async def get_stats(self, owner_id: int) -> dict:
-        total_clients = await self._count(Client, owner_id)
-        total_products = await self._count(Product, owner_id)
+    def _sum_invoices(self, summary: list | None) -> int:
+        if not summary or not isinstance(summary, list):
+            return 0
+        return sum(item.get("count", 0) for item in summary)
 
-        low_stock_stmt = sa.select(sa.func.count()).select_from(Product).where(
-            Product.owner_id == owner_id,
-            Product.track_inventory == True,
-            Product.stock <= Product.low_stock_threshold,
-        )
-        low_stock_result = await self.db.execute(low_stock_stmt)
-        low_stock = low_stock_result.scalar() or 0
+    async def get_stats(self) -> dict:
+        billing, crm, inventory = await self._fetch_all_dashboards()
 
-        billing = await get_dashboard_billing(self.token)
-
+        summary = billing.get("summary", [])
         return {
-            "total_clients": total_clients,
-            "total_invoices": billing.get("summary", {}).get("totalInvoices", 0),
-            "total_revenue": billing.get("totalRevenue", 0),
+            "total_clients": crm.get("total_customers", 0),
+            "total_invoices": self._sum_invoices(summary),
+            "total_revenue": billing.get("total_revenue", 0),
             "outstanding_revenue": billing.get("outstanding", 0),
             "overdue_amount": billing.get("overdue", 0),
-            "total_products": total_products,
-            "low_stock_count": low_stock,
+            "total_products": inventory.get("total_products", 0),
+            "low_stock_count": inventory.get("low_stock_count", 0),
+            "pipeline_value": crm.get("pipeline_value", 0),
+            "open_opportunities": crm.get("open_opportunities", 0),
+            "open_complaints": crm.get("open_complaints", 0),
+            "total_warehouses": inventory.get("total_warehouses", 0),
+            "total_stock": inventory.get("total_stock", 0),
+            "pending_purchase_orders": inventory.get("pending_pos", 0),
+            "total_customers": crm.get("total_customers", 0),
+            "total_leads": crm.get("total_leads", 0),
         }
 
-    async def get_client_growth(self, owner_id: int) -> list[dict]:
-        stmt = sa.text("""
-            SELECT
-                DATE_TRUNC('month', created_at)::date AS month,
-                COUNT(*) as count
-            FROM clients
-            WHERE owner_id = :owner_id
-            GROUP BY month
-            ORDER BY month
-        """)
-        result = await self.db.execute(stmt, {"owner_id": owner_id})
-        return [
-            {"month": str(r.month), "count": r.count}
-            for r in result.all()
-        ]
+    async def get_client_growth(self) -> list[dict]:
+        crm = await get_dashboard_crm(self.token)
+        total = crm.get("total_customers", 0)
+        return [{"month": "Current", "count": total}] if total > 0 else []
 
-    async def get_payment_analytics(self, token: str) -> list[dict]:
-        billing = await get_dashboard_billing(token)
-        metrics = billing.get("paymentMetrics", {})
+    async def get_payment_analytics(self) -> list[dict]:
+        billing = await get_dashboard_billing(self.token)
+        metrics = billing.get("payment_metrics", {})
+        labels = {
+            "today": "Today",
+            "this_month": "This Month",
+            "outstanding": "Outstanding",
+            "refunds": "Refunds",
+            "failed": "Failed",
+        }
         return [
-            {"method": k, "count": v.get("count", 0), "amount": v.get("total", 0)}
+            {"method": labels.get(k, k), "amount": v, "count": 0}
             for k, v in metrics.items()
+            if isinstance(v, (int, float))
         ]
 
-    async def _count(self, model, owner_id: int) -> int:
-        stmt = sa.select(sa.func.count()).select_from(model).where(model.owner_id == owner_id)
-        result = await self.db.execute(stmt)
-        return result.scalar() or 0
+    async def get_crm_dashboard(self) -> dict:
+        return await get_dashboard_crm(self.token)
+
+    async def get_inventory_dashboard(self) -> dict:
+        return await get_dashboard_inventory(self.token)
+
+    async def get_executive_overview(self) -> dict:
+        billing, crm, inventory = await self._fetch_all_dashboards()
+        return {
+            "billing": billing,
+            "crm": crm,
+            "inventory": inventory,
+        }
+
+    async def _fetch_all_dashboards(self) -> tuple[dict, dict, dict]:
+        import asyncio
+        results = await asyncio.gather(
+            get_dashboard_billing(self.token),
+            get_dashboard_crm(self.token),
+            get_dashboard_inventory(self.token),
+            return_exceptions=True,
+        )
+        billing = results[0] if not isinstance(results[0], Exception) else {}
+        crm = results[1] if not isinstance(results[1], Exception) else {}
+        inventory = results[2] if not isinstance(results[2], Exception) else {}
+        return billing, crm, inventory

@@ -24,7 +24,7 @@ class WarehouseUpdate(BaseModel):
 
 class WarehouseOut(BaseModel):
     id: int
-    owner_id: int
+    organization_id: int
     name: str
     code: str
     address: str | None

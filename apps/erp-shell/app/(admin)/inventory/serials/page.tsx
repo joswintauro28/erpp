@@ -1,14 +1,19 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { Search, ScanBarcode } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState, useMemo, useEffect } from "react";
+import { Search, ScanBarcode, Loader2 } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { api } from "@/services/api";
 
-import type { SerialItem } from "@/types/inventory";
+interface SerialItem {
+  id: number; serial_number: string; product_id: number;
+  status: "in_stock" | "sold" | "returned" | "warranty" | "scrapped";
+  warehouse_id: number; purchase_order_id: number | null;
+}
 
 const statusColors: Record<string, string> = {
   in_stock: "var(--shell-success)",
@@ -30,22 +35,38 @@ export default function Serials() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [serials, setSerials] = useState<SerialItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    api.get<any[]>("/serial-numbers")
+      .then((data) => setSerials(data.map((s) => ({
+        id: s.id, serial_number: s.serial_number,
+        product_id: s.product_id,
+        status: s.status as SerialItem["status"],
+        warehouse_id: s.warehouse_id,
+        purchase_order_id: s.purchase_order_id ?? null,
+      }))))
+      .catch(() => setSerials([]))
+      .finally(() => setLoading(false));
+  }, []);
 
   const filtered = useMemo(() => {
     let res = serials;
     if (statusFilter) res = res.filter((s) => s.status === statusFilter);
     if (search.trim()) {
       const q = search.toLowerCase();
-      res = res.filter(
-        (s) =>
-          s.serial_number.toLowerCase().includes(q) ||
-          s.product_name.toLowerCase().includes(q) ||
-          s.sku.toLowerCase().includes(q) ||
-          s.customer.toLowerCase().includes(q)
-      );
+      res = res.filter((s) => s.serial_number.toLowerCase().includes(q));
     }
     return res;
-  }, [search, statusFilter]);
+  }, [serials, search, statusFilter]);
+
+  if (loading) {
+    return (
+      <div className="flex h-[60vh] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-[--shell-muted]" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -63,7 +84,7 @@ export default function Serials() {
       <div className="flex flex-wrap items-center gap-3">
         <div className="relative flex-1 max-w-xs">
           <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[--shell-muted]" />
-          <Input placeholder="Search by serial, product, SKU..." className="pl-8" value={search} onChange={(e) => setSearch(e.target.value)} />
+          <Input placeholder="Search by serial number..." className="pl-8" value={search} onChange={(e) => setSearch(e.target.value)} />
         </div>
         <div className="flex gap-1">
           {["", "in_stock", "sold", "returned", "warranty", "scrapped"].map((s) => (
@@ -82,38 +103,41 @@ export default function Serials() {
 
       <Card>
         <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Serial #</TableHead>
-                <TableHead>Product</TableHead>
-                <TableHead>SKU</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Warehouse</TableHead>
-                <TableHead>Sold Date</TableHead>
-                <TableHead>Warranty Until</TableHead>
-                <TableHead>Customer</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filtered.map((s) => (
-                <TableRow key={s.id}>
-                  <TableCell className="font-mono text-xs font-medium">{s.serial_number}</TableCell>
-                  <TableCell className="text-sm font-medium">{s.product_name}</TableCell>
-                  <TableCell className="font-mono text-xs text-[--shell-muted]">{s.sku}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className="text-xs" style={{ borderColor: statusColors[s.status], color: statusColors[s.status] }}>
-                      {statusLabels[s.status]}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-xs">{s.warehouse}</TableCell>
-                  <TableCell className="font-mono text-xs text-[--shell-muted]">{s.sold_date || "-"}</TableCell>
-                  <TableCell className="font-mono text-xs text-[--shell-muted]">{s.warranty_until || "-"}</TableCell>
-                  <TableCell className="text-xs text-[--shell-muted]">{s.customer || "-"}</TableCell>
+          {filtered.length === 0 ? (
+            <div className="flex flex-col items-center gap-3 py-20 text-[--shell-muted]">
+              <ScanBarcode className="h-12 w-12" />
+              <p className="text-base font-medium text-[--shell-foreground]">
+                {serials.length === 0 ? "No serial numbers yet" : "No serials match your search"}
+              </p>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Serial #</TableHead>
+                  <TableHead>Product ID</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Warehouse ID</TableHead>
+                  <TableHead>PO Reference</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {filtered.map((s) => (
+                  <TableRow key={s.id}>
+                    <TableCell className="font-mono text-xs font-medium">{s.serial_number}</TableCell>
+                    <TableCell className="text-xs text-[--shell-muted]">#{s.product_id}</TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className="text-xs" style={{ borderColor: statusColors[s.status], color: statusColors[s.status] }}>
+                        {statusLabels[s.status]}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-xs text-[--shell-muted]">#{s.warehouse_id}</TableCell>
+                    <TableCell className="font-mono text-xs text-[--shell-muted]">{s.purchase_order_id ? `PO-${s.purchase_order_id}` : "-"}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
     </div>

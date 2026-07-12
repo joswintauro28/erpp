@@ -13,7 +13,7 @@ class Customer(Base):
     tier = Column(String)
     arr = Column(Integer)
     status = Column(String)
-    owner_id = Column(Integer, nullable=False, index=True)
+    organization_id = Column(Integer, nullable=False, index=True)
     updated_at = Column(String)
 
 
@@ -29,7 +29,7 @@ class Contact(Base):
     phone = Column(String)
     type = Column(String)
     last_contact = Column(String)
-    owner_id = Column(Integer, nullable=False, index=True)
+    organization_id = Column(Integer, nullable=False, index=True)
 
 
 class Document(Base):
@@ -42,7 +42,7 @@ class Document(Base):
     account = Column(String)
     size = Column(String)
     status = Column(String)
-    owner_id = Column(Integer, nullable=False, index=True)
+    organization_id = Column(Integer, nullable=False, index=True)
     updated_at = Column(String)
     file_data = Column(String, nullable=True)
     summary = Column(String, nullable=True)

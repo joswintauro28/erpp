@@ -13,7 +13,7 @@ class Lead(Base):
     source = Column(String)
     est_value = Column(Integer)
     status = Column(String)
-    owner_id = Column(Integer, nullable=False, index=True)
+    organization_id = Column(Integer, nullable=False, index=True)
     updated_at = Column(String)
 
 
@@ -28,4 +28,4 @@ class Opportunity(Base):
     probability = Column(String)
     close_date = Column(String)
     stage = Column(String)
-    owner_id = Column(Integer, nullable=False, index=True)
+    organization_id = Column(Integer, nullable=False, index=True)

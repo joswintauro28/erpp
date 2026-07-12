@@ -27,7 +27,7 @@ class Requirement(Base):
     category = Column(String)
     priority = Column(String)
     status = Column(String)
-    owner_id = Column(Integer, nullable=False, index=True)
+    organization_id = Column(Integer, nullable=False, index=True)
 
 
 class Quotation(Base):
@@ -40,7 +40,7 @@ class Quotation(Base):
     value = Column(String)
     valid_until = Column(String)
     status = Column(String)
-    owner_id = Column(Integer, nullable=False, index=True)
+    organization_id = Column(Integer, nullable=False, index=True)
     file_data = Column(String, nullable=True)
     file_name = Column(String, nullable=True)
 
@@ -56,6 +56,6 @@ class SalesOrder(Base):
     value = Column(String)
     eta = Column(String)
     status = Column(String)
-    owner_id = Column(Integer, nullable=False, index=True)
+    organization_id = Column(Integer, nullable=False, index=True)
     file_data = Column(String, nullable=True)
     file_name = Column(String, nullable=True)

@@ -15,7 +15,7 @@ class AIAssistantLogBase(BaseModel):
     category: str
     date: str
     status: str
-    owner_id: int
+    organization_id: int
 
 
 class AIAssistantLog(AIAssistantLogBase):

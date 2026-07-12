@@ -14,6 +14,6 @@ export class DashboardController {
   @Get("billing")
   @Permissions("dashboard.view")
   async getBillingKpis(@CurrentUser() user: JwtPayload) {
-    return this.dashboardService.getBillingKpis(user.user_id);
+    return this.dashboardService.getBillingKpis(user.organization_id);
   }
 }

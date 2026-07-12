@@ -13,26 +13,26 @@ class InventoryDashboardService:
     def __init__(self, db: AsyncSession):
         self.db = db
 
-    async def get_kpis(self, owner_id: int) -> dict:
-        total_products = await self._count(Product, owner_id)
-        total_warehouses = await self._count(Warehouse, owner_id)
-        total_suppliers = await self._count(Supplier, owner_id)
+    async def get_kpis(self, organization_id: int) -> dict:
+        total_products = await self._count(Product, organization_id)
+        total_warehouses = await self._count(Warehouse, organization_id)
+        total_suppliers = await self._count(Supplier, organization_id)
 
         low_stock_stmt = sa.select(sa.func.count()).select_from(Stock).where(
-            Stock.owner_id == owner_id,
+            Stock.organization_id == organization_id,
             Stock.quantity <= 10,
         )
         result = await self.db.execute(low_stock_stmt)
         low_stock_count = result.scalar() or 0
 
         total_stock_stmt = sa.select(sa.func.coalesce(sa.func.sum(Stock.quantity), 0)).where(
-            Stock.owner_id == owner_id,
+            Stock.organization_id == organization_id,
         )
         result = await self.db.execute(total_stock_stmt)
         total_stock = result.scalar() or 0
 
         pending_po_stmt = sa.select(sa.func.count()).select_from(PurchaseOrder).where(
-            PurchaseOrder.owner_id == owner_id,
+            PurchaseOrder.organization_id == organization_id,
             PurchaseOrder.status.in_(["draft", "ordered"]),
         )
         result = await self.db.execute(pending_po_stmt)
@@ -47,7 +47,7 @@ class InventoryDashboardService:
             "pending_purchase_orders": pending_po_count,
         }
 
-    async def get_low_stock_products(self, owner_id: int, limit: int = 10) -> list[dict]:
+    async def get_low_stock_products(self, organization_id: int, limit: int = 10) -> list[dict]:
         stmt = sa.select(
             Stock.product_id,
             Stock.warehouse_id,
@@ -58,7 +58,7 @@ class InventoryDashboardService:
         ).join(
             Product, Stock.product_id == Product.id,
         ).where(
-            Stock.owner_id == owner_id,
+            Stock.organization_id == organization_id,
             Stock.quantity <= Product.low_stock_threshold,
         ).limit(limit)
         result = await self.db.execute(stmt)
@@ -74,7 +74,7 @@ class InventoryDashboardService:
             for r in result.all()
         ]
 
-    async def get_recent_movements(self, owner_id: int, limit: int = 10) -> list[dict]:
+    async def get_recent_movements(self, organization_id: int, limit: int = 10) -> list[dict]:
         stmt = sa.select(
             StockMovement.id,
             StockMovement.product_id,
@@ -86,7 +86,7 @@ class InventoryDashboardService:
         ).join(
             Product, StockMovement.product_id == Product.id,
         ).where(
-            StockMovement.owner_id == owner_id,
+            StockMovement.organization_id == organization_id,
         ).order_by(
             StockMovement.created_at.desc(),
         ).limit(limit)
@@ -104,7 +104,7 @@ class InventoryDashboardService:
             for r in result.all()
         ]
 
-    async def get_warehouse_summary(self, owner_id: int) -> list[dict]:
+    async def get_warehouse_summary(self, organization_id: int) -> list[dict]:
         stmt = sa.select(
             Warehouse.id,
             Warehouse.name,
@@ -114,7 +114,7 @@ class InventoryDashboardService:
         ).outerjoin(
             Stock, Warehouse.id == Stock.warehouse_id,
         ).where(
-            Warehouse.owner_id == owner_id,
+            Warehouse.organization_id == organization_id,
         ).group_by(
             Warehouse.id, Warehouse.name, Warehouse.code,
         )
@@ -130,7 +130,7 @@ class InventoryDashboardService:
             for r in result.all()
         ]
 
-    async def _count(self, model, owner_id: int) -> int:
-        stmt = sa.select(sa.func.count()).select_from(model).where(model.owner_id == owner_id)
+    async def _count(self, model, organization_id: int) -> int:
+        stmt = sa.select(sa.func.count()).select_from(model).where(model.organization_id == organization_id)
         result = await self.db.execute(stmt)
         return result.scalar() or 0

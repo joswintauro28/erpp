@@ -34,7 +34,7 @@ async def get_current_token_payload(
         raise CredentialsException("Invalid or expired access token")
 
 
-async def get_current_user_id(
+async def get_current_org_id(
     payload: dict = Depends(get_current_token_payload),
 ) -> int:
-    return payload["user_id"]
+    return payload.get("organization_id", payload["user_id"])

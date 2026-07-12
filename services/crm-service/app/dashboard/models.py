@@ -49,4 +49,4 @@ class Report(Base):
     category = Column(String)
     last_run = Column(String)
     status = Column(String)
-    owner_id = Column(Integer, nullable=False, index=True)
+    organization_id = Column(Integer, nullable=False, index=True)

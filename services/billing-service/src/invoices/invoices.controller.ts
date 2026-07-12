@@ -26,7 +26,7 @@ export class InvoicesController {
   @Get()
   @Permissions("invoices.view")
   async findAll(@CurrentUser() user: JwtPayload) {
-    return this.invoicesService.findAll(user.user_id);
+    return this.invoicesService.findAll(user.organization_id);
   }
 
   @Get(":id")
@@ -35,7 +35,7 @@ export class InvoicesController {
     @Param("id", ParseIntPipe) id: number,
     @CurrentUser() user: JwtPayload,
   ) {
-    return this.invoicesService.findOne(id, user.user_id);
+    return this.invoicesService.findOne(id, user.organization_id);
   }
 
   @Post()
@@ -44,21 +44,17 @@ export class InvoicesController {
     @Body() dto: CreateInvoiceDto,
     @CurrentUser() user: JwtPayload,
   ) {
-    return this.invoicesService.create(
-      user.user_id,
-      dto,
-      user.organization_id,
-    );
+    return this.invoicesService.create(user.organization_id, dto);
   }
 
   @Put(":id/status")
-  @Permissions("invoices.update")
+  @Permissions("invoices.edit")
   async updateStatus(
     @Param("id", ParseIntPipe) id: number,
     @Body() dto: UpdateInvoiceStatusDto,
     @CurrentUser() user: JwtPayload,
   ) {
-    return this.invoicesService.updateStatus(id, user.user_id, dto.status);
+    return this.invoicesService.updateStatus(id, user.organization_id, dto.status);
   }
 
   @Delete(":id")
@@ -67,6 +63,6 @@ export class InvoicesController {
     @Param("id", ParseIntPipe) id: number,
     @CurrentUser() user: JwtPayload,
   ) {
-    await this.invoicesService.delete(id, user.user_id);
+    await this.invoicesService.delete(id, user.organization_id);
   }
 }

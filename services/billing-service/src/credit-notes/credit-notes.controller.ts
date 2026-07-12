@@ -24,7 +24,7 @@ export class CreditNotesController {
   @Get()
   @Permissions("invoices.view")
   async findAll(@CurrentUser() user: JwtPayload) {
-    return this.creditNotesService.findAll(user.user_id);
+    return this.creditNotesService.findAll(user.organization_id);
   }
 
   @Post()
@@ -33,11 +33,7 @@ export class CreditNotesController {
     @Body() dto: CreateCreditNoteDto,
     @CurrentUser() user: JwtPayload,
   ) {
-    return this.creditNotesService.create(
-      user.user_id,
-      dto,
-      user.organization_id,
-    );
+    return this.creditNotesService.create(user.organization_id, dto);
   }
 
   @Delete(":id")
@@ -46,6 +42,6 @@ export class CreditNotesController {
     @Param("id", ParseIntPipe) id: number,
     @CurrentUser() user: JwtPayload,
   ) {
-    await this.creditNotesService.remove(id, user.user_id);
+    await this.creditNotesService.remove(id, user.organization_id);
   }
 }

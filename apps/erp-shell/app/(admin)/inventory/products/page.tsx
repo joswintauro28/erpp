@@ -25,8 +25,8 @@ export default function Products() {
   const products: ProductView[] = useMemo(() =>
     apiProducts.map((p) => ({
       id: p.id, name: p.name, sku: p.sku ?? "-", category: p.category ?? "Uncategorized",
-      price: p.price, cost: p.cost_price, stock: p.stock, unit: "pcs",
-      reorder_level: p.low_stock_threshold, hsn: "", is_active: true,
+      price: p.price ?? 0, cost: p.cost_price ?? 0, stock: p.stock ?? 0, unit: "pcs",
+      reorder_level: p.low_stock_threshold ?? 0, hsn: "", is_active: true,
     })),
   [apiProducts]);
 
@@ -45,9 +45,9 @@ export default function Products() {
     return res;
   }, [products, search, categoryFilter]);
 
-  const totalStock = products.reduce((s, p) => s + p.stock, 0);
-  const totalValue = products.reduce((s, p) => s + p.stock * p.cost, 0);
-  const lowStock = products.filter((p) => p.stock <= p.reorder_level).length;
+  const totalStock = products.reduce((s, p) => s + (p.stock ?? 0), 0);
+  const totalValue = products.reduce((s, p) => s + (p.stock ?? 0) * (p.cost ?? 0), 0);
+  const lowStock = products.filter((p) => (p.stock ?? 0) <= (p.reorder_level ?? 0)).length;
 
   if (loading) {
     return (
@@ -157,9 +157,9 @@ export default function Products() {
                     <TableCell className="text-sm font-medium">{p.name}</TableCell>
                     <TableCell><Badge variant="outline" className="text-xs">{p.category}</Badge></TableCell>
                     <TableCell className="text-xs text-[--shell-muted]">{p.unit}</TableCell>
-                    <TableCell className={`font-mono text-sm text-right ${p.stock <= p.reorder_level ? "text-[--shell-danger] font-semibold" : ""}`}>
-                      {p.stock.toLocaleString()}
-                      {p.stock <= p.reorder_level && <span className="ml-1 text-xs text-[--shell-danger]">!</span>}
+                    <TableCell className={`font-mono text-sm text-right ${(p.stock ?? 0) <= (p.reorder_level ?? 0) ? "text-[--shell-danger] font-semibold" : ""}`}>
+                      {(p.stock ?? 0).toLocaleString()}
+                      {(p.stock ?? 0) <= (p.reorder_level ?? 0) && <span className="ml-1 text-xs text-[--shell-danger]">!</span>}
                     </TableCell>
                     <TableCell className="font-mono text-sm text-right">{money(p.price)}</TableCell>
                     <TableCell className="font-mono text-sm text-right text-[--shell-muted]">{money(p.cost)}</TableCell>

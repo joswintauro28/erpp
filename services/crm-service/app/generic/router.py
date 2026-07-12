@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.inspection import inspect
 
-from app.core.deps import get_db, get_current_user_id
+from app.core.deps import get_db, get_current_org_id
 
 from app.customer.models import Customer, Contact, Document
 from app.lead.models import Lead, Opportunity
@@ -41,7 +41,7 @@ ENTITY_MODEL_MAP = {
 @router.get("/{entity_type}/fields")
 async def get_entity_fields(
     entity_type: str,
-    user_id: int = Depends(get_current_user_id),
+    user_id: int = Depends(get_current_org_id),
 ):
     if entity_type not in ENTITY_MODEL_MAP:
         raise HTTPException(status_code=404, detail="Entity type not found")
@@ -52,7 +52,7 @@ async def get_entity_fields(
     fields = []
     for column in mapper.attrs:
         name = column.key
-        if name in ("id", "id_str", "owner_id"):
+        if name in ("id", "id_str", "organization_id"):
             continue
 
         sql_type = str(column.columns[0].type).lower()
@@ -108,7 +108,7 @@ async def create_entity(
     entity_type: str,
     payload: dict,
     db: AsyncSession = Depends(get_db),
-    user_id: int = Depends(get_current_user_id),
+    user_id: int = Depends(get_current_org_id),
 ):
     if entity_type not in ENTITY_MODEL_MAP:
         raise HTTPException(status_code=404, detail="Entity type not found")
@@ -142,7 +142,7 @@ async def create_entity(
 
     payload["id_str"] = id_str
     payload.pop("id", None)
-    payload["owner_id"] = user_id
+    payload["organization_id"] = user_id
 
     db_obj = model_class(**payload)
     db.add(db_obj)
@@ -157,7 +157,7 @@ async def update_entity(
     id_str: str,
     payload: dict,
     db: AsyncSession = Depends(get_db),
-    user_id: int = Depends(get_current_user_id),
+    user_id: int = Depends(get_current_org_id),
 ):
     if entity_type not in ENTITY_MODEL_MAP:
         raise HTTPException(status_code=404, detail="Entity type not found")
@@ -169,7 +169,7 @@ async def update_entity(
         raise HTTPException(status_code=404, detail="Record not found")
 
     for key, value in payload.items():
-        if key not in ("id", "id_str", "owner_id"):
+        if key not in ("id", "id_str", "organization_id"):
             setattr(db_obj, key, value)
 
     await db.commit()
@@ -182,7 +182,7 @@ async def delete_entity(
     entity_type: str,
     id_str: str,
     db: AsyncSession = Depends(get_db),
-    user_id: int = Depends(get_current_user_id),
+    user_id: int = Depends(get_current_org_id),
 ):
     if entity_type not in ENTITY_MODEL_MAP:
         raise HTTPException(status_code=404, detail="Entity type not found")
