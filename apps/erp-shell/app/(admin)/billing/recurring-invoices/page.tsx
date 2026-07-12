@@ -117,9 +117,9 @@ export default function RecurringInvoices() {
                       <Badge
                         className="capitalize"
                         style={{
-                          backgroundColor: `${frequencyColors[r.frequency]}15`,
-                          color: frequencyColors[r.frequency],
-                          borderColor: "transparent",
+                          backgroundColor: frequencyColors[r.frequency],
+                          color: "white",
+                          borderColor: frequencyColors[r.frequency],
                         }}
                       >
                         {r.frequency}

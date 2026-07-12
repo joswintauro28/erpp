@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { Search, Plus, ShoppingCart, Eye, Loader2 } from "lucide-react";
+import { Search, Plus, ShoppingCart, Eye } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -9,14 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { money } from "@/utils/format";
 import { api } from "@/services/api";
-
-interface PurchaseOrder {
-  id: number; po_number: string; supplier_id: number; supplier_name: string;
-  order_date: string; expected_date: string; total: number;
-  status: "draft" | "ordered" | "received";
-  items: { product: string; quantity: number; unit_price: number; total: number }[];
-  notes: string;
-}
+import type { ApiPurchaseOrder } from "@/types/inventory";
 
 const statusColors: Record<string, string> = {
   draft: "var(--chart-4)",
@@ -25,32 +18,18 @@ const statusColors: Record<string, string> = {
 };
 
 export default function PurchaseOrders() {
-  const [orders, setOrders] = useState<PurchaseOrder[]>([]);
+  const [orders, setOrders] = useState<ApiPurchaseOrder[]>([]);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("");
-  const [loading, setLoading] = useState(true);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    api.get<any[]>("/purchase-orders")
-      .then((data) => setOrders(data.map((o) => ({
-        id: o.id,
-        po_number: o.order_number ?? `PO-${o.id}`,
-        supplier_id: o.supplier_id,
-        supplier_name: `Supplier #${o.supplier_id}`,
-        order_date: o.ordered_at ? o.ordered_at.split("T")[0] : "",
-        expected_date: o.expected_at ? o.expected_at.split("T")[0] : "",
-        total: Number(o.total),
-        status: o.status as "draft" | "ordered" | "received",
-        items: (o.items ?? []).map((item: any) => ({
-          product: `Product #${item.product_id}`,
-          quantity: item.quantity,
-          unit_price: Number(item.unit_price),
-          total: Number(item.subtotal),
-        })),
-        notes: o.notes ?? "",
-      }))))
-      .catch(() => setOrders([]))
-      .finally(() => setLoading(false));
+    let cancelled = false;
+    api.get<ApiPurchaseOrder[]>("/purchase-orders")
+      .then((data) => { if (!cancelled) setOrders(data); })
+      .catch(() => { if (!cancelled) setOrders([]); })
+      .finally(() => { if (!cancelled) setReady(true); });
+    return () => { cancelled = true; };
   }, []);
 
   const filtered = useMemo(() => {
@@ -59,21 +38,13 @@ export default function PurchaseOrders() {
     if (search.trim()) {
       const q = search.toLowerCase();
       res = res.filter(
-        (o) => o.po_number.toLowerCase().includes(q) || o.supplier_name.toLowerCase().includes(q) || o.notes.toLowerCase().includes(q)
+        (o) => o.order_number.toLowerCase().includes(q) || `#${o.supplier_id}`.includes(q) || (o.notes ?? "").toLowerCase().includes(q)
       );
     }
     return res;
   }, [orders, search, statusFilter]);
 
-  if (loading) {
-    return (
-      <div className="flex h-[60vh] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-[--shell-muted]" />
-      </div>
-    );
-  }
-
-  if (orders.length === 0) {
+  if (ready && orders.length === 0) {
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
@@ -131,40 +102,50 @@ export default function PurchaseOrders() {
 
       <Card>
         <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>PO #</TableHead>
-                <TableHead>Supplier</TableHead>
-                <TableHead>Order Date</TableHead>
-                <TableHead>Expected</TableHead>
-                <TableHead className="text-right">Items</TableHead>
-                <TableHead className="text-right">Total</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="w-16 text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filtered.map((o) => (
-                <TableRow key={o.id}>
-                  <TableCell className="font-mono text-xs font-medium">{o.po_number}</TableCell>
-                  <TableCell className="text-sm">{o.supplier_name}</TableCell>
-                  <TableCell className="font-mono text-xs text-[--shell-muted]">{o.order_date}</TableCell>
-                  <TableCell className="font-mono text-xs text-[--shell-muted]">{o.expected_date}</TableCell>
-                  <TableCell className="font-mono text-sm text-right">{o.items.length}</TableCell>
-                  <TableCell className="font-mono text-sm text-right">{money(o.total)}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className="text-xs capitalize" style={{ borderColor: statusColors[o.status], color: statusColors[o.status] }}>
-                      {o.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Button variant="ghost" size="icon-sm"><Eye className="h-3.5 w-3.5" /></Button>
-                  </TableCell>
+          {filtered.length === 0 ? (
+            <div className="flex flex-col items-center gap-2 py-16 text-[--shell-muted]">
+              <p className="text-sm">No purchase orders match your filters</p>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>PO #</TableHead>
+                  <TableHead>Supplier ID</TableHead>
+                  <TableHead>Order Date</TableHead>
+                  <TableHead>Expected</TableHead>
+                  <TableHead className="text-right">Items</TableHead>
+                  <TableHead className="text-right">Total</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="w-16 text-right">Actions</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {filtered.map((o) => (
+                  <TableRow key={o.id}>
+                    <TableCell className="font-mono text-xs font-medium">{o.order_number}</TableCell>
+                    <TableCell className="text-xs text-[--shell-muted]">#{o.supplier_id}</TableCell>
+                    <TableCell className="font-mono text-xs text-[--shell-muted]">
+                      {o.ordered_at ? o.ordered_at.split("T")[0] : o.created_at.split("T")[0]}
+                    </TableCell>
+                    <TableCell className="font-mono text-xs text-[--shell-muted]">
+                      {o.expected_at ? o.expected_at.split("T")[0] : "-"}
+                    </TableCell>
+                    <TableCell className="font-mono text-sm text-right">{o.items.length}</TableCell>
+                    <TableCell className="font-mono text-sm text-right">{money(o.total)}</TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className="text-xs capitalize" style={{ borderColor: statusColors[o.status], color: statusColors[o.status] }}>
+                        {o.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button variant="ghost" size="icon-sm"><Eye className="h-3.5 w-3.5" /></Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
     </div>

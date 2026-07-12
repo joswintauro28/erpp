@@ -1,33 +1,25 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { Search, Plus, Pencil, Truck, Power, PowerOff, Loader2 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Search, Plus, Pencil, Truck, Power, PowerOff } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-
 import { api } from "@/services/api";
-import type { Supplier } from "@/types/inventory";
+import type { ApiSupplier } from "@/types/inventory";
 
 export default function Suppliers() {
-  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [suppliers, setSuppliers] = useState<ApiSupplier[]>([]);
   const [search, setSearch] = useState("");
 
   useEffect(() => {
-    api.get<any[]>("/suppliers")
-      .then((data) => setSuppliers(data.map((s) => ({
-        id: s.id, name: s.name,
-        contact_person: s.contact_person ?? "",
-        email: s.email ?? "", phone: s.phone ?? "",
-        gst_number: s.gst_number ?? "", state: s.state ?? "",
-        address: s.address ?? "", payment_terms: s.payment_terms ?? "",
-        supply_categories: [], is_active: s.is_active,
-      }))))
-      .catch(() => setSuppliers([]))
-      .finally(() => setLoading(false));
+    let cancelled = false;
+    api.get<ApiSupplier[]>("/suppliers")
+      .then((data) => { if (!cancelled) setSuppliers(data); })
+      .catch(() => { if (!cancelled) setSuppliers([]); });
+    return () => { cancelled = true; };
   }, []);
 
   const filtered = useMemo(() => {
@@ -36,9 +28,9 @@ export default function Suppliers() {
     return suppliers.filter(
       (s) =>
         s.name.toLowerCase().includes(q) ||
-        s.contact_person.toLowerCase().includes(q) ||
-        s.email.toLowerCase().includes(q) ||
-        s.gst_number.toLowerCase().includes(q)
+        (s.contact_person ?? "").toLowerCase().includes(q) ||
+        (s.email ?? "").toLowerCase().includes(q) ||
+        (s.gst_number ?? "").toLowerCase().includes(q)
     );
   }, [suppliers, search]);
 
@@ -48,10 +40,21 @@ export default function Suppliers() {
     );
   };
 
-  if (loading) {
+  if (suppliers.length === 0) {
     return (
-      <div className="flex h-[60vh] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-[--shell-muted]" />
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="font-heading text-xl font-semibold tracking-tight text-[--shell-foreground]">Suppliers</h1>
+            <p className="mt-0.5 text-sm text-[--shell-muted]">Manage vendor and supplier information</p>
+          </div>
+          <Button size="sm"><Plus className="mr-1.5 h-3.5 w-3.5" />Add Supplier</Button>
+        </div>
+        <div className="flex flex-col items-center gap-3 py-20 text-[--shell-muted]">
+          <Truck className="h-12 w-12" />
+          <p className="text-base font-medium text-[--shell-foreground]">No suppliers yet</p>
+          <p className="text-sm">Add your first supplier to start tracking vendors.</p>
+        </div>
       </div>
     );
   }
@@ -90,7 +93,6 @@ export default function Suppliers() {
                 <TableHead>GST #</TableHead>
                 <TableHead>State</TableHead>
                 <TableHead>Payment Terms</TableHead>
-                <TableHead>Categories</TableHead>
                 <TableHead className="w-16">Status</TableHead>
                 <TableHead className="w-16 text-right">Actions</TableHead>
               </TableRow>
@@ -99,13 +101,12 @@ export default function Suppliers() {
               {filtered.map((s) => (
                 <TableRow key={s.id}>
                   <TableCell className="text-sm font-medium">{s.name}</TableCell>
-                  <TableCell className="text-xs text-[--shell-muted]">{s.contact_person}</TableCell>
-                  <TableCell className="text-xs">{s.email}</TableCell>
-                  <TableCell className="font-mono text-xs">{s.phone}</TableCell>
-                  <TableCell className="font-mono text-xs text-[--shell-muted]">{s.gst_number}</TableCell>
-                  <TableCell className="text-xs">{s.state}</TableCell>
-                  <TableCell className="text-xs text-[--shell-muted]">{s.payment_terms}</TableCell>
-                  <TableCell className="text-xs text-[--shell-muted]">-</TableCell>
+                  <TableCell className="text-xs text-[--shell-muted]">{s.contact_person ?? "-"}</TableCell>
+                  <TableCell className="text-xs">{s.email ?? "-"}</TableCell>
+                  <TableCell className="font-mono text-xs">{s.phone ?? "-"}</TableCell>
+                  <TableCell className="font-mono text-xs text-[--shell-muted]">{s.gst_number ?? "-"}</TableCell>
+                  <TableCell className="text-xs">{s.state ?? "-"}</TableCell>
+                  <TableCell className="text-xs text-[--shell-muted]">{s.payment_terms ?? "-"}</TableCell>
                   <TableCell>
                     <Badge variant={s.is_active ? "default" : "secondary"} className="text-xs">
                       {s.is_active ? "Active" : "Inactive"}

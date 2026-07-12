@@ -1,54 +1,43 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { Search, Plus, Pencil, MapPin, Loader2 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Search, Plus, MapPin } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { api } from "@/services/api";
-import type { Warehouse } from "@/types/inventory";
+import type { ApiWarehouse } from "@/types/inventory";
 
 export default function Warehouses() {
   const [search, setSearch] = useState("");
-  const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [warehouses, setWarehouses] = useState<ApiWarehouse[]>([]);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    api.get<any[]>("/warehouses")
-      .then((data) => setWarehouses(data.map((w) => ({
-        id: w.id, name: w.name,
-        location: [w.address, w.city, w.state, w.country].filter(Boolean).join(", ") || w.code,
-        capacity: 0, used: 0, is_active: w.is_active,
-        manager: "-", contact: "-",
-      }))))
-      .catch(() => setWarehouses([]))
-      .finally(() => setLoading(false));
+    let cancelled = false;
+    api.get<ApiWarehouse[]>("/warehouses")
+      .then((data) => { if (!cancelled) setWarehouses(data); })
+      .catch(() => { if (!cancelled) setWarehouses([]); })
+      .finally(() => { if (!cancelled) setReady(true); });
+    return () => { cancelled = true; };
   }, []);
 
   const filtered = useMemo(() => {
     if (!search.trim()) return warehouses;
     const q = search.toLowerCase();
     return warehouses.filter(
-      (w) => w.name.toLowerCase().includes(q) || w.location.toLowerCase().includes(q)
+      (w) => w.name.toLowerCase().includes(q) || w.code.toLowerCase().includes(q)
     );
   }, [warehouses, search]);
 
-  if (loading) {
-    return (
-      <div className="flex h-[60vh] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-[--shell-muted]" />
-      </div>
-    );
-  }
-
-  if (warehouses.length === 0) {
+  if (ready && warehouses.length === 0) {
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="font-heading text-xl font-semibold tracking-tight text-[--shell-foreground]">Warehouses</h1>
-            <p className="mt-0.5 text-sm text-[--shell-muted]">Manage warehouse locations and capacity</p>
+            <p className="mt-0.5 text-sm text-[--shell-muted]">Manage warehouse locations</p>
           </div>
           <Button size="sm"><Plus className="mr-1.5 h-3.5 w-3.5" />Add Warehouse</Button>
         </div>
@@ -69,7 +58,7 @@ export default function Warehouses() {
             Warehouses
           </h1>
           <p className="mt-0.5 text-sm text-[--shell-muted]">
-            Manage warehouse locations and capacity
+            Manage warehouse locations
           </p>
         </div>
         <Button size="sm">
@@ -93,7 +82,10 @@ export default function Warehouses() {
                     <MapPin className="h-4 w-4 text-[--shell-action]" />
                     <h3 className="font-heading text-sm font-semibold text-[--shell-foreground]">{w.name}</h3>
                   </div>
-                  <p className="mt-0.5 text-xs text-[--shell-muted]">{w.location}</p>
+                  <p className="mt-0.5 text-xs text-[--shell-muted] font-mono">{w.code}</p>
+                  <p className="mt-1 text-xs text-[--shell-muted]">
+                    {[w.address, w.city, w.state, w.country].filter(Boolean).join(", ") || "No address"}
+                  </p>
                 </div>
                 <Badge variant={w.is_active ? "default" : "secondary"} className="text-xs">
                   {w.is_active ? "Active" : "Inactive"}

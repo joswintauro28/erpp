@@ -1,125 +1,105 @@
-export interface Product {
-  id: number;
-  sku: string;
-  name: string;
-  category: string;
-  unit: string;
-  stock: number;
-  price: number;
-  cost: number;
-  reorder_level: number;
-  hsn: string;
-  is_active: boolean;
-}
-
-export interface StockMovement {
-  id: number;
-  date: string;
-  product_id: number;
-  product_name: string;
-  sku: string;
-  movement_type: "In" | "Out";
-  quantity: number;
-  reference_type: string;
-  reference: string;
-  warehouse: string;
-  notes: string;
-}
-
-export interface StockAdjustment {
-  id: number;
-  date: string;
-  product_id: number;
-  product_name: string;
-  sku: string;
-  adjustment_type: "Addition" | "Reduction";
-  quantity: number;
-  reason: string;
-  warehouse: string;
-  reference: string;
-  status: "draft" | "approved" | "rejected";
-}
-
-export interface ValuationRow {
-  product_name: string;
-  sku: string;
-  category: string;
-  quantity: number;
-  unit_cost: number;
-  total_value: number;
-}
-
-export interface Warehouse {
-  id: number;
-  name: string;
-  location: string;
-  capacity: number;
-  used: number;
-  is_active: boolean;
-  manager: string;
-  contact: string;
-}
-
-export interface PurchaseOrder {
-  id: number;
-  po_number: string;
-  supplier_id: number;
-  supplier_name: string;
-  order_date: string;
-  expected_date: string;
-  total: number;
-  status: "draft" | "sent" | "confirmed" | "received" | "cancelled";
-  items: { product: string; sku: string; quantity: number; unit_price: number; total: number }[];
-  notes: string;
-}
-
-export interface Supplier {
-  id: number;
-  name: string;
-  contact_person: string;
-  email: string;
-  phone: string;
-  gst_number: string;
-  state: string;
-  address: string;
-  payment_terms: string;
-  supply_categories: string[];
-  is_active: boolean;
-}
-
-export interface Batch {
-  id: number;
-  batch_number: string;
-  product_id: number;
-  product_name: string;
-  sku: string;
-  quantity: number;
-  mfg_date: string;
-  expiry_date: string;
-  warehouse: string;
-}
-
-export interface SerialItem {
-  id: number;
-  serial_number: string;
-  product_id: number;
-  product_name: string;
-  sku: string;
-  status: "in_stock" | "sold" | "returned" | "warranty" | "scrapped";
-  warehouse: string;
-  sold_date: string;
-  warranty_until: string;
-  customer: string;
-}
-
 export interface ApiProduct {
-  id: number; name: string; sku: string | null; category: string | null;
-  price: number; cost_price: number; stock: number;
-  low_stock_threshold: number; track_inventory: boolean;
+  id: number;
+  organization_id: number;
+  name: string;
+  sku: string | null;
+  barcode: string | null;
+  category: string | null;
+  description: string | null;
+  unit: string;
+  price: number;
+  cost_price: number;
+  tax_rate: number;
+  track_inventory: boolean;
+  low_stock_threshold: number;
+  uses_batch_tracking: boolean;
+  uses_serial_tracking: boolean;
+  costing_method: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
-export interface ProductView {
-  id: number; name: string; sku: string; category: string;
-  price: number; cost: number; stock: number;
-  unit: string; reorder_level: number; hsn: string; is_active: boolean;
+export interface ApiWarehouse {
+  id: number;
+  organization_id: number;
+  name: string;
+  code: string;
+  address: string | null;
+  city: string | null;
+  state: string | null;
+  country: string | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ApiSupplier {
+  id: number;
+  organization_id: number;
+  name: string;
+  email: string | null;
+  phone: string | null;
+  address: string | null;
+  city: string | null;
+  state: string | null;
+  gst_number: string | null;
+  contact_person: string | null;
+  payment_terms: string | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ApiStockMovement {
+  id: number;
+  organization_id: number;
+  product_id: number;
+  warehouse_id: number;
+  type: string;
+  quantity: number;
+  reference_type: string | null;
+  reference_id: number | null;
+  notes: string | null;
+  created_at: string;
+}
+
+export interface ApiPurchaseOrder {
+  id: number;
+  organization_id: number;
+  supplier_id: number;
+  warehouse_id: number;
+  order_number: string;
+  status: string;
+  notes: string | null;
+  subtotal: number;
+  tax_amount: number;
+  total: number;
+  ordered_at: string | null;
+  expected_at: string | null;
+  received_at: string | null;
+  items: ApiPurchaseOrderItem[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ApiPurchaseOrderItem {
+  id: number;
+  purchase_order_id: number;
+  product_id: number;
+  quantity: number;
+  unit_price: number;
+  subtotal: number;
+}
+
+export interface ApiSerialNumber {
+  id: number;
+  organization_id: number;
+  product_id: number;
+  warehouse_id: number;
+  serial_number: string;
+  status: string;
+  purchase_order_id: number | null;
+  created_at: string;
+  updated_at: string;
 }
