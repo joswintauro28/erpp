@@ -9,6 +9,7 @@ import { CreditNotesModule } from "./credit-notes/credit-notes.module";
 import { DebitNotesModule } from "./debit-notes/debit-notes.module";
 import { RecurringInvoicesModule } from "./recurring-invoices/recurring-invoices.module";
 import { DashboardModule } from "./dashboard/dashboard.module";
+import { AccountingModule } from "./accounting/accounting.module";
 import { AppController } from "./app.controller";
 
 @Module({
@@ -23,6 +24,7 @@ import { AppController } from "./app.controller";
     InvoicesModule,
     PaymentsModule,
     DashboardModule,
+    AccountingModule,
   ],
   controllers: [AppController],
 })

@@ -18,7 +18,7 @@ export function proxy(request: NextRequest) {
   let url: URL;
   if (path.startsWith("/auth/")) {
     url = new URL(`/api${path}${search}`, IAM_URL);
-  } else if (path.startsWith("/invoices") || path.startsWith("/payments") || path === "/dashboard/billing") {
+  } else if (path.startsWith("/invoices") || path.startsWith("/payments") || path.startsWith("/accounts") || path.startsWith("/expenses") || path.startsWith("/ledger") || path.startsWith("/reports") || path === "/dashboard/billing") {
     url = new URL(`/api${path}${search}`, BILLING_URL);
   } else if (path.startsWith("/products") || path.startsWith("/warehouses") || path.startsWith("/stock") || path.startsWith("/suppliers") || path.startsWith("/purchase-orders") || path.startsWith("/serial-numbers") || path === "/dashboard/inventory") {
     url = new URL(`${path}${search}`, INVENTORY_URL);

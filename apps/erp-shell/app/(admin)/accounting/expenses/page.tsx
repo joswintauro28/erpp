@@ -1,18 +1,36 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { Search, Plus, Receipt, Download, Trash2 } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
+import { Search, Plus, Receipt, Download, Trash2, AlertTriangle } from "lucide-react";
+import { api } from "@/services/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { money } from "@/utils/format";
+import { LoadingSpinner } from "@/components/shared/loading-spinner";
 import type { Expense } from "@/types/accounting";
 
 export default function Expenses() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const d = await api.get<{ expenses: Expense[] }>("/expenses");
+        setExpenses(d.expenses);
+      } catch {
+        setError("Failed to load expenses");
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, []);
 
   const filtered = useMemo(() => {
     if (!search.trim()) return expenses;
@@ -28,7 +46,13 @@ export default function Expenses() {
 
   const totalAmount = expenses.reduce((s, e) => s + e.amount, 0);
   const pendingAmount = expenses.filter((e) => e.status === "pending").reduce((s, e) => s + e.amount, 0);
-  const thisMonth = expenses.filter((e) => e.date.startsWith("2024-08")).reduce((s, e) => s + e.amount, 0);
+  const thisMonth = expenses.filter((e) => {
+    const d = new Date(e.date);
+    const now = new Date();
+    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+  }).reduce((s, e) => s + e.amount, 0);
+
+  if (loading) return <LoadingSpinner />;
 
   return (
     <div className="space-y-6">
@@ -46,6 +70,13 @@ export default function Expenses() {
           Add Expense
         </Button>
       </div>
+
+      {error && (
+        <div className="flex items-center gap-3 rounded-xl border border-destructive/30 bg-destructive/10 px-5 py-3.5">
+          <AlertTriangle className="h-4 w-4 text-destructive" />
+          <span className="text-sm font-medium text-destructive">{error}</span>
+        </div>
+      )}
 
       <div className="grid grid-cols-4 gap-3">
         <Card>

@@ -327,8 +327,87 @@ async function main() {
     console.log(`  Recurring "${ri.templateName}" (${ri.frequency})`);
   }
 
+  // ── ACCOUNTING: Chart of Accounts (18 standard accounts) ──────────
+  const accounts = [
+    { organizationId: 1, code: "1001", name: "Cash & Bank", type: "Asset" as const, subType: "Current Assets", balance: 2850000 },
+    { organizationId: 1, code: "1002", name: "Accounts Receivable", type: "Asset" as const, subType: "Current Assets", balance: 1890000 },
+    { organizationId: 1, code: "1003", name: "Inventory", type: "Asset" as const, subType: "Current Assets", balance: 950000 },
+    { organizationId: 1, code: "1101", name: "Office Equipment", type: "Asset" as const, subType: "Fixed Assets", balance: 450000 },
+    { organizationId: 1, code: "1102", name: "Computer Hardware", type: "Asset" as const, subType: "Fixed Assets", balance: 680000 },
+    { organizationId: 1, code: "2001", name: "Accounts Payable", type: "Liability" as const, subType: "Current Liabilities", balance: 720000 },
+    { organizationId: 1, code: "2002", name: "Short Term Loans", type: "Liability" as const, subType: "Current Liabilities", balance: 350000 },
+    { organizationId: 1, code: "2101", name: "Bank Loan — Term", type: "Liability" as const, subType: "Long Term Debt", balance: 1200000 },
+    { organizationId: 1, code: "3001", name: "Share Capital", type: "Equity" as const, subType: "Capital", balance: 2500000 },
+    { organizationId: 1, code: "3002", name: "Retained Earnings", type: "Equity" as const, subType: "Reserves", balance: 1750000 },
+    { organizationId: 1, code: "4001", name: "Software License Revenue", type: "Revenue" as const, subType: "Operating Revenue", balance: 4200000 },
+    { organizationId: 1, code: "4002", name: "Consulting Services", type: "Revenue" as const, subType: "Operating Revenue", balance: 1850000 },
+    { organizationId: 1, code: "4003", name: "Maintenance & Support", type: "Revenue" as const, subType: "Recurring Revenue", balance: 960000 },
+    { organizationId: 1, code: "5001", name: "Salaries & Wages", type: "Expense" as const, subType: "Operating Expenses", balance: 1200000 },
+    { organizationId: 1, code: "5002", name: "Office Rent", type: "Expense" as const, subType: "Operating Expenses", balance: 360000 },
+    { organizationId: 1, code: "5003", name: "Cloud Infrastructure", type: "Expense" as const, subType: "Operating Expenses", balance: 420000 },
+    { organizationId: 1, code: "5004", name: "Marketing & Advertising", type: "Expense" as const, subType: "Operating Expenses", balance: 180000 },
+    { organizationId: 1, code: "5005", name: "Travel & Conveyance", type: "Expense" as const, subType: "Operating Expenses", balance: 95000 },
+  ];
+
+  const createdAccounts: { id: number; code: string }[] = [];
+  for (const acc of accounts) {
+    const created = await prisma.account.create({ data: acc });
+    createdAccounts.push({ id: created.id, code: created.code });
+    console.log(`  Account ${acc.code} — ${acc.name}`);
+  }
+
+  // ── ACCOUNTING: Expenses (12) ─────────────────────────────────────
+  const expenseEntries = [
+    { organizationId: 1, accountId: createdAccounts.find(a => a.code === "5002")!.id, amount: 30000, category: "Office Rent", description: "July office rent — Prestige Tech Park", date: ago(25), paymentMethod: "Bank_Transfer", reference: "RENT-JUL-001", status: "paid" },
+    { organizationId: 1, accountId: createdAccounts.find(a => a.code === "5003")!.id, amount: 42000, category: "Infrastructure", description: "AWS hosting — production cluster", date: ago(20), paymentMethod: "Credit_Card", reference: "AWS-PROD-0726", status: "paid" },
+    { organizationId: 1, accountId: createdAccounts.find(a => a.code === "5004")!.id, amount: 15000, category: "Marketing", description: "LinkedIn sponsored ads campaign", date: ago(18), paymentMethod: "UPI", reference: "MKT-LINKED-01", status: "paid" },
+    { organizationId: 1, accountId: createdAccounts.find(a => a.code === "5005")!.id, amount: 8500, category: "Travel", description: "Client visit — Mumbai office", date: ago(15), paymentMethod: "UPI", reference: "TRVL-MUM-01", status: "paid" },
+    { organizationId: 1, accountId: createdAccounts.find(a => a.code === "5001")!.id, amount: 150000, category: "Payroll", description: "July salary disbursement", date: ago(12), paymentMethod: "Bank_Transfer", reference: "PAY-JUL-26", status: "paid" },
+    { organizationId: 1, accountId: createdAccounts.find(a => a.code === "5003")!.id, amount: 18000, category: "Infrastructure", description: "Database backup storage expansion", date: ago(10), paymentMethod: "Credit_Card", reference: "AWS-DB-0726", status: "paid" },
+    { organizationId: 1, accountId: createdAccounts.find(a => a.code === "5002")!.id, amount: 30000, category: "Office Rent", description: "August office rent", date: ago(5), paymentMethod: "Bank_Transfer", reference: "RENT-AUG-001", status: "paid" },
+    { organizationId: 1, accountId: createdAccounts.find(a => a.code === "5004")!.id, amount: 8000, category: "Marketing", description: "Google Ads campaign", date: ago(4), paymentMethod: "UPI", reference: "MKT-GOOGLE-01", status: "pending" },
+    { organizationId: 1, accountId: createdAccounts.find(a => a.code === "5005")!.id, amount: 12000, category: "Travel", description: "Team offsite — Coorg", date: ago(3), paymentMethod: "Credit_Card", reference: "TRVL-OFFSITE", status: "pending" },
+    { organizationId: 1, accountId: createdAccounts.find(a => a.code === "5003")!.id, amount: 22000, category: "Infrastructure", description: "CDN subscription renewal", date: ago(2), paymentMethod: "Credit_Card", reference: "CDN-RENEW-01", status: "pending" },
+    { organizationId: 1, accountId: createdAccounts.find(a => a.code === "5001")!.id, amount: 50000, category: "Payroll", description: "Consultant fees — UI/UX designer", date: ago(1), paymentMethod: "Bank_Transfer", reference: "CONS-JUL-01", status: "paid" },
+    { organizationId: 1, accountId: createdAccounts.find(a => a.code === "5004")!.id, amount: 25000, category: "Marketing", description: "Annual trade show booth booking", date: ago(0), paymentMethod: "Cheque", reference: "EVENT-Q3-01", status: "pending" },
+  ];
+
+  for (const exp of expenseEntries) {
+    await prisma.expense.create({ data: exp });
+    console.log(`  Expense ${exp.reference} — ₹${exp.amount.toLocaleString()}`);
+  }
+
+  // ── ACCOUNTING: Ledger Entries (auto-generated from invoices) ─────
+  for (const inv of createdInvoices) {
+    await prisma.ledgerEntry.create({
+      data: {
+        organizationId: 1,
+        accountId: createdAccounts.find(a => a.code === "4001")!.id,
+        entryDate: new Date(),
+        description: `Invoice ${inv.invNum} — ${inv.status}`,
+        debit: inv.status === "cancelled" ? 0 : inv.total,
+        credit: 0,
+        referenceType: "Invoice",
+        referenceId: inv.id,
+      },
+    });
+    // Matching AR entry
+    await prisma.ledgerEntry.create({
+      data: {
+        organizationId: 1,
+        accountId: createdAccounts.find(a => a.code === "1002")!.id,
+        entryDate: new Date(),
+        description: `Receivable — ${inv.invNum}`,
+        debit: 0,
+        credit: inv.status === "cancelled" ? 0 : inv.total,
+        referenceType: "Invoice",
+        referenceId: inv.id,
+      },
+    });
+  }
+
   console.log("\nBilling seeding completed successfully!");
-  console.log(`Summary: ${invoices.length} invoices, ${payments.length} payments, ${quotations.length} quotes, ${creditNotes.length} credit notes, ${debitNotes.length} debit notes, ${recurring.length} recurring`);
+  console.log(`Summary: ${invoices.length} invoices, ${payments.length} payments, ${quotations.length} quotes, ${creditNotes.length} credit notes, ${debitNotes.length} debit notes, ${recurring.length} recurring, ${accounts.length} accounts, ${expenseEntries.length} expenses`);
 }
 
 main()

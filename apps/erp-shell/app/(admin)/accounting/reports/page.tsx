@@ -1,18 +1,37 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
-import { TrendingUp, TrendingDown, DollarSign } from "lucide-react";
+import { TrendingUp, TrendingDown, DollarSign, AlertTriangle } from "lucide-react";
+import { api } from "@/services/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { money } from "@/utils/format";
+import { LoadingSpinner } from "@/components/shared/loading-spinner";
 import type { FinancialReport, BalanceSheetItem } from "@/types/accounting";
 
 export default function Reports() {
   const [activeTab, setActiveTab] = useState<"pl" | "balance" | "tax">("pl");
   const [plData, setPlData] = useState<FinancialReport[]>([]);
   const [bsData, setBsData] = useState<BalanceSheetItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const d = await api.get<{ pl: FinancialReport[]; balance_sheet: BalanceSheetItem[] }>("/reports");
+        setPlData(d.pl);
+        setBsData(d.balance_sheet);
+      } catch {
+        setError("Failed to load financial reports");
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, []);
 
   const currentPL = plData.length > 0 ? plData[plData.length - 1] : { month: "", revenue: 0, cost_of_goods: 0, gross_profit: 0, operating_expenses: 0, net_profit: 0 };
   const prevPL = plData.length > 1 ? plData[plData.length - 2] : { revenue: 0, net_profit: 0 };
@@ -28,6 +47,8 @@ export default function Reports() {
     taxableIncome: 0,
   };
 
+  if (loading) return <LoadingSpinner />;
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -40,6 +61,13 @@ export default function Reports() {
           </p>
         </div>
       </div>
+
+      {error && (
+        <div className="flex items-center gap-3 rounded-xl border border-destructive/30 bg-destructive/10 px-5 py-3.5">
+          <AlertTriangle className="h-4 w-4 text-destructive" />
+          <span className="text-sm font-medium text-destructive">{error}</span>
+        </div>
+      )}
 
       <div className="flex gap-1 border-b border-[--shell-border]">
         {(["pl", "balance", "tax"] as const).map((tab) => (

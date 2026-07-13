@@ -1,19 +1,37 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { Search, ArrowUpDown } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
+import { Search, ArrowUpDown, AlertTriangle } from "lucide-react";
+import { api } from "@/services/api";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { money } from "@/utils/format";
+import { LoadingSpinner } from "@/components/shared/loading-spinner";
 import type { LedgerEntry } from "@/types/accounting";
 
 export default function GeneralLedger() {
   const [ledger, setLedger] = useState<LedgerEntry[]>([]);
   const [search, setSearch] = useState("");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const d = await api.get<{ ledger: LedgerEntry[] }>("/ledger");
+        setLedger(d.ledger);
+      } catch {
+        setError("Failed to load ledger entries");
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, []);
 
   const filtered = useMemo(() => {
     if (!search.trim()) return ledger;
@@ -37,6 +55,8 @@ export default function GeneralLedger() {
   const totalDebit = sorted.reduce((s, e) => s + e.debit, 0);
   const totalCredit = sorted.reduce((s, e) => s + e.credit, 0);
 
+  if (loading) return <LoadingSpinner />;
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -49,6 +69,13 @@ export default function GeneralLedger() {
           </p>
         </div>
       </div>
+
+      {error && (
+        <div className="flex items-center gap-3 rounded-xl border border-destructive/30 bg-destructive/10 px-5 py-3.5">
+          <AlertTriangle className="h-4 w-4 text-destructive" />
+          <span className="text-sm font-medium text-destructive">{error}</span>
+        </div>
+      )}
 
       <div className="flex flex-wrap items-center gap-3">
         <div className="relative flex-1 max-w-xs">

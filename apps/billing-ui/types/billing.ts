@@ -163,18 +163,95 @@ export interface RecurringInvoice {
   status: string;
 }
 
+export interface DashboardPaymentMetrics {
+  today: number;
+  this_month: number;
+  outstanding: number;
+  refunds: number;
+  failed: number;
+}
+
+export interface DashboardSummaryItem {
+  status: string;
+  count: number;
+  percentage: number;
+}
+
+export interface DashboardRecentInvoice {
+  id: number;
+  invoice_number: string;
+  client_name: string;
+  total: number;
+  status: string;
+  due_date: string | null;
+  paid_amount: number;
+  created_at: string;
+}
+
+export interface DashboardRevenueTrend {
+  month: string;
+  revenue: number;
+}
+
 export interface BillingDashboardData {
-  totalRevenue: number;
+  total_revenue: number;
   outstanding: number;
   overdue: number;
-  paymentMetrics: {
-    dailyTotal: number;
-    monthlyTotal: number;
-    outstandingTotal: number;
-    totalRefunds: number;
-    failedTransactions: number;
-  };
-  summary: { status: string; count: number; total: number }[];
-  recentInvoices: InvoiceListView[];
-  revenueTrend: { month: string; revenue: number }[];
+  payment_metrics: DashboardPaymentMetrics;
+  summary: DashboardSummaryItem[];
+  recent_invoices: DashboardRecentInvoice[];
+  revenue_trend: DashboardRevenueTrend[];
+}
+
+export interface AccountEntry {
+  id: number;
+  code: string;
+  name: string;
+  type: string;
+  sub_type: string | null;
+  description: string | null;
+  balance: number;
+  is_active: boolean;
+}
+
+export interface ExpenseEntry {
+  id: number;
+  account_code: string;
+  account_name: string;
+  amount: number;
+  category: string | null;
+  description: string | null;
+  date: string;
+  payment_method: string | null;
+  reference: string | null;
+  status: string;
+}
+
+export interface LedgerEntryView {
+  id: number;
+  account_code: string;
+  account_name: string;
+  entry_date: string;
+  description: string;
+  debit: number;
+  credit: number;
+  reference_type: string | null;
+  reference_id: number | null;
+}
+
+export interface ProfitLoss {
+  revenue: number;
+  expenses: number;
+  net_income: number;
+}
+
+export interface BalanceSheet {
+  assets: number;
+  liabilities: number;
+  equity: number;
+}
+
+export interface FinancialReport {
+  profit_loss: ProfitLoss;
+  balance_sheet: BalanceSheet;
 }

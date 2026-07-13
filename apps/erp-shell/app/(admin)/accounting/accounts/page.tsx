@@ -1,13 +1,15 @@
 "use client";
 
-import { useState, ChangeEvent } from "react";
-import { Search, Plus, Pencil, Power, PowerOff } from "lucide-react";
+import { useState, useEffect, ChangeEvent } from "react";
+import { Search, Plus, Pencil, Power, PowerOff, AlertTriangle } from "lucide-react";
+import { api } from "@/services/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { money } from "@/utils/format";
+import { LoadingSpinner } from "@/components/shared/loading-spinner";
 import type { Account } from "@/types/accounting";
 
 const typeColors: Record<string, string> = {
@@ -28,6 +30,22 @@ export default function ChartOfAccounts() {
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const d = await api.get<{ accounts: Account[] }>("/accounts");
+        setAccounts(d.accounts);
+      } catch {
+        setError("Failed to load accounts");
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, []);
 
   const filtered = accounts.filter((a) => {
     const matchSearch =
@@ -54,6 +72,8 @@ export default function ChartOfAccounts() {
     );
   };
 
+  if (loading) return <LoadingSpinner />;
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -70,6 +90,13 @@ export default function ChartOfAccounts() {
           Add Account
         </Button>
       </div>
+
+      {error && (
+        <div className="flex items-center gap-3 rounded-xl border border-destructive/30 bg-destructive/10 px-5 py-3.5">
+          <AlertTriangle className="h-4 w-4 text-destructive" />
+          <span className="text-sm font-medium text-destructive">{error}</span>
+        </div>
+      )}
 
       <div className="grid grid-cols-5 gap-3">
         {(["Asset", "Liability", "Equity", "Income", "Expense"] as const).map((type) => {
