@@ -1,12 +1,49 @@
 import sqlalchemy as sa
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.deps import get_db, get_current_org_id
+from app.core.deps import get_db, get_current_org_id, get_current_token_payload
+from app.core.billing_client import push_quotation_to_billing
 from app.sales.models import Sale, Requirement, Quotation, SalesOrder
 from app.sales.schemas import SaleManagementData, RequirementManagementData, QuotationManagementData, SalesOrderManagementData
 
 router = APIRouter(prefix="/api", tags=["sales"])
+
+
+@router.post("/quotations/{id_str}/push-to-billing")
+async def push_quotation_to_billing_endpoint(
+    id_str: str,
+    db: AsyncSession = Depends(get_db),
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    result = await db.execute(sa.select(Quotation).where(Quotation.id_str == id_str))
+    quotation = result.scalars().first()
+    if not quotation:
+        raise HTTPException(status_code=404, detail="Quotation not found")
+    if quotation.billing_quote_id is not None:
+        raise HTTPException(status_code=409, detail="Quotation already pushed to billing")
+
+    q_dict = {
+        "quote_no": quotation.quote_no,
+        "account": quotation.account,
+        "value": quotation.value,
+        "valid_until": quotation.valid_until,
+        "id_str": quotation.id_str,
+    }
+
+    billing_quote = await push_quotation_to_billing(token, q_dict)
+    billing_id = billing_quote.get("id")
+
+    quotation.billing_quote_id = billing_id
+    await db.commit()
+    await db.refresh(quotation)
+
+    return {
+        "status": "synced",
+        "crm_quote_id": quotation.id,
+        "billing_quote_id": billing_id,
+    }
 
 
 @router.get("/sales", response_model=SaleManagementData)

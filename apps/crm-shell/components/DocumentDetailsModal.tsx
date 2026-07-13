@@ -262,7 +262,7 @@ export default function DocumentDetailsModal({
       }}
     >
       <div
-        className="card"
+        className="rounded-xl border bg-card shadow-engineered"
         style={{
           maxWidth: "900px",
           width: "100%",

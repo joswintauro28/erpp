@@ -9,6 +9,10 @@ import {
   ClipboardList,
   CreditCard,
   Repeat,
+  BookOpen,
+  Receipt,
+  ScrollText,
+  BarChart3,
   ChevronRight,
   LogOut,
 } from "lucide-react";
@@ -43,6 +47,16 @@ const navItems: NavItem[] = [
       { name: "Recurring", href: "/billing/recurring-invoices", icon: Repeat },
     ],
   },
+  {
+    name: "Accounting",
+    icon: BookOpen,
+    children: [
+      { name: "Accounts", href: "/accounting/accounts", icon: Receipt },
+      { name: "Expenses", href: "/accounting/expenses", icon: ScrollText },
+      { name: "Ledger", href: "/accounting/ledger", icon: BookOpen },
+      { name: "Reports", href: "/accounting/reports", icon: BarChart3 },
+    ],
+  },
 ];
 
 function isGroup(item: NavItem): item is NavGroup {
@@ -61,7 +75,7 @@ function groupActive(group: NavGroup, pathname: string): boolean {
 export default function Sidebar({ collapsed }: { collapsed: boolean }) {
   const pathname = usePathname();
   const { user, logout } = useAuth();
-  const [expanded, setExpanded] = useState<string[]>(["Billing"]);
+  const [expanded, setExpanded] = useState<string[]>(["Billing", "Accounting"]);
   const [hoveredGroup, setHoveredGroup] = useState<NavGroup | null>(null);
   const [hoverPosition, setHoverPosition] = useState(0);
   const flyoutTimeout = useRef<NodeJS.Timeout | null>(null);

@@ -92,43 +92,43 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="relative flex min-h-screen w-full bg-[#1A1C21] overflow-hidden">
+    <div className="relative flex min-h-screen w-full bg-background overflow-hidden">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(150,40,46,0.12)_0%,transparent_60%)]" />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,rgba(203,160,82,0.06)_0%,transparent_50%)]" />
 
       <div className="relative z-10 m-auto flex w-full max-w-[420px] flex-col items-center px-6">
         <div className="mb-10 flex flex-col items-center gap-3">
-          <div className="flex h-14 w-14 items-center justify-center rounded-lg border border-[#CBA052]/40 bg-[#CBA052]/10">
-            <span className="font-[family-name:var(--font-montserrat)] text-xl font-bold text-[#CBA052] tracking-[0.05em]">
+          <div className="flex h-14 w-14 items-center justify-center rounded-lg border border-accent-foreground/20 bg-accent/10">
+            <span className="font-[family-name:var(--font-montserrat)] text-xl font-bold text-accent-foreground tracking-[0.05em]">
               D
             </span>
           </div>
           <div className="flex flex-col items-center gap-1">
-            <h1 className="font-[family-name:var(--font-montserrat)] text-xl font-semibold text-white tracking-[0.05em]">
+            <h1 className="font-[family-name:var(--font-montserrat)] text-xl font-semibold text-foreground tracking-[0.05em]">
               DATAVEX
             </h1>
-            <p className="text-sm text-white/50">Command Center</p>
+            <p className="text-sm text-muted-foreground">Command Center</p>
           </div>
         </div>
 
-        <div className="relative w-full rounded-lg border border-white/10 bg-[#272A30] p-8">
+        <div className="relative w-full rounded-lg border bg-card p-8">
           <div className="pointer-events-none absolute -inset-px rounded-lg bg-[radial-gradient(ellipse_at_top_left,rgba(203,160,82,0.06)_0%,transparent_50%)]" />
 
           <div className="relative z-10">
             <div className="mb-3 flex items-center gap-3">
-              <div className="h-[3px] w-6 rounded-full bg-[#CBA052]" />
+              <div className="h-[3px] w-6 rounded-full bg-accent-foreground" />
               <span className="font-[family-name:var(--font-montserrat)] text-[10px] font-medium uppercase tracking-[0.15em] text-white/40">
                 Authentication
               </span>
             </div>
 
-            <h2 className="font-[family-name:var(--font-montserrat)] mb-8 text-xl font-semibold text-white">
+            <h2 className="font-[family-name:var(--font-montserrat)] mb-8 text-xl font-semibold text-foreground">
               Sign in to your account
             </h2>
 
             {error && (
-              <div className="mb-6 rounded border border-[#96282E]/40 bg-[#96282E]/10 px-4 py-3">
-                <p className="text-sm text-[#C81D25]">{error}</p>
+              <div className="mb-6 rounded border border-destructive/30 bg-destructive/10 px-4 py-3">
+                <p className="text-sm text-destructive">{error}</p>
               </div>
             )}
 
@@ -136,7 +136,7 @@ export default function LoginPage() {
               <div className="flex flex-col gap-1.5">
                 <label
                   htmlFor="email"
-                  className="text-xs font-medium uppercase tracking-[0.1em] text-white/50"
+                  className="text-xs font-medium uppercase tracking-[0.1em] text-muted-foreground"
                 >
                   Email address
                 </label>
@@ -150,19 +150,19 @@ export default function LoginPage() {
                     setEmail(e.target.value);
                     if (fieldErrors.email) setFieldErrors((p) => ({ ...p, email: undefined }));
                   }}
-                  className={`h-10 rounded border bg-white/5 px-3 text-sm text-white outline-none transition-colors placeholder:text-white/20 focus:border-[#CBA052]/60 ${
-                    fieldErrors.email ? "border-[#C81D25]/60" : "border-white/10"
+                  className={`h-10 rounded border bg-muted/50 px-3 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground/50 focus:border-accent-foreground/60 ${
+                    fieldErrors.email ? "border-destructive/60" : "border"
                   }`}
                 />
                 {fieldErrors.email && (
-                  <p className="text-xs text-[#C81D25]">{fieldErrors.email}</p>
+                  <p className="text-xs text-destructive">{fieldErrors.email}</p>
                 )}
               </div>
 
               <div className="flex flex-col gap-1.5">
                 <label
                   htmlFor="password"
-                  className="text-xs font-medium uppercase tracking-[0.1em] text-white/50"
+                  className="text-xs font-medium uppercase tracking-[0.1em] text-muted-foreground"
                 >
                   Password
                 </label>
@@ -177,28 +177,28 @@ export default function LoginPage() {
                       setPassword(e.target.value);
                       if (fieldErrors.password) setFieldErrors((p) => ({ ...p, password: undefined }));
                     }}
-                    className={`h-10 w-full rounded border bg-white/5 px-3 pr-10 text-sm text-white outline-none transition-colors placeholder:text-white/20 focus:border-[#CBA052]/60 ${
-                      fieldErrors.password ? "border-[#C81D25]/60" : "border-white/10"
+                    className={`h-10 w-full rounded border bg-muted/50 px-3 pr-10 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground/50 focus:border-accent-foreground/60 ${
+                      fieldErrors.password ? "border-destructive/60" : "border"
                     }`}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition-colors"
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground/60 transition-colors"
                     tabIndex={-1}
                   >
                     {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
                 </div>
                 {fieldErrors.password && (
-                  <p className="text-xs text-[#C81D25]">{fieldErrors.password}</p>
+                  <p className="text-xs text-destructive">{fieldErrors.password}</p>
                 )}
               </div>
 
               <button
                 type="submit"
                 disabled={isLoading}
-                className="relative mt-2 flex h-10 w-full items-center justify-center gap-2 overflow-hidden rounded bg-[#C81D25] text-sm font-medium text-white transition-all hover:bg-[#A0171E] disabled:cursor-not-allowed disabled:opacity-50"
+                className="relative mt-2 flex h-10 w-full items-center justify-center gap-2 overflow-hidden rounded bg-action text-sm font-medium text-foreground transition-all hover:bg-action/90 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {isLoading ? (
                   <Loader2 size={16} className="animate-spin" />
@@ -210,17 +210,17 @@ export default function LoginPage() {
             </form>
 
             <div className="mt-8 border-t border-white/5 pt-5">
-              <p className="text-center text-xs text-white/30">
+              <p className="text-center text-xs text-muted-foreground/60">
                 Secure login with 256-bit encryption
               </p>
               <div className="mt-3 flex items-center justify-center gap-2">
-                <div className="h-[1px] w-8 bg-white/10" />
+                <div className="h-[1px] w-8 bg-border/50" />
                 <div className="flex gap-1">
-                  <div className="h-1.5 w-1.5 rounded-full bg-[#CBA052]/40" />
-                  <div className="h-1.5 w-1.5 rounded-full bg-[#CBA052]/20" />
-                  <div className="h-1.5 w-1.5 rounded-full bg-[#CBA052]/40" />
+                  <div className="h-1.5 w-1.5 rounded-full bg-accent-foreground/40" />
+                  <div className="h-1.5 w-1.5 rounded-full bg-accent-foreground/20" />
+                  <div className="h-1.5 w-1.5 rounded-full bg-accent-foreground/40" />
                 </div>
-                <div className="h-[1px] w-8 bg-white/10" />
+                <div className="h-[1px] w-8 bg-border/50" />
               </div>
             </div>
           </div>

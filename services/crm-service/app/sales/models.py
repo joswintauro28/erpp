@@ -43,6 +43,7 @@ class Quotation(Base):
     organization_id = Column(Integer, nullable=False, index=True)
     file_data = Column(String, nullable=True)
     file_name = Column(String, nullable=True)
+    billing_quote_id = Column(Integer, nullable=True)
 
 
 class SalesOrder(Base):

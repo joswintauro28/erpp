@@ -14,10 +14,6 @@ from sqlalchemy.ext.asyncio import create_async_engine
 from app.core.config import settings
 from app.core.database import Base
 
-# Import all models to register in Base.metadata
-from app.client.models import Client
-from app.lead.models import Lead
-from app.product.models import Product
 
 config = context.config
 
