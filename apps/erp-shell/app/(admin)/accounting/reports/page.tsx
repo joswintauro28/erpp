@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { money } from "@/utils/format";
 import { LoadingSpinner } from "@/components/shared/loading-spinner";
 import type { FinancialReport, BalanceSheetItem } from "@/types/accounting";
+import ReportsLoading from "./loading";
 
 export default function Reports() {
   const [activeTab, setActiveTab] = useState<"pl" | "balance" | "tax">("pl");
@@ -47,7 +48,7 @@ export default function Reports() {
     taxableIncome: 0,
   };
 
-  if (loading) return <LoadingSpinner />;
+  if (loading) return <ReportsLoading />;
 
   return (
     <div className="space-y-6">

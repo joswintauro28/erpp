@@ -13,6 +13,7 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { api } from "@/services/api";
 import { money, quotationStatusVariant as statusVariant } from "@/utils/format";
 import type { Quotation } from "@/types/billing";
+import QuotationsLoading from "./loading";
 
 const statusOptions = ["draft", "sent", "accepted", "rejected", "expired"];
 
@@ -41,7 +42,7 @@ export default function Quotations() {
     return searched.filter((qt) => qt.status === statusFilter);
   }, [quotations, search, statusFilter]);
 
-  if (loading) return <LoadingSpinner />;
+  if (loading) return <QuotationsLoading />;
 
   return (
     <div className="space-y-6">

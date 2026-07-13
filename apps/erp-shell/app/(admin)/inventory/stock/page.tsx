@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { api } from "@/services/api";
 import type { ApiStockMovement } from "@/types/inventory";
+import StockMovementsLoading from "./loading";
 
 const typeLabels: Record<string, string> = {
   in: "In",
@@ -27,12 +28,14 @@ export default function StockMovements() {
   const [typeFilter, setTypeFilter] = useState<string>("");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   const [movements, setMovements] = useState<ApiStockMovement[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
     api.get<ApiStockMovement[]>("/stock/movements")
       .then((data) => { if (!cancelled) setMovements(data); })
-      .catch(() => { if (!cancelled) setMovements([]); });
+      .catch(() => { if (!cancelled) setMovements([]); })
+      .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
   }, []);
 
@@ -48,6 +51,10 @@ export default function StockMovements() {
       return sortDir === "desc" ? -cmp : cmp;
     });
   }, [movements, search, typeFilter, sortDir]);
+
+  if (loading) {
+    return <StockMovementsLoading />;
+  }
 
   return (
     <div className="space-y-6">

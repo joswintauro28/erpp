@@ -14,6 +14,7 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { money, invoiceStatusVariant as statusVariant } from "@/utils/format";
 import { api } from "@/services/api";
 import type { ApiInvoice, InvoiceListView } from "@/types/billing";
+import InvoicesLoading from "./loading";
 
 const statusOptions = ["paid", "pending", "partially_paid", "overdue", "cancelled"];
 
@@ -64,7 +65,7 @@ export default function Invoices() {
     return searched.filter((inv) => inv.status === statusFilter);
   }, [invoices, search, statusFilter]);
 
-  if (loading) return <LoadingSpinner />;
+  if (loading) return <InvoicesLoading />;
 
   return (
     <div className="space-y-6">

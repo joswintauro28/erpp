@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { money } from "@/utils/format";
 import { LoadingSpinner } from "@/components/shared/loading-spinner";
 import type { LedgerEntry } from "@/types/accounting";
+import GeneralLedgerLoading from "./loading";
 
 export default function GeneralLedger() {
   const [ledger, setLedger] = useState<LedgerEntry[]>([]);
@@ -55,7 +56,7 @@ export default function GeneralLedger() {
   const totalDebit = sorted.reduce((s, e) => s + e.debit, 0);
   const totalCredit = sorted.reduce((s, e) => s + e.credit, 0);
 
-  if (loading) return <LoadingSpinner />;
+  if (loading) return <GeneralLedgerLoading />;
 
   return (
     <div className="space-y-6">

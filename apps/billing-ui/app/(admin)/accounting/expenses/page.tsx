@@ -9,6 +9,7 @@ import { ScrollText, AlertTriangle } from "lucide-react";
 import { api } from "@/services/api";
 import { money } from "@/utils/format";
 import type { ExpenseEntry } from "@/types/billing";
+import ExpensesLoading from "./loading";
 
 export default function ExpensesPage() {
   const [expenses, setExpenses] = useState<ExpenseEntry[]>([]);
@@ -29,7 +30,7 @@ export default function ExpensesPage() {
     fetch();
   }, []);
 
-  if (loading) return <LoadingSpinner />;
+  if (loading) return <ExpensesLoading />;
 
   return (
     <div className="space-y-6">

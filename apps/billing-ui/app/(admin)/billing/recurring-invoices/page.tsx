@@ -12,6 +12,7 @@ import { LoadingSpinner } from "@/components/shared/loading-spinner";
 import { EmptyState } from "@/components/shared/empty-state";
 import { api } from "@/services/api";
 import type { RecurringInvoice } from "@/types/billing";
+import RecurringInvoicesLoading from "./loading";
 
 const frequencyColors: Record<string, string> = {
   weekly: "bg-blue-500/10 text-blue-500 border-blue-500/20",
@@ -45,7 +46,7 @@ export default function RecurringInvoices() {
     return searched.filter((r) => r.status === statusFilter);
   }, [items, search, statusFilter]);
 
-  if (loading) return <LoadingSpinner />;
+  if (loading) return <RecurringInvoicesLoading />;
 
   return (
     <div className="space-y-6">

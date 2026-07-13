@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { money } from "@/utils/format";
 import { LoadingSpinner } from "@/components/shared/loading-spinner";
 import type { Expense } from "@/types/accounting";
+import ExpensesLoading from "./loading";
 
 export default function Expenses() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
@@ -52,7 +53,7 @@ export default function Expenses() {
     return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
   }).reduce((s, e) => s + e.amount, 0);
 
-  if (loading) return <LoadingSpinner />;
+  if (loading) return <ExpensesLoading />;
 
   return (
     <div className="space-y-6">

@@ -12,6 +12,7 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { api } from "@/services/api";
 import { money, noteStatusVariant as statusVariant } from "@/utils/format";
 import type { DebitNote } from "@/types/billing";
+import DebitNotesLoading from "./loading";
 
 export default function DebitNotes() {
   const [notes, setNotes] = useState<DebitNote[]>([]);
@@ -36,7 +37,7 @@ export default function DebitNotes() {
     );
   }, [notes, search]);
 
-  if (loading) return <LoadingSpinner />;
+  if (loading) return <DebitNotesLoading />;
 
   return (
     <div className="space-y-6">

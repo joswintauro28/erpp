@@ -16,6 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { money } from "@/utils/format";
 import { api } from "@/services/api";
 import type { ApiProduct } from "@/types/inventory";
+import ProductsLoading from "./loading";
 
 const categoryVariant = (cat: string) => {
   const c = cat.toLowerCase();
@@ -29,11 +30,13 @@ export default function Products() {
   const [apiProducts, setApiProducts] = useState<ApiProduct[]>([]);
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     api.get<ApiProduct[]>("/products")
       .then(setApiProducts)
-      .catch(() => setApiProducts([]));
+      .catch(() => setApiProducts([]))
+      .finally(() => setLoading(false));
   }, []);
 
   const categories = useMemo(
@@ -59,6 +62,10 @@ export default function Products() {
   const activeCount = apiProducts.filter((p) => p.is_active).length;
   const trackedCount = apiProducts.filter((p) => p.track_inventory).length;
   const serialTrackedCount = apiProducts.filter((p) => p.uses_serial_tracking).length;
+
+  if (loading) {
+    return <ProductsLoading />;
+  }
 
   return (
     <div className="space-y-8">

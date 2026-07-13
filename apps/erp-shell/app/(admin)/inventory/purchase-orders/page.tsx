@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { money } from "@/utils/format";
 import { api } from "@/services/api";
 import type { ApiPurchaseOrder } from "@/types/inventory";
+import PurchaseOrdersLoading from "./loading";
 
 const statusColors: Record<string, string> = {
   draft: "var(--chart-4)",
@@ -43,6 +44,10 @@ export default function PurchaseOrders() {
     }
     return res;
   }, [orders, search, statusFilter]);
+
+  if (!ready) {
+    return <PurchaseOrdersLoading />;
+  }
 
   if (ready && orders.length === 0) {
     return (

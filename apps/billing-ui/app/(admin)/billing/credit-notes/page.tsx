@@ -12,6 +12,7 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { api } from "@/services/api";
 import { money, noteStatusVariant as statusVariant } from "@/utils/format";
 import type { CreditNote } from "@/types/billing";
+import CreditNotesLoading from "./loading";
 
 export default function CreditNotes() {
   const [notes, setNotes] = useState<CreditNote[]>([]);
@@ -36,7 +37,7 @@ export default function CreditNotes() {
     );
   }, [notes, search]);
 
-  if (loading) return <LoadingSpinner />;
+  if (loading) return <CreditNotesLoading />;
 
   return (
     <div className="space-y-6">

@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { api } from "@/services/api";
 import type { ApiSerialNumber } from "@/types/inventory";
+import SerialsLoading from "./loading";
 
 const statusColors: Record<string, string> = {
   in_stock: "var(--shell-success)",
@@ -50,6 +51,10 @@ export default function Serials() {
     }
     return res;
   }, [serials, search, statusFilter]);
+
+  if (!ready) {
+    return <SerialsLoading />;
+  }
 
   if (ready && serials.length === 0) {
     return (

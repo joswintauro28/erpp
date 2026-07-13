@@ -9,16 +9,19 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { api } from "@/services/api";
 import type { ApiSupplier } from "@/types/inventory";
+import SuppliersLoading from "./loading";
 
 export default function Suppliers() {
   const [suppliers, setSuppliers] = useState<ApiSupplier[]>([]);
   const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
     api.get<ApiSupplier[]>("/suppliers")
       .then((data) => { if (!cancelled) setSuppliers(data); })
-      .catch(() => { if (!cancelled) setSuppliers([]); });
+      .catch(() => { if (!cancelled) setSuppliers([]); })
+      .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
   }, []);
 
@@ -39,6 +42,10 @@ export default function Suppliers() {
       prev.map((s) => (s.id === id ? { ...s, is_active: !s.is_active } : s))
     );
   };
+
+  if (loading) {
+    return <SuppliersLoading />;
+  }
 
   if (suppliers.length === 0) {
     return (

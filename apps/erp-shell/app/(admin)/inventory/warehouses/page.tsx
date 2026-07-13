@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { api } from "@/services/api";
 import type { ApiWarehouse } from "@/types/inventory";
+import WarehousesLoading from "./loading";
 
 export default function Warehouses() {
   const [search, setSearch] = useState("");
@@ -30,6 +31,10 @@ export default function Warehouses() {
       (w) => w.name.toLowerCase().includes(q) || w.code.toLowerCase().includes(q)
     );
   }, [warehouses, search]);
+
+  if (!ready) {
+    return <WarehousesLoading />;
+  }
 
   if (ready && warehouses.length === 0) {
     return (

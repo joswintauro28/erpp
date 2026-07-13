@@ -18,6 +18,7 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@
 import { api } from "@/services/api";
 import { money, lakhFormat } from "@/utils/format";
 import type { BillingDashboardData, DashboardSummaryItem, DashboardRecentInvoice, DashboardRevenueTrend } from "@/types/billing";
+import DashboardLoading from "./loading";
 
 const STATUS_COLORS: Record<string, string> = {
   paid: "var(--chart-2)",
@@ -110,6 +111,10 @@ export default function BillingDashboard() {
   useEffect(() => {
     fetchDashboard();
   }, []);
+
+  if (loading) {
+    return <DashboardLoading />;
+  }
 
   if (error && !data) {
     return (

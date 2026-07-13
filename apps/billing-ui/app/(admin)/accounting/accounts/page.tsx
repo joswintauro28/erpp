@@ -9,6 +9,7 @@ import { Receipt, AlertTriangle } from "lucide-react";
 import { api } from "@/services/api";
 import { money } from "@/utils/format";
 import type { AccountEntry } from "@/types/billing";
+import ChartOfAccountsLoading from "./loading";
 
 export default function AccountsPage() {
   const [accounts, setAccounts] = useState<AccountEntry[]>([]);
@@ -29,7 +30,7 @@ export default function AccountsPage() {
     fetch();
   }, []);
 
-  if (loading) return <LoadingSpinner />;
+  if (loading) return <ChartOfAccountsLoading />;
 
   return (
     <div className="space-y-6">

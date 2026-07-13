@@ -8,6 +8,7 @@ import { BookOpen, AlertTriangle } from "lucide-react";
 import { api } from "@/services/api";
 import { money } from "@/utils/format";
 import type { LedgerEntryView } from "@/types/billing";
+import GeneralLedgerLoading from "./loading";
 
 export default function LedgerPage() {
   const [entries, setEntries] = useState<LedgerEntryView[]>([]);
@@ -28,7 +29,7 @@ export default function LedgerPage() {
     fetch();
   }, []);
 
-  if (loading) return <LoadingSpinner />;
+  if (loading) return <GeneralLedgerLoading />;
 
   return (
     <div className="space-y-6">

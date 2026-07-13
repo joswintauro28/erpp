@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { LoadingSpinner } from "@/components/shared/loading-spinner";
 import { BarChart3, TrendingUp, TrendingDown, AlertTriangle } from "lucide-react";
+import ReportsLoading from "./loading";
 import { api } from "@/services/api";
 import { money } from "@/utils/format";
 
@@ -38,7 +39,7 @@ export default function ReportsPage() {
     fetch();
   }, []);
 
-  if (loading) return <LoadingSpinner />;
+  if (loading) return <ReportsLoading />;
 
   const pl = report?.profit_loss;
   const bs = report?.balance_sheet;

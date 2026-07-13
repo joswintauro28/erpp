@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { money } from "@/utils/format";
 import { LoadingSpinner } from "@/components/shared/loading-spinner";
 import type { Account } from "@/types/accounting";
+import ChartOfAccountsLoading from "./loading";
 
 const typeColors: Record<string, string> = {
   Asset: "var(--chart-1)",
@@ -72,7 +73,7 @@ export default function ChartOfAccounts() {
     );
   };
 
-  if (loading) return <LoadingSpinner />;
+  if (loading) return <ChartOfAccountsLoading />;
 
   return (
     <div className="space-y-6">

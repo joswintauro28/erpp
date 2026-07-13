@@ -11,6 +11,7 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { api } from "@/services/api";
 import { money } from "@/utils/format";
 import type { BillingPayment } from "@/types/billing";
+import PaymentsLoading from "./loading";
 
 export default function Payments() {
   const [payments, setPayments] = useState<BillingPayment[]>([]);
@@ -39,7 +40,7 @@ export default function Payments() {
     );
   }, [payments, search]);
 
-  if (loading) return <LoadingSpinner />;
+  if (loading) return <PaymentsLoading />;
 
   return (
     <div className="space-y-6">
