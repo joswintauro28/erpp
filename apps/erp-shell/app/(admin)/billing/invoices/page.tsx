@@ -14,6 +14,7 @@ import {
 import { money } from "@/utils/format";
 import { api } from "@/services/api";
 import type { ApiInvoice, ApiClientRef, InvoiceListView } from "@/types/billing";
+import InvoicesLoading from "./loading";
 
 const statusOptions = ["", "paid", "pending", "partially_paid", "overdue", "cancelled"] as const;
 
@@ -79,11 +80,7 @@ export default function Invoices() {
   }, [invoices, search, statusFilter]);
 
   if (loading) {
-    return (
-      <div className="flex h-[60vh] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-[--shell-muted]" />
-      </div>
-    );
+    return <InvoicesLoading />;
   }
 
   return (

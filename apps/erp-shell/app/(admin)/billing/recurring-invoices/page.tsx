@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { searchBilling, money } from "@/utils/format";
 import { api } from "@/services/api";
 import type { RecurringInvoice } from "@/types/billing";
+import RecurringInvoicesLoading from "./loading";
 
 const frequencyColors: Record<string, string> = {
   weekly: "var(--chart-1)",
@@ -55,11 +56,7 @@ export default function RecurringInvoices() {
   };
 
   if (loading) {
-    return (
-      <div className="flex h-[60vh] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-[--shell-muted]" />
-      </div>
-    );
+    return <RecurringInvoicesLoading />;
   }
 
   return (

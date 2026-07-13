@@ -19,6 +19,7 @@ import { MultiStepDialog } from "@/components/multi-step-dialog";
 import { searchBilling, money } from "@/utils/format";
 import type { Quotation } from "@/types/billing";
 import { api } from "@/services/api";
+import QuotationsLoading from "./loading";
 
 const statusOptions = ["", "draft", "sent", "accepted", "rejected", "expired"] as const;
 
@@ -138,6 +139,10 @@ export default function Quotations() {
     }
   };
 
+  if (loading) {
+    return <QuotationsLoading />;
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -178,13 +183,8 @@ export default function Quotations() {
         </Select>
       </div>
 
-      {loading ? (
-        <Card className="flex items-center justify-center py-16">
-          <Loader2 className="h-6 w-6 animate-spin text-[--shell-muted]" />
-        </Card>
-      ) : (
-        <Card>
-          <CardContent className="p-0">
+      <Card>
+        <CardContent className="p-0">
             {filtered.length === 0 ? (
               <div className="flex flex-col items-center gap-2 py-16 text-[--shell-muted]">
                 <ClipboardList className="h-10 w-10" />
@@ -254,7 +254,6 @@ export default function Quotations() {
             )}
           </CardContent>
         </Card>
-      )}
 
       <MultiStepDialog
         open={dialogOpen}

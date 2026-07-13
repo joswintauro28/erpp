@@ -18,6 +18,7 @@ import { MultiStepDialog } from "@/components/multi-step-dialog";
 import { searchBilling, money } from "@/utils/format";
 import { api } from "@/services/api";
 import type { BillingPayment } from "@/types/billing";
+import PaymentsLoading from "./loading";
 
 interface PaymentMetrics {
   today: number; thisMonth: number; outstanding: number; refunds: number; failed: number;
@@ -68,6 +69,10 @@ export default function Payments() {
       )
     );
   };
+
+  if (loading) {
+    return <PaymentsLoading />;
+  }
 
   return (
     <div className="space-y-6">

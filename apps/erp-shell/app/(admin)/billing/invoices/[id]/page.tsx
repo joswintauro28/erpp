@@ -20,6 +20,7 @@ import { MultiStepDialog } from "@/components/multi-step-dialog";
 import { money } from "@/utils/format";
 import { api } from "@/services/api";
 import type { ApiInvoice, InvoiceDetailView, InvoiceItemView, ApiPayment } from "@/types/billing";
+import InvoiceDetailLoading from "./loading";
 
 const statusVariant = (s: string) => {
   if (s === "paid") return "default" as const;
@@ -85,11 +86,7 @@ export default function InvoiceDetail() {
   }, [id]);
 
   if (loading) {
-    return (
-      <div className="flex h-[60vh] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-[--shell-muted]" />
-      </div>
-    );
+    return <InvoiceDetailLoading />;
   }
 
   if (!invoice) {
