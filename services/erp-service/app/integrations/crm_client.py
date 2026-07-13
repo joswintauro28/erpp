@@ -97,3 +97,12 @@ async def update_lead_crm(token: str, id_str: str, data: dict) -> dict:
 
 async def delete_lead_crm(token: str, id_str: str) -> None:
     await _delete(f"/leads/{id_str}", token)
+
+
+async def get_customer_detail(token: str, id_str: str) -> dict:
+    return await _get(f"/customers/{id_str}", token)
+
+
+async def get_lead_detail(token: str, id_str: str) -> dict:
+    return await _get(f"/leads/{id_str}", token)
+

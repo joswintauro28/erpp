@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 
 from app.core.deps import get_current_token_payload
-from app.integrations.crm_client import get_customers, create_customer, update_customer, delete_customer
+from app.integrations.crm_client import get_customers, get_customer_detail, create_customer, update_customer, delete_customer
 
 router = APIRouter(prefix="/clients", tags=["clients"])
 
@@ -52,6 +52,13 @@ async def get_client(
     payload: dict = Depends(get_current_token_payload),
 ):
     token = payload.get("_raw_token", "")
+    try:
+        res = await get_customer_detail(token, client_id)
+        if res:
+            return _map_customer(res)
+    except Exception:
+        pass
+
     data = await get_customers(token)
     for c in data:
         if str(c.get("id")) == str(client_id) or c.get("id_str") == client_id:
@@ -67,20 +74,29 @@ async def update_client(
     payload: dict = Depends(get_current_token_payload),
 ):
     token = payload.get("_raw_token", "")
-    data = await get_customers(token)
-    id_str = None
-    for c in data:
-        if str(c.get("id")) == str(client_id) or c.get("id_str") == client_id:
-            id_str = c.get("id_str")
-            break
-    if not id_str:
-        from app.core.exceptions import NotFoundException
-        raise NotFoundException("Client not found")
+    id_str = client_id
+    if not id_str.startswith("cust_"):
+        # Look up by numeric id in the list fallback
+        data = await get_customers(token)
+        found = False
+        for c in data:
+            if str(c.get("id")) == str(client_id) or c.get("id_str") == client_id:
+                id_str = c.get("id_str")
+                found = True
+                break
+        if not found:
+            from app.core.exceptions import NotFoundException
+            raise NotFoundException("Client not found")
+
     crm_body = {}
     if "name" in body:
         crm_body["account"] = body["name"]
-    result = await update_customer(token, id_str, crm_body)
-    return _map_customer(result)
+    try:
+        result = await update_customer(token, id_str, crm_body)
+        return _map_customer(result)
+    except Exception:
+        from app.core.exceptions import NotFoundException
+        raise NotFoundException("Client not found")
 
 
 @router.delete("/{client_id}", status_code=204)
@@ -89,13 +105,21 @@ async def delete_client(
     payload: dict = Depends(get_current_token_payload),
 ):
     token = payload.get("_raw_token", "")
-    data = await get_customers(token)
-    id_str = None
-    for c in data:
-        if str(c.get("id")) == str(client_id) or c.get("id_str") == client_id:
-            id_str = c.get("id_str")
-            break
-    if not id_str:
+    id_str = client_id
+    if not id_str.startswith("cust_"):
+        data = await get_customers(token)
+        found = False
+        for c in data:
+            if str(c.get("id")) == str(client_id) or c.get("id_str") == client_id:
+                id_str = c.get("id_str")
+                found = True
+                break
+        if not found:
+            from app.core.exceptions import NotFoundException
+            raise NotFoundException("Client not found")
+
+    try:
+        await delete_customer(token, id_str)
+    except Exception:
         from app.core.exceptions import NotFoundException
         raise NotFoundException("Client not found")
-    await delete_customer(token, id_str)

@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends
 from app.core.deps import get_current_user_id, get_current_token_payload
 from app.integrations.billing_client import get_dashboard_billing, get_invoices, get_invoice_summary
 from app.integrations.crm_client import get_dashboard_crm, get_customers, get_leads, get_opportunities, get_sales, get_complaints
-from app.integrations.inventory_client import get_dashboard_inventory, get_low_stock_products, get_stock_movements, get_warehouses, get_suppliers, get_purchase_orders
+from app.integrations.inventory_client import get_dashboard_inventory, get_low_stock_products, get_stock_movements_dashboard, get_warehouses, get_suppliers, get_purchase_orders
 from app.dashboard.services import DashboardService
 
 router = APIRouter(prefix="/dashboard", tags=["dashboard"])
@@ -155,7 +155,7 @@ async def inventory_movements(
     payload: dict = Depends(get_current_token_payload),
 ):
     token = payload.get("_raw_token", "")
-    return await get_stock_movements(token)
+    return await get_stock_movements_dashboard(token)
 
 
 @router.get("/executive-overview", response_model=dict)

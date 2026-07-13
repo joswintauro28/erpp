@@ -20,7 +20,7 @@ export default function MetricCard({ metric }: { metric: Metric }) {
   const Icon = Object.entries(iconMap).find(([key]) => metric.name.includes(key))?.[1] ?? TrendingUp;
 
   return (
-    <Card size="sm">
+    <Card size="sm" className="transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
       <CardHeader>
         <div className="flex items-center justify-between w-full">
           <CardTitle>{metric.name}</CardTitle>
@@ -30,7 +30,7 @@ export default function MetricCard({ metric }: { metric: Metric }) {
         </div>
       </CardHeader>
       <CardContent>
-        <p className="text-2xl font-bold tracking-tight">{metric.formatted_value}</p>
+        <p className="font-heading text-2xl font-bold tracking-tight">{metric.formatted_value}</p>
         <p className={`flex items-center gap-1 text-xs ${metric.is_positive ? "text-emerald-600" : "text-destructive"}`}>
           {metric.is_positive ? <ArrowUpRight size={16} /> : <ArrowDownRight size={16} />}
           {metric.trend}

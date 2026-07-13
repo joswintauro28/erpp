@@ -67,3 +67,19 @@ class BaseRepository(Generic[ModelT]):
         await self.db.delete(instance)
         await self.db.flush()
         return True
+
+
+async def get_db():
+    async with async_session_factory() as session:
+        try:
+            yield session
+            await session.commit()
+        except Exception:
+            await session.rollback()
+            raise
+
+
+# Import models here to register with Base.metadata for Alembic autogenerate
+from app.settings.models import SystemSettings
+
+

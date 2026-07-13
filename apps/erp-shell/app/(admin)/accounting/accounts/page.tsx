@@ -86,7 +86,7 @@ export default function ChartOfAccounts() {
             Manage your accounting chart of accounts
           </p>
         </div>
-        <Button size="sm">
+        <Button className="bg-[--shell-brand] hover:bg-[--shell-brand]/90 text-white" size="sm">
           <Plus className="mr-1.5 h-3.5 w-3.5" />
           Add Account
         </Button>
@@ -100,47 +100,55 @@ export default function ChartOfAccounts() {
       )}
 
       <div className="grid grid-cols-5 gap-3">
-        {(["Asset", "Liability", "Equity", "Income", "Expense"] as const).map((type) => {
+        {(["Asset", "Liability", "Equity", "Income", "Expense"] as const).map((type, idx) => {
           const info = typeBalances(type, accounts);
+          const isActiveFilter = typeFilter === type;
           return (
-            <Card
+            <div
               key={type}
-              className={`cursor-pointer transition-all hover:shadow-md ${typeFilter === type ? "ring-2 ring-[--shell-action]" : ""}`}
+              className={`animate-kpi flex flex-col gap-1.5 rounded-xl border p-4.5 transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1)] cursor-pointer ${
+                isActiveFilter
+                  ? "border-[--shell-brand] bg-[--shell-surface-alt]/50 ring-1 ring-[--shell-brand]"
+                  : "border-[--shell-border] bg-[--shell-surface]"
+              }`}
+              style={{ animationDelay: `${idx * 0.05}s` }}
               onClick={() => setTypeFilter(typeFilter === type ? "" : type)}
             >
-              <CardHeader className="p-3 pb-1">
-                <CardTitle className="text-xs font-medium tracking-wide" style={{ color: typeColors[type] }}>
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold uppercase tracking-[0.08em]" style={{ color: typeColors[type] }}>
                   {type}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-3 pt-1">
-                <p className="font-mono text-sm font-semibold text-[--shell-foreground]">{money(info.total)}</p>
-                <p className="text-xs text-[--shell-muted]">{info.count} accounts</p>
-              </CardContent>
-            </Card>
+                </span>
+                <div className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: typeColors[type] }} />
+              </div>
+              <span className="font-heading text-lg font-semibold tracking-tight text-[--shell-foreground]">
+                {money(info.total)}
+              </span>
+              <span className="text-xs text-[--shell-muted]">{info.count} accounts</span>
+            </div>
           );
         })}
       </div>
 
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="relative flex-1 max-w-xs">
+          <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[--shell-muted]" />
+          <Input
+            placeholder="Search by name, code, or group..."
+            className="pl-8"
+            value={search}
+            onChange={(e: ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
+          />
+        </div>
+        {typeFilter && (
+          <Badge variant="secondary" className="gap-1">
+            {typeFilter}
+            <button className="ml-1 text-[--shell-muted] hover:text-[--shell-foreground]" onClick={() => setTypeFilter("")}>×</button>
+          </Badge>
+        )}
+      </div>
+
       <Card>
         <CardContent className="p-0">
-          <div className="flex items-center gap-3 border-b border-[--shell-border] p-3">
-            <div className="relative flex-1 max-w-xs">
-              <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[--shell-muted]" />
-              <Input
-                placeholder="Search by name, code, or group..."
-                className="pl-8"
-                value={search}
-                onChange={(e: ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
-              />
-            </div>
-            {typeFilter && (
-              <Badge variant="secondary" className="gap-1">
-                {typeFilter}
-                <button className="ml-1 text-[--shell-muted] hover:text-[--shell-foreground]" onClick={() => setTypeFilter("")}>×</button>
-              </Badge>
-            )}
-          </div>
           <Table>
             <TableHeader>
               <TableRow>

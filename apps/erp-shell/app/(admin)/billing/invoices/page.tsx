@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Search, FileText, Eye, Download, Receipt, CreditCard, DollarSign, BadgePercent, Loader2 } from "lucide-react";
+import { Plus, Search, FileText, Eye, Download, Receipt, CreditCard, DollarSign, BadgePercent } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -25,6 +25,29 @@ const statusVariant = (s: string) => {
   if (s === "partially_paid") return "outline" as const;
   return "outline" as const;
 };
+
+function SectionHeading({ label }: { label: string }) {
+  return (
+    <div className="mb-5 flex items-center gap-2">
+      <h2 className="font-heading text-xs font-medium uppercase tracking-[0.12em] text-[--shell-muted]">
+        {label}
+      </h2>
+      <div className="h-px flex-1 bg-[--shell-border]/20" />
+    </div>
+  );
+}
+
+const CHART_VARS = [
+  "var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--chart-4)", "var(--chart-5)",
+];
+
+const summaryCards = [
+  { key: "taxable_value" as const, icon: Receipt, label: "Taxable Value", idx: 0 },
+  { key: "total_gst" as const, icon: BadgePercent, label: "Total GST", idx: 1 },
+  { key: "total_cgst_sgst" as const, icon: DollarSign, label: "CGST + SGST", idx: 2 },
+  { key: "total_igst" as const, icon: CreditCard, label: "IGST", idx: 3 },
+  { key: "total_invoices" as const, icon: FileText, label: "Total Invoices", idx: 4 },
+];
 
 export default function Invoices() {
   const router = useRouter();
@@ -84,151 +107,137 @@ export default function Invoices() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
+      {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-heading text-xl font-semibold tracking-tight text-[--shell-foreground]">Invoices</h1>
           <p className="mt-0.5 text-sm text-[--shell-muted]">Create, manage, and track all client invoices</p>
         </div>
-        <Button><Plus className="h-4 w-4" /> Create Invoice</Button>
+        <Button className="bg-[--shell-brand] hover:bg-[--shell-brand]/90 text-white"><Plus className="h-4 w-4" /> Create Invoice</Button>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-5">
-        <Card>
-          <CardContent className="flex items-center gap-3 pt-6">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[--chart-1]/10">
-              <Receipt className="h-4 w-4 text-[--chart-1]" />
-            </div>
-            <div>
-              <p className="font-heading text-base font-semibold">{money(gstSummary.taxable_value)}</p>
-              <p className="text-xs text-[--shell-muted]">Taxable Value</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="flex items-center gap-3 pt-6">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[--chart-2]/10">
-              <BadgePercent className="h-4 w-4 text-[--chart-2]" />
-            </div>
-            <div>
-              <p className="font-heading text-base font-semibold">{money(gstSummary.total_gst)}</p>
-              <p className="text-xs text-[--shell-muted]">Total GST</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="flex items-center gap-3 pt-6">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[--chart-3]/10">
-              <DollarSign className="h-4 w-4 text-[--chart-3]" />
-            </div>
-            <div>
-              <p className="font-heading text-base font-semibold">{money(gstSummary.total_cgst + gstSummary.total_sgst)}</p>
-              <p className="text-xs text-[--shell-muted]">CGST + SGST</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="flex items-center gap-3 pt-6">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[--chart-4]/10">
-              <CreditCard className="h-4 w-4 text-[--chart-4]" />
-            </div>
-            <div>
-              <p className="font-heading text-base font-semibold">{money(gstSummary.total_igst)}</p>
-              <p className="text-xs text-[--shell-muted]">IGST</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="flex items-center gap-3 pt-6">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg" style={{ background: "var(--shell-success)/10" }}>
-              <FileText className="h-4 w-4" style={{ color: "var(--shell-success)" }} />
-            </div>
-            <div>
-              <p className="font-heading text-base font-semibold">{invoices.length}</p>
-              <p className="text-xs text-[--shell-muted]">Total Invoices</p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="relative flex-1 max-w-xs">
-          <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[--shell-muted]" />
-          <Input placeholder="Search invoices..." className="pl-8" value={search} onChange={(e) => setSearch(e.target.value)} />
+      {/* GST Summary */}
+      <section>
+        <SectionHeading label="GST Summary" />
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-5">
+          {(() => {
+            const cgst_sgst = gstSummary.total_cgst + gstSummary.total_sgst;
+            const values: Record<string, string> = {
+              taxable_value: money(gstSummary.taxable_value),
+              total_gst: money(gstSummary.total_gst),
+              total_cgst_sgst: money(cgst_sgst),
+              total_igst: money(gstSummary.total_igst),
+              total_invoices: String(invoices.length),
+            };
+            return summaryCards.map((card) => {
+              const Icon = card.icon;
+              return (
+                <div
+                  key={card.key}
+                  className="animate-kpi flex flex-col gap-1.5 rounded-xl border border-[--shell-border] bg-[--shell-surface] p-4.5 transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1)]"
+                  style={{ animationDelay: `${card.idx * 0.05}s` }}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-medium uppercase tracking-[0.08em] text-[--shell-muted]">
+                      {card.label}
+                    </span>
+                    <div className="flex h-7 w-7 items-center justify-center rounded-md border border-[--shell-border] bg-[--shell-bg]">
+                      <Icon className="h-3.5 w-3.5" style={{ color: CHART_VARS[card.idx] }} />
+                    </div>
+                  </div>
+                  <span className="font-heading text-lg font-semibold tracking-tight text-[--shell-foreground]">
+                    {values[card.key]}
+                  </span>
+                </div>
+              );
+            });
+          })()}
         </div>
-        <Select value={statusFilter} onValueChange={(v) => v !== null && setStatusFilter(v)}>
-          <SelectTrigger className="w-36"><SelectValue placeholder="All statuses" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="">All statuses</SelectItem>
-            {statusOptions.filter(Boolean).map((s) => (
-              <SelectItem key={s} value={s} className="capitalize">{s.replace("_", " ")}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      </section>
 
-      <Card>
-        <CardContent className="p-0">
-          {filtered.length === 0 ? (
-            <div className="flex flex-col items-center gap-3 py-20 text-[--shell-muted]">
-              <FileText className="h-12 w-12" />
-              <p className="text-base font-medium text-[--shell-foreground]">
-                {invoices.length === 0 ? "No invoices yet" : "No invoices match your search"}
-              </p>
-              <p className="text-sm">
-                {invoices.length === 0
-                  ? "Create your first invoice to get started."
-                  : "Try adjusting your search or filters."}
-              </p>
-              {invoices.length === 0 && (
-                <Button size="sm" className="mt-2">
-                  <Plus className="mr-1 h-4 w-4" /> Create Invoice
-                </Button>
-              )}
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Invoice</TableHead>
-                  <TableHead>Client</TableHead>
-                  <TableHead className="text-right">Total</TableHead>
-                  <TableHead className="text-right">Paid</TableHead>
-                  <TableHead className="text-right">Balance</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Due</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filtered.map((inv) => (
-                  <TableRow key={inv.id}>
-                    <TableCell><span className="font-mono text-xs font-medium">{inv.invoice_number}</span></TableCell>
-                    <TableCell className="text-[--shell-muted]">{inv.client_name}</TableCell>
-                    <TableCell className="font-mono text-sm text-right">{money(inv.total)}</TableCell>
-                    <TableCell className="font-mono text-sm text-right">{money(inv.paid_amount)}</TableCell>
-                    <TableCell className="font-mono text-sm text-right">{money(inv.balance_due)}</TableCell>
-                    <TableCell>
-                      <Badge variant={statusVariant(inv.status)} className="capitalize">{inv.status.replace("_", " ")}</Badge>
-                    </TableCell>
-                    <TableCell className="text-xs text-[--shell-muted]">{inv.due_date}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center justify-end gap-1">
-                        <Button variant="ghost" size="icon-sm" onClick={() => router.push(`/billing/invoices/${inv.id}`)}>
-                          <Eye className="h-3.5 w-3.5" />
-                        </Button>
-                        <Button variant="ghost" size="icon-sm">
-                          <Download className="h-3.5 w-3.5" />
-                        </Button>
-                      </div>
-                    </TableCell>
+      {/* Search & Filter */}
+      <section>
+        <SectionHeading label="Invoice List" />
+        <div className="mb-5 flex flex-wrap items-center gap-3">
+          <div className="relative flex-1 max-w-xs">
+            <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[--shell-muted]" />
+            <Input placeholder="Search invoices..." className="pl-8 border-[--shell-border] bg-[--shell-surface]" value={search} onChange={(e) => setSearch(e.target.value)} />
+          </div>
+          <Select value={statusFilter} onValueChange={(v) => v !== null && setStatusFilter(v)}>
+            <SelectTrigger className="w-36 border-[--shell-border] bg-[--shell-surface]"><SelectValue placeholder="All statuses" /></SelectTrigger>
+            <SelectContent className="border-[--shell-border] bg-[--shell-surface]">
+              <SelectItem value="">All statuses</SelectItem>
+              {statusOptions.filter(Boolean).map((s) => (
+                <SelectItem key={s} value={s} className="capitalize">{s.replace("_", " ")}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <Card>
+          <CardContent className="p-0">
+            {filtered.length === 0 ? (
+              <div className="flex flex-col items-center gap-3 py-20 text-muted-foreground">
+                <FileText className="h-12 w-12" />
+                <p className="text-base font-medium text-foreground">
+                  {invoices.length === 0 ? "No invoices yet" : "No invoices match your search"}
+                </p>
+                <p className="text-sm">
+                  {invoices.length === 0
+                    ? "Create your first invoice to get started."
+                    : "Try adjusting your search or filters."}
+                </p>
+                {invoices.length === 0 && (
+                  <Button size="sm" className="mt-2">
+                    <Plus className="mr-1 h-4 w-4" /> Create Invoice
+                  </Button>
+                )}
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Invoice</TableHead>
+                    <TableHead>Client</TableHead>
+                    <TableHead className="text-right">Total</TableHead>
+                    <TableHead className="text-right">Paid</TableHead>
+                    <TableHead className="text-right">Balance</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Due</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+                </TableHeader>
+                <TableBody>
+                  {filtered.map((inv) => (
+                    <TableRow key={inv.id}>
+                      <TableCell><span className="font-mono text-xs font-medium">{inv.invoice_number}</span></TableCell>
+                      <TableCell className="text-muted-foreground">{inv.client_name}</TableCell>
+                      <TableCell className="font-mono text-sm text-right">{money(inv.total)}</TableCell>
+                      <TableCell className="font-mono text-sm text-right">{money(inv.paid_amount)}</TableCell>
+                      <TableCell className="font-mono text-sm text-right">{money(inv.balance_due)}</TableCell>
+                      <TableCell>
+                        <Badge variant={statusVariant(inv.status)} className="capitalize">{inv.status.replace("_", " ")}</Badge>
+                      </TableCell>
+                      <TableCell className="text-xs text-muted-foreground">{inv.due_date}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center justify-end gap-1">
+                          <Button variant="ghost" size="icon-sm" onClick={() => router.push(`/billing/invoices/${inv.id}`)}>
+                            <Eye className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button variant="ghost" size="icon-sm">
+                            <Download className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
+      </section>
     </div>
   );
 }

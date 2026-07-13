@@ -40,7 +40,11 @@ const fallbackData: DashboardData = {
   recommendations: [],
 };
 
-export default function Dashboard() {
+interface DashboardProps {
+  loadingFallback?: React.ReactNode;
+}
+
+export default function Dashboard({ loadingFallback }: DashboardProps = {}) {
   const [data, setData] = useState<DashboardData>(fallbackData);
   const [loading, setLoading] = useState(true);
 
@@ -57,6 +61,10 @@ export default function Dashboard() {
     };
     fetchData();
   }, []);
+
+  if (loading && loadingFallback) {
+    return <>{loadingFallback}</>;
+  }
 
   return (
     <div className="space-y-6">

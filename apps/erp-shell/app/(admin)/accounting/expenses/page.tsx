@@ -66,7 +66,7 @@ export default function Expenses() {
             Track and manage business expenses
           </p>
         </div>
-        <Button size="sm">
+        <Button className="bg-[--shell-brand] hover:bg-[--shell-brand]/90 text-white" size="sm">
           <Plus className="mr-1.5 h-3.5 w-3.5" />
           Add Expense
         </Button>
@@ -80,57 +80,42 @@ export default function Expenses() {
       )}
 
       <div className="grid grid-cols-4 gap-3">
-        <Card>
-          <CardHeader className="p-3 pb-1">
-            <CardTitle className="text-xs font-medium text-[--shell-muted] tracking-wide">Total Expenses</CardTitle>
-          </CardHeader>
-          <CardContent className="p-3 pt-1">
-            <p className="font-mono text-lg font-semibold text-[--shell-foreground]">{money(totalAmount)}</p>
-            <p className="text-xs text-[--shell-muted]">{expenses.length} entries</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="p-3 pb-1">
-            <CardTitle className="text-xs font-medium text-[--shell-muted] tracking-wide">This Month</CardTitle>
-          </CardHeader>
-          <CardContent className="p-3 pt-1">
-            <p className="font-mono text-lg font-semibold text-[--shell-foreground]">{money(thisMonth)}</p>
-            <p className="text-xs text-[--shell-muted]">August 2024</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="p-3 pb-1">
-            <CardTitle className="text-xs font-medium text-[--shell-muted] tracking-wide">Pending</CardTitle>
-          </CardHeader>
-          <CardContent className="p-3 pt-1">
-            <p className="font-mono text-lg font-semibold text-[--shell-action]">{money(pendingAmount)}</p>
-            <p className="text-xs text-[--shell-muted]">{expenses.filter((e) => e.status === "pending").length} unpaid</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="p-3 pb-1">
-            <CardTitle className="text-xs font-medium text-[--shell-muted] tracking-wide">Categories</CardTitle>
-          </CardHeader>
-          <CardContent className="p-3 pt-1">
-            <p className="font-mono text-lg font-semibold text-[--shell-foreground]">{new Set(expenses.map((e) => e.category)).size}</p>
-            <p className="text-xs text-[--shell-muted]">distinct categories</p>
-          </CardContent>
-        </Card>
+        {[
+          { label: "Total Expenses", value: money(totalAmount), subtitle: `${expenses.length} entries` },
+          { label: "This Month", value: money(thisMonth), subtitle: "August 2024" },
+          { label: "Pending", value: money(pendingAmount), subtitle: `${expenses.filter((e) => e.status === "pending").length} unpaid`, isAction: true },
+          { label: "Categories", value: String(new Set(expenses.map((e) => e.category)).size), subtitle: "distinct categories" }
+        ].map((item, idx) => (
+          <div
+            key={item.label}
+            className="animate-kpi flex flex-col gap-1.5 rounded-xl border border-[--shell-border] bg-[--shell-surface] p-4.5 transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1)]"
+            style={{ animationDelay: `${idx * 0.05}s` }}
+          >
+            <span className="text-xs font-medium uppercase tracking-[0.08em] text-[--shell-muted]">
+              {item.label}
+            </span>
+            <span className={`font-heading text-lg font-semibold tracking-tight ${item.isAction ? "text-[--shell-brand]" : "text-[--shell-foreground]"}`}>
+              {item.value}
+            </span>
+            <span className="text-xs text-[--shell-muted]">{item.subtitle}</span>
+          </div>
+        ))}
+      </div>
+
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="relative flex-1 max-w-xs">
+          <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[--shell-muted]" />
+          <Input
+            placeholder="Search expenses..."
+            className="pl-8"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
       </div>
 
       <Card>
         <CardContent className="p-0">
-          <div className="flex items-center gap-3 border-b border-[--shell-border] p-3">
-            <div className="relative flex-1 max-w-xs">
-              <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[--shell-muted]" />
-              <Input
-                placeholder="Search expenses..."
-                className="pl-8"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
-          </div>
           <Table>
             <TableHeader>
               <TableRow>

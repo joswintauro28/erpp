@@ -1,0 +1,305 @@
+from fastapi import APIRouter, Depends, Query
+
+from app.core.deps import get_current_token_payload
+from app.integrations.billing_client import (
+    get_invoices, get_invoice, create_invoice, update_invoice_status, delete_invoice,
+    get_quotations, get_quotation, create_quotation, update_quotation,
+    update_quotation_status, convert_quotation, delete_quotation,
+    get_credit_notes, create_credit_note, delete_credit_note,
+    get_debit_notes, create_debit_note, delete_debit_note,
+    get_recurring_invoices, get_recurring_invoice, create_recurring_invoice, delete_recurring_invoice,
+    get_payments, create_payment, refund_payment, get_payments_metrics,
+    get_dashboard_billing,
+    get_accounts, get_expenses, get_ledger, get_reports,
+)
+
+router = APIRouter(tags=["billing"])
+
+
+# ─── Invoices ────────────────────────────────────────────────
+
+@router.get("/invoices", response_model=list[dict])
+async def list_invoices(
+    limit: int = Query(100, le=1000),
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await get_invoices(token, {"limit": str(limit)})
+
+
+@router.post("/invoices", response_model=dict, status_code=201)
+async def create_new_invoice(
+    body: dict,
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await create_invoice(token, body)
+
+
+# ─── Quotations ──────────────────────────────────────────────
+
+@router.get("/invoices/quotations", response_model=list[dict])
+async def list_quotations(
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await get_quotations(token)
+
+
+@router.post("/invoices/quotations", response_model=dict, status_code=201)
+async def create_new_quotation(
+    body: dict,
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await create_quotation(token, body)
+
+
+@router.get("/invoices/quotations/{quotation_id}", response_model=dict)
+async def get_quotation_by_id(
+    quotation_id: int,
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await get_quotation(token, quotation_id)
+
+
+@router.put("/invoices/quotations/{quotation_id}", response_model=dict)
+async def update_quotation_by_id(
+    quotation_id: int,
+    body: dict,
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await update_quotation(token, quotation_id, body)
+
+
+@router.put("/invoices/quotations/{quotation_id}/status", response_model=dict)
+async def update_quotation_status_endpoint(
+    quotation_id: int,
+    status: str = Query(...),
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await update_quotation_status(token, quotation_id, status)
+
+
+@router.post("/invoices/quotations/{quotation_id}/convert", response_model=dict)
+async def convert_quotation_to_invoice(
+    quotation_id: int,
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await convert_quotation(token, quotation_id)
+
+
+@router.delete("/invoices/quotations/{quotation_id}", status_code=204)
+async def delete_quotation_by_id(
+    quotation_id: int,
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    await delete_quotation(token, quotation_id)
+
+
+# ─── Credit Notes ────────────────────────────────────────────
+
+@router.get("/invoices/credit-notes", response_model=list[dict])
+async def list_credit_notes(
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await get_credit_notes(token)
+
+
+@router.post("/invoices/credit-notes", response_model=dict, status_code=201)
+async def create_new_credit_note(
+    body: dict,
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await create_credit_note(token, body)
+
+
+@router.delete("/invoices/credit-notes/{note_id}", status_code=204)
+async def delete_credit_note_by_id(
+    note_id: int,
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    await delete_credit_note(token, note_id)
+
+
+# ─── Debit Notes ─────────────────────────────────────────────
+
+@router.get("/invoices/debit-notes", response_model=list[dict])
+async def list_debit_notes(
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await get_debit_notes(token)
+
+
+@router.post("/invoices/debit-notes", response_model=dict, status_code=201)
+async def create_new_debit_note(
+    body: dict,
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await create_debit_note(token, body)
+
+
+@router.delete("/invoices/debit-notes/{note_id}", status_code=204)
+async def delete_debit_note_by_id(
+    note_id: int,
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    await delete_debit_note(token, note_id)
+
+
+# ─── Recurring Invoices ──────────────────────────────────────
+
+@router.get("/invoices/recurring", response_model=list[dict])
+async def list_recurring_invoices(
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await get_recurring_invoices(token)
+
+
+@router.get("/invoices/recurring/{rec_id}", response_model=dict)
+async def get_recurring_invoice_by_id(
+    rec_id: int,
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await get_recurring_invoice(token, rec_id)
+
+
+@router.post("/invoices/recurring", response_model=dict, status_code=201)
+async def create_new_recurring_invoice(
+    body: dict,
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await create_recurring_invoice(token, body)
+
+
+@router.delete("/invoices/recurring/{rec_id}", status_code=204)
+async def delete_recurring_invoice_by_id(
+    rec_id: int,
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    await delete_recurring_invoice(token, rec_id)
+
+
+# ─── Parameterized Dynamic Invoice Routes ─────────────────────
+
+@router.get("/invoices/{invoice_id}", response_model=dict)
+async def get_invoice_by_id(
+    invoice_id: int,
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await get_invoice(token, invoice_id)
+
+
+@router.put("/invoices/{invoice_id}/status", response_model=dict)
+async def update_invoice_status_endpoint(
+    invoice_id: int,
+    body: dict,
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await update_invoice_status(token, invoice_id, body.get("status", ""))
+
+
+@router.delete("/invoices/{invoice_id}", status_code=204)
+async def delete_invoice_by_id(
+    invoice_id: int,
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    await delete_invoice(token, invoice_id)
+
+
+# ─── Payments ────────────────────────────────────────────────
+
+@router.get("/payments", response_model=list[dict])
+async def list_payments(
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await get_payments(token)
+
+
+@router.post("/payments", response_model=dict, status_code=201)
+async def create_new_payment(
+    body: dict,
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await create_payment(token, body)
+
+
+@router.post("/payments/{payment_id}/refund", response_model=dict)
+async def refund_payment_by_id(
+    payment_id: int,
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await refund_payment(token, payment_id)
+
+
+@router.get("/payments/metrics", response_model=dict)
+async def list_payment_metrics(
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await get_payments_metrics(token)
+
+
+# ─── Dashboard ───────────────────────────────────────────────
+
+@router.get("/dashboard/billing", response_model=dict)
+async def billing_dashboard(
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await get_dashboard_billing(token)
+
+
+# ─── Accounting (proxied to billing-service) ─────────────────
+
+@router.get("/accounts", response_model=dict)
+async def list_accounts(
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await get_accounts(token)
+
+
+@router.get("/expenses", response_model=dict)
+async def list_expenses(
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await get_expenses(token)
+
+
+@router.get("/ledger", response_model=dict)
+async def list_ledger(
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await get_ledger(token)
+
+
+@router.get("/reports", response_model=dict)
+async def list_reports(
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await get_reports(token)

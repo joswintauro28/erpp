@@ -89,60 +89,51 @@ export default function Reports() {
       {activeTab === "pl" && (
         <div className="space-y-4">
           <div className="grid grid-cols-4 gap-3">
-            <Card>
-              <CardHeader className="p-3 pb-1">
-                <CardTitle className="text-xs font-medium text-[--shell-muted] tracking-wide">Revenue</CardTitle>
-              </CardHeader>
-              <CardContent className="p-3 pt-1">
-                <p className="font-mono text-lg font-semibold text-[--shell-foreground]">{money(currentPL.revenue)}</p>
-                <div className="mt-0.5 flex items-center gap-1 text-xs">
-                  <TrendingUp className="h-3 w-3 text-[--shell-success]" />
-                  <span className="text-[--shell-success]">+{((currentPL.revenue - prevPL.revenue) / prevPL.revenue * 100).toFixed(1)}%</span>
-                  <span className="text-[--shell-muted]">vs last month</span>
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="p-3 pb-1">
-                <CardTitle className="text-xs font-medium text-[--shell-muted] tracking-wide">Gross Profit</CardTitle>
-              </CardHeader>
-              <CardContent className="p-3 pt-1">
-                <p className="font-mono text-lg font-semibold text-[--shell-foreground]">{money(currentPL.gross_profit)}</p>
-                <p className="mt-0.5 text-xs text-[--shell-muted]">
-                  Margin {((currentPL.gross_profit / currentPL.revenue) * 100).toFixed(1)}%
-                </p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="p-3 pb-1">
-                <CardTitle className="text-xs font-medium text-[--shell-muted] tracking-wide">Operating Expenses</CardTitle>
-              </CardHeader>
-              <CardContent className="p-3 pt-1">
-                <p className="font-mono text-lg font-semibold text-[--shell-foreground]">{money(currentPL.operating_expenses)}</p>
-                <p className="mt-0.5 text-xs text-[--shell-muted]">
-                  {((currentPL.operating_expenses / currentPL.revenue) * 100).toFixed(1)}% of revenue
-                </p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="p-3 pb-1">
-                <CardTitle className="text-xs font-medium text-[--shell-muted] tracking-wide">Net Profit</CardTitle>
-              </CardHeader>
-              <CardContent className="p-3 pt-1">
-                <p className="font-mono text-lg font-semibold text-[--shell-foreground]">{money(currentPL.net_profit)}</p>
-                <div className="mt-0.5 flex items-center gap-1 text-xs">
-                  {profitChange >= 0 ? (
-                    <TrendingUp className="h-3 w-3 text-[--shell-success]" />
-                  ) : (
-                    <TrendingDown className="h-3 w-3 text-[--shell-danger]" />
-                  )}
-                  <span className={profitChange >= 0 ? "text-[--shell-success]" : "text-[--shell-danger]"}>
-                    {profitChange >= 0 ? "+" : ""}{profitChangePercent}%
-                  </span>
-                  <span className="text-[--shell-muted]">vs last month</span>
-                </div>
-              </CardContent>
-            </Card>
+            {[
+              {
+                label: "Revenue",
+                value: money(currentPL.revenue),
+                subtitle: `+${((currentPL.revenue - prevPL.revenue) / prevPL.revenue * 100).toFixed(1)}% vs last month`,
+                isSuccess: true,
+              },
+              {
+                label: "Gross Profit",
+                value: money(currentPL.gross_profit),
+                subtitle: `Margin ${((currentPL.gross_profit / currentPL.revenue) * 100).toFixed(1)}%`,
+              },
+              {
+                label: "Operating Expenses",
+                value: money(currentPL.operating_expenses),
+                subtitle: `${((currentPL.operating_expenses / currentPL.revenue) * 100).toFixed(1)}% of revenue`,
+              },
+              {
+                label: "Net Profit",
+                value: money(currentPL.net_profit),
+                subtitle: `${profitChange >= 0 ? "+" : ""}${profitChangePercent}% vs last month`,
+                isTrend: true,
+                trendDir: profitChange >= 0 ? "up" : "down",
+              }
+            ].map((item, idx) => (
+              <div
+                key={item.label}
+                className="animate-kpi flex flex-col gap-1.5 rounded-xl border border-[--shell-border] bg-[--shell-surface] p-4.5 transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1)]"
+                style={{ animationDelay: `${idx * 0.05}s` }}
+              >
+                <span className="text-xs font-medium uppercase tracking-[0.08em] text-[--shell-muted]">
+                  {item.label}
+                </span>
+                <span className="font-heading text-lg font-semibold tracking-tight text-[--shell-foreground]">
+                  {item.value}
+                </span>
+                <span className={`text-xs ${
+                  item.isSuccess ? "text-[--shell-success]" :
+                  item.isTrend ? (item.trendDir === "up" ? "text-[--shell-success]" : "text-[--shell-brand]") :
+                  "text-[--shell-muted]"
+                }`}>
+                  {item.subtitle}
+                </span>
+              </div>
+            ))}
           </div>
 
           <Card>
@@ -249,40 +240,28 @@ export default function Reports() {
       {activeTab === "tax" && (
         <div className="space-y-4">
           <div className="grid grid-cols-4 gap-3">
-            <Card>
-              <CardHeader className="p-3 pb-1">
-                <CardTitle className="text-xs font-medium text-[--shell-muted] tracking-wide">Total Revenue</CardTitle>
-              </CardHeader>
-              <CardContent className="p-3 pt-1">
-                <p className="font-mono text-lg font-semibold text-[--shell-foreground]">{money(taxData.totalRevenue)}</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="p-3 pb-1">
-                <CardTitle className="text-xs font-medium text-[--shell-muted] tracking-wide">Total Expenses</CardTitle>
-              </CardHeader>
-              <CardContent className="p-3 pt-1">
-                <p className="font-mono text-lg font-semibold text-[--shell-foreground]">{money(taxData.totalExpenses)}</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="p-3 pb-1">
-                <CardTitle className="text-xs font-medium text-[--shell-muted] tracking-wide">Taxable Income</CardTitle>
-              </CardHeader>
-              <CardContent className="p-3 pt-1">
-                <p className="font-mono text-lg font-semibold text-[--shell-foreground]">{money(taxData.taxableIncome)}</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="p-3 pb-1">
-                <CardTitle className="text-xs font-medium text-[--shell-muted] tracking-wide">Effective Tax Rate</CardTitle>
-              </CardHeader>
-              <CardContent className="p-3 pt-1">
-                <p className="font-mono text-lg font-semibold text-[--shell-foreground]">
-                  {taxData.taxableIncome > 0 ? `${((taxData.gstCollected / taxData.taxableIncome) * 100).toFixed(1)}%` : "N/A"}
-                </p>
-              </CardContent>
-            </Card>
+            {[
+              { label: "Total Revenue", value: money(taxData.totalRevenue) },
+              { label: "Total Expenses", value: money(taxData.totalExpenses) },
+              { label: "Taxable Income", value: money(taxData.taxableIncome) },
+              {
+                label: "Effective Tax Rate",
+                value: taxData.taxableIncome > 0 ? `${((taxData.gstCollected / taxData.taxableIncome) * 100).toFixed(1)}%` : "N/A",
+              }
+            ].map((item, idx) => (
+              <div
+                key={item.label}
+                className="animate-kpi flex flex-col gap-1.5 rounded-xl border border-[--shell-border] bg-[--shell-surface] p-4.5 transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1)]"
+                style={{ animationDelay: `${idx * 0.05}s` }}
+              >
+                <span className="text-xs font-medium uppercase tracking-[0.08em] text-[--shell-muted]">
+                  {item.label}
+                </span>
+                <span className="font-heading text-lg font-semibold tracking-tight text-[--shell-foreground]">
+                  {item.value}
+                </span>
+              </div>
+            ))}
           </div>
 
           <Card>

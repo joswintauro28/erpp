@@ -21,7 +21,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   if (!mounted || loading) {
     return (
-      <div className="flex h-screen w-full items-center justify-center bg-[#1A1C21]">
+      <div className="flex h-screen w-full items-center justify-center bg-background">
         <Loader2 size={32} className="animate-spin text-accent" />
       </div>
     );
@@ -36,7 +36,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <Sidebar collapsed={sidebarCollapsed} />
       <div className="flex flex-1 flex-col overflow-hidden">
         <Header collapsed={sidebarCollapsed} onToggleSidebar={toggleSidebar} />
-        <main className="flex-1 overflow-y-auto bg-[--shell-bg] p-6 lg:p-8">
+        <main className="flex-1 overflow-y-auto bg-background p-6 lg:p-8">
           {children}
         </main>
       </div>

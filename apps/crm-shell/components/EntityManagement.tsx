@@ -9,17 +9,18 @@ import { SearchInput } from "@/components/shared/search-input";
 import type { EntityDef } from "@/lib/entityConfig";
 import EntityTable from "./EntityTable";
 import GenericCreateModal from "./GenericCreateModal";
-import GenericDetailsModal from "./GenericDetailsModal";
-import LeadDetailsModal from "./LeadDetailsModal";
-import DocumentDetailsModal from "./DocumentDetailsModal";
+import GenericDetailsModal from "@/components/modals/GenericDetailsModal";
+import LeadDetailsModal from "@/components/modals/LeadDetailsModal";
+import DocumentDetailsModal from "@/components/modals/DocumentDetailsModal";
 import { exportToCSV } from "@/utils/exportCsv";
 import { api } from "@/services/api";
 
 interface EntityManagementProps {
   config: EntityDef;
+  loadingFallback?: React.ReactNode;
 }
 
-export default function EntityManagement({ config }: EntityManagementProps) {
+export default function EntityManagement({ config, loadingFallback }: EntityManagementProps) {
   const [data, setData] = useState<Record<string, unknown> | null>(null);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -63,6 +64,10 @@ export default function EntityManagement({ config }: EntityManagementProps) {
     fallbackSummary[m.key] = 0;
   }
   const summary = (data?.summary as Record<string, number>) ?? fallbackSummary;
+
+  if (loading && loadingFallback) {
+    return <>{loadingFallback}</>;
+  }
 
   return (
     <div className="space-y-6">

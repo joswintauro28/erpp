@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 
 from app.core.deps import get_current_token_payload
-from app.integrations.inventory_client import get_products, create_product_inv, update_product_inv, delete_product_inv
+from app.integrations.inventory_client import get_products, get_product as get_product_inv, create_product_inv, update_product_inv, delete_product_inv
 
 router = APIRouter(prefix="/products", tags=["products"])
 
@@ -29,12 +29,11 @@ async def get_product(
     payload: dict = Depends(get_current_token_payload),
 ):
     token = payload.get("_raw_token", "")
-    products = await get_products(token)
-    for p in products:
-        if p.get("id") == product_id:
-            return p
-    from app.core.exceptions import NotFoundException
-    raise NotFoundException("Product not found")
+    try:
+        return await get_product_inv(token, product_id)
+    except Exception:
+        from app.core.exceptions import NotFoundException
+        raise NotFoundException("Product not found")
 
 
 @router.put("/{product_id}", response_model=dict)

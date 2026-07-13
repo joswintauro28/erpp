@@ -96,7 +96,7 @@ export default function EntityTable({
                     onClick={() => onView(record)}
                   >
                     {col.link ? (
-                      <span className="text-[--accent-primary] font-medium">
+                      <span className="text-action font-medium">
                         {val}
                       </span>
                     ) : (
