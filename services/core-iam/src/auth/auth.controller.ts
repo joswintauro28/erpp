@@ -9,13 +9,17 @@ import {
   UnauthorizedException, 
   HttpCode, 
   HttpStatus,
-  UseGuards
+  UseGuards,
+  Put,
+  Delete,
+  Param
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import type { Request, Response } from 'express';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
+import { InviteUserDto, UpdateUserRoleDto, UpdateUserStatusDto, UpdateRolePermissionsDto } from './dto/team.dto';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { PermissionsGuard } from './guards/permissions.guard';
@@ -144,5 +148,75 @@ export class AuthController {
   @UseGuards(PermissionsGuard)
   async getMe(@Req() req: Request & { user: any }) {
     return this.authService.getUserMe(Number(req.user.sub));
+  }
+
+  @Get('users')
+  @UseGuards(PermissionsGuard)
+  async listUsers(@Req() req: Request & { user: any }) {
+    const orgId = Number(req.user.organization_id);
+    return this.authService.listUsersInOrganization(orgId);
+  }
+
+  @Post('users')
+  @UseGuards(PermissionsGuard)
+  async inviteUser(
+    @Req() req: Request & { user: any },
+    @Body() body: InviteUserDto
+  ) {
+    const orgId = Number(req.user.organization_id);
+    return this.authService.inviteUserToOrganization(orgId, body);
+  }
+
+  @Put('users/:id/status')
+  @UseGuards(PermissionsGuard)
+  async toggleStatus(
+    @Req() req: Request & { user: any },
+    @Param('id') id: string,
+    @Body() body: UpdateUserStatusDto
+  ) {
+    const orgId = Number(req.user.organization_id);
+    return this.authService.toggleUserStatus(orgId, Number(id), body.isActive);
+  }
+
+  @Put('users/:id/role')
+  @UseGuards(PermissionsGuard)
+  async updateRole(
+    @Req() req: Request & { user: any },
+    @Param('id') id: string,
+    @Body() body: UpdateUserRoleDto
+  ) {
+    const orgId = Number(req.user.organization_id);
+    return this.authService.updateUserRole(orgId, Number(id), body.roleId);
+  }
+
+  @Delete('users/:id')
+  @UseGuards(PermissionsGuard)
+  async deleteUser(
+    @Req() req: Request & { user: any },
+    @Param('id') id: string
+  ) {
+    const orgId = Number(req.user.organization_id);
+    return this.authService.deleteUserFromOrganization(orgId, Number(id));
+  }
+
+  @Get('roles')
+  @UseGuards(PermissionsGuard)
+  async listRoles() {
+    return this.authService.listAvailableRoles();
+  }
+
+  @Get('permissions')
+  @UseGuards(PermissionsGuard)
+  async listPermissions() {
+    return this.authService.listAllPermissions();
+  }
+
+  @Put('roles/:id/permissions')
+  @UseGuards(PermissionsGuard)
+  async updateRolePermissions(
+    @Param('id') id: string,
+    @Body() body: UpdateRolePermissionsDto
+  ) {
+    return this.authService.updateRolePermissions(Number(id), body.permissionIds);
   }
 }

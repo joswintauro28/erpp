@@ -85,10 +85,15 @@ async def adjust_stock_level(
 
 @router.get("/stock/movements", response_model=list[dict])
 async def list_stock_movements(
+    limit: int = 50,
+    product_id: int | None = None,
     payload: dict = Depends(get_current_token_payload),
 ):
     token = payload.get("_raw_token", "")
-    return await get_stock_movements(token)
+    params: dict[str, str] = {"limit": str(limit)}
+    if product_id is not None:
+        params["product_id"] = str(product_id)
+    return await get_stock_movements(token, params)
 
 
 @router.post("/stock/movements", response_model=dict, status_code=201)

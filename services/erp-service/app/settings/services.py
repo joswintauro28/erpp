@@ -1,5 +1,7 @@
+import copy
 import sqlalchemy as sa
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm.attributes import flag_modified
 from app.settings.models import SystemSettings
 from app.settings.schemas import SettingsSchema
 
@@ -21,7 +23,7 @@ async def update_settings_by_owner(db: AsyncSession, owner_id: int, updated_data
     db_settings = await get_settings_by_owner(db, owner_id)
     
     # Merge existing and incoming updates
-    current_settings = dict(db_settings.settings)
+    current_settings = copy.deepcopy(db_settings.settings)
     
     # Simple nested merge
     for group_key, group_val in updated_data.items():
@@ -31,5 +33,7 @@ async def update_settings_by_owner(db: AsyncSession, owner_id: int, updated_data
             current_settings[group_key] = group_val
             
     db_settings.settings = current_settings
+    flag_modified(db_settings, "settings")
     await db.flush()
     return db_settings
+

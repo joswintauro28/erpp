@@ -75,7 +75,7 @@ const navItems: NavItem[] = [
     children: [
       { name: "Product Master", href: "/inventory/products", icon: Package },
       { name: "Stock Movements", href: "/inventory/stock", icon: Warehouse },
-      { name: "Stock Adjustments", href: "#", icon: SlidersHorizontal, soon: true },
+      { name: "Stock Adjustments", href: "/inventory/stock/adjustments", icon: SlidersHorizontal },
       { name: "Inventory Valuation", href: "#", icon: BarChart2, soon: true },
       { name: "Warehouse Locations", href: "/inventory/warehouses", icon: Warehouse },
       { name: "Purchase Orders", href: "/inventory/purchase-orders", icon: ShoppingCart },
@@ -88,7 +88,10 @@ const navItems: NavItem[] = [
   // 5. Intelligent Automation Tier
   { name: "AI Intelligence", href: "/ai-assistant", icon: Sparkles },
 
-  // 6. Security, Compliance & Administration
+  // 6. Identity & Team
+  { name: "Identity & Team", href: "/team", icon: Users },
+
+  // 7. Security, Compliance & Administration
   {
     name: "System Control",
     icon: Settings,
@@ -97,7 +100,6 @@ const navItems: NavItem[] = [
       { name: "Corporate Branding", href: "/settings/branding", icon: Sparkles },
       { name: "Notification Rules", href: "/settings/notifications", icon: Mail },
       { name: "Workflow Pipelines", href: "/settings/workflow", icon: Repeat },
-      { name: "Identity & Team", href: "/team", icon: Users },
       { name: "Communication Logs", href: "/email-logs", icon: Mail },
       { name: "System Audit Logs", href: "/audit-logs", icon: FileClock },
     ],

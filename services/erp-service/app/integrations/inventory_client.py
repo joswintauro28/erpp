@@ -110,8 +110,8 @@ async def adjust_stock(token: str, body: dict) -> dict:
 
 # ─── Stock Movements ─────────────────────────────────────────
 
-async def get_stock_movements(token: str) -> list[dict]:
-    data = await _get("/stock/movements", token)
+async def get_stock_movements(token: str, params: dict | None = None) -> list[dict]:
+    data = await _get("/stock/movements", token, params)
     return data if isinstance(data, list) else []
 
 

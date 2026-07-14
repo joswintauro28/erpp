@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException, ConflictException, Logger } from '@nestjs/common';
+import { Injectable, UnauthorizedException, ConflictException, NotFoundException, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
@@ -349,5 +349,213 @@ export class AuthService {
       role: accessPayload.role,
       permissions: accessPayload.permissions,
     };
+  }
+
+  async listUsersInOrganization(orgId: number) {
+    const members = await this.prisma.organizationMember.findMany({
+      where: { organizationId: orgId },
+      include: {
+        user: true,
+        role: {
+          include: {
+            rolePermissions: {
+              include: {
+                permission: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    return members.map((m) => ({
+      id: m.user.id,
+      name: m.user.fullName || '',
+      email: m.user.email,
+      role: m.role?.name || 'User',
+      role_id: m.role?.id || null,
+      status: !m.user.isActive ? 'disabled' as const : m.status === 'invited' ? 'invited' as const : 'active' as const,
+      department: m.role?.description || 'Corporate',
+      permissions: (m.role?.rolePermissions || []).map((rp) => rp.permission.code),
+      last_active: m.user.lastLogin ? m.user.lastLogin.toISOString() : '',
+    }));
+  }
+
+  async inviteUserToOrganization(orgId: number, data: { email: string; fullName: string; roleId: number; password?: string }) {
+    let user = await this.prisma.user.findUnique({
+      where: { email: data.email },
+    });
+
+    if (user) {
+      const existingMember = await this.prisma.organizationMember.findFirst({
+        where: {
+          organizationId: orgId,
+          userId: user.id,
+        },
+      });
+      if (existingMember) {
+        throw new ConflictException('User is already a member of this organization');
+      }
+    } else {
+      const defaultPassword = data.password || 'User@123!';
+      const salt = await bcrypt.genSalt(10);
+      const passwordHash = await bcrypt.hash(defaultPassword, salt);
+      user = await this.prisma.user.create({
+        data: {
+          email: data.email,
+          fullName: data.fullName,
+          passwordHash,
+          isActive: true,
+        },
+      });
+    }
+
+    const member = await this.prisma.organizationMember.create({
+      data: {
+        organizationId: orgId,
+        userId: user.id,
+        roleId: data.roleId,
+        status: 'active',
+      },
+      include: {
+        user: true,
+        role: {
+          include: {
+            rolePermissions: {
+              include: {
+                permission: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    return {
+      id: member.user.id,
+      name: member.user.fullName || '',
+      email: member.user.email,
+      role: member.role?.name || 'User',
+      role_id: member.role?.id || null,
+      status: 'active' as const,
+      department: member.role?.description || 'Corporate',
+      permissions: (member.role?.rolePermissions || []).map((rp) => rp.permission.code),
+      last_active: '',
+    };
+  }
+
+  async toggleUserStatus(orgId: number, targetUserId: number, isActive: boolean) {
+    const member = await this.prisma.organizationMember.findFirst({
+      where: {
+        organizationId: orgId,
+        userId: targetUserId,
+      },
+    });
+    if (!member) {
+      throw new NotFoundException('User not found in organization');
+    }
+
+    await this.prisma.user.update({
+      where: { id: targetUserId },
+      data: { isActive },
+    });
+
+    await this.prisma.organizationMember.update({
+      where: { id: member.id },
+      data: { status: isActive ? 'active' : 'disabled' },
+    });
+
+    return { success: true };
+  }
+
+  async updateUserRole(orgId: number, targetUserId: number, roleId: number) {
+    const member = await this.prisma.organizationMember.findFirst({
+      where: {
+        organizationId: orgId,
+        userId: targetUserId,
+      },
+    });
+    if (!member) {
+      throw new NotFoundException('User not found in organization');
+    }
+
+    await this.prisma.organizationMember.update({
+      where: { id: member.id },
+      data: { roleId },
+    });
+
+    return { success: true };
+  }
+
+  async deleteUserFromOrganization(orgId: number, targetUserId: number) {
+    const member = await this.prisma.organizationMember.findFirst({
+      where: {
+        organizationId: orgId,
+        userId: targetUserId,
+      },
+    });
+    if (!member) {
+      throw new NotFoundException('User not found in organization');
+    }
+
+    await this.prisma.organizationMember.delete({
+      where: { id: member.id },
+    });
+
+    const otherMemberships = await this.prisma.organizationMember.findMany({
+      where: { userId: targetUserId },
+    });
+    if (otherMemberships.length === 0) {
+      await this.prisma.user.delete({
+        where: { id: targetUserId },
+      });
+    }
+
+    return { success: true };
+  }
+
+  async listAvailableRoles() {
+    const roles = await this.prisma.role.findMany({
+      include: {
+        rolePermissions: {
+          include: {
+            permission: true,
+          },
+        },
+      },
+    });
+
+    return roles.map((r) => ({
+      id: r.id,
+      name: r.name,
+      description: r.description || '',
+      permissions: r.rolePermissions.map((rp) => rp.permission.code),
+    }));
+  }
+
+  async listAllPermissions() {
+    return this.prisma.permission.findMany({
+      orderBy: [
+        { module: 'asc' },
+        { code: 'asc' },
+      ],
+    });
+  }
+
+  async updateRolePermissions(roleId: number, permissionIds: number[]) {
+    await this.prisma.rolePermission.deleteMany({
+      where: { roleId },
+    });
+
+    if (permissionIds.length > 0) {
+      await this.prisma.rolePermission.createMany({
+        data: permissionIds.map((pid) => ({
+          roleId,
+          permissionId: pid,
+        })),
+      });
+    }
+
+    return { success: true };
   }
 }
