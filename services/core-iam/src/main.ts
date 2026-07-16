@@ -20,10 +20,17 @@ async function bootstrap() {
     }),
   );
 
-  // Enable CORS dynamically to support localhost and any .erp.local subdomains
+  const corsOrigins = process.env.CORS_ORIGINS
+    ? process.env.CORS_ORIGINS.split(',').map((s) => s.trim())
+    : [];
+
   app.enableCors({
     origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
-      if (!origin || origin.match(/^https?:\/\/(localhost|127\.0\.0\.1|.*\.erp\.local)(:\d+)?$/)) {
+      if (!origin) {
+        callback(null, true);
+      } else if (corsOrigins.includes(origin)) {
+        callback(null, true);
+      } else if (origin.match(/^https?:\/\/(localhost|127\.0\.0\.1|.*\.erp\.local)(:\d+)?$/)) {
         callback(null, true);
       } else {
         callback(new Error('Not allowed by CORS'));

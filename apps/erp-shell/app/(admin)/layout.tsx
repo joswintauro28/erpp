@@ -8,9 +8,9 @@ import Header from "@/components/Header";
 import { useAuth } from "@/contexts/AuthContext";
 import { getAccessToken } from "@datavex/auth-middleware";
 
-const BILLING_URL = "http://localhost:3002";
-const CRM_URL = "http://localhost:3001";
-const INVENTORY_URL = "http://localhost:3004";
+const BILLING_URL = process.env.NEXT_PUBLIC_BILLING_APP_URL || "http://localhost:3002";
+const CRM_URL = process.env.NEXT_PUBLIC_CRM_APP_URL || "http://localhost:3001";
+const INVENTORY_URL = process.env.NEXT_PUBLIC_INVENTORY_APP_URL || "http://localhost:3004";
 
 const WORKSTATION_ROUTES: Record<string, string> = {
   "Sales Executive": `${CRM_URL}/dashboard`,

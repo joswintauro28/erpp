@@ -1,0 +1,254 @@
+# ─────────────────────────────────────────────────────────────
+# DATAVEX ERP — Local Development Docker Compose
+# Architecture: 9 microservices + PostgreSQL + Nginx
+# Network: All services communicate via container names
+# ─────────────────────────────────────────────────────────────
+
+name: datavex-erp
+
+services:
+
+  # ─── PostgreSQL ───────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: datavex-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-root}
+      POSTGRES_DB: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/01-init.sql
+    networks:
+      - erp-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # ─── Core IAM (NestJS + Prisma) — Port 8002 ──────────────
+  core-iam:
+    build:
+      context: ../../
+      dockerfile: services/core-iam/Dockerfile
+    container_name: datavex-core-iam
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-root}@postgres:5432/erp_iam
+      JWT_SECRET: ${JWT_SECRET:-development-jwt-secret-key-123}
+      PORT: "8002"
+      CORS_ORIGINS: http://shell.erp.local,http://crm.erp.local,http://billing.erp.local,http://inventory.erp.local
+    ports:
+      - "8002:8002"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - erp-network
+
+  # ─── Billing Service (NestJS + Prisma) — Port 8003 ───────
+  billing-service:
+    build:
+      context: ../../
+      dockerfile: services/billing-service/Dockerfile
+    container_name: datavex-billing-service
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-root}@postgres:5432/erp_billing
+      JWT_SECRET: ${JWT_SECRET:-development-jwt-secret-key-123}
+      PORT: "8003"
+      CORS_ORIGINS: http://shell.erp.local,http://billing.erp.local
+    ports:
+      - "8003:8003"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - erp-network
+
+  # ─── ERP Service (FastAPI Gateway) — Port 8000 ───────────
+  erp-service:
+    build:
+      context: ../../
+      dockerfile: services/erp-service/Dockerfile
+    container_name: datavex-erp-service
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-root}@postgres:5432/erp_db
+      JWT_SECRET: ${JWT_SECRET:-development-jwt-secret-key-123}
+      PORT: "8000"
+      FRONTEND_URL: http://shell.erp.local
+      BILLING_SERVICE_URL: http://billing-service:8003/api
+      INVENTORY_SERVICE_URL: http://inventory-service:8004
+      CRM_SERVICE_URL: http://crm-service:8001/api
+      CORS_ORIGINS: http://shell.erp.local,http://crm.erp.local,http://billing.erp.local,http://inventory.erp.local
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - erp-network
+
+  # ─── CRM Service (FastAPI) — Port 8001 ───────────────────
+  crm-service:
+    build:
+      context: ../../
+      dockerfile: services/crm-service/Dockerfile
+    container_name: datavex-crm-service
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-root}@postgres:5432/erp_crm
+      JWT_SECRET: ${JWT_SECRET:-development-jwt-secret-key-123}
+      PORT: "8001"
+      FRONTEND_URL: http://crm.erp.local
+      BILLING_SERVICE_URL: http://billing-service:8003/api
+      CORS_ORIGINS: http://crm.erp.local,http://shell.erp.local
+    ports:
+      - "8001:8001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - erp-network
+
+  # ─── Inventory Service (FastAPI) — Port 8004 ─────────────
+  inventory-service:
+    build:
+      context: ../../
+      dockerfile: services/inventory-service/Dockerfile
+    container_name: datavex-inventory-service
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-root}@postgres:5432/erp_inventory
+      JWT_SECRET: ${JWT_SECRET:-development-jwt-secret-key-123}
+      PORT: "8004"
+      FRONTEND_URL: http://inventory.erp.local
+      CORS_ORIGINS: http://inventory.erp.local,http://shell.erp.local
+    ports:
+      - "8004:8004"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - erp-network
+
+  # ─── ERP Shell (Next.js) — Port 3000 ─────────────────────
+  erp-shell:
+    build:
+      context: ../../
+      dockerfile: apps/erp-shell/Dockerfile
+    container_name: datavex-erp-shell
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      BACKEND_API_URL: http://erp-service:8000
+      IAM_API_URL: http://core-iam:8002
+      NEXT_PUBLIC_API_URL: /api
+      NEXT_PUBLIC_BILLING_APP_URL: http://billing.erp.local
+      NEXT_PUBLIC_CRM_APP_URL: http://crm.erp.local
+      NEXT_PUBLIC_INVENTORY_APP_URL: http://inventory.erp.local
+    ports:
+      - "3000:3000"
+    depends_on:
+      - erp-service
+      - core-iam
+    networks:
+      - erp-network
+
+  # ─── CRM Shell (Next.js) — Port 3001 ─────────────────────
+  crm-shell:
+    build:
+      context: ../../
+      dockerfile: apps/crm-shell/Dockerfile
+    container_name: datavex-crm-shell
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      CRM_API_URL: http://crm-service:8001
+      IAM_API_URL: http://core-iam:8002
+      NEXT_PUBLIC_API_URL: /api
+      NEXT_PUBLIC_APP_URL: http://crm.erp.local
+      NEXT_PUBLIC_SHELL_APP_URL: http://shell.erp.local
+    ports:
+      - "3001:3001"
+    depends_on:
+      - crm-service
+      - core-iam
+    networks:
+      - erp-network
+
+  # ─── Billing UI (Next.js) — Port 3002 ────────────────────
+  billing-ui:
+    build:
+      context: ../../
+      dockerfile: apps/billing-ui/Dockerfile
+    container_name: datavex-billing-ui
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      BILLING_API_URL: http://billing-service:8003
+      IAM_API_URL: http://core-iam:8002
+      NEXT_PUBLIC_API_URL: /api
+      NEXT_PUBLIC_APP_URL: http://billing.erp.local
+      NEXT_PUBLIC_SHELL_APP_URL: http://shell.erp.local
+    ports:
+      - "3002:3002"
+    depends_on:
+      - billing-service
+      - core-iam
+    networks:
+      - erp-network
+
+  # ─── Inventory UI (Next.js) — Port 3004 ──────────────────
+  inventory-ui:
+    build:
+      context: ../../
+      dockerfile: apps/inventory-ui/Dockerfile
+    container_name: datavex-inventory-ui
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      INVENTORY_API_URL: http://inventory-service:8004
+      IAM_API_URL: http://core-iam:8002
+      NEXT_PUBLIC_API_URL: /api
+      NEXT_PUBLIC_APP_URL: http://inventory.erp.local
+      NEXT_PUBLIC_SHELL_APP_URL: http://shell.erp.local
+    ports:
+      - "3004:3004"
+    depends_on:
+      - inventory-service
+      - core-iam
+    networks:
+      - erp-network
+
+  # ─── Nginx Reverse Proxy — Port 80 ───────────────────────
+  nginx:
+    image: nginx:alpine
+    container_name: datavex-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - erp-shell
+      - crm-shell
+      - billing-ui
+      - inventory-ui
+    networks:
+      - erp-network
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  erp-network:
+    name: datavex-erp-network
+    driver: bridge

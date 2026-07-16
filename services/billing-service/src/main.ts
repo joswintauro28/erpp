@@ -18,12 +18,12 @@ async function bootstrap() {
     }),
   );
 
+  const corsOrigins = process.env.CORS_ORIGINS
+    ? process.env.CORS_ORIGINS.split(",").map((s) => s.trim())
+    : ["http://localhost:3000", "http://127.0.0.1:3000"];
+
   app.enableCors({
-    origin: [
-      "http://localhost:3000",
-      "http://127.0.0.1:3000",
-      /\.erp\.local$/,
-    ],
+    origin: [...corsOrigins, /\.erp\.local$/],
     credentials: true,
   });
 

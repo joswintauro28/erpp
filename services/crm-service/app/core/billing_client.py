@@ -1,6 +1,7 @@
+import os
 import httpx
 
-BILLING_SERVICE_URL = "http://localhost:8003/api"
+BILLING_SERVICE_URL = os.environ.get("BILLING_SERVICE_URL", "http://localhost:8003/api")
 
 
 async def push_quotation_to_billing(token: str, crm_quotation: dict) -> dict:

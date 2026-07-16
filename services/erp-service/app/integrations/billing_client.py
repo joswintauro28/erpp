@@ -1,7 +1,8 @@
+import os
 import httpx
 from typing import Any
 
-BILLING_SERVICE_URL = "http://localhost:8003/api"
+BILLING_SERVICE_URL = os.environ.get("BILLING_SERVICE_URL", "http://localhost:8003/api")
 
 
 async def _get(path: str, token: str, params: dict | None = None) -> Any:

@@ -1,7 +1,8 @@
+import os
 import httpx
 from typing import Any
 
-INVENTORY_SERVICE_URL = "http://localhost:8004"
+INVENTORY_SERVICE_URL = os.environ.get("INVENTORY_SERVICE_URL", "http://localhost:8004")
 
 
 async def _get(path: str, token: str, params: dict | None = None) -> Any:

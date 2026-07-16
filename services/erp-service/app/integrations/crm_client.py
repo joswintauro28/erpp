@@ -1,8 +1,9 @@
+import os
 import httpx
 
 # CRM microservice is at services/crm-service (FastAPI, port 8001).
 # Router prefixes use /api, paths here combine with CRM_SERVICE_URL accordingly.
-CRM_SERVICE_URL = "http://localhost:8001/api"
+CRM_SERVICE_URL = os.environ.get("CRM_SERVICE_URL", "http://localhost:8001/api")
 
 
 async def _get(path: str, token: str, params: dict | None = None) -> dict | list:

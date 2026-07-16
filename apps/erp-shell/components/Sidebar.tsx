@@ -32,6 +32,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { getAccessToken } from "@datavex/auth-middleware";
 import { useAuth } from "@/contexts/AuthContext";
 import type { NavItem, NavGroup } from "@/types/navigation";
 
@@ -46,7 +47,7 @@ const navItems: NavItem[] = [
     children: [
       { name: "Leads Funnel", href: "/crm/leads", icon: UserPlus },
       { name: "Client Accounts", href: "/crm/clients", icon: Users },
-      { name: "Open CRM Workstation", href: "http://localhost:3001", icon: ExternalLink },
+      { name: "Open CRM Workstation", href: process.env.NEXT_PUBLIC_CRM_APP_URL || "http://localhost:3001", icon: ExternalLink },
     ],
   },
 
@@ -319,7 +320,20 @@ export default function Sidebar({ collapsed }: { collapsed: boolean }) {
                       }
                       if (isExternal) {
                         return (
-                          <a key={child.name} href={child.href} target="_blank" rel="noopener noreferrer" className={linkClasses}>
+                          <a
+                            key={child.name}
+                            href={child.href}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={linkClasses}
+                            onClick={(e) => {
+                              const token = getAccessToken();
+                              if (token) {
+                                e.preventDefault();
+                                window.open(`${child.href}?token=${token}`, "_blank", "noopener");
+                              }
+                            }}
+                          >
                             <child.icon className={cn("h-3.5 w-3.5 shrink-0 transition-colors duration-200", childActive ? "text-sidebar-primary-foreground" : "text-sidebar-foreground/40 group-hover/link:text-sidebar-accent-foreground")} />
                             <span>{child.name}</span>
                             {child.soon && <span className="ml-auto rounded-full border border-sidebar-primary/30 bg-sidebar-primary/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-sidebar-primary">Soon</span>}
@@ -420,7 +434,20 @@ export default function Sidebar({ collapsed }: { collapsed: boolean }) {
               }
               if (isExternal) {
                 return (
-                  <a key={`fly-${child.name}`} href={child.href} target="_blank" rel="noopener noreferrer" className={linkClasses}>
+                  <a
+                    key={`fly-${child.name}`}
+                    href={child.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={linkClasses}
+                    onClick={(e) => {
+                      const token = getAccessToken();
+                      if (token) {
+                        e.preventDefault();
+                        window.open(`${child.href}?token=${token}`, "_blank", "noopener");
+                      }
+                    }}
+                  >
                     <child.icon className={cn("h-3.5 w-3.5 shrink-0 transition-colors", childActive ? "text-sidebar-primary-foreground" : "text-sidebar-foreground/45 group-hover/flylink:text-sidebar-accent-foreground")} />
                     <span>{child.name}</span>
                     {child.soon && <span className="ml-auto rounded-full border border-sidebar-primary/30 bg-sidebar-primary/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-sidebar-primary">Soon</span>}
