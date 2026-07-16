@@ -1,70 +1,32 @@
-# Getting Started with Create React App
+# crm-shell — CRM Workstation Frontend
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+The CRM Workstation is a modular Next.js 16 application configured on **port 3001** for Sales Executive roles, providing dedicated sales pipeline trackers, lead ingestion, and client analytics dashboards.
 
-## Available Scripts
+---
 
-In the project directory, you can run:
+## 1. Tech Stack
+- **Framework**: Next.js 16.2.10 (Turbopack)
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS v4 (theme variables loaded from `@datavex/ui-theme/globals.css`)
+- **Shared Primitives**: `@datavex/ui-theme` custom components
+- **Shared Middleware**: `@datavex/auth-middleware` API utilities
 
-### `npm start`
+---
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## 2. SSO Authentication Flow
+- **Token-Verification Only**: The workstation is fully decentralized and contains no login pages or credential fields.
+- **SSO Capture**: On mount, the application checks for a `?token=<jwt>` URL query parameter (forwarded from the Executive Shell after successful authentication) or checks for HttpOnly cookies.
+- **Redirect Boundaries**: If no token is detected, the workstation redirects the browser to `http://app.erp.local/login?redirect=http://crm.erp.local` (or `http://localhost:3000` under localhost development).
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+---
 
-### `npm test`
+## 3. Proxy Configurations
+The Next.js edge proxy (`proxy.ts`) dynamically routes request targets:
+- `/api/auth/*` &rarr; `core-iam` (Port 8002)
+- All other `/api/*` &rarr; `crm-service` (Port 8001)
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+---
 
-### `npm run build`
-
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
-
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+## 4. Run Scripts
+- Dev Server: `bun nx serve crm-shell` (runs on `http://localhost:3001`)
+- Production Build: `bun next build` (builds Next.js standalone outputs inside the container)

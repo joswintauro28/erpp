@@ -1,36 +1,43 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# billing-ui — Billing Workstation Frontend
 
-## Getting Started
+The Billing Workstation is a standalone Next.js 16 application configured on **port 3002** for Accountant and Auditor roles, providing focused access to invoicing workflows, GST accounting logs, quotients, and payment status tracking.
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## 1. Tech Stack
+- **Framework**: Next.js 16.2.10 (Turbopack)
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS v4 (inheriting `@datavex/ui-theme` tokens)
+- **Shared Primitives**: `@datavex/ui-theme` components
+- **Shared Middleware**: `@datavex/auth-middleware` API integrations
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 2. Workstation Ingress & SSO
+- **Zero Credentials**: Does not implement login credentials or registration handlers locally.
+- **SSO Capture**: Checks for `?token=<jwt>` URL query inputs on mount (or HttpOnly browser cookies).
+- **Security Boundaries**: Redirects to `http://app.erp.local/login?redirect=http://billing.erp.local` (or `http://localhost:3000` locally) if no active session token is identified.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+## 3. Proxy Configurations
+The Next.js proxy middleware (`proxy.ts`) splits incoming requests:
+- `/api/auth/*` &rarr; `core-iam` (Port 8002)
+- All other `/api/*` &rarr; `billing-service` (Port 8003)
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 4. Workstation Routes
+- `/dashboard`: KPI analytics (overdue trackers, outstanding balances, GST summaries)
+- `/billing/invoices`: Main invoices ledger with detail popups and GST CGST/SGST/IGST breakdowns
+- `/billing/quotations`: Customer quotations manager
+- `/billing/payments`: Invoice payment records
+- `/billing/credit-notes`: Invoices credit note adjusters
+- `/billing/debit-notes`: Invoices debit note adjusters
+- `/billing/recurring-invoices`: Schedules templates frequency badges
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 5. Development Scripts
+- Developer Mode: `bun nx serve billing-ui` (runs on `http://localhost:3002`)
+- Production Compile: `bun next build` (compiles optimized Next.js standalone server targets)

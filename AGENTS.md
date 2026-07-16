@@ -12,15 +12,16 @@ DATAVEX ERP is organized as an **Nx Polyglot Monorepo**. This isolates frontend,
 DATAVEX/ERP/ (Root)
 ├── apps/                                  # FRONTEND APPLICATIONS
 │   ├── erp-shell/                         # Next.js 16 (Turbopack, port 3000) — Main Executive / Super Admin Shell
+│   ├── crm-shell/                         # Next.js 16 (Turbopack, port 3001) — CRM Workstation / Sales Hub
 │   ├── billing-ui/                        # Next.js 16 (Turbopack, port 3002) — Billing Workstation for Accountant/Auditor
 │   └── inventory-ui/                      # Next.js 16 (Turbopack, port 3004) — Inventory Workstation for Inventory Manager
 │
 ├── services/                              # BACKEND MICROSERVICES
-│   ├── erp-service/                       # FastAPI (Python 3.12+, port 8000) — Core Business Logic Gateway
-│   ├── crm-service/                       # FastAPI (Python 3.12+, port 8001) — CRM / Sales Pipeline Engine
+│   ├── erp-service/                       # FastAPI (Python 3.13+, port 8000) — Core Business Logic Gateway
+│   ├── crm-service/                       # FastAPI (Python 3.13+, port 8001) — CRM / Sales Pipeline Engine
 │   ├── core-iam/                          # NestJS (Prisma, port 8002) — Central SSO & RBAC Engine
 │   ├── billing-service/                   # NestJS (Prisma, port 8003) — Invoices, Payments, Quotations, Ledger
-│   └── inventory-service/                 # FastAPI (Python 3.12+, port 8004) — Product Catalog, Warehouses, Stock, Suppliers, POs, Serial Tracking
+│   └── inventory-service/                 # FastAPI (Python 3.13+, port 8004) — Product Catalog, Warehouses, Stock, Suppliers, POs, Serial Tracking
 │
 ├── packages/                              # CENTRAL SHAREABLE PACKAGES
 │   ├── auth-middleware/                   # Shared JWT auth types, API client, token management
@@ -30,6 +31,9 @@ DATAVEX/ERP/ (Root)
 │   ├── SETUP_GUIDE.md                     # Step-by-step workspace installation and configuration guide
 │   ├── PROJECT.md                         # Zero-Trust JWT wildcard cookies, DB allotment strategy
 │   └── FUTURE_PLAN.md                     # Workstation sandboxing, VM & Kubernetes scaling maps
+│
+├── infrastructure/                        # DOCKER & GATEWAY CONFIGURATIONS
+│   └── local/                             # Compose sandbox orchestration, hosts config, and nginx configs
 │
 ├── nx.json                                # Nx build and caching configurations
 ├── package.json                           # Central workspace project registry (workspaces: apps/*, services/*, packages/*)
@@ -67,9 +71,9 @@ All tokens defined in `packages/ui-theme/src/globals.css` as CSS custom properti
 - **Central SSO Redirection & Routing:**
   - Login page processes `?redirect=...` for full browser redirects back to calling workstation domains.
   - On success, passes `?token=<jwt>` in the redirect URL so the target workstation can authenticate.
-  - Role-based workstation routing: `Accountant`/`Auditor` → Billing (`3002`), `Sales Executive` → CRM (currently embedded in Shell `3000` until separate port `3001` is implemented), Admins → stay on Shell (`3000`).
+  - Role-based workstation routing: `Accountant`/`Auditor` → Billing (`3002`), `Sales Executive` → CRM (`3001`), Admins → stay on Shell (`3000`).
 - **API Service (`services/api.ts`):** Re-exports `{ setAccessToken, getAccessToken, api }` from `@datavex/auth-middleware`.
-- **Routing Gateway Proxy (`proxy.ts`):** Next.js middleware intercepting `/api/:path*` (file named `proxy.ts` per modern Next.js middleware convention):
+- **Routing Gateway Proxy (`proxy.ts`):** Next.js middleware intercepting `/api/:path*`:
   - `/api/auth/*` → core-iam on port `8002` (preserving `/api` prefix)
   - `/api/invoices*`, `/api/payments*`, `/api/dashboard/billing` → billing-service on port `8003` (preserving `/api` prefix)
   - `/api/products*`, `/api/warehouses*`, `/api/stock*`, `/api/suppliers*`, `/api/purchase-orders*`, `/api/serial-numbers*`, `/api/dashboard/inventory` → inventory-service on port `8004` (stripping `/api` prefix)
@@ -77,7 +81,22 @@ All tokens defined in `packages/ui-theme/src/globals.css` as CSS custom properti
 - **Imports & Path Aliases:** Shadcn primitives and `cn` utility from `@/components/ui/*` and `@/lib/utils`, mapped via tsconfig paths to `@datavex/ui-theme`.
 - **Multi-Step Modals:** All forms use `components/multi-step-dialog.tsx` with horizontal step wizard.
 
-### 2.2 Billing Workstation (`apps/billing-ui`) — Port 3002
+### 2.2 CRM Workstation (`apps/crm-shell`) — Port 3001
+
+**Tech Stack**
+- Same as erp-shell: Next.js 16, TypeScript, Tailwind v4, lucide-react, recharts
+- Shares `@datavex/ui-theme` package (same theme tokens and components)
+
+**Architecture & Auth Pattern**
+- **Token-verification only** — no login page, no credential handling.
+- On mount, checks for `?token=<jwt>` in URL (passed from erp-shell after login), or tries `/api/auth/refresh` via cookie.
+- If no token found, redirects to `http://localhost:3000/login?redirect=http://localhost:3001` (erp-shell login).
+- `useAuth()` returns `{ user, isAuthenticated, loading, logout }` — no `login()` function.
+- **Proxy** (`proxy.ts`): Routes `/api/auth/*` → core-iam (8002), all other `/api/*` → crm-service (8001).
+
+---
+
+### 2.3 Billing Workstation (`apps/billing-ui`) — Port 3002
 
 **Tech Stack**
 - Same as erp-shell: Next.js 16, TypeScript, Tailwind v4, lucide-react, recharts
@@ -107,7 +126,7 @@ All tokens defined in `packages/ui-theme/src/globals.css` as CSS custom properti
 
 ---
 
-### 2.3 Inventory Workstation (`apps/inventory-ui`) — Port 3004
+### 2.4 Inventory Workstation (`apps/inventory-ui`) — Port 3004
 
 **Tech Stack**
 - Same as erp-shell: Next.js 16, TypeScript, Tailwind v4, lucide-react, recharts
@@ -185,7 +204,7 @@ DATAVEX ERP utilizes a decoupled backend architecture where each business domain
 
 ### 3.3 Inventory Service (`services/inventory-service`) — Port 8004
 
-- **Framework:** FastAPI (Python 3.12+)
+- **Framework:** FastAPI (Python 3.13+)
 - **Database ORM:** SQLAlchemy 2.0 (AsyncSession via `postgresql+asyncpg`)
 - **Migrations:** Alembic
 - **Database Target:** `erp_inventory` (PostgreSQL)
@@ -207,7 +226,7 @@ DATAVEX ERP utilizes a decoupled backend architecture where each business domain
 
 ### 3.4 FastAPI Business Backend (`services/erp-service`) — Port 8000
 
-- **Framework:** FastAPI (Python 3.12+)
+- **Framework:** FastAPI (Python 3.13+)
 - **Database ORM:** SQLAlchemy 2.0 (AsyncSession via `postgresql+asyncpg`)
 - **Migrations:** Alembic
 - **Database Target:** `erp_db` (PostgreSQL)
@@ -224,7 +243,7 @@ DATAVEX ERP utilizes a decoupled backend architecture where each business domain
 
 ### 3.5 CRM Service (`services/crm-service`) — Port 8001
 
-- **Framework:** FastAPI (Python 3.12+)
+- **Framework:** FastAPI (Python 3.13+)
 - **Database ORM:** SQLAlchemy 2.0 (sync, via `create_engine` + `SessionLocal`)
 - **Database Target:** `erp_crm` (PostgreSQL)
 - **Claims-Based Verification:** JWT payload decoded from shared `JWT_SECRET` — no DB queries for auth. Uses `get_current_token_payload` / `get_current_user_id` dependencies.
@@ -342,7 +361,42 @@ bunx prisma generate   # Regenerate Prisma client
 
 ---
 
-## 7. Linked Documentation References
+## 7. Local Docker Sandbox & Orchestration
+
+The application contains a production-optimized local Docker sandbox configured in `infrastructure/local/`.
+
+### Docker Architecture Details:
+- **Consistent Alpine Builders**: Node/Bun services compile natively on Alpine-based Node layers (`node:24-alpine`) with Bun copied inside, avoiding glibc vs musl runtime crashes.
+- **Next.js Standalone Mode**: Configured to compile to minimal standalone node targets, reducing container image size by ~95% (~100MB instead of ~2GB).
+- **Python Isolation & Auto-Migrations**: FastAPI backends run in virtualenvs (`/opt/venv`), run under non-root permissions, and perform Alembic db migrations (`alembic upgrade head`) automatically on startup.
+- **Consolidated Healthchecks**: All containers run custom, lightweight healthchecks (via Node `http` or Python `urllib`) to track container status inside Compose.
+- **Sequential Boot Sequence**: Standardized `depends_on: condition: service_healthy` triggers ensure Postgres starts first, followed by database migrations, services, frontends, and finally Nginx.
+
+### Operational Commands:
+* **Add local hosts subdomains** (run as Administrator in PowerShell):
+  ```powershell
+  .\infrastructure\local\setup-hosts.ps1
+  ```
+* **Build / Rebuild the Docker Stack**:
+  ```powershell
+  .\infrastructure\local\docker-build.ps1 rebuild
+  ```
+* **Start the Stack**:
+  ```powershell
+  .\infrastructure\local\docker-build.ps1 start
+  ```
+* **Stop the Stack**:
+  ```powershell
+  .\infrastructure\local\docker-build.ps1 stop
+  ```
+* **View Container Status**:
+  ```powershell
+  .\infrastructure\local\docker-build.ps1 ps
+  ```
+
+---
+
+## 8. Linked Documentation References
 
 1. **[docs/SETUP_GUIDE.md](docs/SETUP_GUIDE.md):** Step-by-step walkthrough on environment setup, local configurations, and active login accounts.
 2. **[docs/PROJECT.md](docs/PROJECT.md):** SSO architecture, database allotment strategy, and Zero-Trust subdomains structure.

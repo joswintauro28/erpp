@@ -199,7 +199,7 @@ bun install
 
 ---
 
-## Step 5: Startup Commands
+## Step 5: Startup Commands (Local Native Dev)
 
 All services must be run simultaneously in separate terminals using the following startup commands:
 
@@ -214,7 +214,6 @@ To start the hot-reloading NestJS billing microservice on port `8003`:
 ```powershell
 bun nx run billing-service:dev
 ```
-*Alternative: `cd services/billing-service && bun run start:dev`*
 
 ### Running the Backend Service
 The backend folder contains a custom PowerShell startup script `run.ps1`:
@@ -222,22 +221,50 @@ The backend folder contains a custom PowerShell startup script `run.ps1`:
 cd services/erp-service
 .\run.ps1
 ```
-*Uvicorn will spin up a hot-reloading development server on `http://127.0.0.1:8000`.*
 
 ### Running the Executive Shell (Port 3000)
 ```powershell
 cd apps/erp-shell
 .\run.ps1
 ```
-*Next.js Turbopack runs on `http://localhost:3000`.*
 
 ### Running the Billing Workstation (Port 3002)
 ```powershell
 bun nx serve billing-ui
 ```
-*Alternative: `cd apps/billing-ui && bun next dev --port 3002` — runs on `http://localhost:3002`.*
 
 ### Run Everything at Once
 ```powershell
 bun nx run-many --target=dev
 ```
+
+---
+
+## Step 6: Startup via Docker Compose Sandbox (Recommended)
+
+Alternatively, you can run the entire ecosystem inside a production-optimized Docker Compose sandbox. This isolates database schemas and routes domain hosts dynamically.
+
+### 1. Configure Host Mappings (Optional)
+If you wish to access the frontends via custom domains (e.g. `http://app.erp.local`), run the hosts utility in an Administrator PowerShell terminal:
+```powershell
+.\infrastructure\local\setup-hosts.ps1
+```
+*Note: If you skip this, the workstation redirect handlers will fall back to using localhost ports (`localhost:3000`, `localhost:3002`, etc.) automatically.*
+
+### 2. Docker Operations Utility
+Manage the Docker stack using the orchestration script:
+
+```powershell
+# Build/Rebuild all optimized standalone Docker images
+.\infrastructure\local\docker-build.ps1 rebuild
+
+# Start all containers in the background
+.\infrastructure\local\docker-build.ps1 start
+
+# Check status and health transitions of all 11 services
+.\infrastructure\local\docker-build.ps1 ps
+
+# Stop and shut down the containers
+.\infrastructure\local\docker-build.ps1 stop
+```
+

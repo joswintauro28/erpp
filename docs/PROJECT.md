@@ -12,7 +12,7 @@ By standardizing on **TypeScript** (Next.js/NestJS) and **Python** (FastAPI), we
 erp-ecosystem/
 ├── apps/                                  # FRONTEND CORE CLIENTS (Subdomain Targets)
 │   ├── erp-shell/                         # app.erp.local (Next.js 15 App Router - Executive Control / Super Admin Shell)
-│   ├── crm-ui/                            # crm.erp.local (React/Next.js - Maintained by Team A)
+│   ├── crm-shell/                         # crm.erp.local (Next.js - Maintained by Team A)
 │   ├── billing-ui/                        # billing.erp.local (Next.js - Maintained by Team B)
 │   ├── inventory-ui/                      # inventory.erp.local (React/Next.js - Maintained by Team C)
 │   └── hrms-ui/                           # hrms.erp.local (React/Next.js - Maintained by Team D)
