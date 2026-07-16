@@ -2,7 +2,7 @@
 # Run this script as Administrator once before starting Docker
 
 $hostsEntries = @(
-    "127.0.0.1 shell.erp.local",
+    "127.0.0.1 app.erp.local",
     "127.0.0.1 crm.erp.local",
     "127.0.0.1 billing.erp.local",
     "127.0.0.1 inventory.erp.local"
@@ -43,7 +43,7 @@ if ($added -eq 0) {
 }
 
 Write-Host "`nDATAVEX ERP subdomains ready:"
-Write-Host "  http://shell.erp.local      → Executive Shell"
+Write-Host "  http://app.erp.local        → Executive Shell"
 Write-Host "  http://crm.erp.local        → CRM Workstation"
 Write-Host "  http://billing.erp.local    → Billing Workstation"
 Write-Host "  http://inventory.erp.local  → Inventory Workstation"

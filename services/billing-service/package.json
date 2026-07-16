@@ -38,6 +38,9 @@
     "ts-node": "^10.9.0",
     "typescript": "^5.7.0"
   },
+  "prisma": {
+    "seed": "ts-node prisma/seed.ts"
+  },
   "jest": {
     "rootDir": "src",
     "testRegex": ".*\\.spec\\.ts$",

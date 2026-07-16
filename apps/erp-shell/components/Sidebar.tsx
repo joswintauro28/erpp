@@ -36,6 +36,23 @@ import { getAccessToken } from "@datavex/auth-middleware";
 import { useAuth } from "@/contexts/AuthContext";
 import type { NavItem, NavGroup } from "@/types/navigation";
 
+const WORKSTATION_PORTS: Record<string, string> = {
+  "3001": "crm",
+  "3002": "billing",
+  "3004": "inventory",
+};
+
+function getWorkstationUrl(defaultUrl: string): string {
+  if (typeof window === "undefined") return defaultUrl;
+  const host = window.location.hostname;
+  if (host === "app.erp.local" || host.endsWith(".erp.local")) {
+    const port = defaultUrl.match(/:(\d+)/)?.[1];
+    const subdomain = port ? WORKSTATION_PORTS[port] : null;
+    if (subdomain) return `http://${subdomain}.erp.local`;
+  }
+  return defaultUrl;
+}
+
 const navItems: NavItem[] = [
   // 1. Core Overview Hub
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -330,7 +347,7 @@ export default function Sidebar({ collapsed }: { collapsed: boolean }) {
                               const token = getAccessToken();
                               if (token) {
                                 e.preventDefault();
-                                window.open(`${child.href}?token=${token}`, "_blank", "noopener");
+                                window.open(`${getWorkstationUrl(child.href)}?token=${token}`, "_blank", "noopener");
                               }
                             }}
                           >
@@ -444,7 +461,7 @@ export default function Sidebar({ collapsed }: { collapsed: boolean }) {
                       const token = getAccessToken();
                       if (token) {
                         e.preventDefault();
-                        window.open(`${child.href}?token=${token}`, "_blank", "noopener");
+                        window.open(`${getWorkstationUrl(child.href)}?token=${token}`, "_blank", "noopener");
                       }
                     }}
                   >

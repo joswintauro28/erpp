@@ -13,11 +13,18 @@ interface AuthState {
 
 const AuthContext = createContext<AuthState | null>(null);
 
-const SHELL_APP_URL = process.env.NEXT_PUBLIC_SHELL_APP_URL || "http://localhost:3000";
-
-const LOGIN_URL = process.env.NEXT_PUBLIC_APP_URL
-  ? `${SHELL_APP_URL}/login?redirect=${encodeURIComponent(process.env.NEXT_PUBLIC_APP_URL)}`
-  : `${SHELL_APP_URL}/login`;
+function getLoginUrl(): string {
+  const currentUrl = encodeURIComponent(window.location.href);
+  if (typeof window === "undefined") {
+    return `${process.env.NEXT_PUBLIC_SHELL_APP_URL || "http://app.erp.local"}/login`;
+  }
+  const host = window.location.hostname;
+  if (host === "localhost" || host === "127.0.0.1") {
+    return `http://${host}:3000/login?redirect=${currentUrl}`;
+  }
+  const shellUrl = process.env.NEXT_PUBLIC_SHELL_APP_URL || "http://app.erp.local";
+  return `${shellUrl}/login?redirect=${currentUrl}`;
+}
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -47,12 +54,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const u = await api.get<User>("/auth/users/me");
           setUser(u);
         } else {
-          window.location.href = LOGIN_URL;
+          window.location.href = getLoginUrl();
           return;
         }
       } catch {
+        if (tokenParam) {
+          try {
+            const u = await api.get<User>("/auth/users/me");
+            setUser(u);
+          } catch {
+            // Token verification also failed
+          }
+        }
         if (!tokenParam) {
-          window.location.href = LOGIN_URL;
+          window.location.href = getLoginUrl();
           return;
         }
       }
@@ -70,7 +85,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     setAccessToken(null);
     setUser(null);
-    window.location.href = LOGIN_URL;
+    window.location.href = getLoginUrl();
   }, []);
 
   return (
