@@ -12,7 +12,8 @@ COPY services/core-iam/package.json services/core-iam/
 COPY services/billing-service/package.json services/billing-service/
 COPY packages/auth-middleware/package.json packages/auth-middleware/
 COPY packages/ui-theme/package.json packages/ui-theme/
-RUN bun install --frozen-lockfile --ignore-scripts
+RUN --mount=type=cache,target=/root/.cache/bun \
+    bun install --frozen-lockfile --ignore-scripts
 
 FROM node:24-alpine AS builder
 WORKDIR /app
@@ -25,7 +26,7 @@ COPY packages ./packages
 
 # Generate Prisma client (output: services/core-iam/node_modules/@prisma/client-iam)
 WORKDIR /app/services/core-iam
-RUN bunx prisma generate
+RUN bun x prisma generate
 # Copy generated client into root node_modules so it's accessible at runtime
 RUN mkdir -p /app/node_modules/@prisma && \
     cp -r /app/services/core-iam/node_modules/@prisma/client-iam /app/node_modules/@prisma/client-iam
@@ -44,13 +45,14 @@ COPY services/core-iam/package.json services/core-iam/
 COPY services/billing-service/package.json services/billing-service/
 COPY packages/auth-middleware/package.json packages/auth-middleware/
 COPY packages/ui-theme/package.json packages/ui-theme/
-RUN bun install --production --frozen-lockfile --ignore-scripts
+RUN --mount=type=cache,target=/root/.cache/bun \
+    bun install --production --frozen-lockfile --ignore-scripts
 
 FROM node:24-alpine AS runner
 WORKDIR /app/services/core-iam
 ENV NODE_ENV=production
-RUN apk add --no-cache openssl && \
-    addgroup --system --gid 1001 nodejs && \
+COPY --from=oven/bun:1.2-alpine /usr/local/bin/bun /usr/local/bin/bun
+RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nodejs
 
 # Runtime dependencies (includes production node_modules and generated prisma client)
@@ -67,5 +69,5 @@ RUN chown -R nodejs:nodejs /app/node_modules/@prisma
 USER nodejs
 EXPOSE 8002
 ENV PORT=8002
-CMD ["node", "dist/src/main.js"]
+CMD ["sh", "-c", "bun x prisma db push --skip-generate && exec node dist/src/main.js"]
 

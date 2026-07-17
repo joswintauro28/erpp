@@ -56,12 +56,12 @@ foreach ($df in $dockerfiles) {
 
 Write-Host ""
 Write-Host "╔══════════════════════════════════════════════╗" -ForegroundColor Cyan
-Write-Host "║   Setup Complete!                             ║" -ForegroundColor Cyan
+Write-Host "║   Setup Complete!                            ║" -ForegroundColor Cyan
 Write-Host "║                                              ║" -ForegroundColor Cyan
-Write-Host "║   Start with:                                 ║" -ForegroundColor Cyan
-Write-Host "║     .\docker-build.ps1 up                     ║" -ForegroundColor Cyan
+Write-Host "║   Start with:                                ║" -ForegroundColor Cyan
+Write-Host "║     .\docker-build.ps1 up                    ║" -ForegroundColor Cyan
 Write-Host "║                                              ║" -ForegroundColor Cyan
-Write-Host "║   Or manually:                                ║" -ForegroundColor Cyan
+Write-Host "║   Or manually:                               ║" -ForegroundColor Cyan
 Write-Host "║     docker compose -f .\docker-compose.yml   ║" -ForegroundColor Cyan
-Write-Host "║       --env-file .env.docker up -d            ║" -ForegroundColor Cyan
+Write-Host "║       --env-file .env.docker up -d           ║" -ForegroundColor Cyan
 Write-Host "╚══════════════════════════════════════════════╝" -ForegroundColor Cyan

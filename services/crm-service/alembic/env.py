@@ -1,5 +1,10 @@
 import asyncio
+import sys
+import os
 from logging.config import fileConfig
+
+# Add CWD to python path to resolve app module imports
+sys.path.append(os.getcwd())
 
 from alembic import context
 from sqlalchemy import pool

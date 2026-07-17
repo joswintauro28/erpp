@@ -7,9 +7,24 @@ let refreshPromise: Promise<string | null> | null = null;
 
 export function setAccessToken(token: string | null) {
   accessToken = token;
+  if (typeof window !== "undefined") {
+    (window as any).__datavex_access_token = token;
+    if (token) {
+      localStorage.setItem("datavex_access_token", token);
+    } else {
+      localStorage.removeItem("datavex_access_token");
+    }
+  }
 }
 
 export function getAccessToken(): string | null {
+  if (typeof window !== "undefined") {
+    const globalToken = (window as any).__datavex_access_token || localStorage.getItem("datavex_access_token");
+    if (globalToken) {
+      accessToken = globalToken;
+      return globalToken;
+    }
+  }
   return accessToken;
 }
 
@@ -21,8 +36,8 @@ async function refreshAccessToken(): Promise<string | null> {
     });
     if (!res.ok) return null;
     const data = await res.json();
-    accessToken = data.access_token;
-    return accessToken;
+    setAccessToken(data.access_token);
+    return data.access_token;
   } catch {
     return null;
   }
@@ -74,7 +89,7 @@ async function request<T>(
       throw new ApiClientError(retryRes.status, retryErr.detail);
     }
 
-    accessToken = null;
+    setAccessToken(null);
     throw new ApiClientError(401, "Session expired. Please log in again.");
   }
 

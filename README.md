@@ -82,17 +82,39 @@ Each service operates on its own dedicated PostgreSQL database target. In local 
 The repository contains a production-ready dockerization configuration (featuring Next.js standalone outputs, cached dependencies, automated Alembic migrations, and sequential healthchecks):
 
 ```powershell
+# Windows (PowerShell):
 # 1. Build and compile the stack
 .\infrastructure\local\docker-build.ps1 rebuild
 
 # 2. Spin up all containers in background
 .\infrastructure\local\docker-build.ps1 start
 
-# 3. Check status (verify healthy transitions)
+# 3. Seed database containers with development data
+.\infrastructure\local\seed-docker.ps1
+
+# 4. Check status (verify healthy transitions)
 .\infrastructure\local\docker-build.ps1 ps
 
-# 4. Stop the stack
+# 5. Stop the stack
 .\infrastructure\local\docker-build.ps1 stop
+```
+
+```bash
+# Linux / macOS (Bash):
+# 1. Build and compile the stack
+./infrastructure/local/docker-build.sh rebuild
+
+# 2. Spin up all containers in background
+./infrastructure/local/docker-build.sh start
+
+# 3. Seed database containers with development data
+./infrastructure/local/seed-docker.sh
+
+# 4. Check status (verify healthy transitions)
+./infrastructure/local/docker-build.sh ps
+
+# 5. Stop the stack
+./infrastructure/local/docker-build.sh stop
 ```
 
 ### Running Locally (Native Process Development)

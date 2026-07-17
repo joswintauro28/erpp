@@ -12,7 +12,8 @@ COPY services/core-iam/package.json services/core-iam/
 COPY services/billing-service/package.json services/billing-service/
 COPY packages/auth-middleware/package.json packages/auth-middleware/
 COPY packages/ui-theme/package.json packages/ui-theme/
-RUN bun install --frozen-lockfile --ignore-scripts
+RUN --mount=type=cache,target=/root/.cache/bun \
+    bun install --frozen-lockfile --ignore-scripts
 
 COPY packages/ packages/
 COPY apps/erp-shell/ apps/erp-shell/
@@ -25,7 +26,7 @@ ENV NEXT_PUBLIC_BILLING_APP_URL=$NEXT_PUBLIC_BILLING_APP_URL \
     NEXT_PUBLIC_INVENTORY_APP_URL=$NEXT_PUBLIC_INVENTORY_APP_URL \
     NEXT_STANDALONE=true
 
-RUN cd apps/erp-shell && bun run build
+RUN mkdir -p apps/erp-shell/public && cd apps/erp-shell && bun run build
 
 FROM node:24-alpine AS runner
 WORKDIR /app

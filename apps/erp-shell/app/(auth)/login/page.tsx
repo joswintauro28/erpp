@@ -51,14 +51,17 @@ export default function LoginPage() {
 
       if (redirectUrl) {
         const redirectLower = redirectUrl.toLowerCase();
-        let roleMatch = true;
+        // Organization Owner can access any workstation
+        let roleMatch = role === "Organization Owner";
 
-        if (redirectLower.includes(BILLING_APP_URL.toLowerCase())) {
-          roleMatch = role === "Accountant" || role === "Auditor";
-        } else if (redirectLower.includes(CRM_APP_URL.toLowerCase())) {
-          roleMatch = role === "Sales Executive";
-        } else if (redirectLower.includes(INVENTORY_APP_URL.toLowerCase())) {
-          roleMatch = role === "Inventory Manager";
+        if (!roleMatch) {
+          if (redirectLower.includes(BILLING_APP_URL.toLowerCase())) {
+            roleMatch = role === "Accountant" || role === "Auditor";
+          } else if (redirectLower.includes(CRM_APP_URL.toLowerCase())) {
+            roleMatch = role === "Sales Executive";
+          } else if (redirectLower.includes(INVENTORY_APP_URL.toLowerCase())) {
+            roleMatch = role === "Inventory Manager";
+          }
         }
 
         if (roleMatch) {

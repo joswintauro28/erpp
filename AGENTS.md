@@ -373,26 +373,30 @@ The application contains a production-optimized local Docker sandbox configured 
 - **Sequential Boot Sequence**: Standardized `depends_on: condition: service_healthy` triggers ensure Postgres starts first, followed by database migrations, services, frontends, and finally Nginx.
 
 ### Operational Commands:
-* **Add local hosts subdomains** (run as Administrator in PowerShell):
-  ```powershell
-  .\infrastructure\local\setup-hosts.ps1
-  ```
+* **Add local hosts subdomains**:
+  * **Windows (Administrator PowerShell)**:
+    ```powershell
+    .\infrastructure\local\setup-hosts.ps1
+    ```
+  * **Linux / macOS (Sudo Bash)**:
+    ```bash
+    sudo ./infrastructure/local/setup-hosts.sh
+    ```
 * **Build / Rebuild the Docker Stack**:
-  ```powershell
-  .\infrastructure\local\docker-build.ps1 rebuild
-  ```
+  * **Windows**: `.\infrastructure\local\docker-build.ps1 rebuild`
+  * **Linux / macOS**: `./infrastructure/local/docker-build.sh rebuild`
 * **Start the Stack**:
-  ```powershell
-  .\infrastructure\local\docker-build.ps1 start
-  ```
-* **Stop the Stack**:
-  ```powershell
-  .\infrastructure\local\docker-build.ps1 stop
-  ```
+  * **Windows**: `.\infrastructure\local\docker-build.ps1 start`
+  * **Linux / macOS**: `./infrastructure/local/docker-build.sh start`
+* **Seed Database Containers**:
+  * **Windows**: `.\infrastructure\local\seed-docker.ps1`
+  * **Linux / macOS**: `./infrastructure/local/seed-docker.sh`
 * **View Container Status**:
-  ```powershell
-  .\infrastructure\local\docker-build.ps1 ps
-  ```
+  * **Windows**: `.\infrastructure\local\docker-build.ps1 ps`
+  * **Linux / macOS**: `./infrastructure/local/docker-build.sh ps`
+* **Stop the Stack**:
+  * **Windows**: `.\infrastructure\local\docker-build.ps1 stop`
+  * **Linux / macOS**: `./infrastructure/local/docker-build.sh stop`
 
 ---
 
