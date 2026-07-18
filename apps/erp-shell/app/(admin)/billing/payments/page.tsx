@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect } from "react";
 import {
   Search, CreditCard, DollarSign, Receipt,
   ArrowUpRight, ArrowDownLeft, Wallet, XCircle, Ban,
+  Building2,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
@@ -41,11 +42,11 @@ const CHART_VARS = [
 ];
 
 const metricCards = [
-  { key: "today" as const, icon: ArrowDownLeft, label: "Today", idx: 0 },
-  { key: "thisMonth" as const, icon: DollarSign, label: "This Month", idx: 1 },
-  { key: "outstanding" as const, icon: ArrowUpRight, label: "Outstanding", idx: 2 },
-  { key: "refunds" as const, icon: Ban, label: "Refunds", idx: 3 },
-  { key: "failed" as const, icon: XCircle, label: "Failed", idx: 4 },
+  { key: "today" as const, icon: ArrowDownLeft, label: "Today", gradient: "from-[--shell-brand]/5 to-transparent", idx: 0 },
+  { key: "thisMonth" as const, icon: DollarSign, label: "This Month", gradient: "from-[--shell-accent]/5 to-transparent", idx: 1 },
+  { key: "outstanding" as const, icon: ArrowUpRight, label: "Outstanding", gradient: "from-amber-500/5 to-transparent", idx: 2 },
+  { key: "refunds" as const, icon: Ban, label: "Refunds", gradient: "from-orange-500/5 to-transparent", idx: 3 },
+  { key: "failed" as const, icon: XCircle, label: "Failed", gradient: "from-red-500/5 to-transparent", idx: 4 },
 ];
 
 export default function Payments() {
@@ -55,13 +56,26 @@ export default function Payments() {
   const [search, setSearch] = useState("");
   const [recordOpen, setRecordOpen] = useState(false);
   const [payStep, setPayStep] = useState(0);
+  const [formInvoice, setFormInvoice] = useState("");
+  const [formAmount, setFormAmount] = useState("");
+  const [formMethod, setFormMethod] = useState("Bank Transfer");
+  const [formRef, setFormRef] = useState("");
+  const [formNotes, setFormNotes] = useState("");
+  const [invoices, setInvoices] = useState<{ id: number; number: string; client: string; balance: number }[]>([]);
 
-  useEffect(() => {
+  const selectedInvoice = useMemo(
+    () => invoices.find((i) => i.number === formInvoice),
+    [formInvoice, invoices],
+  );
+
+  const loadData = () => {
+    setLoading(true);
     Promise.all([
       api.get<any[]>("/payments"),
       api.get<any>("/payments/metrics").catch(() => ({})),
+      api.get<any[]>("/invoices?status=Sent,Overdue,Partially%20Paid").catch(() => []),
     ])
-      .then(([pmts, m]) => {
+      .then(([pmts, m, invs]) => {
         setPayments(pmts.map((p: any) => ({
           id: p.id, payment_id: p.payment_id,
           invoice_number: p.invoice_number ?? `INV-${p.invoice_id}`,
@@ -77,21 +91,53 @@ export default function Payments() {
           refunds: Number(m?.refunds ?? 0),
           failed: Number(m?.failed ?? 0),
         });
+        setInvoices(invs.map((i: any) => ({
+          id: i.id,
+          number: i.invoice_number ?? `INV-${i.id}`,
+          client: i.client_name ?? "Unknown",
+          balance: Number(i.balance_due ?? i.total ?? 0),
+        })));
       })
       .catch(() => { setPayments([]); })
       .finally(() => setLoading(false));
-  }, []);
+  };
+
+  useEffect(() => { loadData(); }, []);
 
   const filtered = useMemo(() => searchBilling(payments, search), [payments, search]);
 
-  const handleRefund = (id: number) => {
-    setPayments((prev) =>
-      prev.map((p) =>
-        p.id === id
-          ? { ...p, refunded_amount: p.amount }
-          : p
-      )
-    );
+  const handleRecordPayment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const selected = invoices.find((i) => i.number === formInvoice);
+    if (!formAmount || !formInvoice) return;
+    try {
+      await api.post("/payments", {
+        invoice_id: selected?.id ?? formInvoice,
+        amount: Number(formAmount),
+        method: formMethod,
+        reference: formRef || undefined,
+        notes: formNotes || undefined,
+      });
+      setRecordOpen(false);
+      setPayStep(0);
+      setFormInvoice("");
+      setFormAmount("");
+      setFormMethod("Bank Transfer");
+      setFormRef("");
+      setFormNotes("");
+      loadData();
+    } catch {
+      // error handled by api interceptor
+    }
+  };
+
+  const handleRefund = async (id: number) => {
+    try {
+      await api.post(`/payments/${id}/refund`);
+      loadData();
+    } catch {
+      // error handled by api interceptor
+    }
   };
 
   if (loading) {
@@ -134,10 +180,11 @@ export default function Payments() {
               return (
                 <div
                   key={card.key}
-                  className="animate-kpi flex flex-col gap-1.5 rounded-xl border border-[--shell-border] bg-[--shell-surface] p-4.5 transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1)]"
+                  className="animate-kpi relative flex flex-col gap-1.5 rounded-xl border border-[--shell-border] bg-[--shell-surface] p-4.5 transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1)] overflow-hidden"
                   style={{ animationDelay: `${card.idx * 0.05}s` }}
                 >
-                  <div className="flex items-center justify-between">
+                  <div className={`absolute inset-0 bg-gradient-to-br ${card.gradient} pointer-events-none`} />
+                  <div className="relative z-10 flex items-center justify-between">
                     <span className="text-xs font-medium uppercase tracking-[0.08em] text-[--shell-muted]">
                       {card.label}
                     </span>
@@ -145,7 +192,7 @@ export default function Payments() {
                       <Icon className="h-3.5 w-3.5" style={{ color: CHART_VARS[card.idx] }} />
                     </div>
                   </div>
-                  <span className={`font-heading text-lg font-semibold tracking-tight ${isDestructive ? "text-[--shell-brand]" : "text-[--shell-foreground]"}`}>
+                  <span className={`relative z-10 font-heading text-lg font-semibold tracking-tight ${isDestructive ? "text-[--shell-brand]" : "text-[--shell-foreground]"}`}>
                     {values[card.key]}
                   </span>
                 </div>
@@ -229,7 +276,7 @@ export default function Payments() {
       {/* Record Payment Dialog */}
       <MultiStepDialog
         open={recordOpen}
-        onOpenChange={(v) => { if (!v) setPayStep(0); setRecordOpen(v); }}
+        onOpenChange={(v) => { if (!v) { setPayStep(0); setRecordOpen(v); } }}
         title="Record Payment"
         steps={[
           { title: "Invoice", description: "Select invoice and enter amount" },
@@ -237,50 +284,81 @@ export default function Payments() {
         ]}
         currentStep={payStep}
         onStepChange={setPayStep}
-        onSubmit={(e) => { e.preventDefault(); setRecordOpen(false); }}
+        onSubmit={handleRecordPayment}
         submitLabel="Record Payment"
       >
         {payStep === 0 && (
           <div className="space-y-5">
-            <div className="space-y-2">
-              <Label htmlFor="payment-invoice" className="text-muted-foreground">Invoice</Label>
-              <Select defaultValue="INV-2024-008 - Apex Logistics (₹3,20,000)">
-                <SelectTrigger id="payment-invoice"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="INV-2024-008 - Apex Logistics (₹3,20,000)">INV-2024-008 — Apex Logistics</SelectItem>
-                  <SelectItem value="INV-2024-007 - Coastal Foods (₹5,20,000)">INV-2024-007 — Coastal Foods</SelectItem>
-                  <SelectItem value="INV-2024-009 - Velocity Traders (₹70,000)">INV-2024-009 — Velocity Traders</SelectItem>
-                </SelectContent>
-              </Select>
+            <div className="rounded-lg border border-[--shell-border] bg-[--shell-surface] p-4">
+              <div className="mb-3 flex items-center gap-2">
+                <Receipt className="h-3.5 w-3.5 text-[--shell-brand]" />
+                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[--shell-foreground]">Select Invoice</span>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="payment-invoice">Invoice</Label>
+                <Select value={formInvoice} onValueChange={(v) => v !== null && setFormInvoice(v)}>
+                  <SelectTrigger id="payment-invoice"><SelectValue placeholder="Select an invoice" /></SelectTrigger>
+                  <SelectContent>
+                    {invoices.length === 0 && (
+                      <SelectItem value="-" disabled>No invoices available</SelectItem>
+                    )}
+                    {invoices.map((inv) => (
+                      <SelectItem key={inv.id} value={inv.number}>
+                        {inv.number} — {inv.client}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              {selectedInvoice && (
+                <div className="mt-3 flex items-center justify-between rounded-md bg-[--shell-bg] px-3 py-2 text-xs">
+                  <span className="text-[--shell-muted]">Balance Due</span>
+                  <span className="font-mono font-semibold text-[--shell-brand]">{money(selectedInvoice.balance)}</span>
+                </div>
+              )}
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="payment-amount" className="text-muted-foreground">Amount</Label>
-              <Input id="payment-amount" type="number" min={0} placeholder="0.00" required />
+            <div className="rounded-lg border border-[--shell-border] bg-[--shell-surface] p-4">
+              <div className="mb-3 flex items-center gap-2">
+                <DollarSign className="h-3.5 w-3.5 text-[--shell-accent]" />
+                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[--shell-foreground]">Payment Amount</span>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="payment-amount">Amount (₹)</Label>
+                <Input id="payment-amount" type="number" min={0} step={0.01} placeholder="0.00" required value={formAmount} onChange={(e) => setFormAmount(e.target.value)} />
+              </div>
             </div>
           </div>
         )}
         {payStep === 1 && (
           <div className="space-y-5">
-            <div className="space-y-2">
-              <Label htmlFor="payment-method" className="text-muted-foreground">Method</Label>
-              <Select defaultValue="Bank Transfer">
-                <SelectTrigger id="payment-method"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Bank Transfer">Bank Transfer</SelectItem>
-                  <SelectItem value="UPI">UPI</SelectItem>
-                  <SelectItem value="Credit Card">Credit Card</SelectItem>
-                  <SelectItem value="Cheque">Cheque</SelectItem>
-                  <SelectItem value="Cash">Cash</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="payment-ref" className="text-muted-foreground">Reference</Label>
-              <Input id="payment-ref" placeholder="Transaction ID / Reference" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="payment-notes" className="text-muted-foreground">Notes</Label>
-              <Textarea id="payment-notes" rows={2} placeholder="Optional notes" />
+            <div className="rounded-lg border border-[--shell-border] bg-[--shell-surface] p-4">
+              <div className="mb-3 flex items-center gap-2">
+                <Building2 className="h-3.5 w-3.5 text-[--shell-accent]" />
+                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[--shell-foreground]">Payment Method</span>
+              </div>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="payment-method">Method</Label>
+                  <Select value={formMethod} onValueChange={(v) => v !== null && setFormMethod(v)}>
+                    <SelectTrigger id="payment-method"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Bank Transfer">Bank Transfer</SelectItem>
+                      <SelectItem value="UPI">UPI</SelectItem>
+                      <SelectItem value="Credit Card">Credit Card</SelectItem>
+                      <SelectItem value="Cheque">Cheque</SelectItem>
+                      <SelectItem value="Cash">Cash</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="payment-ref">Reference</Label>
+                  <Input id="payment-ref" placeholder="Transaction ID / Reference" value={formRef} onChange={(e) => setFormRef(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="payment-notes">Notes</Label>
+                  <Textarea id="payment-notes" rows={2} placeholder="Optional notes" value={formNotes} onChange={(e) => setFormNotes(e.target.value)} />
+                </div>
+              </div>
             </div>
           </div>
         )}

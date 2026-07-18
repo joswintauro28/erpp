@@ -33,7 +33,7 @@ import {
 import { cn } from "@/lib/utils";
 import { getAccessToken } from "@datavex/auth-middleware";
 import { useAuth } from "@/contexts/AuthContext";
-import type { NavItem, NavGroup } from "@/types/navigation";
+import type { NavItem, NavGroup, NavSection, NavChild } from "@/types/navigation";
 
 const WORKSTATION_PORTS: Record<string, string> = {
   "3001": "crm",
@@ -53,90 +53,171 @@ function getWorkstationUrl(defaultUrl: string): string {
 }
 
 const navItems: NavItem[] = [
-  // 1. Core Overview Hub
+  // 1. Overview
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
 
-  // 2. Front-Office & Growth
+  // 2. CRM
   {
-    name: "CRM Suite",
+    name: "CRM",
     icon: UserPlus,
-    children: [
-      { name: "Leads Funnel", href: "/crm/leads", icon: UserPlus },
-      { name: "Client Accounts", href: "/crm/clients", icon: Users },
+    sections: [
+      {
+        name: "Sales Pipeline",
+        children: [
+          { name: "Leads", href: "/crm/leads", icon: UserPlus },
+          { name: "Clients", href: "/crm/clients", icon: Users },
+        ],
+      },
     ],
   },
 
-  // 3. Core Financial Operations
+  // 3. Inventory
   {
-    name: "Financials",
-    icon: Calculator,
-    children: [
-      { name: "Quotations", href: "/billing/quotations", icon: ClipboardList },
-      { name: "Invoices & Billing", href: "/billing/invoices", icon: FileText },
-      { name: "Recurring Billings", href: "/billing/recurring-invoices", icon: Repeat },
-      { name: "Credit Notes", href: "/billing/credit-notes", icon: FileText },
-      { name: "Debit Notes", href: "/billing/debit-notes", icon: FileText },
-      { name: "Payments Received", href: "/billing/payments", icon: CreditCard },
-      { name: "Chart of Accounts", href: "/accounting/accounts", icon: SlidersHorizontal },
-      { name: "General Ledger", href: "/accounting/ledger", icon: BookOpen },
-      { name: "Expense Tracking", href: "/accounting/expenses", icon: Receipt },
-      { name: "Financial Reports", href: "/accounting/reports", icon: PieChart },
-    ],
-  },
-
-  // 4. Back-Office & Supply Chain Logistics
-    {
-    name: "Logistics & Stock",
+    name: "Inventory",
     icon: Package,
-    children: [
-      { name: "Product Master", href: "/inventory/products", icon: Package },
-      { name: "Stock Movements", href: "/inventory/stock", icon: Warehouse },
-      { name: "Stock Adjustments", href: "/inventory/stock/adjustments", icon: SlidersHorizontal },
-      { name: "Inventory Valuation", href: "#", icon: BarChart2, soon: true },
-      { name: "Warehouse Locations", href: "/inventory/warehouses", icon: Warehouse },
-      { name: "Purchase Orders", href: "/inventory/purchase-orders", icon: ShoppingCart },
-      { name: "Supplier Registry", href: "/inventory/suppliers", icon: Truck },
-      { name: "Batch Tracking", href: "#", icon: Boxes, soon: true },
-      { name: "Serial Tracking", href: "/inventory/serials", icon: ScanBarcode },
+    sections: [
+      {
+        name: "Products",
+        children: [
+          { name: "Product Catalog", href: "/inventory/products", icon: Package },
+          { name: "Batch Tracking", href: "#", icon: Boxes, soon: true },
+          { name: "Serial Tracking", href: "/inventory/serials", icon: ScanBarcode },
+        ],
+      },
+      {
+        name: "Stock & Warehouses",
+        children: [
+          { name: "Stock Levels", href: "/inventory/stock", icon: Warehouse },
+          { name: "Stock Adjustments", href: "/inventory/stock/adjustments", icon: SlidersHorizontal },
+          { name: "Inventory Valuation", href: "#", icon: BarChart2, soon: true },
+          { name: "Warehouses", href: "/inventory/warehouses", icon: Warehouse },
+        ],
+      },
+      {
+        name: "Procurement",
+        children: [
+          { name: "Purchase Orders", href: "/inventory/purchase-orders", icon: ShoppingCart },
+          { name: "Suppliers", href: "/inventory/suppliers", icon: Truck },
+        ],
+      },
     ],
   },
 
-  // 5. Intelligent Automation Tier
-  { name: "AI Intelligence", href: "/ai-assistant", icon: Sparkles },
-
-  // 6. Identity & Team
-  { name: "Identity & Team", href: "/team", icon: Users },
-
-  // 7. Security, Compliance & Administration
+  // 4. Billing
   {
-    name: "System Control",
-    icon: Settings,
-    children: [
-      { name: "General System", href: "/settings", icon: Settings },
-      { name: "Corporate Branding", href: "/settings/branding", icon: Sparkles },
-      { name: "Notification Rules", href: "/settings/notifications", icon: Mail },
-      { name: "Workflow Pipelines", href: "/settings/workflow", icon: Repeat },
-      { name: "Communication Logs", href: "/email-logs", icon: Mail },
-      { name: "System Audit Logs", href: "/audit-logs", icon: FileClock },
+    name: "Billing",
+    icon: FileText,
+    sections: [
+      {
+        name: "Revenue",
+        children: [
+          { name: "Quotations", href: "/billing/quotations", icon: ClipboardList },
+          { name: "Invoices", href: "/billing/invoices", icon: FileText },
+          { name: "Recurring Invoices", href: "/billing/recurring-invoices", icon: Repeat },
+          { name: "Credit Notes", href: "/billing/credit-notes", icon: FileText },
+          { name: "Debit Notes", href: "/billing/debit-notes", icon: FileText },
+          { name: "Payments", href: "/billing/payments", icon: CreditCard },
+        ],
+      },
     ],
   },
+
+  // 5. Accounting
+  {
+    name: "Accounting",
+    icon: Calculator,
+    sections: [
+      {
+        name: "Ledger",
+        children: [
+          { name: "Chart of Accounts", href: "/accounting/accounts", icon: SlidersHorizontal },
+          { name: "General Ledger", href: "/accounting/ledger", icon: BookOpen },
+          { name: "Expenses", href: "/accounting/expenses", icon: Receipt },
+        ],
+      },
+      {
+        name: "Reporting",
+        children: [
+          { name: "Financial Reports", href: "/accounting/reports", icon: PieChart },
+        ],
+      },
+    ],
+  },
+
+  // 6. Settings
+  {
+    name: "Settings",
+    icon: Settings,
+    sections: [
+      {
+        name: "General",
+        children: [
+          { name: "System Settings", href: "/settings", icon: Settings },
+          { name: "Corporate Branding", href: "/settings/branding", icon: Sparkles },
+          { name: "Notification Rules", href: "/settings/notifications", icon: Mail },
+          { name: "Workflow Pipelines", href: "/settings/workflow", icon: Repeat },
+        ],
+      },
+      {
+        name: "Activity",
+        children: [
+          { name: "Communication Logs", href: "/email-logs", icon: Mail },
+          { name: "Audit Logs", href: "/audit-logs", icon: FileClock },
+        ],
+      },
+    ],
+  },
+
+  // 7. Team
+  { name: "Team", href: "/team", icon: Users },
+
+  // 8. AI (Coming Soon)
+  { name: "AI Assistant", href: "/ai-assistant", icon: Sparkles, soon: true },
 ];
 
+// Extract all defined navigation hrefs to determine more specific matches
+const allHrefs = navItems.flatMap((item) => {
+  if ("sections" in item) {
+    return item.sections.flatMap((s) => s.children.map((c) => c.href));
+  }
+  return [item.href];
+}).filter((href) => href && href !== "#");
+
+function flattenSections(sections: NavSection[]): NavChild[] {
+  return sections.flatMap((s) => s.children);
+}
+
 function isGroup(item: NavItem): item is NavGroup {
-  return "children" in item;
+  return "sections" in item;
 }
 
 function isActive(href: string, pathname: string): boolean {
   if (href === "/dashboard") return pathname === "/dashboard" || pathname === "/";
-  return pathname.startsWith(href);
+  if (href === "#") return false;
+  
+  // Exact match
+  if (pathname === href) return true;
+  
+  // Detail page match (e.g. /billing/invoices/123 matching /billing/invoices)
+  if (pathname.startsWith(href + "/")) {
+    // Exclude if there is a more specific defined route matching the path
+    return !allHrefs.some(
+      (otherHref) =>
+        otherHref !== href &&
+        otherHref.startsWith(href + "/") &&
+        pathname.startsWith(otherHref)
+    );
+  }
+  
+  return false;
 }
 
 function groupActive(group: NavGroup, pathname: string): boolean {
-  return group.children.some((c) => isActive(c.href, pathname));
+  return flattenSections(group.sections).some((c) => isActive(c.href, pathname));
 }
 
 function activeChild(group: NavGroup, pathname: string): string | null {
-  for (const child of group.children) {
+  for (const child of flattenSections(group.sections)) {
     if (isActive(child.href, pathname)) return child.href;
   }
   return null;
@@ -146,7 +227,7 @@ export default function Sidebar({ collapsed }: { collapsed: boolean }) {
   const pathname = usePathname();
   const router = useRouter();
   const { user, logout } = useAuth();
-  const [expanded, setExpanded] = useState<string[]>(["CRM Suite", "Financials"]);
+  const [expanded, setExpanded] = useState<string[]>(["CRM", "Inventory", "Billing"]);
 
   const displayName = user?.full_name || user?.email?.split("@")[0] || "User";
   const initials = (displayName
@@ -177,7 +258,7 @@ export default function Sidebar({ collapsed }: { collapsed: boolean }) {
     if (flyoutTimeout.current) clearTimeout(flyoutTimeout.current);
     
     const rect = event.currentTarget.getBoundingClientRect();
-    const flyoutEstimatedHeight = group.children.length * 32 + 40; 
+    const flyoutEstimatedHeight = flattenSections(group.sections).length * 32 + 40; 
     const windowHeight = window.innerHeight;
     
     // Bounds Check Strategy: Adjust vertical coordinate up if it risks spilling past viewport margins
@@ -311,58 +392,73 @@ export default function Sidebar({ collapsed }: { collapsed: boolean }) {
                   )}
                 </button>
 
-                {/* Internal Multi-Link Lists (Expanded Context Only) */}
+                {/* Internal Multi-Link Lists with Section Hierarchy (Expanded Context Only) */}
                 {!collapsed && expanded.includes(item.name) && (
-                  <div className="pl-4.5 mt-1 space-y-1 border-l border-sidebar-border ml-4">
-                    {item.children.map((child) => {
-                      const childActive = activeChild(item, pathname) === child.href;
-                      const isExternal = child.href.startsWith("http");
-                      const linkClasses = cn(
-                        "relative flex items-center gap-3 rounded-md px-2.5 py-1.5 text-xs transition-all duration-200 group/link",
-                        child.soon && "opacity-60",
-                        childActive
-                          ? "text-sidebar-primary-foreground font-medium bg-sidebar-primary/80"
-                          : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                      );
-                      if (child.href === "#") {
-                        return (
-                          <span key={child.name} className={linkClasses}>
-                            <child.icon className={cn("h-3.5 w-3.5 shrink-0 transition-colors duration-200", childActive ? "text-sidebar-primary-foreground" : "text-sidebar-foreground/40 group-hover/link:text-sidebar-accent-foreground")} />
-                            <span>{child.name}</span>
-                            {child.soon && <span className="ml-auto rounded-full border border-sidebar-primary/30 bg-sidebar-primary/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-sidebar-primary">Soon</span>}
+                  <div className="mt-1 space-y-3 border-l border-sidebar-border ml-4 pl-4">
+                    {item.sections.map((section, sIdx) => (
+                      <div key={section.name}>
+                        {sIdx > 0 && (
+                          <div className="mb-2.5 h-px bg-sidebar-border/60 mx-1.5" />
+                        )}
+                        <div className="space-y-0.5">
+                          <span className="block text-[9px] font-semibold uppercase tracking-[0.15em] text-sidebar-foreground/30 px-1.5 py-1 select-none">
+                            {section.name}
                           </span>
-                        );
-                      }
-                      if (isExternal) {
-                        return (
-                          <a
-                            key={child.name}
-                            href={child.href}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className={linkClasses}
-                            onClick={(e) => {
-                              const token = getAccessToken();
-                              if (token) {
-                                e.preventDefault();
-                                window.open(`${getWorkstationUrl(child.href)}?token=${token}`, "_blank", "noopener");
-                              }
-                            }}
-                          >
-                            <child.icon className={cn("h-3.5 w-3.5 shrink-0 transition-colors duration-200", childActive ? "text-sidebar-primary-foreground" : "text-sidebar-foreground/40 group-hover/link:text-sidebar-accent-foreground")} />
-                            <span>{child.name}</span>
-                            {child.soon && <span className="ml-auto rounded-full border border-sidebar-primary/30 bg-sidebar-primary/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-sidebar-primary">Soon</span>}
-                          </a>
-                        );
-                      }
-                      return (
-                        <Link key={child.name} href={child.href} title={child.name} className={linkClasses}>
-                          <child.icon className={cn("h-3.5 w-3.5 shrink-0 transition-colors duration-200", childActive ? "text-sidebar-primary-foreground" : "text-sidebar-foreground/40 group-hover/link:text-sidebar-accent-foreground")} />
-                          <span>{child.name}</span>
-                          {child.soon && <span className="ml-auto rounded-full border border-sidebar-primary/30 bg-sidebar-primary/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-sidebar-primary">Soon</span>}
-                        </Link>
-                      );
-                    })}
+                          {section.children.map((child) => {
+                            const childActive = activeChild(item, pathname) === child.href;
+                            const isExternal = child.href.startsWith("http");
+                            const linkClasses = cn(
+                              "relative flex items-center gap-3 rounded-sm px-2.5 py-1.5 text-xs transition-all duration-200 group/link",
+                              child.soon && "opacity-50",
+                              childActive
+                                ? "text-sidebar-primary-foreground font-medium bg-sidebar-primary/80 shadow-sm"
+                                : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                            );
+                            if (child.href === "#") {
+                              return (
+                                <span key={child.name} className={linkClasses}>
+                                  {childActive && <span className="absolute left-0 top-1/2 -translate-y-1/2 h-4 w-0.5 rounded-r-full bg-sidebar-primary" />}
+                                  <child.icon className={cn("h-3.5 w-3.5 shrink-0 transition-colors duration-200", childActive ? "text-sidebar-primary-foreground" : "text-sidebar-foreground/40 group-hover/link:text-sidebar-accent-foreground")} />
+                                  <span>{child.name}</span>
+                                  {child.soon && <span className="ml-auto text-[8px] font-medium uppercase tracking-wider text-[var(--shell-accent)]">Soon</span>}
+                                </span>
+                              );
+                            }
+                            if (isExternal) {
+                              return (
+                                <a
+                                  key={child.name}
+                                  href={child.href}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className={linkClasses}
+                                  onClick={(e) => {
+                                    const token = getAccessToken();
+                                    if (token) {
+                                      e.preventDefault();
+                                      window.open(`${getWorkstationUrl(child.href)}?token=${token}`, "_blank", "noopener");
+                                    }
+                                  }}
+                                >
+                                  {childActive && <span className="absolute left-0 top-1/2 -translate-y-1/2 h-4 w-0.5 rounded-r-full bg-sidebar-primary" />}
+                                  <child.icon className={cn("h-3.5 w-3.5 shrink-0 transition-colors duration-200", childActive ? "text-sidebar-primary-foreground" : "text-sidebar-foreground/40 group-hover/link:text-sidebar-accent-foreground")} />
+                                  <span>{child.name}</span>
+                                  {child.soon && <span className="ml-auto text-[8px] font-medium uppercase tracking-wider text-[var(--shell-accent)]">Soon</span>}
+                                </a>
+                              );
+                            }
+                            return (
+                              <Link key={child.name} href={child.href} title={child.name} className={linkClasses}>
+                                {childActive && <span className="absolute left-0 top-1/2 -translate-y-1/2 h-4 w-0.5 rounded-r-full bg-sidebar-primary" />}
+                                <child.icon className={cn("h-3.5 w-3.5 shrink-0 transition-colors duration-200", childActive ? "text-sidebar-primary-foreground" : "text-sidebar-foreground/40 group-hover/link:text-sidebar-accent-foreground")} />
+                                <span>{child.name}</span>
+                                {child.soon && <span className="ml-auto text-[8px] font-medium uppercase tracking-wider text-[var(--shell-accent)]">Soon</span>}
+                              </Link>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>
@@ -371,14 +467,14 @@ export default function Sidebar({ collapsed }: { collapsed: boolean }) {
             /* Standard Route Configurations */
             <Link
               key={`link-${item.name}-${index}`}
-              href={item.name === "AI Intelligence" ? "#" : item.href}
+              href={item.soon ? "#" : item.href}
               title={collapsed ? item.name : undefined}
-              onClick={item.name === "AI Intelligence" ? (e) => e.preventDefault() : undefined}
+              onClick={item.soon ? (e) => e.preventDefault() : undefined}
               className={cn(
                 "relative flex w-full items-center rounded-md px-2.5 py-2 text-left text-sm font-medium transition-all duration-200 group/btn",
                 collapsed && "justify-center",
-                item.name === "AI Intelligence" && "opacity-60 cursor-not-allowed",
-                isActive(item.href, pathname)
+                item.soon && "opacity-50 cursor-not-allowed",
+                !item.soon && isActive(item.href, pathname)
                   ? "text-sidebar-primary-foreground font-semibold bg-sidebar-primary shadow-sm"
                   : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
               )}
@@ -387,7 +483,7 @@ export default function Sidebar({ collapsed }: { collapsed: boolean }) {
                 <item.icon
                   className={cn(
                     "h-4 w-4 shrink-0 transition-all duration-200 group-hover/btn:scale-110",
-                    isActive(item.href, pathname)
+                    !item.soon && isActive(item.href, pathname)
                       ? "text-sidebar-primary-foreground"
                       : "text-sidebar-foreground/60 group-hover/btn:text-sidebar-accent-foreground"
                   )}
@@ -400,10 +496,8 @@ export default function Sidebar({ collapsed }: { collapsed: boolean }) {
                 >
                   {item.name}
                 </span>
-                {item.name === "AI Intelligence" && !collapsed && (
-                  <span className="ml-auto rounded-full border border-sidebar-primary/30 bg-sidebar-primary/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-sidebar-primary">
-                    Soon
-                  </span>
+                {item.soon && !collapsed && (
+                  <span className="ml-auto text-[8px] font-medium uppercase tracking-wider text-sidebar-foreground/45">Soon</span>
                 )}
               </div>
             </Link>
@@ -428,7 +522,7 @@ export default function Sidebar({ collapsed }: { collapsed: boolean }) {
           
           {/* Submenu Core Link Array */}
           <div className="space-y-1">
-            {hoveredGroup.children.map((child) => {
+            {flattenSections(hoveredGroup.sections).map((child) => {
               const childActive = isActive(child.href, pathname);
               const isExternal = child.href.startsWith("http");
               const linkClasses = cn(
@@ -443,7 +537,7 @@ export default function Sidebar({ collapsed }: { collapsed: boolean }) {
                   <span key={`fly-${child.name}`} className={linkClasses}>
                     <child.icon className={cn("h-3.5 w-3.5 shrink-0 transition-colors", childActive ? "text-sidebar-primary-foreground" : "text-sidebar-foreground/45 group-hover/flylink:text-sidebar-accent-foreground")} />
                     <span>{child.name}</span>
-                    {child.soon && <span className="ml-auto rounded-full border border-sidebar-primary/30 bg-sidebar-primary/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-sidebar-primary">Soon</span>}
+                    {child.soon && <span className="ml-auto text-[8px] font-medium uppercase tracking-wider text-[var(--shell-accent)]">Soon</span>}
                   </span>
                 );
               }
@@ -465,7 +559,7 @@ export default function Sidebar({ collapsed }: { collapsed: boolean }) {
                   >
                     <child.icon className={cn("h-3.5 w-3.5 shrink-0 transition-colors", childActive ? "text-sidebar-primary-foreground" : "text-sidebar-foreground/45 group-hover/flylink:text-sidebar-accent-foreground")} />
                     <span>{child.name}</span>
-                    {child.soon && <span className="ml-auto rounded-full border border-sidebar-primary/30 bg-sidebar-primary/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-sidebar-primary">Soon</span>}
+                    {child.soon && <span className="ml-auto text-[8px] font-medium uppercase tracking-wider text-[var(--shell-accent)]">Soon</span>}
                   </a>
                 );
               }
@@ -473,7 +567,7 @@ export default function Sidebar({ collapsed }: { collapsed: boolean }) {
                 <Link key={`fly-${child.name}`} href={child.href} className={linkClasses}>
                   <child.icon className={cn("h-3.5 w-3.5 shrink-0 transition-colors", childActive ? "text-sidebar-primary-foreground" : "text-sidebar-foreground/45 group-hover/flylink:text-sidebar-accent-foreground")} />
                   <span>{child.name}</span>
-                  {child.soon && <span className="ml-auto rounded-full border border-sidebar-primary/30 bg-sidebar-primary/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-sidebar-primary">Soon</span>}
+                  {child.soon && <span className="ml-auto text-[8px] font-medium uppercase tracking-wider text-[var(--shell-accent)]">Soon</span>}
                 </Link>
               );
             })}

@@ -7,16 +7,22 @@ export interface NavChild {
   soon?: boolean;
 }
 
+export interface NavSection {
+  name: string;
+  children: NavChild[];
+}
+
 export interface NavGroup {
   name: string;
   icon: LucideIcon;
-  children: NavChild[];
+  sections: NavSection[];
 }
 
 export interface NavLink {
   name: string;
   href: string;
   icon: LucideIcon;
+  soon?: boolean;
 }
 
 export type NavItem = NavLink | NavGroup;

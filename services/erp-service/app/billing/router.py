@@ -2,15 +2,17 @@ from fastapi import APIRouter, Depends, Query
 
 from app.core.deps import get_current_token_payload
 from app.integrations.billing_client import (
-    get_invoices, get_invoice, create_invoice, update_invoice_status, delete_invoice,
+    get_invoices, get_invoice, create_invoice, create_invoice_from_dispatch, update_invoice_status, delete_invoice,
     get_quotations, get_quotation, create_quotation, update_quotation,
     update_quotation_status, convert_quotation, delete_quotation,
     get_credit_notes, create_credit_note, delete_credit_note,
     get_debit_notes, create_debit_note, delete_debit_note,
-    get_recurring_invoices, get_recurring_invoice, create_recurring_invoice, delete_recurring_invoice,
+    get_recurring_invoices, get_recurring_invoice, create_recurring_invoice, update_recurring_invoice, delete_recurring_invoice,
     get_payments, create_payment, refund_payment, get_payments_metrics,
     get_dashboard_billing,
-    get_accounts, get_expenses, get_ledger, get_reports,
+    get_accounts, get_expenses, create_account, update_account, create_expense, delete_expense, create_expense_from_po, get_ledger, get_reports, get_aging, get_dunning,
+    import_bank_csv, get_bank_transactions, match_bank_transaction, get_bank_reports,
+    get_periods, close_period, reopen_period, get_periods_status,
 )
 
 router = APIRouter(tags=["billing"])
@@ -34,6 +36,15 @@ async def create_new_invoice(
 ):
     token = payload.get("_raw_token", "")
     return await create_invoice(token, body)
+
+
+@router.post("/invoices/from-dispatch", response_model=dict, status_code=201)
+async def create_invoice_from_dispatch_endpoint(
+    body: dict,
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await create_invoice_from_dispatch(token, body)
 
 
 # ─── Quotations ──────────────────────────────────────────────
@@ -186,6 +197,16 @@ async def create_new_recurring_invoice(
     return await create_recurring_invoice(token, body)
 
 
+@router.put("/invoices/recurring/{rec_id}", response_model=dict)
+async def update_recurring_invoice_by_id(
+    rec_id: int,
+    body: dict,
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await update_recurring_invoice(token, rec_id, body)
+
+
 @router.delete("/invoices/recurring/{rec_id}", status_code=204)
 async def delete_recurring_invoice_by_id(
     rec_id: int,
@@ -281,12 +302,58 @@ async def list_accounts(
     return await get_accounts(token)
 
 
+@router.post("/accounts", response_model=dict, status_code=201)
+async def create_account_endpoint(
+    body: dict,
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await create_account(token, body)
+
+
+@router.put("/accounts/{account_id}", response_model=dict)
+async def update_account_endpoint(
+    account_id: int,
+    body: dict,
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await update_account(token, account_id, body)
+
+
 @router.get("/expenses", response_model=dict)
 async def list_expenses(
     payload: dict = Depends(get_current_token_payload),
 ):
     token = payload.get("_raw_token", "")
     return await get_expenses(token)
+
+
+@router.post("/expenses", response_model=dict, status_code=201)
+async def create_expense_endpoint(
+    body: dict,
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await create_expense(token, body)
+
+
+@router.delete("/expenses/{expense_id}", status_code=204)
+async def delete_expense_endpoint(
+    expense_id: int,
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    await delete_expense(token, expense_id)
+
+
+@router.post("/expenses/from-po", response_model=dict, status_code=201)
+async def create_expense_from_po_endpoint(
+    body: dict,
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await create_expense_from_po(token, body)
 
 
 @router.get("/ledger", response_model=dict)
@@ -303,3 +370,92 @@ async def list_reports(
 ):
     token = payload.get("_raw_token", "")
     return await get_reports(token)
+
+
+@router.get("/aging", response_model=dict)
+async def list_aging(
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await get_aging(token)
+
+
+@router.get("/dunning", response_model=dict)
+async def list_dunning(
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await get_dunning(token)
+
+
+# ─── Bank Reconciliation ────────────────────────────────────
+
+@router.post("/bank-reconciliation/import", response_model=dict, status_code=201)
+async def import_bank_csv_endpoint(
+    body: dict,
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await import_bank_csv(token, body)
+
+
+@router.get("/bank-reconciliation/transactions", response_model=dict)
+async def list_bank_transactions(
+    batch: str | None = None,
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await get_bank_transactions(token, batch)
+
+
+@router.post("/bank-reconciliation/match", response_model=dict)
+async def match_bank_transaction_endpoint(
+    body: dict,
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await match_bank_transaction(token, body)
+
+
+@router.get("/bank-reconciliation/reports", response_model=dict)
+async def list_bank_reports(
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await get_bank_reports(token)
+
+
+# ─── Month-End Close / Fiscal Periods ───────────────────────
+
+@router.get("/periods", response_model=dict)
+async def list_periods(
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await get_periods(token)
+
+
+@router.post("/periods/{period_id}/close", response_model=dict)
+async def close_period_endpoint(
+    period_id: int,
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await close_period(token, period_id)
+
+
+@router.post("/periods/{period_id}/reopen", response_model=dict)
+async def reopen_period_endpoint(
+    period_id: int,
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await reopen_period(token, period_id)
+
+
+@router.get("/periods/status", response_model=dict)
+async def get_periods_status_endpoint(
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await get_periods_status(token)

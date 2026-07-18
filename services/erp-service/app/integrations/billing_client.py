@@ -65,6 +65,10 @@ async def create_invoice(token: str, body: dict) -> dict:
     return await _post("/invoices", token, body)
 
 
+async def create_invoice_from_dispatch(token: str, body: dict) -> dict:
+    return await _post("/invoices/from-dispatch", token, body)
+
+
 async def update_invoice_status(token: str, invoice_id: int, status: str) -> dict:
     return await _put(f"/invoices/{invoice_id}/status", token, {"status": status})
 
@@ -164,6 +168,10 @@ async def create_recurring_invoice(token: str, body: dict) -> dict:
     return await _post("/invoices/recurring", token, body)
 
 
+async def update_recurring_invoice(token: str, rec_id: int, body: dict) -> dict:
+    return await _put(f"/invoices/recurring/{rec_id}", token, body)
+
+
 async def delete_recurring_invoice(token: str, rec_id: int) -> None:
     await _delete(f"/invoices/recurring/{rec_id}", token)
 
@@ -197,9 +205,74 @@ async def get_expenses(token: str) -> dict:
     return await _get("/expenses", token)
 
 
+async def create_account(token: str, body: dict) -> dict:
+    return await _post("/accounts", token, body)
+
+
+async def update_account(token: str, account_id: int, body: dict) -> dict:
+    return await _put(f"/accounts/{account_id}", token, body)
+
+
+async def create_expense(token: str, body: dict) -> dict:
+    return await _post("/expenses", token, body)
+
+
+async def delete_expense(token: str, expense_id: int) -> None:
+    await _delete(f"/expenses/{expense_id}", token)
+
+
+async def create_expense_from_po(token: str, body: dict) -> dict:
+    return await _post("/expenses/from-po", token, body)
+
+
 async def get_ledger(token: str) -> dict:
     return await _get("/ledger", token)
 
 
 async def get_reports(token: str) -> dict:
     return await _get("/reports", token)
+
+
+async def get_aging(token: str) -> dict:
+    return await _get("/aging", token)
+
+
+async def get_dunning(token: str) -> dict:
+    return await _get("/dunning", token)
+
+
+# ─── Bank Reconciliation ────────────────────────────────────
+
+async def import_bank_csv(token: str, body: dict) -> dict:
+    return await _post("/bank-reconciliation/import", token, body)
+
+
+async def get_bank_transactions(token: str, batch: str | None = None) -> dict:
+    params = {"batch": batch} if batch else None
+    return await _get("/bank-reconciliation/transactions", token, params)
+
+
+async def match_bank_transaction(token: str, body: dict) -> dict:
+    return await _post("/bank-reconciliation/match", token, body)
+
+
+async def get_bank_reports(token: str) -> dict:
+    return await _get("/bank-reconciliation/reports", token)
+
+
+# ─── Month-End Close / Fiscal Periods ───────────────────────
+
+async def get_periods(token: str) -> dict:
+    return await _get("/periods", token)
+
+
+async def close_period(token: str, period_id: int) -> dict:
+    return await _post(f"/periods/{period_id}/close", token)
+
+
+async def reopen_period(token: str, period_id: int) -> dict:
+    return await _post(f"/periods/{period_id}/reopen", token)
+
+
+async def get_periods_status(token: str) -> dict:
+    return await _get("/periods/status", token)

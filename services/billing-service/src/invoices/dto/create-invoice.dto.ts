@@ -30,6 +30,11 @@ export class CreateInvoiceItemDto {
   @IsNumber()
   @Min(0)
   gstRate!: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  costPrice?: number;
 }
 
 export class CreateInvoiceDto {

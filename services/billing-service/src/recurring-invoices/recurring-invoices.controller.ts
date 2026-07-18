@@ -48,6 +48,16 @@ export class RecurringInvoicesController {
     return this.recurringInvoicesService.create(user.organization_id, dto);
   }
 
+  @Put(":id")
+  @Permissions("invoices.edit")
+  async update(
+    @Param("id", ParseIntPipe) id: number,
+    @Body() dto: Partial<CreateRecurringInvoiceDto> & { status?: "active" | "paused" | "completed" },
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return this.recurringInvoicesService.update(id, user.organization_id, dto);
+  }
+
   @Delete(":id")
   @Permissions("invoices.delete")
   async remove(

@@ -1,37 +1,73 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { Search, Plus, Receipt, Download, Trash2, AlertTriangle } from "lucide-react";
+import { Search, Plus, Receipt, Download, Trash2, AlertTriangle, Loader2, Wallet, Building2, CalendarDays } from "lucide-react";
 import { api } from "@/services/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+} from "@/components/ui/dialog";
 import { money } from "@/utils/format";
 import { LoadingSpinner } from "@/components/shared/loading-spinner";
 import type { Expense } from "@/types/accounting";
 import ExpensesLoading from "./loading";
+
+const categoryColors: Record<string, string> = {
+  "Office Supplies": "#16a34a",
+  "Utilities": "#2563eb",
+  "Rent": "#d97706",
+  "Travel": "#7c3aed",
+  "Salary": "#dc2626",
+  "Marketing": "#ea580c",
+  "Software": "#0891b2",
+  "Insurance": "#4f46e5",
+  "Maintenance": "#65a30d",
+  "Food": "#ca8a04",
+};
+
+function getCategoryColor(cat: string): string {
+  return categoryColors[cat] || "#6b7280";
+}
 
 export default function Expenses() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [createOpen, setCreateOpen] = useState(false);
+  const [deleting, setDeleting] = useState<number | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [formAmount, setFormAmount] = useState("");
+  const [formCategory, setFormCategory] = useState("");
+  const [formDescription, setFormDescription] = useState("");
+  const [formPaidTo, setFormPaidTo] = useState("");
+  const [formDate, setFormDate] = useState("");
+  const [formMethod, setFormMethod] = useState("Bank Transfer");
+  const [formRef, setFormRef] = useState("");
+  const [accounts, setAccounts] = useState<{ id: number; code: string; name: string }[]>([]);
 
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const d = await api.get<{ expenses: Expense[] }>("/expenses");
-        setExpenses(d.expenses);
-      } catch {
-        setError("Failed to load expenses");
-      } finally {
-        setLoading(false);
-      }
+  const loadData = async () => {
+    setLoading(true);
+    try {
+      const d = await api.get<{ expenses: Expense[] }>("/expenses");
+      setExpenses(d.expenses);
+    } catch {
+      setError("Failed to load expenses");
+    } finally {
+      setLoading(false);
     }
-    fetchData();
-  }, []);
+  };
+
+  useEffect(() => { loadData(); }, []);
 
   const filtered = useMemo(() => {
     if (!search.trim()) return expenses;
@@ -53,6 +89,49 @@ export default function Expenses() {
     return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
   }).reduce((s, e) => s + e.amount, 0);
 
+  const handleCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formAmount) return;
+    setSaving(true);
+    try {
+      await api.post("/expenses", {
+        amount: Number(formAmount),
+        category: formCategory || undefined,
+        description: formDescription || undefined,
+        account_code: "6000",
+        date: formDate || undefined,
+        payment_method: formMethod,
+        reference: formRef || undefined,
+      });
+      setCreateOpen(false);
+      setFormAmount(""); setFormCategory(""); setFormDescription(""); setFormDate(""); setFormRef("");
+      loadData();
+    } catch {
+      // handled by api interceptor
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = async (id: number) => {
+    setDeleting(id);
+    try {
+      await api.delete(`/expenses/${id}`);
+      loadData();
+    } catch {
+      // handled by api interceptor
+    } finally {
+      setDeleting(null);
+    }
+  };
+
+  const summaryCards = [
+    { label: "Total Expenses", value: money(totalAmount), subtitle: `${expenses.length} entries`, gradient: "from-[--shell-brand]/5" },
+    { label: "This Month", value: money(thisMonth), subtitle: new Date().toLocaleString("default", { month: "long", year: "numeric" }), gradient: "from-[--shell-accent]/5" },
+    { label: "Pending", value: money(pendingAmount), subtitle: `${expenses.filter((e) => e.status === "pending").length} unpaid`, gradient: "from-amber-500/5" },
+    { label: "Categories", value: String(new Set(expenses.map((e) => e.category)).size), subtitle: "distinct categories", gradient: "from-blue-500/5" },
+  ];
+
   if (loading) return <ExpensesLoading />;
 
   return (
@@ -66,7 +145,7 @@ export default function Expenses() {
             Track and manage business expenses
           </p>
         </div>
-        <Button className="bg-[--shell-brand] hover:bg-[--shell-brand]/90 text-white" size="sm">
+        <Button className="bg-[--shell-brand] hover:bg-[--shell-brand]/90 text-white" size="sm" onClick={() => setCreateOpen(true)}>
           <Plus className="mr-1.5 h-3.5 w-3.5" />
           Add Expense
         </Button>
@@ -80,24 +159,20 @@ export default function Expenses() {
       )}
 
       <div className="grid grid-cols-4 gap-3">
-        {[
-          { label: "Total Expenses", value: money(totalAmount), subtitle: `${expenses.length} entries` },
-          { label: "This Month", value: money(thisMonth), subtitle: "August 2024" },
-          { label: "Pending", value: money(pendingAmount), subtitle: `${expenses.filter((e) => e.status === "pending").length} unpaid`, isAction: true },
-          { label: "Categories", value: String(new Set(expenses.map((e) => e.category)).size), subtitle: "distinct categories" }
-        ].map((item, idx) => (
+        {summaryCards.map((item, idx) => (
           <div
             key={item.label}
-            className="animate-kpi flex flex-col gap-1.5 rounded-xl border border-[--shell-border] bg-[--shell-surface] p-4.5 transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1)]"
+            className="animate-kpi relative flex flex-col gap-1.5 rounded-xl border border-[--shell-border] bg-[--shell-surface] p-4.5 transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1)] overflow-hidden"
             style={{ animationDelay: `${idx * 0.05}s` }}
           >
-            <span className="text-xs font-medium uppercase tracking-[0.08em] text-[--shell-muted]">
+            <div className={`absolute inset-0 bg-gradient-to-br ${item.gradient} pointer-events-none`} />
+            <span className="relative z-10 text-xs font-medium uppercase tracking-[0.08em] text-[--shell-muted]">
               {item.label}
             </span>
-            <span className={`font-heading text-lg font-semibold tracking-tight ${item.isAction ? "text-[--shell-brand]" : "text-[--shell-foreground]"}`}>
+            <span className={`relative z-10 font-heading text-lg font-semibold tracking-tight ${item.label === "Pending" ? "text-[--shell-brand]" : "text-[--shell-foreground]"}`}>
               {item.value}
             </span>
-            <span className="text-xs text-[--shell-muted]">{item.subtitle}</span>
+            <span className="relative z-10 text-xs text-[--shell-muted]">{item.subtitle}</span>
           </div>
         ))}
       </div>
@@ -135,7 +210,14 @@ export default function Expenses() {
                 <TableRow key={e.id}>
                   <TableCell className="font-mono text-xs text-[--shell-muted]">{e.date}</TableCell>
                   <TableCell>
-                    <Badge variant="outline" className="text-xs">{e.category}</Badge>
+                    <Badge
+                      variant="outline"
+                      className="text-xs gap-1.5"
+                      style={{ borderColor: `${getCategoryColor(e.category)}30`, color: getCategoryColor(e.category) }}
+                    >
+                      <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: getCategoryColor(e.category) }} />
+                      {e.category}
+                    </Badge>
                   </TableCell>
                   <TableCell className="text-xs text-[--shell-foreground] max-w-sm truncate">{e.description}</TableCell>
                   <TableCell className="text-xs text-[--shell-muted]">{e.paid_to}</TableCell>
@@ -152,11 +234,11 @@ export default function Expenses() {
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center justify-end gap-1">
-                      <Button variant="ghost" size="icon-sm">
+                      <Button variant="ghost" size="icon-sm" title="Download receipt" onClick={() => alert("Receipt download not yet implemented")}>
                         <Download className="h-3 w-3" />
                       </Button>
-                      <Button variant="ghost" size="icon-sm">
-                        <Trash2 className="h-3 w-3 text-[--shell-danger]" />
+                      <Button variant="ghost" size="icon-sm" onClick={() => handleDelete(e.id)} disabled={deleting === e.id}>
+                        {deleting === e.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Trash2 className="h-3 w-3 text-[--shell-danger]" />}
                       </Button>
                     </div>
                   </TableCell>
@@ -166,6 +248,75 @@ export default function Expenses() {
           </Table>
         </CardContent>
       </Card>
+
+      {/* Add Expense Dialog */}
+      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Expense</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleCreate} className="space-y-5">
+            <div className="rounded-lg border border-[--shell-border] bg-[--shell-surface] p-4">
+              <div className="mb-3 flex items-center gap-2">
+                <Wallet className="h-3.5 w-3.5 text-[--shell-brand]" />
+                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[--shell-foreground]">Expense Details</span>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Amount (₹)</Label>
+                  <Input type="number" min={0.01} step={0.01} placeholder="0.00" required value={formAmount} onChange={(e) => setFormAmount(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Category</Label>
+                  <Input placeholder="e.g. Office Supplies" value={formCategory} onChange={(e) => setFormCategory(e.target.value)} />
+                </div>
+              </div>
+              <div className="mt-4 space-y-2">
+                <Label>Description</Label>
+                <Textarea rows={2} placeholder="What was this expense for?" value={formDescription} onChange={(e) => setFormDescription(e.target.value)} />
+              </div>
+            </div>
+
+            <div className="rounded-lg border border-[--shell-border] bg-[--shell-surface] p-4">
+              <div className="mb-3 flex items-center gap-2">
+                <CalendarDays className="h-3.5 w-3.5 text-[--shell-accent]" />
+                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[--shell-foreground]">Payment Info</span>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Date</Label>
+                  <Input type="date" value={formDate} onChange={(e) => setFormDate(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Payment Method</Label>
+                  <Select value={formMethod} onValueChange={(v) => v !== null && setFormMethod(v)}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Bank Transfer">Bank Transfer</SelectItem>
+                      <SelectItem value="UPI">UPI</SelectItem>
+                      <SelectItem value="Credit Card">Credit Card</SelectItem>
+                      <SelectItem value="Cash">Cash</SelectItem>
+                      <SelectItem value="Cheque">Cheque</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="mt-4 space-y-2">
+                <Label>Reference / Bill #</Label>
+                <Input placeholder="Bill number or reference" value={formRef} onChange={(e) => setFormRef(e.target.value)} />
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setCreateOpen(false)}>Cancel</Button>
+              <Button type="submit" disabled={saving} className="bg-[--shell-brand] hover:bg-[--shell-brand]/90 text-white">
+                {saving && <Loader2 className="mr-1 h-4 w-4 animate-spin" />}
+                Add Expense
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -11,6 +11,18 @@ import { CreatePaymentDto } from "./dto/create-payment.dto";
 export class PaymentsService {
   constructor(private readonly prisma: PrismaService) {}
 
+  private async getAccountIds(organizationId: number) {
+    const accounts = await this.prisma.account.findMany({
+      where: { organizationId, code: { in: ["1001", "1002"] } },
+      select: { code: true, id: true },
+    });
+    const map = new Map(accounts.map((a) => [a.code, a.id]));
+    return {
+      cashBankId: map.get("1001"),
+      arId: map.get("1002"),
+    };
+  }
+
   async findAll(organizationId: number) {
     const payments = await this.prisma.payment.findMany({
       where: { organizationId },
@@ -41,6 +53,8 @@ export class PaymentsService {
   }
 
   async create(organizationId: number, dto: CreatePaymentDto) {
+    const { cashBankId, arId } = await this.getAccountIds(organizationId);
+
     return this.prisma.$transaction(async (tx) => {
       const invoice = await tx.invoice.findFirst({
         where: { id: dto.invoiceId, organizationId },
@@ -79,11 +93,42 @@ export class PaymentsService {
         },
       });
 
+      if (cashBankId && arId) {
+        const entryDate = dto.paymentDate ? new Date(dto.paymentDate) : new Date();
+        const desc = `Payment received for ${invoice.invoiceNumber ?? `Invoice #${dto.invoiceId}`}`;
+        await tx.ledgerEntry.createMany({
+          data: [
+            {
+              organizationId,
+              accountId: cashBankId,
+              entryDate,
+              description: desc,
+              debit: new Prisma.Decimal(dto.amount),
+              credit: 0,
+              referenceType: "Payment",
+              referenceId: payment.id,
+            },
+            {
+              organizationId,
+              accountId: arId,
+              entryDate,
+              description: desc,
+              debit: 0,
+              credit: new Prisma.Decimal(dto.amount),
+              referenceType: "Payment",
+              referenceId: payment.id,
+            },
+          ],
+        });
+      }
+
       return payment;
     });
   }
 
   async refund(id: number, organizationId: number) {
+    const { cashBankId, arId } = await this.getAccountIds(organizationId);
+
     return this.prisma.$transaction(async (tx) => {
       const payment = await tx.payment.findFirst({
         where: { id, organizationId },
@@ -123,6 +168,35 @@ export class PaymentsService {
             },
           });
         }
+      }
+
+      if (cashBankId && arId) {
+        const entryDate = payment.paymentDate ?? new Date();
+        const desc = `Payment refunded — ${payment.referenceId ?? `Payment #${id}`}`;
+        await tx.ledgerEntry.createMany({
+          data: [
+            {
+              organizationId,
+              accountId: cashBankId,
+              entryDate,
+              description: desc,
+              debit: 0,
+              credit: new Prisma.Decimal(Number(payment.amount)),
+              referenceType: "Refund",
+              referenceId: id,
+            },
+            {
+              organizationId,
+              accountId: arId,
+              entryDate,
+              description: desc,
+              debit: new Prisma.Decimal(Number(payment.amount)),
+              credit: 0,
+              referenceType: "Refund",
+              referenceId: id,
+            },
+          ],
+        });
       }
 
       return { message: "Payment refunded successfully" };

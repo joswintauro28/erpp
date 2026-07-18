@@ -1,5 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
+import { Prisma } from "@prisma/client";
 
 @Injectable()
 export class AccountingService {
@@ -78,61 +79,267 @@ export class AccountingService {
   }
 
   async getReports(organizationId: number) {
-    const accounts = await this.prisma.account.findMany({
-      where: { organizationId },
+    const monthNames = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+    const key = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+    const label = (k: string) => {
+      const m = parseInt(k.split("-")[1], 10);
+      return monthNames[m - 1] ?? k;
+    };
+
+    const [invoices, expenses, accounts, invoiceItems] = await Promise.all([
+      this.prisma.invoice.findMany({
+        where: {
+          organizationId,
+          status: { in: ["paid", "sent", "partially_paid", "overdue"] },
+          issueDate: { not: null },
+        },
+        select: { id: true, total: true, issueDate: true },
+      }),
+      this.prisma.expense.findMany({
+        where: { organizationId },
+        select: { amount: true, date: true },
+      }),
+      this.prisma.account.findMany({
+        where: { organizationId, isActive: true },
+        orderBy: { code: "asc" },
+      }),
+      this.prisma.invoiceItem.findMany({
+        where: {
+          invoice: {
+            organizationId,
+            status: { in: ["paid", "sent", "partially_paid", "overdue"] },
+            issueDate: { not: null },
+          },
+        },
+        select: {
+          quantity: true,
+          costPrice: true,
+          invoice: { select: { issueDate: true } },
+        },
+      }),
+    ]);
+
+    const revenueByMonth: Record<string, number> = {};
+    for (const inv of invoices) {
+      if (!inv.issueDate) continue;
+      const k = key(inv.issueDate);
+      revenueByMonth[k] = (revenueByMonth[k] ?? 0) + Number(inv.total);
+    }
+
+    const cogsByMonth: Record<string, number> = {};
+    for (const item of invoiceItems) {
+      if (!item.invoice.issueDate) continue;
+      const k = key(item.invoice.issueDate);
+      const cost = Number(item.quantity) * Number(item.costPrice);
+      cogsByMonth[k] = (cogsByMonth[k] ?? 0) + cost;
+    }
+
+    const expenseByMonth: Record<string, number> = {};
+    for (const exp of expenses) {
+      const k = key(exp.date);
+      expenseByMonth[k] = (expenseByMonth[k] ?? 0) + Number(exp.amount);
+    }
+
+    const allMonths = [...new Set([...Object.keys(revenueByMonth), ...Object.keys(cogsByMonth), ...Object.keys(expenseByMonth)])].sort();
+
+    const pl = allMonths.map((k) => {
+      const rev = revenueByMonth[k] ?? 0;
+      const cogs = cogsByMonth[k] ?? 0;
+      const exp = expenseByMonth[k] ?? 0;
+      return {
+        month: label(k),
+        revenue: Math.round(rev),
+        cost_of_goods: Math.round(cogs),
+        gross_profit: Math.round(rev - cogs),
+        operating_expenses: Math.round(exp),
+        net_profit: Math.round(rev - cogs - exp),
+      };
     });
 
-    const revenue = accounts
-      .filter((a) => a.type === "Revenue")
-      .reduce((sum, a) => sum + Number(a.balance), 0);
-    const expenses = accounts
-      .filter((a) => a.type === "Expense")
-      .reduce((sum, a) => sum + Number(a.balance), 0);
+    const typeOrder = ["Asset", "Liability", "Equity"] as const;
+    const displayNames: Record<string, string> = {
+      Asset: "Assets",
+      Liability: "Liabilities",
+      Equity: "Equity",
+    };
 
-    const assets = accounts
-      .filter((a) => a.type === "Asset")
-      .reduce((sum, a) => sum + Number(a.balance), 0);
-    const liabilities = accounts
-      .filter((a) => a.type === "Liability")
-      .reduce((sum, a) => sum + Number(a.balance), 0);
-    const equity = accounts
-      .filter((a) => a.type === "Equity")
-      .reduce((sum, a) => sum + Number(a.balance), 0);
+    const balance_sheet = typeOrder.map((type) => {
+      const typeAccounts = accounts.filter((a) => a.type === type);
+      const total = typeAccounts.reduce((s, a) => s + Number(a.balance), 0);
+      return {
+        category: displayNames[type] ?? type,
+        items: [
+          ...typeAccounts.map((a) => ({
+            label: a.name,
+            amount: Math.round(Number(a.balance)),
+          })),
+          { label: `Total ${displayNames[type] ?? type}`, amount: Math.round(total) },
+        ],
+      };
+    });
+
+    return { pl, balance_sheet };
+  }
+
+  async createAccount(organizationId: number, body: any) {
+    const account = await this.prisma.account.create({
+      data: {
+        organizationId,
+        code: body.code,
+        name: body.name,
+        type: body.type ?? "Expense",
+        subType: body.sub_type ?? body.subType ?? null,
+        description: body.description ?? null,
+        balance: body.balance ?? 0,
+      },
+    });
+    return { id: account.id, code: account.code, name: account.name, message: "Account created" };
+  }
+
+  async updateAccount(id: number, organizationId: number, body: any) {
+    const account = await this.prisma.account.findFirst({ where: { id, organizationId } });
+    if (!account) throw new Error("Account not found");
+
+    const data: any = {};
+    if (body.name !== undefined) data.name = body.name;
+    if (body.code !== undefined) data.code = body.code;
+    if (body.type !== undefined) data.type = body.type;
+    if (body.sub_type !== undefined || body.subType !== undefined) data.subType = body.sub_type ?? body.subType;
+    if (body.description !== undefined) data.description = body.description;
+    if (body.is_active !== undefined) data.isActive = body.is_active;
+    if (body.isActive !== undefined) data.isActive = body.isActive;
+
+    const updated = await this.prisma.account.update({ where: { id }, data });
+    return { id: updated.id, code: updated.code, name: updated.name, is_active: updated.isActive, message: "Account updated" };
+  }
+
+  async createExpense(organizationId: number, body: any) {
+    const account = body.account_id
+      ? await this.prisma.account.findFirst({ where: { id: Number(body.account_id), organizationId } })
+      : body.account_code
+        ? await this.prisma.account.findFirst({ where: { code: body.account_code, organizationId } })
+        : null;
+    if (!account) return { error: "Account not found" };
+
+    const expense = await this.prisma.expense.create({
+      data: {
+        organizationId,
+        accountId: account.id,
+        amount: new Prisma.Decimal(body.amount ?? 0),
+        category: body.category ?? null,
+        description: body.description ?? null,
+        date: body.date ? new Date(body.date) : new Date(),
+        paymentMethod: body.payment_method ?? body.paymentMethod ?? null,
+        reference: body.reference ?? null,
+        status: body.status ?? "recorded",
+      },
+    });
+
+    await this.prisma.account.update({
+      where: { id: account.id },
+      data: { balance: { increment: new Prisma.Decimal(body.amount ?? 0) } },
+    });
+
+    return { id: expense.id, amount: Number(expense.amount), message: "Expense recorded" };
+  }
+
+  async deleteExpense(id: number, organizationId: number) {
+    const expense = await this.prisma.expense.findFirst({ where: { id, organizationId } });
+    if (!expense) throw new Error("Expense not found");
+
+    await this.prisma.account.update({
+      where: { id: expense.accountId },
+      data: { balance: { decrement: expense.amount } },
+    });
+
+    await this.prisma.expense.delete({ where: { id } });
+  }
+
+  async createExpenseFromPo(organizationId: number, body: any) {
+    const apAccount = await this.prisma.account.findFirst({
+      where: { organizationId, code: "2001" },
+    });
+    if (!apAccount) {
+      return { error: "Accounts Payable account not found. Please set up your chart of accounts." };
+    }
+
+    const expense = await this.prisma.expense.create({
+      data: {
+        organizationId,
+        accountId: apAccount.id,
+        amount: new Prisma.Decimal(body.total ?? 0),
+        category: body.category ?? "Procurement",
+        description: body.description ?? (body.po_reference ? `PO: ${body.po_reference}` : "Purchase Order"),
+        date: body.date ? new Date(body.date) : new Date(),
+        paymentMethod: body.paymentMethod ?? "Bank_Transfer",
+        reference: body.po_reference ?? "",
+        status: "pending",
+      },
+    });
 
     return {
-      pl: [
-        { month: "Apr", revenue: Math.round(revenue * 0.18), cost_of_goods: Math.round(revenue * 0.06), gross_profit: Math.round(revenue * 0.12), operating_expenses: Math.round(expenses * 0.25), net_profit: Math.round(revenue * 0.12 - expenses * 0.25) },
-        { month: "May", revenue: Math.round(revenue * 0.21), cost_of_goods: Math.round(revenue * 0.07), gross_profit: Math.round(revenue * 0.14), operating_expenses: Math.round(expenses * 0.30), net_profit: Math.round(revenue * 0.14 - expenses * 0.30) },
-        { month: "Jun", revenue: Math.round(revenue * 0.25), cost_of_goods: Math.round(revenue * 0.08), gross_profit: Math.round(revenue * 0.17), operating_expenses: Math.round(expenses * 0.28), net_profit: Math.round(revenue * 0.17 - expenses * 0.28) },
-        { month: "Jul", revenue: Math.round(revenue * 0.36), cost_of_goods: Math.round(revenue * 0.12), gross_profit: Math.round(revenue * 0.24), operating_expenses: Math.round(expenses * 0.17), net_profit: Math.round(revenue * 0.24 - expenses * 0.17) },
-      ],
-      balance_sheet: [
-        {
-          category: "Assets",
-          items: [
-            { label: "Current Assets", amount: Math.round(assets * 0.6) },
-            { label: "Fixed Assets", amount: Math.round(assets * 0.3) },
-            { label: "Investments", amount: Math.round(assets * 0.1) },
-            { label: "Total Assets", amount: Math.round(assets) },
-          ],
-        },
-        {
-          category: "Liabilities",
-          items: [
-            { label: "Current Liabilities", amount: Math.round(liabilities * 0.5) },
-            { label: "Long Term Debt", amount: Math.round(liabilities * 0.5) },
-            { label: "Total Liabilities", amount: Math.round(liabilities) },
-          ],
-        },
-        {
-          category: "Equity",
-          items: [
-            { label: "Share Capital", amount: Math.round(equity * 0.7) },
-            { label: "Retained Earnings", amount: Math.round(equity * 0.3) },
-            { label: "Total Equity", amount: Math.round(equity) },
-          ],
-        },
-      ],
+      id: expense.id,
+      message: "Expense recorded from purchase order",
+      amount: Number(expense.amount),
+      reference: expense.reference,
+      status: expense.status,
     };
+  }
+
+  async getAging(organizationId: number) {
+    const invoices = await this.prisma.invoice.findMany({
+      where: {
+        organizationId,
+        status: { in: ["sent", "partially_paid", "overdue"] },
+        balanceDue: { gt: 0 },
+      },
+      select: {
+        id: true,
+        invoiceNumber: true,
+        clientName: true,
+        total: true,
+        balanceDue: true,
+        dueDate: true,
+        status: true,
+      },
+      orderBy: { dueDate: "asc" },
+    });
+
+    const now = new Date();
+    const buckets = [
+      { label: "Current", minDays: -Infinity, maxDays: 30 },
+      { label: "31-60 Days", minDays: 31, maxDays: 60 },
+      { label: "61-90 Days", minDays: 61, maxDays: 90 },
+      { label: "90+ Days", minDays: 91, maxDays: Infinity },
+    ];
+
+    const aging = buckets.map((bucket) => {
+      const filtered = invoices.filter((inv) => {
+        if (!inv.dueDate) return false;
+        const diff = Math.floor((now.getTime() - inv.dueDate.getTime()) / 86400000);
+        return diff >= bucket.minDays && diff <= bucket.maxDays;
+      });
+
+      return {
+        bucket: bucket.label,
+        min_days: bucket.minDays === -Infinity ? 0 : bucket.minDays,
+        max_days: bucket.maxDays === Infinity ? null : bucket.maxDays,
+        total: filtered.reduce((s, i) => s + Number(i.balanceDue), 0),
+        count: filtered.length,
+        invoices: filtered.map((i) => ({
+          id: i.id,
+          invoice_number: i.invoiceNumber ?? `INV-${i.id}`,
+          client_name: i.clientName,
+          total: Number(i.total),
+          balance_due: Number(i.balanceDue),
+          due_date: i.dueDate?.toISOString().split("T")[0] ?? "",
+          days_overdue: i.dueDate ? Math.max(0, Math.floor((now.getTime() - i.dueDate.getTime()) / 86400000)) : 0,
+          status: i.status,
+        })),
+      };
+    });
+
+    return { aging };
   }
 }

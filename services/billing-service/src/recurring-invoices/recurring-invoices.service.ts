@@ -62,6 +62,35 @@ export class RecurringInvoicesService {
     return this.flatten(item);
   }
 
+  async update(id: number, organizationId: number, dto: Partial<CreateRecurringInvoiceDto> & { status?: "active" | "paused" | "completed" }) {
+    const item = await this.prisma.recurringInvoice.findFirst({
+      where: { id, organizationId },
+    });
+    if (!item) throw new NotFoundException("Recurring invoice not found");
+
+    const data: any = {};
+
+    if (dto.status) data.status = dto.status;
+    if (dto.invoiceNumber) data.templateName = dto.invoiceNumber;
+    if (dto.interval) data.frequency = dto.interval;
+    if (dto.nextInvoiceDate) data.nextRun = new Date(dto.nextInvoiceDate);
+    if (dto.endDate) data.endDate = new Date(dto.endDate);
+    if (dto.items) {
+      data.items = dto.items as any;
+      data.total = dto.items.reduce(
+        (sum, i) => sum + Number(i.quantity) * Number(i.unitPrice),
+        0,
+      );
+    }
+
+    const updated = await this.prisma.recurringInvoice.update({
+      where: { id },
+      data,
+    });
+
+    return this.flatten(updated);
+  }
+
   async remove(id: number, organizationId: number) {
     const item = await this.prisma.recurringInvoice.findFirst({
       where: { id, organizationId },

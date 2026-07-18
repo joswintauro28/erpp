@@ -10,6 +10,9 @@ import { DebitNotesModule } from "./debit-notes/debit-notes.module";
 import { RecurringInvoicesModule } from "./recurring-invoices/recurring-invoices.module";
 import { DashboardModule } from "./dashboard/dashboard.module";
 import { AccountingModule } from "./accounting/accounting.module";
+import { DunningModule } from "./dunning/dunning.module";
+import { BankReconciliationModule } from "./bank-reconciliation/bank-reconciliation.module";
+import { MonthEndCloseModule } from "./month-end-close/month-end-close.module";
 import { AppController } from "./app.controller";
 
 @Module({
@@ -25,6 +28,9 @@ import { AppController } from "./app.controller";
     PaymentsModule,
     DashboardModule,
     AccountingModule,
+    DunningModule,
+    BankReconciliationModule,
+    MonthEndCloseModule,
   ],
   controllers: [AppController],
 })

@@ -2,15 +2,21 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Search, FileText, Eye, Download, Receipt, CreditCard, DollarSign, BadgePercent } from "lucide-react";
+import { Plus, Search, FileText, Eye, Download, Receipt, CreditCard, DollarSign, BadgePercent, Loader2, X, Calculator, Building2, CalendarDays, FileSpreadsheet } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+} from "@/components/ui/dialog";
+import { MultiStepDialog } from "@/components/multi-step-dialog";
 import { money } from "@/utils/format";
 import { api } from "@/services/api";
 import type { ApiInvoice, ApiClientRef, InvoiceListView } from "@/types/billing";
@@ -37,16 +43,16 @@ function SectionHeading({ label }: { label: string }) {
   );
 }
 
-const CHART_VARS = [
-  "var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--chart-4)", "var(--chart-5)",
+const summaryCards = [
+  { key: "taxable_value" as const, icon: Receipt, label: "Taxable Value", gradient: "from-[--shell-brand]/5 to-transparent", idx: 0 },
+  { key: "total_gst" as const, icon: BadgePercent, label: "Total GST", gradient: "from-[--shell-accent]/5 to-transparent", idx: 1 },
+  { key: "total_cgst_sgst" as const, icon: DollarSign, label: "CGST + SGST", gradient: "from-emerald-500/5 to-transparent", idx: 2 },
+  { key: "total_igst" as const, icon: CreditCard, label: "IGST", gradient: "from-blue-500/5 to-transparent", idx: 3 },
+  { key: "total_invoices" as const, icon: FileText, label: "Total Invoices", gradient: "from-purple-500/5 to-transparent", idx: 4 },
 ];
 
-const summaryCards = [
-  { key: "taxable_value" as const, icon: Receipt, label: "Taxable Value", idx: 0 },
-  { key: "total_gst" as const, icon: BadgePercent, label: "Total GST", idx: 1 },
-  { key: "total_cgst_sgst" as const, icon: DollarSign, label: "CGST + SGST", idx: 2 },
-  { key: "total_igst" as const, icon: CreditCard, label: "IGST", idx: 3 },
-  { key: "total_invoices" as const, icon: FileText, label: "Total Invoices", idx: 4 },
+const CHART_VARS = [
+  "var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--chart-4)", "var(--chart-5)",
 ];
 
 export default function Invoices() {
@@ -55,14 +61,26 @@ export default function Invoices() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [createOpen, setCreateOpen] = useState(false);
+  const [clients, setClients] = useState<ApiClientRef[]>([]);
+  const [createStep, setCreateStep] = useState(0);
+  const [saving, setSaving] = useState(false);
+  const [formClientId, setFormClientId] = useState("");
+  const [formDueDate, setFormDueDate] = useState("");
+  const [formGstTreatment, setFormGstTreatment] = useState("registered");
+  const [formPlaceOfSupply, setFormPlaceOfSupply] = useState("");
+  const [formNotes, setFormNotes] = useState("");
+  const [formItems, setFormItems] = useState([{ product: "", description: "", quantity: 1, unit_price: 0, gst_percent: 18 }]);
 
-  useEffect(() => {
+  const loadData = () => {
+    setLoading(true);
     Promise.all([
       api.get<ApiInvoice[]>("/invoices"),
       api.get<ApiClientRef[]>("/clients"),
     ])
       .then(([invData, clientData]) => {
         const clientMap = new Map(clientData.map((c) => [c.id, c.name]));
+        setClients(clientData);
         setInvoices(invData.map((inv) => ({
           id: inv.id,
           invoice_number: inv.invoice_number ?? `INV-${inv.id}`,
@@ -78,7 +96,70 @@ export default function Invoices() {
       })
       .catch(() => setInvoices([]))
       .finally(() => setLoading(false));
-  }, []);
+  };
+
+  useEffect(() => { loadData(); }, []);
+
+  // ─── Live GST calculation for create form ───
+  const liveCalc = useMemo(() => {
+    let subtotal = 0;
+    let cgst = 0;
+    let sgst = 0;
+    let igst = 0;
+    for (const item of formItems) {
+      const lineSubtotal = item.quantity * item.unit_price;
+      subtotal += lineSubtotal;
+      if (formGstTreatment === "registered") {
+        const half = (lineSubtotal * item.gst_percent) / 100 / 2;
+        cgst += half;
+        sgst += half;
+      } else {
+        igst += (lineSubtotal * item.gst_percent) / 100;
+      }
+    }
+    const taxTotal = formGstTreatment === "registered" ? cgst + sgst : igst;
+    return { subtotal, cgst, sgst, igst, taxTotal, grandTotal: subtotal + taxTotal };
+  }, [formItems, formGstTreatment]);
+
+  const handleCreateInvoice = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formClientId || formItems.length === 0) return;
+    setSaving(true);
+    try {
+      await api.post("/invoices", {
+        client_id: Number(formClientId),
+        due_date: formDueDate || undefined,
+        gst_treatment: formGstTreatment,
+        place_of_supply: formPlaceOfSupply || undefined,
+        notes: formNotes || undefined,
+        items: formItems.map((item) => ({
+          product: item.product,
+          description: item.description,
+          quantity: item.quantity,
+          unit_price: item.unit_price,
+          gst_percent: item.gst_percent,
+        })),
+      });
+      setCreateOpen(false);
+      setCreateStep(0);
+      setFormClientId(""); setFormDueDate(""); setFormPlaceOfSupply(""); setFormNotes("");
+      setFormItems([{ product: "", description: "", quantity: 1, unit_price: 0, gst_percent: 18 }]);
+      loadData();
+    } catch {
+      // handled by api interceptor
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const addItem = () => setFormItems([...formItems, { product: "", description: "", quantity: 1, unit_price: 0, gst_percent: 18 }]);
+  const updateItem = (idx: number, field: string, value: any) => {
+    const updated = formItems.map((item, i) => i === idx ? { ...item, [field]: value } : item);
+    setFormItems(updated);
+  };
+  const removeItem = (idx: number) => {
+    if (formItems.length > 1) setFormItems(formItems.filter((_, i) => i !== idx));
+  };
 
   const gstSummary = useMemo(() => ({
     taxable_value: invoices.reduce((s, inv) => s + inv.subtotal, 0),
@@ -114,7 +195,7 @@ export default function Invoices() {
           <h1 className="font-heading text-xl font-semibold tracking-tight text-[--shell-foreground]">Invoices</h1>
           <p className="mt-0.5 text-sm text-[--shell-muted]">Create, manage, and track all client invoices</p>
         </div>
-        <Button className="bg-[--shell-brand] hover:bg-[--shell-brand]/90 text-white"><Plus className="h-4 w-4" /> Create Invoice</Button>
+        <Button className="bg-[--shell-brand] hover:bg-[--shell-brand]/90 text-white" onClick={() => setCreateOpen(true)}><Plus className="h-4 w-4" /> Create Invoice</Button>
       </div>
 
       {/* GST Summary */}
@@ -135,10 +216,11 @@ export default function Invoices() {
               return (
                 <div
                   key={card.key}
-                  className="animate-kpi flex flex-col gap-1.5 rounded-xl border border-[--shell-border] bg-[--shell-surface] p-4.5 transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1)]"
+                  className="animate-kpi relative flex flex-col gap-1.5 rounded-xl border border-[--shell-border] bg-[--shell-surface] p-4.5 transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1)] overflow-hidden"
                   style={{ animationDelay: `${card.idx * 0.05}s` }}
                 >
-                  <div className="flex items-center justify-between">
+                  <div className={`absolute inset-0 bg-gradient-to-br ${card.gradient} pointer-events-none`} />
+                  <div className="relative z-10 flex items-center justify-between">
                     <span className="text-xs font-medium uppercase tracking-[0.08em] text-[--shell-muted]">
                       {card.label}
                     </span>
@@ -146,7 +228,7 @@ export default function Invoices() {
                       <Icon className="h-3.5 w-3.5" style={{ color: CHART_VARS[card.idx] }} />
                     </div>
                   </div>
-                  <span className="font-heading text-lg font-semibold tracking-tight text-[--shell-foreground]">
+                  <span className="relative z-10 font-heading text-lg font-semibold tracking-tight text-[--shell-foreground]">
                     {values[card.key]}
                   </span>
                 </div>
@@ -189,7 +271,7 @@ export default function Invoices() {
                     : "Try adjusting your search or filters."}
                 </p>
                 {invoices.length === 0 && (
-                  <Button size="sm" className="mt-2">
+                  <Button size="sm" className="mt-2" onClick={() => setCreateOpen(true)}>
                     <Plus className="mr-1 h-4 w-4" /> Create Invoice
                   </Button>
                 )}
@@ -238,6 +320,197 @@ export default function Invoices() {
           </CardContent>
         </Card>
       </section>
+
+      {/* Create Invoice Dialog — with live GST calculator */}
+      <MultiStepDialog
+        open={createOpen}
+        onOpenChange={(v) => { if (!v) { setCreateStep(0); setCreateOpen(v); } }}
+        title="Create Invoice"
+        steps={[
+          { title: "Client", description: "Select client and basic invoice settings" },
+          { title: "Items", description: "Add line items with quantities, prices, and GST" },
+        ]}
+        currentStep={createStep}
+        onStepChange={setCreateStep}
+        onSubmit={handleCreateInvoice}
+        submitLabel="Create Invoice"
+        isSubmitting={saving}
+      >
+        {createStep === 0 && (
+          <div className="space-y-5">
+            <div className="rounded-lg border border-[--shell-border] bg-[--shell-surface] p-4">
+              <div className="mb-3 flex items-center gap-2">
+                <Building2 className="h-3.5 w-3.5 text-[--shell-brand]" />
+                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[--shell-foreground]">Client Details</span>
+              </div>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Client</Label>
+                  <Select value={formClientId} onValueChange={(v) => v !== null && setFormClientId(v)}>
+                    <SelectTrigger><SelectValue placeholder="Select client" /></SelectTrigger>
+                    <SelectContent>
+                      {clients.map((c) => (
+                        <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Due Date</Label>
+                  <Input type="date" value={formDueDate} onChange={(e) => setFormDueDate(e.target.value)} />
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-lg border border-[--shell-border] bg-[--shell-surface] p-4">
+              <div className="mb-3 flex items-center gap-2">
+                <FileSpreadsheet className="h-3.5 w-3.5 text-[--shell-accent]" />
+                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[--shell-foreground]">Tax Settings</span>
+              </div>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label>GST Treatment</Label>
+                  <Select value={formGstTreatment} onValueChange={(v) => v !== null && setFormGstTreatment(v)}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="registered">Registered (CGST + SGST)</SelectItem>
+                      <SelectItem value="unregistered">Unregistered (IGST)</SelectItem>
+                      <SelectItem value="consumer">Consumer (IGST)</SelectItem>
+                      <SelectItem value="sez">SEZ (IGST)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Place of Supply</Label>
+                  <Input placeholder="State name" value={formPlaceOfSupply} onChange={(e) => setFormPlaceOfSupply(e.target.value)} />
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-lg border border-[--shell-border] bg-[--shell-surface] p-4">
+              <div className="flex items-center gap-2">
+                <CalendarDays className="h-3.5 w-3.5 text-[--shell-muted]" />
+                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[--shell-foreground]">Notes</span>
+              </div>
+              <div className="mt-3 space-y-2">
+                <Textarea rows={2} placeholder="Optional notes or payment instructions" value={formNotes} onChange={(e) => setFormNotes(e.target.value)} />
+              </div>
+            </div>
+          </div>
+        )}
+        {createStep === 1 && (
+          <div className="space-y-5">
+            <div className="rounded-lg border border-[--shell-brand]/20 bg-[--shell-brand]/5 p-3">
+              <div className="flex items-center gap-2 text-xs text-[--shell-muted]">
+                <Calculator className="h-3.5 w-3.5 text-[--shell-brand]" />
+                <span className="font-medium text-[--shell-foreground]">{formItems.length} item{formItems.length > 1 ? "s" : ""}</span>
+                <span className="mx-1.5 text-[--shell-border]">|</span>
+                <span>Subtotal: <strong className="text-[--shell-foreground]">{money(liveCalc.subtotal)}</strong></span>
+                <span className="mx-1.5 text-[--shell-border]">|</span>
+                <span>Total: <strong className="text-[--shell-foreground]">{money(liveCalc.grandTotal)}</strong></span>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-medium text-[--shell-muted]">Line Items</span>
+              <Button type="button" variant="outline" size="sm" onClick={addItem}>
+                <Plus className="mr-1 h-3 w-3" /> Add Item
+              </Button>
+            </div>
+            {formItems.map((item, idx) => (
+              <div key={idx} className="space-y-3 rounded-lg border border-[--shell-border] bg-[--shell-surface] p-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-medium text-[--shell-brand]">Item {idx + 1}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-[--shell-muted]">
+                      Line: {money(item.quantity * item.unit_price)}
+                    </span>
+                    {formItems.length > 1 && (
+                      <Button type="button" variant="ghost" size="icon-xs" onClick={() => removeItem(idx)} className="h-5 w-5">
+                        <X className="h-3 w-3" />
+                      </Button>
+                    )}
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label className="text-xs">Product / Service</Label>
+                    <Input placeholder="Name" value={item.product} onChange={(e) => updateItem(idx, "product", e.target.value)} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs">Description</Label>
+                    <Input placeholder="Description" value={item.description} onChange={(e) => updateItem(idx, "description", e.target.value)} />
+                  </div>
+                </div>
+                <div className="grid grid-cols-4 gap-3">
+                  <div className="space-y-2">
+                    <Label className="text-xs">Qty</Label>
+                    <Input type="number" min={1} value={item.quantity} onChange={(e) => updateItem(idx, "quantity", Number(e.target.value))} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs">Unit Price</Label>
+                    <Input type="number" min={0} step={0.01} value={item.unit_price} onChange={(e) => updateItem(idx, "unit_price", Number(e.target.value))} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs">GST %</Label>
+                    <Select value={String(item.gst_percent)} onValueChange={(v) => updateItem(idx, "gst_percent", Number(v))}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="0">0%</SelectItem>
+                        <SelectItem value="5">5%</SelectItem>
+                        <SelectItem value="12">12%</SelectItem>
+                        <SelectItem value="18">18%</SelectItem>
+                        <SelectItem value="28">28%</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs">Amount</Label>
+                    <div className="flex h-9 items-center rounded-md border border-[--shell-border] bg-[--shell-bg] px-3 text-sm font-mono text-[--shell-foreground]">
+                      {money(item.quantity * item.unit_price)}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+
+            {/* Live GST Summary */}
+            <div className="rounded-lg border border-[--shell-accent]/20 bg-[--shell-accent]/5 p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <Calculator className="h-3.5 w-3.5 text-[--shell-accent]" />
+                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[--shell-foreground]">Invoice Summary</span>
+              </div>
+              <div className="space-y-1.5 text-sm">
+                <div className="flex justify-between text-[--shell-muted]">
+                  <span>Subtotal</span>
+                  <span className="font-mono text-[--shell-foreground]">{money(liveCalc.subtotal)}</span>
+                </div>
+                {formGstTreatment === "registered" ? (
+                  <>
+                    <div className="flex justify-between text-[--shell-muted]">
+                      <span>CGST (half of GST)</span>
+                      <span className="font-mono text-[--shell-foreground]">{money(liveCalc.cgst)}</span>
+                    </div>
+                    <div className="flex justify-between text-[--shell-muted]">
+                      <span>SGST (half of GST)</span>
+                      <span className="font-mono text-[--shell-foreground]">{money(liveCalc.sgst)}</span>
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex justify-between text-[--shell-muted]">
+                    <span>IGST</span>
+                    <span className="font-mono text-[--shell-foreground]">{money(liveCalc.igst)}</span>
+                  </div>
+                )}
+                <div className="border-t border-[--shell-border] pt-1.5 mt-1.5 flex justify-between font-semibold text-[--shell-foreground]">
+                  <span>Grand Total</span>
+                  <span className="font-mono text-[--shell-brand]">{money(liveCalc.grandTotal)}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </MultiStepDialog>
     </div>
   );
 }

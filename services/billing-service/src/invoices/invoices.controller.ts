@@ -15,6 +15,7 @@ import { Permissions } from "../auth/permissions.decorator";
 import { CurrentUser } from "../auth/current-user.decorator";
 import { InvoicesService } from "./invoices.service";
 import { CreateInvoiceDto } from "./dto/create-invoice.dto";
+import { CreateInvoiceFromDispatchDto } from "./dto/create-invoice-from-dispatch.dto";
 import { UpdateInvoiceStatusDto } from "./dto/update-invoice-status.dto";
 import type { JwtPayload } from "../auth/auth.guard";
 
@@ -45,6 +46,15 @@ export class InvoicesController {
     @CurrentUser() user: JwtPayload,
   ) {
     return this.invoicesService.create(user.organization_id, dto);
+  }
+
+  @Post("from-dispatch")
+  @Permissions("invoices.create")
+  async createFromDispatch(
+    @Body() dto: CreateInvoiceFromDispatchDto,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return this.invoicesService.createFromDispatch(user.organization_id, dto);
   }
 
   @Put(":id/status")

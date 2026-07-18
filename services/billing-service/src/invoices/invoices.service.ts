@@ -23,6 +23,7 @@ export class InvoicesService {
       ...item,
       quantity: this.toNumber(item.quantity),
       unitPrice: this.toNumber(item.unitPrice),
+      costPrice: this.toNumber(item.costPrice),
       gstRate: this.toNumber(item.gstRate),
       amount: this.toNumber(item.amount),
       cgst: this.toNumber(item.cgst),
@@ -107,6 +108,7 @@ export class InvoicesService {
         description: item.description,
         quantity: new Prisma.Decimal(qty),
         unitPrice: new Prisma.Decimal(unitPrice),
+        costPrice: new Prisma.Decimal(item.costPrice ?? 0),
         gstRate: new Prisma.Decimal(gstRate),
         amount: new Prisma.Decimal(amount),
       };
@@ -143,6 +145,68 @@ export class InvoicesService {
       },
     });
 
+    return this.flattenInvoice(raw);
+  }
+
+  async createFromDispatch(organizationId: number, dto: any): Promise<any> {
+    this.logger.log(`Creating invoice from dispatch for client: ${dto.clientName}`);
+
+    const gstTreatment = "intrastate" as const;
+    let subtotal = 0;
+    let cgst = 0, sgst = 0, igst = 0;
+
+    const itemsData = dto.items.map((item: any) => {
+      const qty = Number(item.quantity);
+      const unitPrice = Number(item.unitPrice);
+      const gstRate = Number(item.gstRate);
+      const amount = qty * unitPrice;
+      subtotal += amount;
+
+      if (gstTreatment === "intrastate") {
+        cgst += amount * (gstRate / 2 / 100);
+        sgst += amount * (gstRate / 2 / 100);
+      } else {
+        igst += amount * (gstRate / 100);
+      }
+
+      return {
+        productId: item.productId,
+        description: item.description,
+        quantity: new Prisma.Decimal(qty),
+        unitPrice: new Prisma.Decimal(unitPrice),
+        costPrice: new Prisma.Decimal(item.costPrice ?? 0),
+        gstRate: new Prisma.Decimal(gstRate),
+        amount: new Prisma.Decimal(amount),
+      };
+    });
+
+    const taxTotal = cgst + sgst + igst;
+    const total = subtotal + taxTotal;
+    const now = new Date();
+
+    const raw = await this.prisma.invoice.create({
+      data: {
+        organizationId,
+        clientId: dto.clientId,
+        clientName: dto.clientName,
+        status: "sent",
+        issueDate: now,
+        dueDate: new Date(now.getTime() + 30 * 86400000),
+        subtotal: new Prisma.Decimal(subtotal),
+        cgst: new Prisma.Decimal(cgst),
+        sgst: new Prisma.Decimal(sgst),
+        igst: new Prisma.Decimal(igst),
+        taxTotal: new Prisma.Decimal(taxTotal),
+        total: new Prisma.Decimal(total),
+        balanceDue: new Prisma.Decimal(total),
+        gstTreatment,
+        notes: dto.notes ?? (dto.dispatchReference ? `Auto-generated from dispatch: ${dto.dispatchReference}` : "Auto-generated from dispatch"),
+        items: { create: itemsData },
+      },
+      include: { items: true, payments: true },
+    });
+
+    this.logger.log(`Invoice #${raw.id} created from dispatch`);
     return this.flattenInvoice(raw);
   }
 
