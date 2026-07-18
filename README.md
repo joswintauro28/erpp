@@ -33,6 +33,414 @@ DATAVEX/ERP/ (Root)
 └── AGENTS.md                              # Unified AI Agent instructions & project context hub
 ```
 
+### System Blueprints
+
+#### Technical Architecture Blueprint
+```mermaid
+graph TD
+    %% ==========================================
+    %% CUSTOM STYLES
+    %% ==========================================
+    classDef client fill:#ffffff,stroke:#333,stroke-width:2px,shape:rect,color:#333;
+    classDef iam fill:#f0ebf8,stroke:#b4a7d6,stroke-width:2px,color:#333;
+    classDef marketing fill:#fdf4f5,stroke:#e0a8b4,stroke-width:2px,color:#333;
+    classDef sales fill:#eef5fc,stroke:#a4c2f4,stroke-width:2px,color:#333;
+    classDef inventory fill:#fdf8e7,stroke:#f1c232,stroke-width:2px,color:#333;
+    classDef finance fill:#eef8f2,stroke:#93c47d,stroke-width:2px,color:#333;
+    classDef decision fill:#ffffff,stroke:#666,stroke-width:2px,shape:rhombus,color:#333;
+    classDef database fill:#e8e8e8,stroke:#555,stroke-width:2px,shape:cylinder,color:#333;
+    classDef eventbus fill:#2c3e50,stroke:#000,stroke-width:2px,color:#fff;
+
+    %% ==========================================
+    %% CLIENT & SYSTEM GATEWAY
+    %% ==========================================
+    Client([Web / Mobile / B2B Portals]) --> APIGateway[API Gateway & Load Balancer]
+    
+    subgraph IAM ["Security & Routing (Cross-Cutting)"]
+        APIGateway --> AuthCheck{IAM / RBAC Validation}
+        AuthCheck -. "Token Check" .-> DB_IAM[(erp_iam)]
+        AuthCheck -- "Authorized Request" --> RouteRequest[Service Router]
+    end
+
+    %% ==========================================
+    %% CENTRAL EVENT BUS (The Nervous System)
+    %% ==========================================
+    Kafka((Central Event Bus\nKafka / RabbitMQ)):::eventbus
+
+    %% ==========================================
+    %% DOMAIN 1: CRM & SALES
+    %% ==========================================
+    subgraph CRM ["1. CRM & Order Management (Domain: Sales)"]
+        RouteRequest --> M1(Marketing Campaign)
+        M1 --> M2(Lead Capture)
+        M2 --> M3(Lead Scoring & Nurture)
+        M3 --> M4{MQL Criteria Met?}
+        M4 -- No --> M3
+        M4 -- Yes --> S1(Sales Handoff: MQL to SQL)
+        
+        S1 --> S2(Discovery & Needs Analysis)
+        S2 --> S3(Opportunity Creation)
+        S3 --> S4(Configure, Price, Quote - CPQ)
+        S4 --> S5{Internal Approval Required?}
+        S5 -- Yes --> S6(Manager Approval)
+        S6 -- Rejected --> S4
+        S6 -- Approved --> S7
+        S5 -- No --> S7(Quote Sent to Customer)
+        
+        S7 --> S8{Customer Accepts?}
+        S8 -- Negotiate --> S4
+        S8 -- Yes --> S9(Contract Signed)
+        
+        S9 --> O1(Convert Quote to Sales Order)
+        O1 --> O2{Finance API: Credit Check}
+        O2 -- Fail --> O3(Hold SO / Request Prepayment)
+        O3 -.-> O2
+        O2 -- Pass --> O4(SO Approved & Logged)
+        
+        %% CRM Database Interactions
+        DB_CRM[(erp_crm)]
+        M2 -. "Write Lead" .-> DB_CRM
+        S3 -. "Write Opp" .-> DB_CRM
+        O4 -. "Persist Order" .-> DB_CRM
+    end
+
+    %% Publish SO Created Event
+    O4 ===> |"Publish: Order.Approved"| Kafka
+
+    %% ==========================================
+    %% DOMAIN 2: INVENTORY & SCM
+    %% ==========================================
+    subgraph INV ["2. Supply Chain & Fulfillment (Domain: Operations)"]
+        Kafka ===> |"Subscribe: Order.Approved"| I1(Available to Promise - ATP Check)
+        
+        I1 --> I2{In Stock?}
+        
+        %% Out of Stock Flow (Procure to Pay / Manufacturing)
+        I2 -- No --> I3(Run MRP - Material Requirements)
+        I3 --> I4{Make or Buy?}
+        
+        %% Buy Flow
+        I4 -- Buy --> P1(Purchase Requisition)
+        P1 --> P2(Purchase Order to Vendor)
+        P2 --> P3(Goods Receipt Note - GRN)
+        P3 --> P4(Quality Check)
+        P4 --> P5(Putaway in Warehouse)
+        P5 --> I5
+        
+        %% Make Flow
+        I4 -- Make --> M1_Prod(Create Work Order)
+        M1_Prod --> M2_Prod(Issue Raw Materials)
+        M2_Prod --> M3_Prod(Production Routing)
+        M3_Prod --> M4_Prod(Finished Goods to Warehouse)
+        M4_Prod --> I5
+        
+        %% In Stock / Fulfillment Flow
+        I2 -- Yes --> I5(Hard Allocation of Stock)
+        I5 --> I6(Generate Pick List)
+        I6 --> I7(Wave / Batch Picking)
+        I7 --> I8(Packing & Weighing)
+        I8 --> I9(Generate Shipping Label)
+        I9 --> I10([Dispatch & Proof of Delivery])
+        
+        %% Inventory Database Interactions
+        DB_INV[(erp_inventory)]
+        I1 -. "Query Stock" .-> DB_INV
+        P5 -. "Add Buy Stock" .-> DB_INV
+        M4_Prod -. "Add Make Stock" .-> DB_INV
+        I5 -. "Reserve Stock" .-> DB_INV
+        I10 -. "Deduct Stock" .-> DB_INV
+    end
+
+    %% Publish Dispatch & PO Events
+    I10 ===> |"Publish: Shipment.Dispatched"| Kafka
+    P2 ===> |"Publish: PurchaseOrder.Created"| Kafka
+
+    %% ==========================================
+    %% DOMAIN 3: ACCOUNTS & BILLING
+    %% ==========================================
+    subgraph ACC ["3. Accounts, Billing & GL (Domain: Finance)"]
+        Kafka ===> |"Subscribe: Shipment.Dispatched"| A1(Auto-Generate Sales Invoice)
+        Kafka ===> |"Subscribe: PurchaseOrder.Created"| AP1(Create Accounts Payable - AP)
+        
+        %% Billing Flow
+        A1 --> A2(Apply Taxes & Discounts)
+        A2 --> A3(Invoice Sent to Customer)
+        A3 --> A4(Accounts Receivable AR Increased)
+        
+        A4 --> A5{Payment Received?}
+        A5 -- No, Overdue --> A6(Automated Dunning)
+        A6 --> A5
+        A5 -- Yes --> A7(Payment Gateway / Bank Receipt)
+        A7 --> A8(Match Receipt to Invoice - Clearing)
+        
+        %% General Ledger & Accounting Flow
+        A3 -. "Trigger" .-> F2(Recognize Revenue)
+        Kafka ===> |"Subscribe: Shipment.Dispatched"| F1(Recognize COGS Expense)
+        A8 -. "Trigger" .-> F3(Decrease AR, Increase Cash)
+        
+        F1 & F2 & F3 --> F4(Bank Reconciliation)
+        F4 --> F5(Month-End Close Process)
+        F5 --> F6([Live Dashboard: P&L, Balance Sheet])
+        
+        %% Finance Database Interactions
+        DB_BILL[(erp_billing)]
+        A1 -. "Persist Invoice" .-> DB_BILL
+        A4 -. "Update AR" .-> DB_BILL
+        AP1 -. "Update AP" .-> DB_BILL
+        A8 -. "Log Payment" .-> DB_BILL
+        F5 -. "Update Ledgers" .-> DB_BILL
+    end
+
+    %% Apply Classes
+    class Client client;
+    class APIGateway,AuthCheck,RouteRequest iam;
+    class M1,M2,M3,S1,S2,S3,S4,S6,S7,S9,O1 marketing;
+    class O1,O3,O4 sales;
+    class I1,I3,P1,P2,P3,P4,P5,M1_Prod,M2_Prod,M3_Prod,M4_Prod,I5,I6,I7,I8,I9,I10 inventory;
+    class A1,AP1,A2,A3,A4,A6,A7,A8,F1,F2,F3,F4,F5,F6 finance;
+    class M4,S5,S8,O2,I2,I4,A5 decision;
+    class DB_IAM,DB_CRM,DB_INV,DB_BILL database;
+```
+
+#### Flow & Authentication Blueprint
+```mermaid
+graph TD
+
+    %% Custom Styles
+
+    classDef marketing fill:#fdf4f5,stroke:#e0a8b4,stroke-width:2px,color:#333;
+
+    classDef sales fill:#eef5fc,stroke:#a4c2f4,stroke-width:2px,color:#333;
+
+    classDef inventory fill:#fdf8e7,stroke:#f1c232,stroke-width:2px,color:#333;
+
+    classDef finance fill:#eef8f2,stroke:#93c47d,stroke-width:2px,color:#333;
+
+    classDef decision fill:#ffffff,stroke:#666,stroke-width:2px,shape:rhombus,color:#333;
+
+    classDef database fill:#f3f3f3,stroke:#999,stroke-width:2px,shape:cylinder,color:#333;
+
+
+
+    %% ==========================================
+
+    %% PHASE 1: MARKETING & CRM (Acquisition)
+
+    %% ==========================================
+
+    subgraph CRM ["1. Marketing & CRM (Lead to Opportunity)"]
+
+        M1([Marketing Campaign]) --> M2(Lead Capture)
+
+        M2 --> M3(Lead Scoring & Nurture)
+
+        M3 --> M4{MQL Criteria Met?}
+
+        M4 -- No --> M3
+
+        M4 -- Yes --> S1(Sales Handoff: MQL to SQL)
+
+        
+
+        S1 --> S2(Discovery & Needs Analysis)
+
+        S2 --> S3(Opportunity Creation)
+
+        S3 --> S4(Configure, Price, Quote - CPQ)
+
+        S4 --> S5{Internal Approval Required?}
+
+        S5 -- Yes --> S6(Manager Approval)
+
+        S6 -- Rejected --> S4
+
+        S6 -- Approved --> S7
+
+        S5 -- No --> S7(Quote Sent to Customer)
+
+        
+
+        S7 --> S8{Customer Accepts?}
+
+        S8 -- Negotiate --> S4
+
+        S8 -- Yes --> S9(Contract Signed)
+
+    end
+
+
+
+    %% ==========================================
+
+    %% PHASE 2: SALES & ORDER MANAGEMENT
+
+    %% ==========================================
+
+    subgraph SOM ["2. Order Management (Commitment)"]
+
+        S9 --> O1(Convert Quote to Sales Order - SO)
+
+        O1 --> O2{Finance: Credit Check}
+
+        O2 -- Fail --> O3(Hold SO / Request Prepayment)
+
+        O3 -.-> O2
+
+        O2 -- Pass --> O4(SO Approved & Logged)
+
+        O4 -.-> DB1[(ERP Central Database)]
+
+    end
+
+
+
+    %% ==========================================
+
+    %% PHASE 3: INVENTORY, MRP & SUPPLY CHAIN
+
+    %% ==========================================
+
+    subgraph INV ["3. Supply Chain & Fulfillment (Inventory/Production)"]
+
+        O4 --> I1(Available to Promise - ATP Check)
+
+        I1 --> I2{In Stock?}
+
+        
+
+        %% Out of Stock Flow (Procure to Pay / Manufacturing)
+
+        I2 -- No --> I3(Run MRP - Material Requirements Planning)
+
+        I3 --> I4{Make or Buy?}
+
+        
+
+        %% Buy Flow
+
+        I4 -- Buy --> P1(Purchase Requisition - PR)
+
+        P1 --> P2(Purchase Order - PO to Vendor)
+
+        P2 --> P3(Goods Receipt Note - GRN)
+
+        P3 --> P4(Quality Check)
+
+        P4 --> P5(Putaway in Warehouse)
+
+        P5 --> I5
+
+        
+
+        %% Make Flow
+
+        I4 -- Make --> M1_Prod(Create Work Order)
+
+        M1_Prod --> M2_Prod(Issue Raw Materials)
+
+        M2_Prod --> M3_Prod(Production Routing)
+
+        M3_Prod --> M4_Prod(Finished Goods to Warehouse)
+
+        M4_Prod --> I5
+
+        
+
+        %% In Stock / Fulfillment Flow
+
+        I2 -- Yes --> I5(Hard Allocation of Stock)
+
+        I5 --> I6(Generate Pick List)
+
+        I6 --> I7(Wave / Batch Picking)
+
+        I7 --> I8(Packing & Weighing)
+
+        I8 --> I9(Generate Shipping Label & Waybill)
+
+        I9 --> I10([Dispatch & Proof of Delivery])
+
+        I10 -.-> DB1
+
+    end
+
+
+
+    %% ==========================================
+
+    %% PHASE 4: ACCOUNTS & BILLING (Invoicing)
+
+    %% ==========================================
+
+    subgraph ACC ["4. Accounts Receivable & Billing (Invoicing)"]
+
+        I10 --> A1(Auto-Generate Sales Invoice)
+
+        A1 --> A2(Apply Taxes & Discounts)
+
+        A2 --> A3(Invoice Sent to Customer)
+
+        A3 --> A4(Accounts Receivable AR Increased)
+
+        
+
+        A4 --> A5{Payment Received?}
+
+        A5 -- No, Overdue --> A6(Automated Dunning / Reminders)
+
+        A6 --> A5
+
+        A5 -- Yes --> A7(Payment Gateway / Bank Receipt)
+
+        A7 --> A8(Match Receipt to Invoice - Clearing)
+
+    end
+
+
+
+    %% ==========================================
+
+    %% PHASE 5: GENERAL LEDGER & ACCOUNTING
+
+    %% ==========================================
+
+    subgraph GL ["5. General Ledger & Financials (Reconciliation)"]
+
+        I10 -.-> F1(Recognize COGS Expense)
+
+        A3 -.-> F2(Recognize Revenue)
+
+        A8 -.-> F3(Decrease AR, Increase Cash)
+
+        
+
+        F1 & F2 & F3 --> F4(Bank Reconciliation)
+
+        F4 --> F5(Month-End Close Process)
+
+        F5 --> F6([Live Dashboard: P&L, Balance Sheet, Cash Flow])
+
+        DB1 -.-> F6
+
+    end
+
+
+
+    %% Apply Classes
+
+    class M1,M2,M3,S1,S2,S3,S4,S6,S7,S9,O1 marketing;
+
+    class O1,O3,O4 sales;
+
+    class I1,I3,P1,P2,P3,P4,P5,M1_Prod,M2_Prod,M3_Prod,M4_Prod,I5,I6,I7,I8,I9,I10 inventory;
+
+    class O2,A1,A2,A3,A4,A6,A7,A8,F1,F2,F3,F4,F5,F6 finance;
+
+    class M4,S5,S8,O2,I2,I4,A5 decision;
+
+    class DB1 database; 
+```
+
 ---
 
 ## 2. Dynamic Redirection & Hostnames

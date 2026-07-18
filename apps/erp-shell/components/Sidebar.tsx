@@ -29,7 +29,6 @@ import {
   Mail,
   FileClock,
   LogOut,
-  ExternalLink,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getAccessToken } from "@datavex/auth-middleware";
@@ -64,7 +63,6 @@ const navItems: NavItem[] = [
     children: [
       { name: "Leads Funnel", href: "/crm/leads", icon: UserPlus },
       { name: "Client Accounts", href: "/crm/clients", icon: Users },
-      { name: "Open CRM Workstation", href: process.env.NEXT_PUBLIC_CRM_APP_URL || "http://localhost:3001", icon: ExternalLink },
     ],
   },
 
