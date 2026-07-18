@@ -73,7 +73,7 @@ export default function Payments() {
     Promise.all([
       api.get<any[]>("/payments"),
       api.get<any>("/payments/metrics").catch(() => ({})),
-      api.get<any[]>("/invoices?status=Sent,Overdue,Partially%20Paid").catch(() => []),
+      api.get<any[]>("/invoices?status=sent,partially_paid,overdue").catch(() => []),
     ])
       .then(([pmts, m, invs]) => {
         setPayments(pmts.map((p: any) => ({

@@ -51,6 +51,24 @@ export class AccountingController {
     return this.accountingService.getAging(user.organization_id);
   }
 
+  @Post("ledger")
+  @Permissions("invoices.create")
+  async createLedgerEntry(
+    @Body() body: any,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return this.accountingService.createLedgerEntry(user.organization_id, body);
+  }
+
+  @Get("ledger/customer/:clientId")
+  @Permissions("invoices.view")
+  async getCustomerLedger(
+    @Param("clientId", ParseIntPipe) clientId: number,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return this.accountingService.getCustomerLedger(user.organization_id, clientId);
+  }
+
   @Post("accounts")
   @Permissions("invoices.create")
   async createAccount(

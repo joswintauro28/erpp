@@ -24,7 +24,7 @@ export interface BillingInvoice {
   total: number;
   paid_amount: number;
   balance_due: number;
-  status: "paid" | "pending" | "partially_paid" | "overdue" | "cancelled";
+  status: "paid" | "pending" | "partially_paid" | "overdue" | "void";
   issue_date: string;
   due_date: string;
   notes: string;

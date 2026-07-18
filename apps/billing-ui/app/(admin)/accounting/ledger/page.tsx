@@ -1,41 +1,78 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
-import { LoadingSpinner } from "@/components/shared/loading-spinner";
-import { BookOpen, AlertTriangle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { BookOpen, AlertTriangle, Plus, Loader2 } from "lucide-react";
 import { api } from "@/services/api";
 import { money } from "@/utils/format";
-import type { LedgerEntryView } from "@/types/billing";
+import type { LedgerEntryView, AccountEntry } from "@/types/billing";
 import GeneralLedgerLoading from "./loading";
 
 export default function LedgerPage() {
   const [entries, setEntries] = useState<LedgerEntryView[]>([]);
+  const [accounts, setAccounts] = useState<AccountEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [journalOpen, setJournalOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    async function fetch() {
-      try {
-        const d = await api.get<{ ledger: LedgerEntryView[] }>("/ledger");
-        setEntries(d.ledger);
-      } catch {
-        setError("Failed to load ledger entries");
-      } finally {
-        setLoading(false);
-      }
+  const [formAccountId, setFormAccountId] = useState("");
+  const [formDebit, setFormDebit] = useState("");
+  const [formCredit, setFormCredit] = useState("");
+  const [formDesc, setFormDesc] = useState("");
+  const [formDate, setFormDate] = useState("");
+
+  const load = useCallback(async () => {
+    try {
+      const [ledgerData, accData] = await Promise.all([
+        api.get<{ ledger: LedgerEntryView[] }>("/ledger"),
+        api.get<{ accounts: AccountEntry[] }>("/accounts"),
+      ]);
+      setEntries(ledgerData.ledger);
+      setAccounts(accData.accounts);
+    } catch {
+      setError("Failed to load data");
+    } finally {
+      setLoading(false);
     }
-    fetch();
   }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  const handleCreateJournal = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      await api.post("/ledger", {
+        account_id: Number(formAccountId),
+        debit: Number(formDebit) || 0,
+        credit: Number(formCredit) || 0,
+        description: formDesc || "Manual journal entry",
+        entry_date: formDate || undefined,
+      });
+      setJournalOpen(false);
+      setFormAccountId(""); setFormDebit(""); setFormCredit(""); setFormDesc(""); setFormDate("");
+      load();
+    } catch { /* handled */ } finally { setSaving(false); }
+  };
 
   if (loading) return <GeneralLedgerLoading />;
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold text-foreground">General Ledger</h1>
-        <p className="text-sm text-muted-foreground mt-1">View account transactions and balances</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold text-foreground">General Ledger</h1>
+          <p className="text-sm text-muted-foreground mt-1">View account transactions and balances</p>
+        </div>
+        <Button onClick={() => setJournalOpen(true)}><Plus className="h-4 w-4" /> Manual Journal</Button>
       </div>
 
       {error && (
@@ -86,6 +123,50 @@ export default function LedgerPage() {
           </Table>
         </CardContent>
       </Card>
+
+      <Dialog open={journalOpen} onOpenChange={setJournalOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Manual Journal Entry</DialogTitle></DialogHeader>
+          <form className="space-y-5" onSubmit={handleCreateJournal}>
+            <div className="space-y-2">
+              <Label htmlFor="jl-account">Account</Label>
+              <Select value={formAccountId} onValueChange={(v) => v !== null && setFormAccountId(v)}>
+                <SelectTrigger id="jl-account"><SelectValue placeholder="Select account" /></SelectTrigger>
+                <SelectContent>
+                  {accounts.map((a) => (
+                    <SelectItem key={a.id} value={String(a.id)}>{a.code} — {a.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="jl-debit">Debit (₹)</Label>
+                <Input id="jl-debit" type="number" min={0} step={0.01} placeholder="0.00" value={formDebit} onChange={(e) => setFormDebit(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="jl-credit">Credit (₹)</Label>
+                <Input id="jl-credit" type="number" min={0} step={0.01} placeholder="0.00" value={formCredit} onChange={(e) => setFormCredit(e.target.value)} />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="jl-desc">Description</Label>
+              <Textarea id="jl-desc" rows={2} placeholder="Journal entry description" value={formDesc} onChange={(e) => setFormDesc(e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="jl-date">Date</Label>
+              <Input id="jl-date" type="date" value={formDate} onChange={(e) => setFormDate(e.target.value)} />
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setJournalOpen(false)}>Cancel</Button>
+              <Button type="submit" disabled={saving || !formAccountId || (!formDebit && !formCredit)}>
+                {saving && <Loader2 className="mr-1 h-4 w-4 animate-spin" />}
+                Create Entry
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

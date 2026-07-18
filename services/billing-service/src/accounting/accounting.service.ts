@@ -40,7 +40,7 @@ export class AccountingService {
         category: e.category ?? "General",
         description: e.description ?? "",
         amount: Number(e.amount),
-        status: e.status as "paid" | "pending" | "cancelled",
+        status: e.status as "paid" | "pending" | "void",
         paid_to: e.account.name,
         payment_method: e.paymentMethod ?? "",
         bill_number: e.reference ?? "",
@@ -284,6 +284,108 @@ export class AccountingService {
       amount: Number(expense.amount),
       reference: expense.reference,
       status: expense.status,
+    };
+  }
+
+  async createLedgerEntry(organizationId: number, body: any) {
+    if (!body.account_id && !body.account_code) {
+      return { error: "account_id or account_code is required" };
+    }
+
+    const account = body.account_id
+      ? await this.prisma.account.findFirst({ where: { id: Number(body.account_id), organizationId } })
+      : await this.prisma.account.findFirst({ where: { code: body.account_code, organizationId } });
+
+    if (!account) return { error: "Account not found" };
+
+    const debit = Number(body.debit ?? 0);
+    const credit = Number(body.credit ?? 0);
+
+    if (debit === 0 && credit === 0) {
+      return { error: "Either debit or credit must be greater than zero" };
+    }
+
+    const entry = await this.prisma.ledgerEntry.create({
+      data: {
+        organizationId,
+        accountId: account.id,
+        entryDate: body.entry_date ? new Date(body.entry_date) : new Date(),
+        description: body.description ?? "Manual journal entry",
+        debit: new Prisma.Decimal(debit),
+        credit: new Prisma.Decimal(credit),
+        referenceType: body.reference_type ?? null,
+        referenceId: body.reference_id ?? null,
+      },
+    });
+
+    await this.prisma.account.update({
+      where: { id: account.id },
+      data: { balance: { increment: new Prisma.Decimal(debit - credit) } },
+    });
+
+    return { id: entry.id, message: "Journal entry created" };
+  }
+
+  async getCustomerLedger(organizationId: number, clientId: number) {
+    const invoices = await this.prisma.invoice.findMany({
+      where: { organizationId, clientId, type: "receivable" },
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        invoiceNumber: true,
+        issueDate: true,
+        total: true,
+        paidAmount: true,
+        balanceDue: true,
+        status: true,
+      },
+    });
+
+    const payments = await this.prisma.payment.findMany({
+      where: {
+        organizationId,
+        invoice: { clientId, type: "receivable" },
+      },
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        invoiceId: true,
+        amount: true,
+        paymentDate: true,
+        status: true,
+        referenceId: true,
+        invoice: { select: { invoiceNumber: true } },
+      },
+    });
+
+    const totalInvoiced = invoices.reduce((s, i) => s + Number(i.total), 0);
+    const totalPaid = invoices.reduce((s, i) => s + Number(i.paidAmount), 0);
+
+    return {
+      clientId,
+      summary: {
+        totalInvoiced: Math.round(totalInvoiced * 100) / 100,
+        totalPaid: Math.round(totalPaid * 100) / 100,
+        balanceOutstanding: Math.round((totalInvoiced - totalPaid) * 100) / 100,
+        invoiceCount: invoices.length,
+      },
+      invoices: invoices.map((i) => ({
+        id: i.id,
+        invoice_number: i.invoiceNumber ?? `INV-${i.id}`,
+        date: i.issueDate?.toISOString().split("T")[0] ?? "",
+        total: Number(i.total),
+        paid: Number(i.paidAmount),
+        balance: Number(i.balanceDue),
+        status: i.status,
+      })),
+      payments: payments.map((p) => ({
+        id: p.id,
+        invoice: p.invoice?.invoiceNumber ?? `INV-${p.invoiceId}`,
+        amount: Number(p.amount),
+        date: p.paymentDate?.toISOString().split("T")[0] ?? "",
+        status: p.status,
+        reference: p.referenceId ?? "",
+      })),
     };
   }
 

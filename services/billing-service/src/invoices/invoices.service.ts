@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   ConflictException,
+  BadRequestException,
   Logger,
 } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
@@ -36,6 +37,7 @@ export class InvoicesService {
     return {
       ...invoice,
       subtotal: this.toNumber(invoice.subtotal),
+      discount: this.toNumber(invoice.discount),
       cgst: this.toNumber(invoice.cgst),
       sgst: this.toNumber(invoice.sgst),
       igst: this.toNumber(invoice.igst),
@@ -52,10 +54,20 @@ export class InvoicesService {
     };
   }
 
-  async findAll(organizationId: number): Promise<any[]> {
-    this.logger.log(`Fetching all invoices for org: ${organizationId}`);
+  async findAll(
+    organizationId: number,
+    type?: string,
+    status?: string,
+  ): Promise<any[]> {
+    this.logger.log(`Fetching invoices for org: ${organizationId}`);
+    const where: any = { organizationId };
+    if (type) where.type = type;
+    if (status) {
+      const statuses = status.split(",");
+      where.status = { in: statuses };
+    }
     const invoices = await this.prisma.invoice.findMany({
-      where: { organizationId },
+      where,
       orderBy: { createdAt: "desc" },
       include: {
         items: true,
@@ -114,14 +126,19 @@ export class InvoicesService {
       };
     });
 
+    const discount = Number(dto.discount ?? 0);
+    const taxableValue = subtotal - discount;
     const taxTotal = cgst + sgst + igst;
-    const total = subtotal + taxTotal;
+    const total = taxableValue + taxTotal;
 
     const raw = await this.prisma.invoice.create({
       data: {
         organizationId,
+        type: dto.type ?? "receivable",
         clientId: dto.clientId,
         clientName: dto.clientName,
+        vendorId: dto.vendorId,
+        vendorName: dto.vendorName,
         invoiceNumber: dto.invoiceNumber,
         gstTreatment,
         placeOfSupply: dto.placeOfSupply,
@@ -129,6 +146,8 @@ export class InvoicesService {
         dueDate: dto.dueDate ? new Date(dto.dueDate) : undefined,
         notes: dto.notes,
         subtotal: new Prisma.Decimal(subtotal),
+        discount: new Prisma.Decimal(discount),
+        discountType: dto.discountType ?? null,
         cgst: new Prisma.Decimal(cgst),
         sgst: new Prisma.Decimal(sgst),
         igst: new Prisma.Decimal(igst),
@@ -206,8 +225,28 @@ export class InvoicesService {
       include: { items: true, payments: true },
     });
 
+    await this.writeSentLedgerEntries(this.prisma, organizationId, raw);
+
     this.logger.log(`Invoice #${raw.id} created from dispatch`);
     return this.flattenInvoice(raw);
+  }
+
+  private readonly validTransitions: Record<string, string[]> = {
+    draft: ["sent", "void"],
+    sent: ["partially_paid", "paid", "overdue", "void"],
+    partially_paid: ["paid", "overdue", "void"],
+    overdue: ["paid", "partially_paid", "void"],
+    paid: [],
+    void: [],
+  };
+
+  private assertValidTransition(current: string, next: string) {
+    const allowed = this.validTransitions[current];
+    if (!allowed || !allowed.includes(next)) {
+      throw new BadRequestException(
+        `Cannot transition invoice from "${current}" to "${next}". Allowed transitions: ${(allowed ?? []).join(", ") || "none"}`,
+      );
+    }
   }
 
   async updateStatus(id: number, organizationId: number, status: InvoiceStatus): Promise<any> {
@@ -217,21 +256,79 @@ export class InvoicesService {
     });
     if (!invoice) throw new NotFoundException("Invoice not found");
 
-    if (status === InvoiceStatus.cancelled && Number(invoice.paidAmount) > 0) {
+    this.assertValidTransition(invoice.status, status);
+
+    if (status === InvoiceStatus.void && Number(invoice.paidAmount) > 0) {
       throw new ConflictException(
-        "Cannot cancel an invoice with recorded payments. Issue a credit note instead.",
+        "Cannot void an invoice with recorded payments. Issue a credit note instead.",
       );
     }
 
-    const updated = await this.prisma.invoice.update({
-      where: { id },
-      data: { status },
-      include: {
-        items: true,
-        payments: true,
-      },
+    return this.prisma.$transaction(async (tx) => {
+      const updated = await tx.invoice.update({
+        where: { id },
+        data: { status },
+        include: {
+          items: true,
+          payments: true,
+        },
+      });
+
+      if (status === "sent") {
+        await this.writeSentLedgerEntries(tx, organizationId, updated);
+      }
+
+      return this.flattenInvoice(updated);
     });
-    return this.flattenInvoice(updated);
+  }
+
+  private async writeSentLedgerEntries(
+    tx: any,
+    organizationId: number,
+    invoice: any,
+  ) {
+    const accounts = await tx.account.findMany({
+      where: { organizationId, code: { in: ["1002", "4001"] } },
+      select: { code: true, id: true },
+    });
+    const arId = accounts.find((a: any) => a.code === "1002")?.id;
+    const revenueId = accounts.find((a: any) => a.code === "4001")?.id;
+
+    if (!arId || !revenueId) {
+      this.logger.warn(
+        `Cannot write ledger entries for invoice #${invoice.id}: missing AR (1002) or Revenue (4001) account`,
+      );
+      return;
+    }
+
+    const total = Number(invoice.total);
+    const entryDate = invoice.issueDate ?? new Date();
+    const desc = `Invoice ${invoice.invoiceNumber ?? `#${invoice.id}`} — Revenue recognized`;
+
+    await tx.ledgerEntry.createMany({
+      data: [
+        {
+          organizationId,
+          accountId: arId,
+          entryDate,
+          description: desc,
+          debit: new Prisma.Decimal(total),
+          credit: 0,
+          referenceType: "Invoice",
+          referenceId: invoice.id,
+        },
+        {
+          organizationId,
+          accountId: revenueId,
+          entryDate,
+          description: desc,
+          debit: 0,
+          credit: new Prisma.Decimal(total),
+          referenceType: "Invoice",
+          referenceId: invoice.id,
+        },
+      ],
+    });
   }
 
   async delete(id: number, organizationId: number) {
@@ -245,6 +342,18 @@ export class InvoicesService {
 
   async countByOwner(organizationId: number): Promise<number> {
     return this.prisma.invoice.count({ where: { organizationId } });
+  }
+
+  async sumByType(organizationId: number, type: string): Promise<number> {
+    const result = await this.prisma.invoice.aggregate({
+      where: {
+        organizationId,
+        type: type as any,
+        status: { not: "void" },
+      },
+      _sum: { balanceDue: true },
+    });
+    return Number(result._sum?.balanceDue ?? 0);
   }
 
   async sumRevenue(organizationId: number): Promise<number> {

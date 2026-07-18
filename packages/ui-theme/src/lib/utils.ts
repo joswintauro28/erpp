@@ -28,6 +28,17 @@ export const quotationStatusVariant = (s: string) => {
   return "outline" as const;
 };
 
+export const formatDate = (d: string | null | undefined) => {
+  if (!d) return "-";
+  try {
+    const date = new Date(d);
+    if (isNaN(date.getTime())) return d;
+    return date.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+  } catch {
+    return d;
+  }
+};
+
 export const noteStatusVariant = (s: string) => {
   if (s === "issued") return "default" as const;
   return "outline" as const;

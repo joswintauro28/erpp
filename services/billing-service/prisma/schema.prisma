@@ -11,10 +11,15 @@ datasource db {
 enum InvoiceStatus {
   draft
   sent
-  paid
   partially_paid
+  paid
   overdue
-  cancelled
+  void
+}
+
+enum InvoiceType {
+  receivable
+  payable
 }
 
 enum GstTreatment {
@@ -31,6 +36,8 @@ enum PaymentMethod {
 }
 
 enum PaymentStatus {
+  pending
+  cleared
   completed
   failed
   refunded
@@ -65,13 +72,18 @@ enum RecurringStatus {
 model Invoice {
   id              Int            @id @default(autoincrement())
   organizationId  Int            @map("organization_id")
-  clientId        Int            @map("client_id")
-  clientName      String         @map("client_name")
+  type            InvoiceType    @default(receivable)
+  clientId        Int?           @map("client_id")
+  clientName      String?        @map("client_name")
+  vendorId        Int?           @map("vendor_id")
+  vendorName      String?        @map("vendor_name")
   invoiceNumber   String?        @unique @map("invoice_number")
   status          InvoiceStatus  @default(draft)
   issueDate       DateTime?      @map("issue_date")
   dueDate         DateTime?      @map("due_date")
   subtotal        Decimal        @default(0.00) @db.Decimal(12, 2)
+  discount        Decimal        @default(0.00) @db.Decimal(12, 2)
+  discountType    String?        @map("discount_type")
   cgst            Decimal        @default(0.00) @db.Decimal(12, 2)
   sgst            Decimal        @default(0.00) @db.Decimal(12, 2)
   igst            Decimal        @default(0.00) @db.Decimal(12, 2)
@@ -92,9 +104,13 @@ model Invoice {
   dunningRecords DunningRecord[]
 
   @@index([organizationId])
+  @@index([type])
   @@index([status])
   @@index([dueDate])
+  @@index([organizationId, type])
   @@index([organizationId, status])
+  @@index([clientId])
+  @@index([vendorId])
   @@map("invoices")
 }
 

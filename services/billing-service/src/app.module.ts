@@ -13,6 +13,7 @@ import { AccountingModule } from "./accounting/accounting.module";
 import { DunningModule } from "./dunning/dunning.module";
 import { BankReconciliationModule } from "./bank-reconciliation/bank-reconciliation.module";
 import { MonthEndCloseModule } from "./month-end-close/month-end-close.module";
+import { InternalModule } from "./internal/internal.module";
 import { AppController } from "./app.controller";
 
 @Module({
@@ -31,6 +32,7 @@ import { AppController } from "./app.controller";
     DunningModule,
     BankReconciliationModule,
     MonthEndCloseModule,
+    InternalModule,
   ],
   controllers: [AppController],
 })

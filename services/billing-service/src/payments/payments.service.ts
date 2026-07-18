@@ -52,24 +52,119 @@ export class PaymentsService {
     }));
   }
 
-  async create(organizationId: number, dto: CreatePaymentDto) {
-    const { cashBankId, arId } = await this.getAccountIds(organizationId);
+  async findAllPending(organizationId: number) {
+    const payments = await this.prisma.payment.findMany({
+      where: { organizationId, status: "pending" },
+      orderBy: { createdAt: "desc" },
+      include: {
+        invoice: {
+          select: {
+            invoiceNumber: true,
+            clientName: true,
+          },
+        },
+      },
+    });
 
+    return payments.map((p) => ({
+      id: p.id,
+      paymentId: `PAY-${String(p.id).padStart(4, "0")}`,
+      invoiceId: p.invoiceId,
+      invoiceNumber: p.invoice?.invoiceNumber ?? `INV-${p.invoiceId}`,
+      clientName: p.invoice?.clientName ?? "Unknown",
+      amount: Number(p.amount),
+      method: p.paymentMethod ?? "Unknown",
+      reference: p.referenceId ?? "",
+      date: p.paymentDate?.toISOString().split("T")[0] ?? "",
+      status: p.status,
+    }));
+  }
+
+  async clearPayment(id: number, organizationId: number) {
+    return this.prisma.$transaction(async (tx) => {
+      const payment = await tx.payment.findFirst({
+        where: { id, organizationId },
+      });
+      if (!payment) throw new NotFoundException("Payment not found");
+      if (payment.status !== "pending") {
+        throw new BadRequestException(
+          `Cannot clear payment in "${payment.status}" status. Only pending payments can be cleared.`,
+        );
+      }
+
+      const { cashBankId, arId } = await this.getAccountIds(organizationId);
+
+      await tx.payment.update({
+        where: { id },
+        data: { status: "cleared" },
+      });
+
+      if (payment.invoiceId) {
+        const invoice = await tx.invoice.findUnique({
+          where: { id: payment.invoiceId },
+        });
+        if (invoice) {
+          const paidAmount = Number(invoice.paidAmount) + Number(payment.amount);
+          const total = Number(invoice.total);
+          let newStatus = invoice.status;
+
+          if (paidAmount >= total) {
+            newStatus = "paid";
+          } else if (paidAmount > 0) {
+            newStatus = "partially_paid";
+          }
+
+          const balanceDue = total - paidAmount;
+          await tx.invoice.update({
+            where: { id: payment.invoiceId },
+            data: {
+              paidAmount: new Prisma.Decimal(paidAmount),
+              balanceDue: new Prisma.Decimal(Math.max(0, balanceDue)),
+              status: newStatus,
+            },
+          });
+
+          if (cashBankId && arId) {
+            const entryDate = payment.paymentDate ?? new Date();
+            const desc = `Payment cleared for ${invoice.invoiceNumber ?? `Invoice #${payment.invoiceId}`}`;
+            await tx.ledgerEntry.createMany({
+              data: [
+                {
+                  organizationId,
+                  accountId: cashBankId,
+                  entryDate,
+                  description: desc,
+                  debit: new Prisma.Decimal(Number(payment.amount)),
+                  credit: 0,
+                  referenceType: "Payment",
+                  referenceId: payment.id,
+                },
+                {
+                  organizationId,
+                  accountId: arId,
+                  entryDate,
+                  description: desc,
+                  debit: 0,
+                  credit: new Prisma.Decimal(Number(payment.amount)),
+                  referenceType: "Payment",
+                  referenceId: payment.id,
+                },
+              ],
+            });
+          }
+        }
+      }
+
+      return { message: "Payment cleared successfully", id };
+    });
+  }
+
+  async create(organizationId: number, dto: CreatePaymentDto) {
     return this.prisma.$transaction(async (tx) => {
       const invoice = await tx.invoice.findFirst({
         where: { id: dto.invoiceId, organizationId },
       });
       if (!invoice) throw new NotFoundException("Invoice not found");
-
-      const paidAmount = Number(invoice.paidAmount) + Number(dto.amount);
-      const total = Number(invoice.total);
-      let newStatus = invoice.status;
-
-      if (paidAmount >= total) {
-        newStatus = "paid";
-      } else if (paidAmount > 0) {
-        newStatus = "partially_paid";
-      }
 
       const payment = await tx.payment.create({
         data: {
@@ -80,47 +175,9 @@ export class PaymentsService {
           paymentDate: dto.paymentDate ? new Date(dto.paymentDate) : new Date(),
           referenceId: dto.referenceId,
           notes: dto.notes,
+          status: "pending",
         },
       });
-
-      const balanceDue = total - paidAmount;
-      await tx.invoice.update({
-        where: { id: dto.invoiceId },
-        data: {
-          paidAmount: new Prisma.Decimal(paidAmount),
-          balanceDue: new Prisma.Decimal(Math.max(0, balanceDue)),
-          status: newStatus,
-        },
-      });
-
-      if (cashBankId && arId) {
-        const entryDate = dto.paymentDate ? new Date(dto.paymentDate) : new Date();
-        const desc = `Payment received for ${invoice.invoiceNumber ?? `Invoice #${dto.invoiceId}`}`;
-        await tx.ledgerEntry.createMany({
-          data: [
-            {
-              organizationId,
-              accountId: cashBankId,
-              entryDate,
-              description: desc,
-              debit: new Prisma.Decimal(dto.amount),
-              credit: 0,
-              referenceType: "Payment",
-              referenceId: payment.id,
-            },
-            {
-              organizationId,
-              accountId: arId,
-              entryDate,
-              description: desc,
-              debit: 0,
-              credit: new Prisma.Decimal(dto.amount),
-              referenceType: "Payment",
-              referenceId: payment.id,
-            },
-          ],
-        });
-      }
 
       return payment;
     });

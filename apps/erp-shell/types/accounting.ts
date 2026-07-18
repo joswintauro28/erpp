@@ -28,7 +28,7 @@ export interface Expense {
   category: string;
   description: string;
   amount: number;
-  status: "paid" | "pending" | "cancelled";
+  status: "paid" | "pending" | "void";
   paid_to: string;
   payment_method: string;
   bill_number: string;

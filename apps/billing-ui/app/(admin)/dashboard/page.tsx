@@ -9,7 +9,7 @@ import {
 import {
   ArrowUp, Wallet, Clock, FileText, TrendingUp,
   AlertTriangle, DollarSign, Plus, CreditCard,
-  BarChart3, Receipt, Layers,
+  Receipt, Layers, ArrowDownLeft, ArrowUpRight,
 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -17,7 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { api } from "@/services/api";
 import { money, lakhFormat } from "@/utils/format";
-import type { BillingDashboardData, DashboardSummaryItem, DashboardRecentInvoice, DashboardRevenueTrend } from "@/types/billing";
+import type { BillingDashboardData } from "@/types/billing";
 import DashboardLoading from "./loading";
 
 const STATUS_COLORS: Record<string, string> = {
@@ -26,7 +26,6 @@ const STATUS_COLORS: Record<string, string> = {
   pending: "var(--chart-3)",
   overdue: "var(--shell-danger)",
   draft: "var(--chart-4)",
-  cancelled: "var(--chart-5)",
   void: "var(--chart-4)",
 };
 
@@ -112,9 +111,7 @@ export default function BillingDashboard() {
     fetchDashboard();
   }, []);
 
-  if (loading) {
-    return <DashboardLoading />;
-  }
+  if (loading) return <DashboardLoading />;
 
   if (error && !data) {
     return (
@@ -153,42 +150,14 @@ export default function BillingDashboard() {
       <section>
         <SectionHeading label="Overview" />
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-          <KpiCard
-            label="Total Revenue"
-            value={lakhFormat(d?.total_revenue ?? 0)}
-            subtitle="All time"
-            icon={Wallet}
-            color="var(--chart-1)"
-            index={0}
-            loading={loading}
-          />
-          <KpiCard
-            label="Outstanding"
-            value={lakhFormat(d?.outstanding ?? 0)}
-            subtitle={d?.outstanding ? `${((d.outstanding / Math.max(d.total_revenue, 1)) * 100).toFixed(0)}% of revenue` : "None due"}
-            icon={Clock}
-            color="var(--chart-3)"
-            index={1}
-            loading={loading}
-          />
-          <KpiCard
-            label="Overdue"
-            value={lakhFormat(d?.overdue ?? 0)}
-            subtitle={hasOverdue ? "Requires action" : "All clear"}
-            icon={AlertTriangle}
-            color={hasOverdue ? "var(--shell-danger)" : "var(--chart-2)"}
-            index={2}
-            loading={loading}
-          />
-          <KpiCard
-            label="Total Invoices"
-            value={String(totalInvoices)}
-            subtitle="Issued to date"
-            icon={FileText}
-            color="var(--chart-4)"
-            index={3}
-            loading={loading}
-          />
+          <KpiCard label="Total Revenue" value={lakhFormat(d?.total_revenue ?? 0)} subtitle="All time" icon={Wallet} color="var(--chart-1)" index={0} />
+          <KpiCard label="AR" value={lakhFormat(d?.total_ar ?? 0)} subtitle="Accounts Receivable" icon={ArrowDownLeft} color="var(--chart-2)" index={1} />
+          <KpiCard label="AP" value={lakhFormat(d?.total_ap ?? 0)} subtitle="Accounts Payable" icon={ArrowUpRight} color="var(--chart-3)" index={2} />
+          <KpiCard label="Overdue" value={lakhFormat(d?.overdue ?? 0)} subtitle={hasOverdue ? "Requires action" : "All clear"} icon={AlertTriangle} color={hasOverdue ? "var(--shell-danger)" : "var(--chart-2)"} index={3} />
+        </div>
+        <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
+          <KpiCard label="Outstanding" value={lakhFormat(d?.outstanding ?? 0)} subtitle={d?.outstanding ? `${((d.outstanding / Math.max(d.total_revenue, 1)) * 100).toFixed(0)}% of revenue` : "None due"} icon={Clock} color="var(--chart-4)" index={4} />
+          <KpiCard label="Total Invoices" value={String(totalInvoices)} subtitle="Issued to date" icon={FileText} color="var(--chart-5)" index={5} />
         </div>
       </section>
 
@@ -212,11 +181,7 @@ export default function BillingDashboard() {
         <Card>
           <CardContent>
             <div className="h-[280px]">
-              {loading ? (
-                <div className="flex h-full items-center justify-center">
-                  <div className="h-[240px] w-full shimmer-glow rounded-lg" />
-                </div>
-              ) : d?.revenue_trend && d.revenue_trend.length > 0 ? (
+              {d?.revenue_trend && d.revenue_trend.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={d.revenue_trend} margin={{ top: 8, right: 8, bottom: 0, left: -16 }}>
                     <defs>
@@ -257,25 +222,9 @@ export default function BillingDashboard() {
             </div>
           </CardHeader>
           <CardContent className="pt-4">
-            {loading ? (
-              <div className="grid grid-cols-1 md:grid-cols-12 gap-6 min-h-[300px]">
-                <div className="col-span-12 md:col-span-7 flex items-center justify-center h-[250px] md:h-[280px]">
-                  <div className="h-full w-full shimmer-glow rounded-lg" />
-                </div>
-                <div className="col-span-12 md:col-span-5 space-y-3">
-                  {Array.from({ length: 4 }).map((_, i) => (
-                    <div key={i} className="flex flex-col gap-1.5 p-2">
-                      <div className="h-3 w-24 shimmer-glow rounded" />
-                      <div className="h-1 w-full shimmer-glow rounded" />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ) : d?.summary && d.summary.length > 0 ? (
+            {d?.summary && d.summary.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center min-h-[300px]">
-                {/* Donut Chart */}
                 <div className="col-span-12 md:col-span-7 flex justify-center items-center relative h-[250px] md:h-[280px]">
-                  {/* Glassmorphic Center Label */}
                   <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-0">
                     <div className="flex flex-col items-center justify-center bg-card border border-border rounded-full h-32 w-32">
                       <span className="font-heading text-4xl font-bold tracking-tight text-foreground leading-none">
@@ -310,8 +259,6 @@ export default function BillingDashboard() {
                     </PieChart>
                   </ResponsiveContainer>
                 </div>
-
-                {/* Legend with Progress Bars */}
                 <div className="col-span-12 md:col-span-5 space-y-3">
                   <div className="text-[11px] font-heading font-semibold uppercase tracking-[0.12em] text-muted-foreground border-b border-border/20 pb-1.5 mb-3">
                     Lifecycle Summary
@@ -358,16 +305,7 @@ export default function BillingDashboard() {
             </div>
           </CardHeader>
           <CardContent>
-            {loading ? (
-              <div className="grid grid-cols-2 gap-4">
-                {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="rounded-lg border border-border bg-card p-3.5">
-                    <div className="h-3 w-12 shimmer-glow rounded mb-2" />
-                    <div className="h-6 w-20 shimmer-glow rounded" />
-                  </div>
-                ))}
-              </div>
-            ) : d?.payment_metrics ? (
+            {d?.payment_metrics ? (
               <div className="grid grid-cols-2 gap-4">
                 <div className="rounded-lg border border-border bg-card p-3.5">
                   <p className="text-xs text-muted-foreground">Today</p>
@@ -416,16 +354,7 @@ export default function BillingDashboard() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {loading ? (
-                  Array.from({ length: 4 }).map((_, i) => (
-                    <TableRow key={i}>
-                      <TableCell><div className="h-4 w-20 shimmer-glow rounded" /></TableCell>
-                      <TableCell><div className="h-4 w-28 shimmer-glow rounded" /></TableCell>
-                      <TableCell className="text-right"><div className="h-4 w-16 shimmer-glow rounded ml-auto" /></TableCell>
-                      <TableCell><div className="h-5 w-14 shimmer-glow rounded" /></TableCell>
-                    </TableRow>
-                  ))
-                ) : (d?.recent_invoices ?? []).length === 0 ? (
+                {(d?.recent_invoices ?? []).length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={4} className="text-center text-muted-foreground py-8 text-sm">No invoices yet</TableCell>
                   </TableRow>

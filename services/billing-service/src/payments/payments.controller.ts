@@ -26,6 +26,18 @@ export class PaymentsController {
     return this.paymentsService.findAll(user.organization_id);
   }
 
+  @Get("pending")
+  @Permissions("payments.view")
+  async findPending(@CurrentUser() user: JwtPayload) {
+    return this.paymentsService.findAllPending(user.organization_id);
+  }
+
+  @Get("metrics")
+  @Permissions("payments.view")
+  async getMetrics(@CurrentUser() user: JwtPayload) {
+    return this.paymentsService.getMetrics(user.organization_id);
+  }
+
   @Post()
   @Permissions("payments.create")
   async create(
@@ -35,6 +47,15 @@ export class PaymentsController {
     return this.paymentsService.create(user.organization_id, dto);
   }
 
+  @Post(":id/clear")
+  @Permissions("payments.edit")
+  async clear(
+    @Param("id", ParseIntPipe) id: number,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return this.paymentsService.clearPayment(id, user.organization_id);
+  }
+
   @Post(":id/refund")
   @Permissions("payments.edit")
   async refund(
@@ -42,11 +63,5 @@ export class PaymentsController {
     @CurrentUser() user: JwtPayload,
   ) {
     return this.paymentsService.refund(id, user.organization_id);
-  }
-
-  @Get("metrics")
-  @Permissions("payments.view")
-  async getMetrics(@CurrentUser() user: JwtPayload) {
-    return this.paymentsService.getMetrics(user.organization_id);
   }
 }

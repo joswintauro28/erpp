@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.inspection import inspect
 
-from app.core.deps import get_db, get_current_org_id
+from app.core.deps import get_db, get_current_org_id, get_current_token_payload
 
 from app.customer.models import Customer, Contact, Document
 from app.lead.models import Lead, Opportunity
@@ -12,6 +12,7 @@ from app.interaction.models import Enquiry, SiteVisit, FollowUp, Task, Communica
 from app.service.models import Complaint, Feedback
 from app.ai.models import AIAssistantLog
 from app.dashboard.models import Metric, PipelineStage, Recommendation, HotLead, Report
+from app.core.billing_client import push_sales_invoice_to_billing
 
 router = APIRouter(prefix="/api", tags=["generic"])
 
@@ -109,6 +110,7 @@ async def create_entity(
     payload: dict,
     db: AsyncSession = Depends(get_db),
     user_id: int = Depends(get_current_org_id),
+    token_payload: dict = Depends(get_current_token_payload),
 ):
     if entity_type not in ENTITY_MODEL_MAP:
         raise HTTPException(status_code=404, detail="Entity type not found")
@@ -148,6 +150,20 @@ async def create_entity(
     db.add(db_obj)
     await db.commit()
     await db.refresh(db_obj)
+
+    if entity_type == "sales-orders" and payload.get("status") == "Confirmed":
+        so_dict = {
+            "account": getattr(db_obj, "account", ""),
+            "so_no": getattr(db_obj, "so_no", ""),
+            "value": getattr(db_obj, "value", "0"),
+            "id_str": getattr(db_obj, "id_str", ""),
+        }
+        raw_token = token_payload.get("_raw_token", "")
+        try:
+            await push_sales_invoice_to_billing(raw_token, user_id, so_dict)
+        except Exception:
+            pass
+
     return db_obj
 
 
@@ -158,6 +174,7 @@ async def update_entity(
     payload: dict,
     db: AsyncSession = Depends(get_db),
     user_id: int = Depends(get_current_org_id),
+    token_payload: dict = Depends(get_current_token_payload),
 ):
     if entity_type not in ENTITY_MODEL_MAP:
         raise HTTPException(status_code=404, detail="Entity type not found")
@@ -168,12 +185,28 @@ async def update_entity(
     if not db_obj:
         raise HTTPException(status_code=404, detail="Record not found")
 
+    old_status = getattr(db_obj, "status", None)
+
     for key, value in payload.items():
         if key not in ("id", "id_str", "organization_id"):
             setattr(db_obj, key, value)
 
     await db.commit()
     await db.refresh(db_obj)
+
+    if entity_type == "sales-orders" and payload.get("status") == "Confirmed" and old_status != "Confirmed":
+        so_dict = {
+            "account": getattr(db_obj, "account", ""),
+            "so_no": getattr(db_obj, "so_no", ""),
+            "value": getattr(db_obj, "value", "0"),
+            "id_str": getattr(db_obj, "id_str", ""),
+        }
+        raw_token = token_payload.get("_raw_token", "")
+        try:
+            await push_sales_invoice_to_billing(raw_token, user_id, so_dict)
+        except Exception:
+            pass
+
     return db_obj
 
 

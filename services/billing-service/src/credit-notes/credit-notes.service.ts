@@ -68,7 +68,7 @@ export class CreditNotesService {
       if (creditedAmount >= invoiceTotal) {
         await tx.invoice.update({
           where: { id: dto.invoiceId },
-          data: { status: "cancelled" },
+          data: { status: "void" },
         });
       } else {
         const paid = Number(invoice.paidAmount);

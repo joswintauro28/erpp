@@ -5,6 +5,7 @@ import {
   Put,
   Delete,
   Param,
+  Query,
   Body,
   UseGuards,
   ParseIntPipe,
@@ -26,8 +27,12 @@ export class InvoicesController {
 
   @Get()
   @Permissions("invoices.view")
-  async findAll(@CurrentUser() user: JwtPayload) {
-    return this.invoicesService.findAll(user.organization_id);
+  async findAll(
+    @CurrentUser() user: JwtPayload,
+    @Query("type") type?: string,
+    @Query("status") status?: string,
+  ) {
+    return this.invoicesService.findAll(user.organization_id, type, status);
   }
 
   @Get(":id")

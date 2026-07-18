@@ -10,11 +10,13 @@ export class DashboardService {
   ) {}
 
   async getBillingKpis(organizationId: number) {
-    const [totalRevenue, outstanding, overdue, paymentMetrics, summary, recent, revenueTrend] =
+    const [totalRevenue, outstanding, overdue, totalAR, totalAP, paymentMetrics, summary, recent, revenueTrend] =
       await Promise.all([
         this.invoicesService.sumRevenue(organizationId),
         this.invoicesService.sumOutstanding(organizationId),
         this.invoicesService.sumOverdue(organizationId),
+        this.invoicesService.sumByType(organizationId, "receivable"),
+        this.invoicesService.sumByType(organizationId, "payable"),
         this.paymentsService.getMetrics(organizationId),
         this.invoicesService.getInvoiceSummary(organizationId),
         this.invoicesService.getRecentInvoices(organizationId),
@@ -25,6 +27,8 @@ export class DashboardService {
       totalRevenue,
       outstanding,
       overdue,
+      totalAR,
+      totalAP,
       paymentMetrics,
       summary,
       recentInvoices: recent,

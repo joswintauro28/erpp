@@ -47,7 +47,7 @@ export default function Payments() {
     Promise.all([
       api.get<BillingPayment[]>("/payments"),
       api.get<{ dailyTotal: number; monthlyTotal: number; outstandingTotal: number; totalRefunds: number; failedTransactions: number }>("/payments/metrics"),
-      api.get<any[]>("/invoices?status=Sent,Overdue,Partially%20Paid").catch(() => []),
+      api.get<any[]>("/invoices?status=sent,partially_paid,overdue").catch(() => []),
     ])
       .then(([p, m, invs]) => {
         setPayments(p);

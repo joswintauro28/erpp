@@ -33,3 +33,38 @@ async def push_quotation_to_billing(token: str, crm_quotation: dict) -> dict:
         )
         resp.raise_for_status()
         return resp.json()
+
+
+async def push_sales_invoice_to_billing(
+    token: str,
+    organization_id: int,
+    sales_order: dict,
+) -> dict:
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json",
+    }
+
+    body = {
+        "organizationId": organization_id,
+        "clientId": 0,
+        "clientName": sales_order.get("account", ""),
+        "orderReference": sales_order.get("so_no", sales_order.get("id_str", "")),
+        "items": [
+            {
+                "description": f"Sales Order {sales_order.get('so_no', '')}",
+                "quantity": 1,
+                "unitPrice": float(sales_order.get("value", 0) or 0),
+                "gstRate": 0,
+            }
+        ],
+    }
+
+    async with httpx.AsyncClient(timeout=10.0) as client:
+        resp = await client.post(
+            f"{BILLING_SERVICE_URL}/internal/billing/trigger-sales-invoice",
+            headers=headers,
+            json=body,
+        )
+        resp.raise_for_status()
+        return resp.json()

@@ -25,7 +25,11 @@ export interface InvoiceDetailView {
   invoice_number: string;
   client_id: number;
   client_name: string;
+  type: string;
   total: number;
+  subtotal: number;
+  discount: number;
+  discount_type: string | null;
   paid_amount: number;
   balance_due: number;
   status: string;
@@ -36,6 +40,7 @@ export interface InvoiceDetailView {
   cgst: number;
   sgst: number;
   igst: number;
+  tax_total: number;
   taxable_value: number;
   notes: string;
   items: InvoiceItemView[];
@@ -60,7 +65,9 @@ export interface ApiPayment {
   payment_method: string | null;
   payment_date: string | null;
   reference_id: string | null;
+  reference_number: string | null;
   status: string;
+  created_at: string | null;
 }
 
 export interface ApiInvoice {
@@ -197,6 +204,8 @@ export interface BillingDashboardData {
   total_revenue: number;
   outstanding: number;
   overdue: number;
+  total_ar: number;
+  total_ap: number;
   payment_metrics: DashboardPaymentMetrics;
   summary: DashboardSummaryItem[];
   recent_invoices: DashboardRecentInvoice[];

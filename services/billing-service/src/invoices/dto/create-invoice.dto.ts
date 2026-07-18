@@ -38,11 +38,25 @@ export class CreateInvoiceItemDto {
 }
 
 export class CreateInvoiceDto {
-  @IsNumber()
-  clientId!: number;
-
+  @IsOptional()
   @IsString()
-  clientName!: string;
+  type?: "receivable" | "payable";
+
+  @IsOptional()
+  @IsNumber()
+  clientId?: number;
+
+  @IsOptional()
+  @IsString()
+  clientName?: string;
+
+  @IsOptional()
+  @IsNumber()
+  vendorId?: number;
+
+  @IsOptional()
+  @IsString()
+  vendorName?: string;
 
   @IsOptional()
   @IsString()
@@ -63,6 +77,15 @@ export class CreateInvoiceDto {
   @IsOptional()
   @IsDateString()
   dueDate?: string;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  discount?: number;
+
+  @IsOptional()
+  @IsString()
+  discountType?: string;
 
   @IsOptional()
   @IsString()

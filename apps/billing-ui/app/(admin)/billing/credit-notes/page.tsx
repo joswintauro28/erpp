@@ -1,13 +1,17 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
-import { FileText, Plus } from "lucide-react";
+import { useState, useMemo, useEffect, useCallback } from "react";
+import { FileText, Plus, Loader2, Trash2, Receipt } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { SearchInput } from "@/components/shared/search-input";
-import { LoadingSpinner } from "@/components/shared/loading-spinner";
 import { EmptyState } from "@/components/shared/empty-state";
 import { api } from "@/services/api";
 import { money, noteStatusVariant as statusVariant } from "@/utils/format";
@@ -18,24 +22,72 @@ export default function CreditNotes() {
   const [notes, setNotes] = useState<CreditNote[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [createOpen, setCreateOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState<number | null>(null);
 
-  useEffect(() => {
-    api.get<CreditNote[]>("/invoices/credit-notes")
-      .then(setNotes)
-      .catch(() => setNotes([]))
-      .finally(() => setLoading(false));
+  const [invoices, setInvoices] = useState<{ id: number; number: string; client: string; total: number; balance: number }[]>([]);
+
+  const load = useCallback(() => {
+    setLoading(true);
+    Promise.all([
+      api.get<CreditNote[]>("/invoices/credit-notes"),
+      api.get<any[]>("/invoices?status=sent,partially_paid,overdue").catch(() => []),
+    ]).then(([notesData, invData]) => {
+      setNotes(notesData);
+      setInvoices(invData.map((i) => ({
+        id: i.id,
+        number: i.invoice_number ?? `INV-${i.id}`,
+        client: i.client_name ?? "Unknown",
+        total: Number(i.total),
+        balance: Number(i.balance_due ?? i.total),
+      })));
+    }).catch(() => setNotes([]))
+    .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => { load(); }, [load]);
 
   const filtered = useMemo(() => {
     if (!search.trim()) return notes;
     const q = search.toLowerCase();
-    return notes.filter(
-      (n) =>
-        n.note_number.toLowerCase().includes(q) ||
-        n.invoice_number.toLowerCase().includes(q) ||
-        n.client_name.toLowerCase().includes(q),
-    );
+    return notes.filter((n) =>
+      n.note_number.toLowerCase().includes(q) ||
+      n.invoice_number.toLowerCase().includes(q) ||
+      n.client_name.toLowerCase().includes(q));
   }, [notes, search]);
+
+  // Create form
+  const [formInvoice, setFormInvoice] = useState("");
+  const [formAmount, setFormAmount] = useState("");
+  const [formReason, setFormReason] = useState("");
+
+  const selectedInvoice = useMemo(() => invoices.find((i) => i.number === formInvoice), [formInvoice, invoices]);
+
+  const handleCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formInvoice) return;
+    setSaving(true);
+    try {
+      const inv = invoices.find((i) => i.number === formInvoice);
+      await api.post("/invoices/credit-notes", {
+        invoice_id: inv?.id,
+        amount: Number(formAmount),
+        reason: formReason || undefined,
+      });
+      setCreateOpen(false);
+      setFormInvoice(""); setFormAmount(""); setFormReason("");
+      load();
+    } catch { /* handled */ } finally { setSaving(false); }
+  };
+
+  const handleDelete = async (id: number) => {
+    setDeleting(id);
+    try {
+      await api.delete(`/invoices/credit-notes/${id}`);
+      load();
+    } catch { /* handled */ } finally { setDeleting(null); }
+  };
 
   if (loading) return <CreditNotesLoading />;
 
@@ -46,7 +98,7 @@ export default function CreditNotes() {
           <h1 className="font-heading text-xl font-semibold tracking-tight text-[--shell-foreground]">Credit Notes</h1>
           <p className="mt-0.5 text-sm text-[--shell-muted]">Manage credit notes issued against invoices</p>
         </div>
-        <Button aria-label="Create Credit Note"><Plus className="h-4 w-4" /> Create Credit Note</Button>
+        <Button aria-label="Create Credit Note" onClick={() => setCreateOpen(true)}><Plus className="h-4 w-4" /> Create Credit Note</Button>
       </div>
 
       <SearchInput value={search} onChange={setSearch} placeholder="Search credit notes..." className="max-w-xs" />
@@ -54,10 +106,7 @@ export default function CreditNotes() {
       <Card>
         <CardContent className="p-0">
           {filtered.length === 0 ? (
-            <EmptyState
-              icon={FileText}
-              title={notes.length === 0 ? "No credit notes yet" : "No credit notes match your search"}
-            />
+            <EmptyState icon={FileText} title={notes.length === 0 ? "No credit notes yet" : "No credit notes match your search"} />
           ) : (
             <Table>
               <TableHeader>
@@ -68,6 +117,7 @@ export default function CreditNotes() {
                   <TableHead className="text-right">Amount</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Date</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -77,10 +127,15 @@ export default function CreditNotes() {
                     <TableCell className="font-mono text-xs">{n.invoice_number}</TableCell>
                     <TableCell className="text-[--shell-muted]">{n.client_name}</TableCell>
                     <TableCell className="font-mono text-sm text-right">{money(n.amount)}</TableCell>
-                    <TableCell>
-                      <Badge variant={statusVariant(n.status)} className="capitalize">{n.status}</Badge>
-                    </TableCell>
+                    <TableCell><Badge variant={statusVariant(n.status)} className="capitalize">{n.status}</Badge></TableCell>
                     <TableCell className="text-xs text-[--shell-muted]">{n.date}</TableCell>
+                    <TableCell>
+                      <div className="flex justify-end">
+                        <Button variant="ghost" size="icon-sm" onClick={() => handleDelete(n.id)} disabled={deleting === n.id}>
+                          {deleting === n.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Trash2 className="h-3 w-3 text-[--shell-danger]" />}
+                        </Button>
+                      </div>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -88,6 +143,61 @@ export default function CreditNotes() {
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Create Credit Note</DialogTitle></DialogHeader>
+          <form className="space-y-5" onSubmit={handleCreate}>
+            <div className="rounded-lg border border-[--shell-border] bg-[--shell-surface] p-4">
+              <div className="mb-3 flex items-center gap-2">
+                <Receipt className="h-3.5 w-3.5 text-[--shell-brand]" />
+                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[--shell-foreground]">Invoice Reference</span>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="cn-invoice">Invoice</Label>
+                <Select value={formInvoice} onValueChange={(v) => v !== null && setFormInvoice(v)}>
+                  <SelectTrigger id="cn-invoice"><SelectValue placeholder="Select an invoice" /></SelectTrigger>
+                  <SelectContent>
+                    {invoices.map((inv) => (
+                      <SelectItem key={inv.id} value={inv.number}>
+                        {inv.number} — {inv.client} (Balance: {money(inv.balance)})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              {selectedInvoice && (
+                <div className="mt-3 flex items-center justify-between rounded-md bg-[--shell-bg] px-3 py-2 text-xs">
+                  <span className="text-[--shell-muted]">Invoice Balance</span>
+                  <span className="font-mono font-semibold text-[--shell-brand]">{money(selectedInvoice.balance)}</span>
+                </div>
+              )}
+            </div>
+
+            <div className="rounded-lg border border-[--shell-border] bg-[--shell-surface] p-4">
+              <div className="space-y-2">
+                <Label htmlFor="cn-amount">Amount (₹)</Label>
+                <Input id="cn-amount" type="number" min={0.01} step={0.01} placeholder="0.00" required value={formAmount} onChange={(e) => setFormAmount(e.target.value)} />
+              </div>
+            </div>
+
+            <div className="rounded-lg border border-[--shell-border] bg-[--shell-surface] p-4">
+              <div className="space-y-2">
+                <Label htmlFor="cn-reason">Reason</Label>
+                <Textarea id="cn-reason" rows={2} placeholder="Reason for credit note" value={formReason} onChange={(e) => setFormReason(e.target.value)} />
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setCreateOpen(false)}>Cancel</Button>
+              <Button type="submit" disabled={saving || !formInvoice || !formAmount}>
+                {saving && <Loader2 className="mr-1 h-4 w-4 animate-spin" />}
+                Create Credit Note
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
