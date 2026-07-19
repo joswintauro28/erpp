@@ -86,7 +86,7 @@ async function request<T>(
       });
       if (retryRes.ok) return retryRes.json();
       const retryErr = await retryRes.json().catch(() => ({ detail: "Request failed" }));
-      throw new ApiClientError(retryRes.status, retryErr.detail);
+      throw new ApiClientError(retryRes.status, retryErr.detail || retryErr.message || "Request failed");
     }
 
     setAccessToken(null);
@@ -95,7 +95,7 @@ async function request<T>(
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({ detail: "Request failed" }));
-    throw new ApiClientError(res.status, err.detail || "Request failed");
+    throw new ApiClientError(res.status, err.detail || err.message || "Request failed");
   }
 
   if (res.status === 204) return undefined as T;

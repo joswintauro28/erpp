@@ -27,7 +27,7 @@ export class AuthService {
     });
 
     if (!user) {
-      throw new UnauthorizedException('Invalid email or password');
+      throw new UnauthorizedException('No account found with this email address');
     }
 
     if (!user.isActive) {
@@ -57,7 +57,7 @@ export class AuthService {
         data: updateData,
       });
 
-      throw new UnauthorizedException('Invalid email or password');
+      throw new UnauthorizedException('Incorrect password');
     }
 
     if (user.failedLoginAttempts > 0 || user.lockedUntil) {

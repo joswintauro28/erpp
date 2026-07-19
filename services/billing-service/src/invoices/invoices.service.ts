@@ -360,6 +360,7 @@ export class InvoicesService {
     const result = await this.prisma.invoice.aggregate({
       where: {
         organizationId,
+        type: "receivable",
         status: { in: ["paid", "sent"] },
       },
       _sum: { total: true },
@@ -451,7 +452,7 @@ export class InvoicesService {
     const payments = await this.prisma.payment.findMany({
       where: {
         organizationId,
-        status: "completed",
+        status: "cleared",
         invoice: { organizationId },
       },
       select: {

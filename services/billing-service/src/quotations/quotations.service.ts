@@ -23,6 +23,14 @@ export class QuotationsService {
       valid_until: q.validUntil?.toISOString().split("T")[0] ?? "",
       notes: q.notes ?? "",
       converted_invoice_id: q.convertedInvoiceId ?? undefined,
+      created_at: q.createdAt?.toISOString() ?? null,
+      items: (q.items ?? []).map((i: any) => ({
+        description: i.description,
+        quantity: Number(i.quantity),
+        unit_price: Number(i.unitPrice),
+        gst_rate: Number(i.gstRate),
+        amount: Number(i.amount),
+      })),
     };
   }
 
@@ -37,6 +45,7 @@ export class QuotationsService {
   async findOne(id: number, organizationId: number) {
     const quotation = await this.prisma.quotation.findFirst({
       where: { id, organizationId },
+      include: { items: true },
     });
     if (!quotation) throw new NotFoundException("Quotation not found");
     return this.flatten(quotation);
@@ -58,7 +67,17 @@ export class QuotationsService {
         validUntil: dto.validUntil ? new Date(dto.validUntil) : undefined,
         notes: dto.notes,
         total,
+        items: {
+          create: dto.items.map((item) => ({
+            description: item.description,
+            quantity: Number(item.quantity),
+            unitPrice: Number(item.unitPrice),
+            gstRate: Number(item.gstRate),
+            amount: Number(item.quantity) * Number(item.unitPrice),
+          })),
+        },
       },
+      include: { items: true },
     });
 
     return this.flatten(quotation);
@@ -73,27 +92,48 @@ export class QuotationsService {
       throw new ConflictException("Only draft quotations can be edited");
     }
 
-    const updateData: any = {};
-    if (dto.clientId) updateData.clientId = dto.clientId;
-    if (dto.clientName) updateData.clientName = dto.clientName;
-    if (dto.quotationNumber) updateData.quoteNumber = dto.quotationNumber;
-    if (dto.quotationDate) updateData.issueDate = new Date(dto.quotationDate);
-    if (dto.validUntil) updateData.validUntil = new Date(dto.validUntil);
-    if (dto.notes !== undefined) updateData.notes = dto.notes;
+    return this.prisma.$transaction(async (tx) => {
+      const updateData: any = {};
+      if (dto.clientId) updateData.clientId = dto.clientId;
+      if (dto.clientName) updateData.clientName = dto.clientName;
+      if (dto.quotationNumber) updateData.quoteNumber = dto.quotationNumber;
+      if (dto.quotationDate) updateData.issueDate = new Date(dto.quotationDate);
+      if (dto.validUntil) updateData.validUntil = new Date(dto.validUntil);
+      if (dto.notes !== undefined) updateData.notes = dto.notes;
 
-    if (dto.items && dto.items.length > 0) {
-      updateData.total = dto.items.reduce(
-        (sum, item) => sum + Number(item.quantity) * Number(item.unitPrice),
-        0,
-      );
-    }
+      if (dto.items && dto.items.length > 0) {
+        await tx.quotationItem.deleteMany({ where: { quotationId: id } });
+        const total = dto.items.reduce(
+          (sum, item) => sum + Number(item.quantity) * Number(item.unitPrice),
+          0,
+        );
+        const created = await tx.quotation.update({
+          where: { id },
+          data: {
+            ...updateData,
+            total,
+            items: {
+              create: dto.items.map((item) => ({
+                description: item.description,
+                quantity: Number(item.quantity),
+                unitPrice: Number(item.unitPrice),
+                gstRate: Number(item.gstRate),
+                amount: Number(item.quantity) * Number(item.unitPrice),
+              })),
+            },
+          },
+          include: { items: true },
+        });
+        return this.flatten(created);
+      }
 
-    const updated = await this.prisma.quotation.update({
-      where: { id },
-      data: updateData,
+      const updated = await tx.quotation.update({
+        where: { id },
+        data: updateData,
+        include: { items: true },
+      });
+      return this.flatten(updated);
     });
-
-    return this.flatten(updated);
   }
 
   async updateStatus(id: number, organizationId: number, status: QuotationStatus) {
@@ -105,6 +145,7 @@ export class QuotationsService {
     const updated = await this.prisma.quotation.update({
       where: { id },
       data: { status },
+      include: { items: true },
     });
 
     return this.flatten(updated);

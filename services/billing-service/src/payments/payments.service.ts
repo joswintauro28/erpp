@@ -270,7 +270,7 @@ export class PaymentsService {
         this.prisma.payment.aggregate({
           where: {
             organizationId,
-            status: "completed",
+            status: "cleared",
             paymentDate: { gte: today },
           },
           _sum: { amount: true },
@@ -278,7 +278,7 @@ export class PaymentsService {
         this.prisma.payment.aggregate({
           where: {
             organizationId,
-            status: "completed",
+            status: "cleared",
             paymentDate: { gte: startOfMonth },
           },
           _sum: { amount: true },

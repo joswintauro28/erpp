@@ -20,3 +20,4 @@ export * from "./components/ui/textarea";
 
 // Export common utilities
 export { cn } from "./lib/utils";
+export * from "./components/shared/multi-step-dialog";

@@ -1,33 +1,37 @@
 "use client";
 
 import { useState, useMemo, useEffect, useCallback } from "react";
-import { ClipboardList, Plus, Loader2, X, DollarSign } from "lucide-react";
+import { useRouter } from "next/navigation";
+import {
+  ClipboardList, Plus, Loader2,
+  Eye, Send, Ban, Trash2, Receipt,
+} from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+} from "@/components/ui/dialog";
 import { SearchInput } from "@/components/shared/search-input";
 import { EmptyState } from "@/components/shared/empty-state";
 import { api } from "@/services/api";
-import { money, quotationStatusVariant as statusVariant } from "@/utils/format";
+import { money, formatDate, quotationStatusVariant as statusVariant } from "@/utils/format";
 import type { Quotation } from "@/types/billing";
 import QuotationsLoading from "./loading";
 
 const statusOptions = ["draft", "sent", "accepted", "rejected", "expired"];
 
 export default function Quotations() {
+  const router = useRouter();
   const [quotations, setQuotations] = useState<Quotation[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
-  const [createOpen, setCreateOpen] = useState(false);
-  const [saving, setSaving] = useState(false);
   const [actionLoading, setActionLoading] = useState<number | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null);
+  const [deleteSaving, setDeleteSaving] = useState(false);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -51,39 +55,6 @@ export default function Quotations() {
     return searched.filter((qt) => qt.status === statusFilter);
   }, [quotations, search, statusFilter]);
 
-  // Create form
-  const [formClient, setFormClient] = useState("");
-  const [formValidUntil, setFormValidUntil] = useState("");
-  const [formNotes, setFormNotes] = useState("");
-  const [formItems, setFormItems] = useState([{ description: "", quantity: 1, unitPrice: 0, gstRate: 18 }]);
-
-  const lineTotals = useMemo(() =>
-    formItems.map((item) => (Number(item.quantity) || 0) * (Number(item.unitPrice) || 0)),
-    [formItems]);
-
-  const grandTotal = useMemo(() => lineTotals.reduce((s, v) => s + v, 0), [lineTotals]);
-
-  const handleCreate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSaving(true);
-    try {
-      await api.post("/invoices/quotations", {
-        client_name: formClient,
-        valid_until: formValidUntil || undefined,
-        notes: formNotes || undefined,
-        items: formItems.map((item) => ({
-          description: item.description,
-          quantity: Number(item.quantity) || 0,
-          unit_price: Number(item.unitPrice) || 0,
-          gst_rate: Number(item.gstRate) || 0,
-        })),
-      });
-      setCreateOpen(false);
-      setFormClient(""); setFormValidUntil(""); setFormNotes(""); setFormItems([{ description: "", quantity: 1, unitPrice: 0, gstRate: 18 }]);
-      load();
-    } catch { /* handled */ } finally { setSaving(false); }
-  };
-
   const handleConvert = async (id: number) => {
     setActionLoading(id);
     try {
@@ -100,6 +71,17 @@ export default function Quotations() {
     } catch { /* handled */ } finally { setActionLoading(null); }
   };
 
+  const handleDelete = async (id: number) => {
+    setDeleteSaving(true);
+    try {
+      await api.delete(`/invoices/quotations/${id}`);
+      setDeleteConfirm(null);
+      load();
+    } catch { /* handled */ } finally { setDeleteSaving(false); }
+  };
+
+
+
   if (loading) return <QuotationsLoading />;
 
   return (
@@ -109,7 +91,7 @@ export default function Quotations() {
           <h1 className="font-heading text-xl font-semibold tracking-tight text-[--shell-foreground]">Quotations</h1>
           <p className="mt-0.5 text-sm text-[--shell-muted]">Create and manage client quotations</p>
         </div>
-        <Button aria-label="Create Quotation" onClick={() => setCreateOpen(true)}><Plus className="h-4 w-4" /> Create Quotation</Button>
+        <Button aria-label="Create Quotation" onClick={() => router.push("/billing/quotations/new")}><Plus className="h-4 w-4" /> New Quotation</Button>
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
@@ -145,22 +127,65 @@ export default function Quotations() {
               <TableBody>
                 {filtered.map((qt) => (
                   <TableRow key={qt.id}>
-                    <TableCell><span className="font-mono text-xs font-medium">{qt.quote_number}</span></TableCell>
+                    <TableCell className="cursor-pointer" onClick={() => router.push(`/billing/quotations/${qt.id}`)}>
+                      <span className="font-mono text-xs font-medium hover:text-[--shell-brand] transition-colors">{qt.quote_number}</span>
+                    </TableCell>
                     <TableCell className="text-[--shell-muted]">{qt.client_name}</TableCell>
                     <TableCell className="font-mono text-sm text-right">{money(qt.total)}</TableCell>
                     <TableCell><Badge variant={statusVariant(qt.status)} className="capitalize">{qt.status}</Badge></TableCell>
-                    <TableCell className="text-xs text-[--shell-muted]">{qt.issue_date}</TableCell>
-                    <TableCell className="text-xs text-[--shell-muted]">{qt.valid_until}</TableCell>
+                    <TableCell className="text-xs text-[--shell-muted]">{formatDate(qt.issue_date)}</TableCell>
+                    <TableCell className="text-xs text-[--shell-muted]">{formatDate(qt.valid_until)}</TableCell>
                     <TableCell>
                       <div className="flex items-center justify-end gap-1">
+                        <Button
+                          variant="ghost" size="icon-sm"
+                          onClick={() => router.push(`/billing/quotations/${qt.id}`)}
+                          aria-label="View quotation"
+                          title="View quotation"
+                        >
+                          <Eye className="h-3.5 w-3.5" />
+                        </Button>
                         {qt.status === "draft" && (
-                          <Button variant="ghost" size="icon-sm" onClick={() => handleStatusChange(qt.id, "sent")} disabled={actionLoading === qt.id}>
-                            {actionLoading === qt.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <span className="text-[10px] font-semibold">Send</span>}
+                          <Button
+                            variant="ghost" size="icon-sm"
+                            onClick={() => handleStatusChange(qt.id, "sent")}
+                            disabled={actionLoading === qt.id}
+                            aria-label="Send quotation"
+                            title="Send quotation"
+                          >
+                            {actionLoading === qt.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
+                          </Button>
+                        )}
+                        {qt.status === "sent" && (
+                          <Button
+                            variant="ghost" size="icon-sm"
+                            onClick={() => handleStatusChange(qt.id, "rejected")}
+                            disabled={actionLoading === qt.id}
+                            aria-label="Mark as rejected"
+                            title="Mark as rejected"
+                          >
+                            {actionLoading === qt.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Ban className="h-3.5 w-3.5" />}
                           </Button>
                         )}
                         {qt.status === "accepted" && !qt.converted_invoice_id && (
-                          <Button variant="ghost" size="icon-sm" onClick={() => handleConvert(qt.id)} disabled={actionLoading === qt.id}>
-                            {actionLoading === qt.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <span className="text-[10px] font-semibold">Convert</span>}
+                          <Button
+                            variant="ghost" size="icon-sm"
+                            onClick={() => handleConvert(qt.id)}
+                            disabled={actionLoading === qt.id}
+                            aria-label="Convert to invoice"
+                            title="Convert to invoice"
+                          >
+                            {actionLoading === qt.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Receipt className="h-3.5 w-3.5" />}
+                          </Button>
+                        )}
+                        {qt.status === "draft" && (
+                          <Button
+                            variant="ghost" size="icon-sm"
+                            onClick={() => setDeleteConfirm(qt.id)}
+                            aria-label="Delete quotation"
+                            title="Delete quotation"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
                           </Button>
                         )}
                       </div>
@@ -173,97 +198,23 @@ export default function Quotations() {
         </CardContent>
       </Card>
 
-      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-        <DialogContent className="max-w-xl">
-          <DialogHeader><DialogTitle>Create Quotation</DialogTitle></DialogHeader>
-          <form className="space-y-5" onSubmit={handleCreate}>
-            <div className="rounded-lg border border-[--shell-border] bg-[--shell-surface] p-4">
-              <div className="mb-3 flex items-center gap-2">
-                <ClipboardList className="h-3.5 w-3.5 text-[--shell-brand]" />
-                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[--shell-foreground]">Quote Details</span>
-              </div>
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="q-client">Client Name</Label>
-                  <Input id="q-client" placeholder="Client name" required value={formClient} onChange={(e) => setFormClient(e.target.value)} />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="q-valid">Valid Until</Label>
-                    <Input id="q-valid" type="date" value={formValidUntil} onChange={(e) => setFormValidUntil(e.target.value)} />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="rounded-lg border border-[--shell-border] bg-[--shell-surface] p-4">
-              <div className="mb-3 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <DollarSign className="h-3.5 w-3.5 text-[--shell-accent]" />
-                  <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[--shell-foreground]">Line Items</span>
-                </div>
-                <Button type="button" variant="outline" size="sm" onClick={() => setFormItems([...formItems, { description: "", quantity: 1, unitPrice: 0, gstRate: 18 }])}>
-                  <Plus className="h-3 w-3" /> Add Item
-                </Button>
-              </div>
-              <div className="space-y-3">
-                {formItems.map((item, idx) => (
-                  <div key={idx} className="flex items-start gap-2 rounded-md border border-[--shell-border] bg-[--shell-bg] p-3">
-                    <div className="flex-1 space-y-2">
-                      <Input placeholder="Description" value={item.description} onChange={(e) => {
-                        const next = [...formItems]; next[idx] = { ...next[idx], description: e.target.value }; setFormItems(next);
-                      }} />
-                    </div>
-                    <div className="w-20 space-y-2">
-                      <Input type="number" min={0.01} step={1} placeholder="Qty" value={item.quantity} onChange={(e) => {
-                        const next = [...formItems]; next[idx] = { ...next[idx], quantity: Number(e.target.value) || 0 }; setFormItems(next);
-                      }} />
-                    </div>
-                    <div className="w-24 space-y-2">
-                      <Input type="number" min={0} step={0.01} placeholder="Price" value={item.unitPrice} onChange={(e) => {
-                        const next = [...formItems]; next[idx] = { ...next[idx], unitPrice: Number(e.target.value) || 0 }; setFormItems(next);
-                      }} />
-                    </div>
-                    <div className="w-16 space-y-2">
-                      <Input type="number" min={0} max={100} step={0.1} placeholder="GST%" value={item.gstRate} onChange={(e) => {
-                        const next = [...formItems]; next[idx] = { ...next[idx], gstRate: Number(e.target.value) || 0 }; setFormItems(next);
-                      }} />
-                    </div>
-                    <div className="w-20 pt-6 text-right">
-                      <span className="font-mono text-xs font-semibold">{money((Number(item.quantity) || 0) * (Number(item.unitPrice) || 0))}</span>
-                    </div>
-                    {formItems.length > 1 && (
-                      <Button type="button" variant="ghost" size="icon-sm" className="pt-6" onClick={() => setFormItems(formItems.filter((_, i) => i !== idx))}>
-                        <X className="h-3 w-3" />
-                      </Button>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="rounded-lg border border-[--shell-border] bg-[--shell-surface] p-4">
-              <div className="space-y-2">
-                <Label htmlFor="q-notes">Notes</Label>
-                <Textarea id="q-notes" rows={2} placeholder="Optional notes" value={formNotes} onChange={(e) => setFormNotes(e.target.value)} />
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between rounded-lg border border-[--shell-border] bg-[--shell-surface] px-4 py-3">
-              <span className="text-sm font-semibold text-[--shell-foreground]">Estimated Total</span>
-              <span className="font-heading text-lg font-bold text-[--shell-brand]">{money(grandTotal)}</span>
-            </div>
-
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setCreateOpen(false)}>Cancel</Button>
-              <Button type="submit" disabled={saving || !formClient || formItems.length === 0 || formItems.every((i) => !i.description)}>
-                {saving && <Loader2 className="mr-1 h-4 w-4 animate-spin" />}
-                Create Quotation
-              </Button>
-            </DialogFooter>
-          </form>
+      <Dialog open={deleteConfirm !== null} onOpenChange={() => setDeleteConfirm(null)}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Delete Quotation</DialogTitle></DialogHeader>
+          <p className="text-sm text-[--shell-muted]">
+            Are you sure you want to delete this quotation? This action cannot be undone.
+          </p>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setDeleteConfirm(null)}>Cancel</Button>
+            <Button variant="destructive" onClick={() => deleteConfirm && handleDelete(deleteConfirm)} disabled={deleteSaving}>
+              {deleteSaving && <Loader2 className="mr-1 h-4 w-4 animate-spin" />}
+              Delete
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
+
+
     </div>
   );
 }

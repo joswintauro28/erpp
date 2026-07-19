@@ -124,6 +124,29 @@ export interface Quotation {
   converted_invoice_id?: number;
 }
 
+export interface QuotationDetailView {
+  id: number;
+  quote_number: string;
+  client_id: number;
+  client_name: string;
+  total: number;
+  status: string;
+  issue_date: string;
+  valid_until: string;
+  notes: string;
+  converted_invoice_id?: number;
+  created_at: string | null;
+  items: QuotationItemView[];
+}
+
+export interface QuotationItemView {
+  description: string;
+  quantity: number;
+  unit_price: number;
+  gst_rate: number;
+  amount: number;
+}
+
 export interface CreditNote {
   id: number;
   note_number: string;
