@@ -1,7 +1,7 @@
 from datetime import date, timedelta
 
 from app.integrations.billing_client import get_invoices, get_payments_metrics
-from app.integrations.crm_client import get_complaints as get_crm_complaints, get_enquiries as get_crm_enquiries, get_customers
+from app.integrations.crm_client import get_customers
 from app.integrations.inventory_client import get_low_stock_products as get_inv_low_stock
 
 
@@ -81,7 +81,8 @@ class NotificationService:
 
         # New clients via CRM service
         try:
-            customers = await get_customers(self.token)
+            data = await get_customers(self.token)
+            customers = data.get("customers", []) if isinstance(data, dict) else (data if isinstance(data, list) else [])
             new_clients = sum(
                 1 for c in customers
                 if c.get("updated_at") and date.fromisoformat(c["updated_at"][:10]) >= seven_days_ago
@@ -96,36 +97,6 @@ class NotificationService:
                 })
         except Exception:
             summary["new_clients"] = 0
-
-        # Open CRM complaints
-        try:
-            complaints = await get_crm_complaints(self.token)
-            open_complaints = [c for c in complaints if c.get("status") in ("Open", "In Progress")]
-            summary["open_complaints"] = len(open_complaints)
-            if open_complaints:
-                notifications.append({
-                    "type": "open_complaints",
-                    "title": f"{len(open_complaints)} open complaint(s) requiring attention",
-                    "severity": "high",
-                    "count": len(open_complaints),
-                })
-        except Exception:
-            summary["open_complaints"] = 0
-
-        # Pending CRM enquiries
-        try:
-            enquiries = await get_crm_enquiries(self.token)
-            pending_enquiries = [e for e in enquiries if e.get("status") == "New"]
-            summary["pending_enquiries"] = len(pending_enquiries)
-            if pending_enquiries:
-                notifications.append({
-                    "type": "pending_enquiries",
-                    "title": f"{len(pending_enquiries)} new enquiry(ies) awaiting reply",
-                    "severity": "medium",
-                    "count": len(pending_enquiries),
-                })
-        except Exception:
-            summary["pending_enquiries"] = 0
 
         # Inventory low stock from service
         try:

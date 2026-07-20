@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 
 from app.core.deps import get_current_token_payload
-from app.integrations.crm_client import get_customers, get_customer_detail, create_customer, update_customer, delete_customer
+from app.integrations.crm_client import get_customers, get_customer_detail, create_customer, update_customer, delete_customer, extract_list
 
 router = APIRouter(prefix="/clients", tags=["clients"])
 
@@ -25,7 +25,7 @@ async def list_clients(
     payload: dict = Depends(get_current_token_payload),
 ):
     token = payload.get("_raw_token", "")
-    data = await get_customers(token)
+    data = extract_list(await get_customers(token), "customers")
     return [_map_customer(c) for c in data]
 
 
@@ -59,7 +59,7 @@ async def get_client(
     except Exception:
         pass
 
-    data = await get_customers(token)
+    data = extract_list(await get_customers(token), "customers")
     for c in data:
         if str(c.get("id")) == str(client_id) or c.get("id_str") == client_id:
             return _map_customer(c)
@@ -76,8 +76,7 @@ async def update_client(
     token = payload.get("_raw_token", "")
     id_str = client_id
     if not id_str.startswith("cust_"):
-        # Look up by numeric id in the list fallback
-        data = await get_customers(token)
+        data = extract_list(await get_customers(token), "customers")
         found = False
         for c in data:
             if str(c.get("id")) == str(client_id) or c.get("id_str") == client_id:
@@ -107,7 +106,7 @@ async def delete_client(
     token = payload.get("_raw_token", "")
     id_str = client_id
     if not id_str.startswith("cust_"):
-        data = await get_customers(token)
+        data = extract_list(await get_customers(token), "customers")
         found = False
         for c in data:
             if str(c.get("id")) == str(client_id) or c.get("id_str") == client_id:

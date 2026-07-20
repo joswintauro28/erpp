@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 
 from app.core.deps import get_current_token_payload
-from app.integrations.crm_client import get_leads, get_lead_detail, create_lead_crm, update_lead_crm, delete_lead_crm
+from app.integrations.crm_client import get_leads, get_lead_detail, create_lead_crm, update_lead_crm, delete_lead_crm, extract_list
 
 router = APIRouter(prefix="/leads", tags=["leads"])
 
@@ -36,7 +36,7 @@ async def list_leads(
     payload: dict = Depends(get_current_token_payload),
 ):
     token = payload.get("_raw_token", "")
-    data = await get_leads(token)
+    data = extract_list(await get_leads(token), "leads")
     return [_map_lead(l) for l in data]
 
 
@@ -70,7 +70,7 @@ async def get_lead(
     except Exception:
         pass
 
-    data = await get_leads(token)
+    data = extract_list(await get_leads(token), "leads")
     for l in data:
         if str(l.get("id")) == str(lead_id) or l.get("id_str") == lead_id:
             return _map_lead(l)
@@ -87,7 +87,7 @@ async def update_lead(
     token = payload.get("_raw_token", "")
     id_str = lead_id
     if not id_str.startswith("lead_"):
-        data = await get_leads(token)
+        data = extract_list(await get_leads(token), "leads")
         found = False
         for l in data:
             if str(l.get("id")) == str(lead_id) or l.get("id_str") == lead_id:
@@ -126,7 +126,7 @@ async def delete_lead(
     token = payload.get("_raw_token", "")
     id_str = lead_id
     if not id_str.startswith("lead_"):
-        data = await get_leads(token)
+        data = extract_list(await get_leads(token), "leads")
         found = False
         for l in data:
             if str(l.get("id")) == str(lead_id) or l.get("id_str") == lead_id:
@@ -158,7 +158,7 @@ async def convert_lead(
         pass
 
     if not lead_data or not id_str.startswith("lead_"):
-        data = await get_leads(token)
+        data = extract_list(await get_leads(token), "leads")
         for l in data:
             if str(l.get("id")) == str(lead_id) or l.get("id_str") == lead_id:
                 lead_data = l

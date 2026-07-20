@@ -1,0 +1,38 @@
+{
+  "name": "crm-service",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "sourceRoot": "services/crm-service",
+  "targets": {
+    "dev": {
+      "command": ".venv\\Scripts\\uvicorn main:app --port 8001 --reload",
+      "options": {
+        "cwd": "services/crm-service"
+      }
+    },
+    "migrate": {
+      "command": ".venv\\Scripts\\alembic upgrade head",
+      "options": {
+        "cwd": "services/crm-service"
+      }
+    },
+    "create-db": {
+      "command": ".venv\\Scripts\\python scripts/create_db.py",
+      "options": {
+        "cwd": "services/crm-service"
+      }
+    },
+    "reset-db": {
+      "command": ".venv\\Scripts\\python scripts/reset_db.py",
+      "options": {
+        "cwd": "services/crm-service"
+      }
+    },
+    "seed": {
+      "command": ".venv\\Scripts\\python scripts/seed.py",
+      "options": {
+        "cwd": "services/crm-service"
+      }
+    }
+  }
+}

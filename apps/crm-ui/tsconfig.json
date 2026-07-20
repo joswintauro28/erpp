@@ -30,7 +30,7 @@
       "@/components/ui/*": ["../../packages/ui-theme/src/components/ui/*"],
       "@/components/shared/*": ["../../packages/ui-theme/src/components/shared/*"],
       "@/lib/utils": ["../../packages/ui-theme/src/lib/utils.ts"],
-      "@/*": ["./src/*"]
+      "@/*": ["./*"]
     }
   },
   "include": [
