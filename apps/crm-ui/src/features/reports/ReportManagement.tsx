@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { TrendingUp, Award, Users, BarChart3, ShieldAlert } from 'lucide-react';
+import { api } from '@/services/api';
 
 const ReportManagement = () => {
   const [data, setData] = useState(null);
@@ -9,11 +10,8 @@ const ReportManagement = () => {
 
   const fetchReportData = async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/reports/dashboard`);
-      if (response.ok) {
-        const result = await response.json();
-        setData(result);
-      }
+      const result = await api.get<any>('/reports/dashboard');
+      setData(result);
     } catch (error) {
       console.error("Failed to fetch reports dashboard data", error);
     } finally {

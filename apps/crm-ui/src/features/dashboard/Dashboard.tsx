@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import MetricCard from './MetricCard';
 import PipelineChart from './PipelineChart';
 import Recommendations from './Recommendations';
+import { api } from '@/services/api';
 
 // Fallback data if API is not running
 const fallbackData = {
@@ -19,13 +20,8 @@ const Dashboard = ({ user }) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch(process.env.NEXT_PUBLIC_API_URL + '/api/dashboard');
-        if (response.ok) {
-          const result = await response.json();
-          setData(result);
-        } else {
-          console.log("Failed to fetch data, using fallback");
-        }
+        const result = await api.get<any>('/dashboard');
+        setData(result);
       } catch (error) {
         console.log("API not running, using fallback data", error);
       } finally {

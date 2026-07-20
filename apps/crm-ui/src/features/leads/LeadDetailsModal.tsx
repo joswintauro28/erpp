@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { X, Target, BarChart2, TrendingUp, Calendar, AlertCircle } from 'lucide-react';
+import { api } from '@/services/api';
 
 const LeadDetailsModal = ({ lead, isOpen, onClose, onSuccess, onViewAIInsights }) => {
   const [isConverting, setIsConverting] = useState(false);
@@ -18,11 +19,8 @@ const LeadDetailsModal = ({ lead, isOpen, onClose, onSuccess, onViewAIInsights }
   const loadAIInsights = async () => {
     setLoadingInsights(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/lead-discovery/pinned/${encodeURIComponent(lead.company)}`);
-      if (res.ok) {
-        const data = await res.json();
-        setPinnedDetail(data);
-      }
+      const data = await api.get<any>(`/lead-discovery/pinned/${encodeURIComponent(lead.company)}`);
+      setPinnedDetail(data);
     } catch (err) {
       console.error(err);
     } finally {
@@ -73,36 +71,20 @@ const LeadDetailsModal = ({ lead, isOpen, onClose, onSuccess, onViewAIInsights }
         stage: stage,
         owner: lead.owner
       };
-      const createRes = await fetch(process.env.NEXT_PUBLIC_API_URL + '/api/opportunities', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(oppPayload)
-      });
-
-      if (!createRes.ok) {
-        throw new Error("Failed to create Opportunity");
-      }
+      await api.post('/opportunities', oppPayload);
 
       // 2. Update Lead status to 'Converted'
       const leadPayload = {
         ...lead,
         status: 'Converted'
       };
-      const updateRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/leads/${lead.id_str}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(leadPayload)
-      });
-
-      if (!updateRes.ok) {
-        throw new Error("Failed to update Lead status");
-      }
+      await api.put(`/leads/${lead.id_str}`, leadPayload);
 
       if (onSuccess) onSuccess();
       onClose();
     } catch (err) {
       console.error(err);
-      setError(err.message || "Failed to convert lead to opportunity.");
+      setError(err instanceof Error ? err.message : "Failed to convert lead to opportunity.");
     } finally {
       setSubmitting(false);
     }

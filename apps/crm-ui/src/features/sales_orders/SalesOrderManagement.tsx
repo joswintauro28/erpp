@@ -6,6 +6,7 @@ import { exportToCSV } from '../../utils/exportCsv';
 import GenericCreateModal from '../shared/GenericCreateModal';
 import SalesOrderTable from './SalesOrderTable';
 import GenericDetailsModal from '../shared/GenericDetailsModal';
+import { api } from '@/services/api';
 
 // Fallback data
 const fallbackData = {
@@ -30,11 +31,8 @@ const SalesOrderManagement = () => {
   const fetchData = async () => {
       setLoading(true);
       try {
-        const response = await fetch(process.env.NEXT_PUBLIC_API_URL + '/api/sales-orders');
-        if (response.ok) {
-          const result = await response.json();
-          setData(result);
-        }
+        const result = await api.get<any>('/sales-orders');
+        setData(result);
       } catch (error) {
         console.log("Failed to fetch sales order data, using fallback", error);
       } finally {
@@ -48,16 +46,10 @@ const SalesOrderManagement = () => {
   const handleDelete = async (record) => {
     if (window.confirm("Are you sure you want to delete this record?")) {
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/sales-orders/${record.id_str}`, {
-          method: 'DELETE'
-        });
-        if (response.ok) {
-          fetchData();
-        } else {
-          alert("Failed to delete record.");
-        }
+        await api.delete(`/sales-orders/${record.id_str}`);
+        fetchData();
       } catch (err) {
-        alert("Network error.");
+        alert("Failed to delete record: " + (err instanceof Error ? err.message : String(err)));
       }
     }
   };

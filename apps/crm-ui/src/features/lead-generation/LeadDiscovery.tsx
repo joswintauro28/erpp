@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import SearchCard from './SearchCard';
 import ResultsCard from './ResultsCard';
+import { api, getAccessToken } from '@/services/api';
 
 export default function LeadDiscovery({ initialQuery, onImportComplete }) {
   const [results, setResults] = useState(null);
@@ -15,14 +16,17 @@ export default function LeadDiscovery({ initialQuery, onImportComplete }) {
   const [importing, setImporting] = useState(false);
   const abortControllerRef = useRef(null);
 
+  const CRM_BASE = process.env.NEXT_PUBLIC_CRM_API_URL || 'http://127.0.0.1:8001';
+
+  const getAuthHeaders = (): Record<string, string> => {
+    const token = getAccessToken();
+    return token ? { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' } : { 'Content-Type': 'application/json' };
+  };
+
   const fetchPinnedLeads = async () => {
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-      const res = await fetch(`${apiUrl}/api/lead-discovery/pinned`);
-      if (res.ok) {
-        const data = await res.json();
-        setPinnedLeads(data);
-      }
+      const data = await api.get<any[]>('/lead-discovery/pinned');
+      setPinnedLeads(data);
     } catch (err) {
       console.error("Failed to fetch pinned leads", err);
     }
@@ -41,7 +45,7 @@ export default function LeadDiscovery({ initialQuery, onImportComplete }) {
   const handleSearch = async (searchParams) => {
     setIsStopped(false);
     setLoading(true);
-    
+
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
     }
@@ -50,11 +54,7 @@ export default function LeadDiscovery({ initialQuery, onImportComplete }) {
 
     try {
       const isUrlMode = searchParams.mode === 'url' && searchParams.url && searchParams.url.trim().length > 0;
-      let apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
-      if (apiUrl.includes('localhost')) {
-        apiUrl = apiUrl.replace('localhost', '127.0.0.1');
-      }
-      const endpoint = isUrlMode ? `${apiUrl}/api/lead-discovery/scrape-url` : `${apiUrl}/api/lead-discovery/search`;
+      const endpoint = isUrlMode ? '/lead-discovery/scrape-url' : '/lead-discovery/search';
       const body = isUrlMode ? { url: searchParams.url } : {
         city: searchParams.city || null,
         industry: searchParams.industry || null,
@@ -64,21 +64,31 @@ export default function LeadDiscovery({ initialQuery, onImportComplete }) {
         refresh: searchParams.refresh || false,
       };
 
-      const response = await fetch(endpoint, {
+      // Call the CRM service directly to avoid the Next.js proxy 60s timeout.
+      // Long-running discovery/scrape operations can take 90-300s.
+      const res = await fetch(`${CRM_BASE}/api${endpoint}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
         body: JSON.stringify(body),
         signal: controller.signal
       });
-      if (!response.ok) {
-        let errorMsg = 'Network response was not ok';
+
+      if (!res.ok) {
+        let errorMsg = `Server returned ${res.status}`;
         try {
-          const errorData = await response.json();
-          errorMsg = errorData.detail || errorMsg;
-        } catch (e) {}
+          const text = await res.text();
+          try {
+            const errJson = JSON.parse(text);
+            errorMsg = errJson.detail || errJson.message || errorMsg;
+          } catch {
+            errorMsg = `Server returned ${res.status}: ` + text.substring(0, 200);
+          }
+        } catch {}
         throw new Error(errorMsg);
       }
-      let data = await response.json();
+
+      let data = await res.json();
+
       if (isUrlMode) {
         data = {
           search: {
@@ -88,9 +98,10 @@ export default function LeadDiscovery({ initialQuery, onImportComplete }) {
             mode: 'url',
             url: searchParams.url
           },
-          companies: [ data ]
+          companies: [data]
         };
       }
+
       setResults(data);
       setLoading(false);
     } catch (error) {
@@ -135,24 +146,17 @@ export default function LeadDiscovery({ initialQuery, onImportComplete }) {
   };
 
   const togglePin = async (company) => {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
     if (isPinned(company)) {
       setPinnedLeads((prev) => prev.filter(c => c.company_name !== company.company_name));
       try {
-        await fetch(`${apiUrl}/api/lead-discovery/pinned/${encodeURIComponent(company.company_name)}`, {
-          method: 'DELETE'
-        });
+        await api.delete(`/lead-discovery/pinned/${encodeURIComponent(company.company_name)}`);
       } catch (err) {
         console.error("Failed to delete pin", err);
       }
     } else {
       setPinnedLeads((prev) => [...prev, company]);
       try {
-        await fetch(`${apiUrl}/api/lead-discovery/pinned`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(company)
-        });
+        await api.post(`/lead-discovery/pinned`, company);
       } catch (err) {
         console.error("Failed to save pin", err);
       }
@@ -163,13 +167,7 @@ export default function LeadDiscovery({ initialQuery, onImportComplete }) {
     if (selectedLeads.length === 0) return;
     setImporting(true);
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-      const res = await fetch(`${apiUrl}/api/lead-discovery/import`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ companies: selectedLeads })
-      });
-      if (!res.ok) throw new Error('Failed to import leads');
+      await api.post('/lead-discovery/import', { companies: selectedLeads });
       alert(`Successfully imported ${selectedLeads.length} leads!`);
       setSelectedLeads([]);
       if (onImportComplete) {

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
+import { api } from '@/services/api';
 
 interface GenericFormModalProps {
   entityType: string;
@@ -29,10 +30,8 @@ const GenericFormModal: React.FC<GenericFormModalProps> = ({ entityType, entityN
       setLoading(true);
       setError('');
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/${entityType}/fields`);
-        if (response.ok) {
-          const schemaFields = await response.json();
-          setFields(schemaFields);
+        const schemaFields = await api.get<any[]>(`/${entityType}/fields`);
+        setFields(schemaFields);
           
           const now = new Date();
           const dateStr = now.toLocaleDateString('en-US', { month: 'short', day: '2-digit' }) + ' ' + now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
@@ -85,9 +84,6 @@ const GenericFormModal: React.FC<GenericFormModalProps> = ({ entityType, entityN
             });
             setFormData(initialData);
           }
-        } else {
-          setError('Failed to load fields schema.');
-        }
       } catch (err) {
         setError('Network error loading schema.');
       } finally {
@@ -149,27 +145,16 @@ const GenericFormModal: React.FC<GenericFormModalProps> = ({ entityType, entityN
       return;
     }
 
-    const url = editRecord 
-      ? `${process.env.NEXT_PUBLIC_API_URL}/api/${entityType}/${editRecord.id_str}`
-      : `${process.env.NEXT_PUBLIC_API_URL}/api/${entityType}`;
-      
-    const method = editRecord ? 'PUT' : 'POST';
-
     try {
-      const response = await fetch(url, {
-        method: method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(submissionData)
-      });
-
-      if (response.ok) {
-        onSuccess();
-        onClose();
+      if (editRecord) {
+        await api.put(`/${entityType}/${editRecord.id_str}`, submissionData);
       } else {
-        setError(`Failed to ${editRecord ? 'update' : 'create'} record. Please try again.`);
+        await api.post(`/${entityType}`, submissionData);
       }
+      onSuccess();
+      onClose();
     } catch (err) {
-      setError('Network error submitting request.');
+      setError(err instanceof Error ? err.message : `Failed to ${editRecord ? 'update' : 'create'} record. Please try again.`);
     } finally {
       setSubmitting(false);
     }

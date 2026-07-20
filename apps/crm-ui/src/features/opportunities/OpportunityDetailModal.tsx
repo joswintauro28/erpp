@@ -6,6 +6,7 @@ import {
   CheckCircle, Loader, Trash2, ChevronRight, ChevronDown,
   Paperclip, Download, Eye, ShoppingCart, Edit2
 } from 'lucide-react';
+import { api } from '@/services/api';
 
 /* ─── shared styles ─────────────────────────────── */
 const inputStyle: React.CSSProperties = {
@@ -136,33 +137,29 @@ const QuoteRow: React.FC<QuoteRowProps> = ({ quote, onDelete, onPreview, onConve
     e.preventDefault();
     setSaleSubmitting(true); setSaleError('');
     try {
-      const saleRes = await fetch(`${API}/api/sales-orders`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          id_str:      `SO-${Date.now().toString().slice(-6)}`,
-          so_no:       `SO-${Date.now().toString().slice(-6)}`,
-          account:     quote.account || '',
-          from_quote:  quote.quote_no || '',
-          value:       quote.value   || '0',
-          date_ordered: saleData.issued_date,
-          eta:         saleData.due_date,
-          status:      'Pending',
-          owner:       saleData.rep,
-        }),
+      await api.post('/sales-orders', {
+        id_str:      `SO-${Date.now().toString().slice(-6)}`,
+        so_no:       `SO-${Date.now().toString().slice(-6)}`,
+        account:     quote.account || '',
+        from_quote:  quote.quote_no || '',
+        value:       quote.value   || '0',
+        date_ordered: saleData.issued_date,
+        eta:         saleData.due_date,
+        status:      'Pending',
+        owner:       saleData.rep,
       });
-      if (!saleRes.ok) { setSaleError('Failed to create sales order record.'); return; }
 
       // mark quotation as Converted
-      await fetch(`${API}/api/quotations/${quote.id_str}`, {
-        method: 'PUT', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: 'Converted' }),
-      });
+      await api.put(`/quotations/${quote.id_str}`, { status: 'Converted' });
 
       setSaleSuccess(true);
       setShowSaleForm(false);
       if (onConverted) onConverted();
-    } catch { setSaleError('Network error. Please try again.'); }
-    finally { setSaleSubmitting(false); }
+    } catch (err) {
+      setSaleError(err instanceof Error ? err.message : 'Network error. Please try again.');
+    } finally {
+      setSaleSubmitting(false);
+    }
   };
 
   return (
@@ -334,27 +331,21 @@ const OpportunityDetailModal = ({ record, isOpen, onClose, onSuccess }) => {
     if (!record) return;
     setReqLoading(true);
     try {
-      const res = await fetch(`${API}/api/requirements`);
-      if (res.ok) {
-        const d = await res.json();
-        setRequirements((d.requirements || []).filter(r => r.account === record.account));
-      }
+      const d = await api.get<any>('/requirements');
+      setRequirements((d.requirements || []).filter(r => r.account === record.account));
     } catch (e) { console.error(e); }
     finally { setReqLoading(false); }
-  }, [record, API]);
+  }, [record]);
 
   const fetchQuotations = useCallback(async () => {
     if (!record) return;
     setQuoteLoading(true);
     try {
-      const res = await fetch(`${API}/api/quotations`);
-      if (res.ok) {
-        const d = await res.json();
-        setQuotations((d.quotations || []).filter(q => q.account === record.account));
-      }
+      const d = await api.get<any>('/quotations');
+      setQuotations((d.quotations || []).filter(q => q.account === record.account));
     } catch (e) { console.error(e); }
     finally { setQuoteLoading(false); }
-  }, [record, API]);
+  }, [record]);
 
   useEffect(() => {
     if (isOpen && record) {
@@ -388,26 +379,28 @@ const OpportunityDetailModal = ({ record, isOpen, onClose, onSuccess }) => {
     setReqSubmitting(true); setReqError('');
     try {
       const isEdit = !!editReq;
-      const url = isEdit ? `${API}/api/requirements/${editReq.id_str}` : `${API}/api/requirements`;
-      const method = isEdit ? 'PUT' : 'POST';
-      const res = await fetch(url, {
-        method: method, headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          id_str: isEdit ? editReq.id_str : `RE-${Date.now().toString().slice(-6)}`,
-          name: reqData.name || `Requirement for ${record.account}`,
-          account: record.account || '',
-          category: reqData.category, priority: reqData.priority,
-          status: reqData.status, owner: reqData.owner,
-        }),
-      });
-      if (!res.ok) { setReqError('Failed to save.'); return; }
+      const body = {
+        id_str: isEdit ? editReq.id_str : `RE-${Date.now().toString().slice(-6)}`,
+        name: reqData.name || `Requirement for ${record.account}`,
+        account: record.account || '',
+        category: reqData.category, priority: reqData.priority,
+        status: reqData.status, owner: reqData.owner,
+      };
+      if (isEdit) {
+        await api.put(`/requirements/${editReq.id_str}`, body);
+      } else {
+        await api.post('/requirements', body);
+      }
       setShowReqForm(false);
       setEditReq(null);
       setReqData({ name: '', category: 'Technical', priority: 'Medium', status: 'Draft', owner: '' });
       fetchRequirements();
       if (onSuccess) onSuccess();
-    } catch { setReqError('Network error.'); }
-    finally { setReqSubmitting(false); }
+    } catch (err) {
+      setReqError(err instanceof Error ? err.message : 'Network error.');
+    } finally {
+      setReqSubmitting(false);
+    }
   };
 
   /* ─ file → base64 helper ─ */
@@ -431,23 +424,22 @@ const OpportunityDetailModal = ({ record, isOpen, onClose, onSuccess }) => {
     setQuoteSubmitting(true); setQuoteError('');
     try {
       const isEdit = !!editQuote;
-      const url = isEdit ? `${API}/api/quotations/${editQuote.id_str}` : `${API}/api/quotations`;
-      const method = isEdit ? 'PUT' : 'POST';
-      const res = await fetch(url, {
-        method: method, headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          id_str: isEdit ? editQuote.id_str : `QT-${Date.now().toString().slice(-6)}`,
-          quote_no: quoteData.quote_no || `QT-${Date.now().toString().slice(-6)}`,
-          account: record.account || '',
-          value: quoteData.value,
-          valid_until: quoteData.valid_until,
-          status: quoteData.status,
-          owner: quoteData.owner,
-          file_data: quoteFile ? quoteFile.base64 : (isEdit ? editQuote.file_data : null),
-          file_name: quoteFile ? quoteFile.name : (isEdit ? editQuote.file_name : null),
-        }),
-      });
-      if (!res.ok) { setQuoteError('Failed to save.'); return; }
+      const body = {
+        id_str: isEdit ? editQuote.id_str : `QT-${Date.now().toString().slice(-6)}`,
+        quote_no: quoteData.quote_no || `QT-${Date.now().toString().slice(-6)}`,
+        account: record.account || '',
+        value: quoteData.value,
+        valid_until: quoteData.valid_until,
+        status: quoteData.status,
+        owner: quoteData.owner,
+        file_data: quoteFile ? quoteFile.base64 : (isEdit ? editQuote.file_data : null),
+        file_name: quoteFile ? quoteFile.name : (isEdit ? editQuote.file_name : null),
+      };
+      if (isEdit) {
+        await api.put(`/quotations/${editQuote.id_str}`, body);
+      } else {
+        await api.post('/quotations', body);
+      }
       setShowQuoteForm(false);
       setEditQuote(null);
       setQuoteData({ quote_no: '', value: '', valid_until: '', status: 'Draft', owner: '' });
@@ -455,20 +447,31 @@ const OpportunityDetailModal = ({ record, isOpen, onClose, onSuccess }) => {
       if (fileInputRef.current) fileInputRef.current.value = '';
       fetchQuotations();
       if (onSuccess) onSuccess();
-    } catch { setQuoteError('Network error.'); }
-    finally { setQuoteSubmitting(false); }
+    } catch (err) {
+      setQuoteError(err instanceof Error ? err.message : 'Network error.');
+    } finally {
+      setQuoteSubmitting(false);
+    }
   };
 
   const handleDeleteReq = async (req) => {
     if (!window.confirm('Delete this requirement?')) return;
-    await fetch(`${API}/api/requirements/${req.id_str}`, { method: 'DELETE' });
-    fetchRequirements();
+    try {
+      await api.delete(`/requirements/${req.id_str}`);
+      fetchRequirements();
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const handleDeleteQuote = async (q) => {
     if (!window.confirm('Delete this quotation?')) return;
-    await fetch(`${API}/api/quotations/${q.id_str}`, { method: 'DELETE' });
-    fetchQuotations();
+    try {
+      await api.delete(`/quotations/${q.id_str}`);
+      fetchQuotations();
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const detailRows = [

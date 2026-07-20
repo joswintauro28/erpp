@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { X, FileText, ShoppingCart, ArrowRight, ClipboardList, FileSpreadsheet, PackageOpen, Download, CheckCircle } from 'lucide-react';
+import { api } from '@/services/api';
 
 const inputStyle: React.CSSProperties = {
   width: '100%',
@@ -95,18 +96,12 @@ const GenericDetailsModal: React.FC<GenericDetailsModalProps> = ({ record, entit
     if (!record || !record.account) return;
     setLoadingRelated(true);
     try {
-      const [reqRes, quoteRes] = await Promise.all([
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/requirements?account=${encodeURIComponent(record.account)}`),
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/quotations?account=${encodeURIComponent(record.account)}`)
+      const [reqData, qData] = await Promise.all([
+        api.get<any>(`/requirements?account=${encodeURIComponent(record.account)}`),
+        api.get<any>(`/quotations?account=${encodeURIComponent(record.account)}`)
       ]);
-      if (reqRes.ok) {
-        const reqData = await reqRes.json();
-        setRelatedRequirements(reqData.requirements || []);
-      }
-      if (quoteRes.ok) {
-        const qData = await quoteRes.json();
-        setRelatedQuotations(qData.quotations || []);
-      }
+      setRelatedRequirements(reqData.requirements || []);
+      setRelatedQuotations(qData.quotations || []);
     } catch (err) {
       console.error("Failed to fetch related data", err);
     } finally {
@@ -221,27 +216,14 @@ const GenericDetailsModal: React.FC<GenericDetailsModalProps> = ({ record, entit
         rep: saleData.rep
       };
 
-      const saleRes = await fetch(process.env.NEXT_PUBLIC_API_URL + '/api/sales', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(salePayload)
-      });
+      await api.post('/sales', salePayload);
 
-      if (!saleRes.ok) {
-        const errText = await saleRes.text();
-        setSaleError('Failed to create sale: ' + errText);
-        setSaleSubmitting(false);
-        return;
-      }
-
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/opportunities/${record.id_str}`, {
-        method: 'DELETE'
-      });
+      await api.delete(`/opportunities/${record.id_str}`);
 
       if (onSuccess) onSuccess();
       onClose();
     } catch (err) {
-      setSaleError('Network error. Please try again.');
+      setSaleError(err instanceof Error ? err.message : 'Network error. Please try again.');
     } finally {
       setSaleSubmitting(false);
     }
@@ -263,30 +245,17 @@ const GenericDetailsModal: React.FC<GenericDetailsModalProps> = ({ record, entit
         owner: requirementData.owner
       };
 
-      const res = await fetch(process.env.NEXT_PUBLIC_API_URL + '/api/requirements', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(requirementPayload)
-      });
-
-      if (!res.ok) {
-        const errText = await res.text();
-        setRequirementError('Failed to create requirement: ' + errText);
-        setRequirementSubmitting(false);
-        return;
-      }
+      await api.post('/requirements', requirementPayload);
 
       if (isSale) {
         const type = record.id_str.startsWith('SA-') ? 'sales' : 'sales-orders';
-        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/${type}/${record.id_str}`, {
-          method: 'DELETE'
-        });
+        await api.delete(`/${type}/${record.id_str}`);
       }
 
       if (onSuccess) onSuccess();
       onClose();
     } catch (err) {
-      setRequirementError('Network error. Please try again.');
+      setRequirementError(err instanceof Error ? err.message : 'Network error. Please try again.');
     } finally {
       setRequirementSubmitting(false);
     }
@@ -312,29 +281,16 @@ const GenericDetailsModal: React.FC<GenericDetailsModalProps> = ({ record, entit
         owner: quotationData.owner
       };
 
-      const res = await fetch(process.env.NEXT_PUBLIC_API_URL + '/api/quotations', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(quotationPayload)
-      });
-
-      if (!res.ok) {
-        const errText = await res.text();
-        setQuotationError('Failed to create quotation: ' + errText);
-        setQuotationSubmitting(false);
-        return;
-      }
+      await api.post('/quotations', quotationPayload);
 
       if (isRequirement) {
-        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/requirements/${record.id_str}`, {
-          method: 'DELETE'
-        });
+        await api.delete(`/requirements/${record.id_str}`);
       }
 
       if (onSuccess) onSuccess();
       onClose();
     } catch (err) {
-      setQuotationError('Network error. Please try again.');
+      setQuotationError(err instanceof Error ? err.message : 'Network error. Please try again.');
     } finally {
       setQuotationSubmitting(false);
     }
@@ -361,33 +317,18 @@ const GenericDetailsModal: React.FC<GenericDetailsModalProps> = ({ record, entit
         file_name: salesOrderData.file_name || ''
       };
 
-      const res = await fetch(process.env.NEXT_PUBLIC_API_URL + '/api/sales-orders', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(salesOrderPayload)
-      });
-
-      if (!res.ok) {
-        const errText = await res.text();
-        setSalesOrderError('Failed to create sales order: ' + errText);
-        setSalesOrderSubmitting(false);
-        return;
-      }
+      await api.post('/sales-orders', salesOrderPayload);
 
       if (isQuotation) {
-        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/quotations/${record.id_str}`, {
-          method: 'DELETE'
-        });
+        await api.delete(`/quotations/${record.id_str}`);
       } else if (isOpportunity) {
-        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/opportunities/${record.id_str}`, {
-          method: 'DELETE'
-        });
+        await api.delete(`/opportunities/${record.id_str}`);
       }
 
       if (onSuccess) onSuccess();
       onClose();
     } catch (err) {
-      setSalesOrderError('Network error. Please try again.');
+      setSalesOrderError(err instanceof Error ? err.message : 'Network error. Please try again.');
     } finally {
       setSalesOrderSubmitting(false);
     }
@@ -406,21 +347,12 @@ const GenericDetailsModal: React.FC<GenericDetailsModalProps> = ({ record, entit
         file_name: invoiceFile ? invoiceFile.name : record.file_name
       };
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/sales-orders/${record.id_str}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-
-      if (!res.ok) {
-        setInvoiceError('Failed to update sales order.');
-        return;
-      }
+      await api.put(`/sales-orders/${record.id_str}`, payload);
 
       if (onSuccess) onSuccess();
       onClose();
-    } catch {
-      setInvoiceError('Network error.');
+    } catch (err) {
+      setInvoiceError(err instanceof Error ? err.message : 'Network error.');
     } finally {
       setInvoiceSubmitting(false);
     }
@@ -428,39 +360,28 @@ const GenericDetailsModal: React.FC<GenericDetailsModalProps> = ({ record, entit
 
   const handleAddAsCustomer = async () => {
     try {
-      const checkRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/customers`);
-      if (checkRes.ok) {
-        const custData = await checkRes.json();
-        const exists = custData.customers?.some(c => c.account === record.account);
-        if (exists) {
-          alert("This account is already added as a customer!");
-          return;
-        }
+      const custData = await api.get<any>('/customers');
+      const exists = custData.customers?.some(c => c.account === record.account);
+      if (exists) {
+        alert("This account is already added as a customer!");
+        return;
       }
 
       let cleanArr = parseInt(String(record.value || '').replace(/[^0-9]/g, '')) || 0;
       if (cleanArr > 2147483647) cleanArr = 2147483647;
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/customers`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          id_str: `CU-${Date.now().toString().slice(-6)}`,
-          account: record.account,
-          industry: 'Software',
-          tier: 'Silver',
-          arr: cleanArr,
-          status: 'Active',
-          owner: record.owner || ''
-        })
+      await api.post('/customers', {
+        id_str: `CU-${Date.now().toString().slice(-6)}`,
+        account: record.account,
+        industry: 'Software',
+        tier: 'Silver',
+        arr: cleanArr,
+        status: 'Active',
+        owner: record.owner || ''
       });
 
-      if (res.ok) {
-        alert("Added successfully to Customers!");
-        if (onSuccess) onSuccess();
-        onClose();
-      } else {
-        alert("Failed to add as customer.");
-      }
+      alert("Added successfully to Customers!");
+      if (onSuccess) onSuccess();
+      onClose();
     } catch (err) {
       alert("Network error.");
     }
@@ -1243,17 +1164,11 @@ const GenericDetailsModal: React.FC<GenericDetailsModalProps> = ({ record, entit
                             onClick={async () => {
                               if (window.confirm("Are you sure you want to delete this sales order?")) {
                                 try {
-                                  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/sales-orders/${record.id_str}`, {
-                                    method: 'DELETE'
-                                  });
-                                  if (res.ok) {
-                                    if (onSuccess) onSuccess();
-                                    onClose();
-                                  } else {
-                                    alert("Failed to delete sales order.");
-                                  }
-                                } catch {
-                                  alert("Network error.");
+                                  await api.delete(`/sales-orders/${record.id_str}`);
+                                  if (onSuccess) onSuccess();
+                                  onClose();
+                                } catch (err) {
+                                  alert(err instanceof Error ? err.message : "Failed to delete sales order.");
                                 }
                               }
                             }}
@@ -1300,19 +1215,11 @@ const GenericDetailsModal: React.FC<GenericDetailsModalProps> = ({ record, entit
                   onClick={async () => {
                     if (window.confirm("Are you sure you want to finalize this quotation? This will approve it and generate a Sales Order.")) {
                       try {
-                        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/quotations/${record.id_str}`, {
-                          method: 'PUT',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({ ...record, status: 'Accepted' })
-                        });
-                        if (response.ok) {
-                          if (onSuccess) onSuccess();
-                          onClose();
-                        } else {
-                          alert("Failed to finalize quotation.");
-                        }
+                        await api.put(`/quotations/${record.id_str}`, { ...record, status: 'Accepted' });
+                        if (onSuccess) onSuccess();
+                        onClose();
                       } catch (err) {
-                        alert("Network error.");
+                        alert(err instanceof Error ? err.message : "Failed to finalize quotation.");
                       }
                     }
                   }}

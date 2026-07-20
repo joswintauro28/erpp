@@ -6,6 +6,7 @@ import { exportToCSV } from '../../utils/exportCsv';
 import GenericCreateModal from '../shared/GenericCreateModal';
 import LeadTable from './LeadTable';
 import LeadDetailsModal from './LeadDetailsModal';
+import { api } from '@/services/api';
 
 // Fallback data
 const fallbackData = {
@@ -29,13 +30,10 @@ const LeadManagement = ({ setCurrentView, setDiscoveryQuery }) => {
 
   const fetchData = async () => {
     try {
-      const response = await fetch(process.env.NEXT_PUBLIC_API_URL + '/api/leads');
-      if (response.ok) {
-        const result = await response.json();
-        setData(result);
-      }
+      const result = await api.get<any>('/leads');
+      setData(result);
     } catch (error) {
-      console.log("API not running, using fallback");
+      console.log("API not running, using fallback", error);
     } finally {
       setLoading(false);
     }
@@ -48,9 +46,7 @@ const LeadManagement = ({ setCurrentView, setDiscoveryQuery }) => {
   const handleDelete = async (lead) => {
     if (window.confirm('Are you sure you want to delete this lead?')) {
       try {
-        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/leads/${lead.id_str}`, {
-          method: 'DELETE'
-        });
+        await api.delete(`/leads/${lead.id_str}`);
         fetchData();
       } catch (err) {
         console.error("Failed to delete", err);

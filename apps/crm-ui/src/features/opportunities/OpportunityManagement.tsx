@@ -6,6 +6,7 @@ import { exportToCSV } from '../../utils/exportCsv';
 import GenericCreateModal from '../shared/GenericCreateModal';
 import OpportunityTable from './OpportunityTable';
 import OpportunityDetailModal from './OpportunityDetailModal';
+import { api } from '@/services/api';
 
 // Fallback data
 const fallbackData = {
@@ -29,11 +30,8 @@ const OpportunityManagement = () => {
 
   const fetchData = async () => {
       try {
-        const response = await fetch(process.env.NEXT_PUBLIC_API_URL + '/api/opportunities');
-        if (response.ok) {
-          const result = await response.json();
-          setData(result);
-        }
+        const result = await api.get<any>('/opportunities');
+        setData(result);
       } catch (error) {
         console.log("Failed to fetch opportunity data, using fallback", error);
       } finally {
@@ -47,16 +45,10 @@ const OpportunityManagement = () => {
   const handleDelete = async (record) => {
     if (window.confirm("Are you sure you want to delete this record?")) {
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/opportunities/${record.id_str}`, {
-          method: 'DELETE'
-        });
-        if (response.ok) {
-          fetchData();
-        } else {
-          alert("Failed to delete record.");
-        }
+        await api.delete(`/opportunities/${record.id_str}`);
+        fetchData();
       } catch (err) {
-        alert("Network error.");
+        alert("Failed to delete record: " + (err instanceof Error ? err.message : String(err)));
       }
     }
   };

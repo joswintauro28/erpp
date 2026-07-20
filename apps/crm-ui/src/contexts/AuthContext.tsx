@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
-import { api, setAccessToken, getAccessToken } from "@datavex/auth-middleware";
+import { api, setAccessToken } from "@datavex/auth-middleware";
 import type { User } from "@datavex/auth-middleware";
 
 interface AuthState {
@@ -12,39 +12,6 @@ interface AuthState {
 }
 
 const AuthContext = createContext<AuthState | null>(null);
-
-if (typeof window !== "undefined") {
-  const originalFetch = window.fetch;
-  window.fetch = async (input, init) => {
-    let url = typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
-    
-    // Normalize double /api/api/ to single /api/
-    if (url.includes("/api/api/")) {
-      url = url.replace("/api/api/", "/api/");
-      if (typeof input === "string") {
-        input = url;
-      } else if (input instanceof URL) {
-        input = new URL(url);
-      } else {
-        input = new Request(url, input as RequestInit);
-      }
-    }
-
-    if (url.startsWith("/api/") || url.includes("/api/")) {
-      const token = getAccessToken();
-      if (token) {
-        init = init || {};
-        const headers = new Headers(init.headers || {});
-        if (!headers.has("Authorization")) {
-          headers.set("Authorization", `Bearer ${token}`);
-        }
-        init.headers = headers;
-      }
-    }
-    
-    return originalFetch(input, init);
-  };
-}
 
 function getLoginUrl(): string {
   const currentUrl = encodeURIComponent(window.location.href);
