@@ -1,15 +1,15 @@
 import os
 import httpx
 
-# CRM microservice is at services/crm-service (FastAPI, port 8001).
+# CRM microservice is at services/crm-ser (FastAPI, port 8001).
 # Router prefixes use /api, paths here combine with CRM_SERVICE_URL accordingly.
-CRM_SERVICE_URL = os.environ.get("CRM_SERVICE_URL", "http://localhost:8001/api")
+CRM_SERVICE_URL = os.environ.get("CRM_SERVICE_URL", "http://localhost:8001")
 
 
 async def _get(path: str, token: str, params: dict | None = None) -> dict | list:
     headers = {"Authorization": f"Bearer {token}"}
     async with httpx.AsyncClient(timeout=10.0) as client:
-        resp = await client.get(f"{CRM_SERVICE_URL}{path}", headers=headers, params=params)
+        resp = await client.get(f"{CRM_SERVICE_URL}/api{path}", headers=headers, params=params)
         resp.raise_for_status()
         return resp.json()
 
@@ -56,7 +56,7 @@ async def get_enquiries(token: str) -> list[dict]:
 async def _post(path: str, token: str, body: dict) -> dict:
     headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
     async with httpx.AsyncClient(timeout=10.0) as client:
-        resp = await client.post(f"{CRM_SERVICE_URL}{path}", headers=headers, json=body)
+        resp = await client.post(f"{CRM_SERVICE_URL}/api{path}", headers=headers, json=body)
         resp.raise_for_status()
         return resp.json()
 
@@ -64,7 +64,7 @@ async def _post(path: str, token: str, body: dict) -> dict:
 async def _put(path: str, token: str, body: dict) -> dict:
     headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
     async with httpx.AsyncClient(timeout=10.0) as client:
-        resp = await client.put(f"{CRM_SERVICE_URL}{path}", headers=headers, json=body)
+        resp = await client.put(f"{CRM_SERVICE_URL}/api{path}", headers=headers, json=body)
         resp.raise_for_status()
         return resp.json()
 
@@ -72,7 +72,7 @@ async def _put(path: str, token: str, body: dict) -> dict:
 async def _delete(path: str, token: str) -> None:
     headers = {"Authorization": f"Bearer {token}"}
     async with httpx.AsyncClient(timeout=10.0) as client:
-        resp = await client.delete(f"{CRM_SERVICE_URL}{path}", headers=headers)
+        resp = await client.delete(f"{CRM_SERVICE_URL}/api{path}", headers=headers)
         resp.raise_for_status()
 
 

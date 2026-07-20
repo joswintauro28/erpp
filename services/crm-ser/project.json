@@ -1,0 +1,20 @@
+{
+  "name": "crm-ser",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "sourceRoot": "services/crm-ser",
+  "targets": {
+    "dev": {
+      "command": "venv\\Scripts\\uvicorn main:app --port 8001 --reload",
+      "options": {
+        "cwd": "services/crm-ser"
+      }
+    },
+    "seed": {
+      "command": "venv\\Scripts\\python scripts/seed_admin.py",
+      "options": {
+        "cwd": "services/crm-ser"
+      }
+    }
+  }
+}
