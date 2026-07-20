@@ -1,7 +1,12 @@
 """Comprehensive inventory seed — 30 products, 5 warehouses, 8 suppliers, 15 POs."""
 import asyncio
+import sys
+import os
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
+
+# Add CWD to python path to resolve app module imports
+sys.path.append(os.getcwd())
 
 from app.core.database import async_session_factory, engine, Base
 from app.product.models import Product
