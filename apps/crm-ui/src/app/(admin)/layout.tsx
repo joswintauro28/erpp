@@ -38,12 +38,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   return (
     <div className="app-container flex h-screen w-full overflow-hidden">
-      <Sidebar 
-        currentView="" 
-        setCurrentView={() => {}} 
-        onGoToAdmin={() => {}} 
-        onLogout={handleLogout} 
-      />
+      <Sidebar />
       <div className="main-content flex flex-1 flex-col overflow-hidden">
         <Header 
           currentView="" 
