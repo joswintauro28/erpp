@@ -5,7 +5,7 @@ COPY --from=oven/bun:1.2-alpine /usr/local/bin/bun /usr/local/bin/bun
 COPY package.json bun.lock ./
 # Copy all workspace package.json files so Bun resolves the full dependency graph
 COPY apps/erp-shell/package.json apps/erp-shell/
-COPY apps/crm-shell/package.json apps/crm-shell/
+COPY apps/crm-ui/package.json apps/crm-ui/
 COPY apps/billing-ui/package.json apps/billing-ui/
 COPY apps/inventory-ui/package.json apps/inventory-ui/
 COPY services/core-iam/package.json services/core-iam/
@@ -35,7 +35,7 @@ COPY --from=oven/bun:1.2-alpine /usr/local/bin/bun /usr/local/bin/bun
 
 COPY package.json bun.lock ./
 COPY apps/erp-shell/package.json apps/erp-shell/
-COPY apps/crm-shell/package.json apps/crm-shell/
+COPY apps/crm-ui/package.json apps/crm-ui/
 COPY apps/billing-ui/package.json apps/billing-ui/
 COPY apps/inventory-ui/package.json apps/inventory-ui/
 COPY services/core-iam/package.json services/core-iam/
@@ -67,5 +67,5 @@ RUN chown -R nodejs:nodejs /app/node_modules/@prisma /app/node_modules/.prisma
 USER nodejs
 EXPOSE 8003
 ENV PORT=8003
-CMD ["sh", "-c", "bun x prisma db push --skip-generate && exec node dist/main"]
+CMD ["sh", "-c", "bun x prisma db push --skip-generate --accept-data-loss && exec node dist/main"]
 

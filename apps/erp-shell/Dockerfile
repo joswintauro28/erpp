@@ -5,7 +5,7 @@ COPY --from=oven/bun:1.2-alpine /usr/local/bin/bun /usr/local/bin/bun
 COPY package.json bun.lock nx.json ./
 # Copy all workspace package.json files so Bun resolves the full dependency graph
 COPY apps/erp-shell/package.json apps/erp-shell/
-COPY apps/crm-shell/package.json apps/crm-shell/
+COPY apps/crm-ui/package.json apps/crm-ui/
 COPY apps/billing-ui/package.json apps/billing-ui/
 COPY apps/inventory-ui/package.json apps/inventory-ui/
 COPY services/core-iam/package.json services/core-iam/

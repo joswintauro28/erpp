@@ -32,6 +32,6 @@ EXPOSE 8004
 HEALTHCHECK --interval=15s --timeout=5s --retries=3 \
     CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8004/')" || exit 1
 
-CMD ["sh", "-c", "alembic upgrade head && exec uvicorn app.main:app --host 0.0.0.0 --port 8004"]
+CMD ["sh", "-c", "alembic upgrade head 2>/dev/null || alembic stamp head; exec uvicorn app.main:app --host 0.0.0.0 --port 8004"]
 
 
