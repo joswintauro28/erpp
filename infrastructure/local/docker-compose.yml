@@ -117,11 +117,11 @@ services:
   crm-service:
     build:
       context: ../../
-      dockerfile: services/crm-ser/Dockerfile
+      dockerfile: services/crm-service/Dockerfile
     container_name: datavex-crm-service
     restart: unless-stopped
     environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-root}@postgres:5432/CRM
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-root}@postgres:5432/erp_crm
       PORT: "8001"
       CORS_ORIGINS: http://localhost:3001,http://app.erp.local
     ports:
