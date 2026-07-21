@@ -36,22 +36,50 @@ Write-Host ""
 
 # Step 1: Seed core-iam
 Write-Host "[1/4] Seeding core-iam (SSO & Permissions)..." -ForegroundColor Yellow
-docker exec datavex-core-iam bun prisma/seed.ts
+Push-Location "$PSScriptRoot\..\..\services\core-iam"
+bunx tsc prisma/seed.ts --module commonjs --target es2022
 if ($LASTEXITCODE -eq 0) {
-    Write-Host "  OK - core-iam seeded successfully!" -ForegroundColor Green
+    docker exec datavex-core-iam npx prisma db push --accept-data-loss --skip-generate
+    if ($LASTEXITCODE -eq 0) {
+        docker cp prisma/seed.js datavex-core-iam:/app/services/core-iam/prisma/seed.js
+        docker exec datavex-core-iam node prisma/seed.js
+        if ($LASTEXITCODE -eq 0) {
+            Write-Host "  OK - core-iam seeded successfully!" -ForegroundColor Green
+        } else {
+            Write-Host "  FAIL - core-iam seeding execution failed." -ForegroundColor Red
+        }
+        Remove-Item prisma/seed.js -ErrorAction SilentlyContinue
+    } else {
+        Write-Host "  FAIL - core-iam database push failed." -ForegroundColor Red
+    }
 } else {
-    Write-Host "  FAIL - core-iam seeding failed." -ForegroundColor Red
+    Write-Host "  FAIL - core-iam seeder compilation failed." -ForegroundColor Red
 }
+Pop-Location
 Write-Host ""
 
 # Step 2: Seed billing-service
 Write-Host "[2/4] Seeding billing-service (Invoices, Payments, Ledgers)..." -ForegroundColor Yellow
-docker exec datavex-billing-service bun prisma/seed.ts
+Push-Location "$PSScriptRoot\..\..\services\billing-service"
+bunx tsc prisma/seed.ts --module commonjs --target es2022
 if ($LASTEXITCODE -eq 0) {
-    Write-Host "  OK - billing-service seeded successfully!" -ForegroundColor Green
+    docker exec datavex-billing-service npx prisma db push --accept-data-loss --skip-generate
+    if ($LASTEXITCODE -eq 0) {
+        docker cp prisma/seed.js datavex-billing-service:/app/services/billing-service/prisma/seed.js
+        docker exec datavex-billing-service node prisma/seed.js
+        if ($LASTEXITCODE -eq 0) {
+            Write-Host "  OK - billing-service seeded successfully!" -ForegroundColor Green
+        } else {
+            Write-Host "  FAIL - billing-service seeding execution failed." -ForegroundColor Red
+        }
+        Remove-Item prisma/seed.js -ErrorAction SilentlyContinue
+    } else {
+        Write-Host "  FAIL - billing-service database push failed." -ForegroundColor Red
+    }
 } else {
-    Write-Host "  FAIL - billing-service seeding failed." -ForegroundColor Red
+    Write-Host "  FAIL - billing-service seeder compilation failed." -ForegroundColor Red
 }
+Pop-Location
 Write-Host ""
 
 # Step 3: Seed crm-service
@@ -59,7 +87,7 @@ Write-Host "[3/4] Seeding crm-service (Leads, Customers, Pipelines)..." -Foregro
 # Copy scripts folder from host to container
 docker cp "$PSScriptRoot\..\..\services\crm-service\scripts" datavex-crm-service:/app/services/crm-service/
 if ($LASTEXITCODE -eq 0) {
-    docker exec -e PYTHONPATH=. datavex-crm-service /opt/venv/bin/python /app/services/crm-service/scripts/seed_data.py
+    docker exec -e PYTHONPATH=. datavex-crm-service /opt/venv/bin/python /app/services/crm-service/scripts/seed.py
     if ($LASTEXITCODE -eq 0) {
         Write-Host "  OK - crm-service seeded successfully!" -ForegroundColor Green
     } else {

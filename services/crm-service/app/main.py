@@ -47,6 +47,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy"}
+
 # Auth dependency for CRM
 crm_auth = [Depends(get_current_token_payload)]
 

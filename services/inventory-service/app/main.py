@@ -77,6 +77,10 @@ app.include_router(serial_numbers_router)
 app.include_router(dashboard_router)
 
 
-@app.get("/")
+@app.get("/health")
 async def health_check():
+    return {"status": "healthy"}
+
+@app.get("/")
+async def root():
     return {"message": "DATAVEX Inventory API Running", "status": "healthy"}

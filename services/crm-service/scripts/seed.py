@@ -32,6 +32,11 @@ async def seed():
         try:
             organization_id = 1
 
+            # Clean up existing data first
+            from sqlalchemy import text
+            await db.execute(text("TRUNCATE TABLE ai_logs, contacts, customers, documents, hot_leads, leads, metrics, opportunities, pinned_leads, pipeline_stages, recommendations, reports, requirements, sales_orders CASCADE"))
+            await db.commit()
+
             # ── Customers (10) ───────────────────────────────────────────
             customers = [
                 Customer(id_str="CU-1001", account="Meridian Foods", industry="Food Processing",

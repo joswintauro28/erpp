@@ -104,12 +104,6 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request, os; urllib.request.urlopen('http://localhost:' + os.environ.get('PORT', '8000') + '/')"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 15s
     networks:
       - erp-network
 
@@ -117,24 +111,21 @@ services:
   crm-service:
     build:
       context: ../../
-      dockerfile: services/crm-ser/Dockerfile
+      dockerfile: services/crm-service/Dockerfile
     container_name: datavex-crm-service
     restart: unless-stopped
     environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-root}@postgres:5432/CRM
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-root}@postgres:5432/erp_crm
+      JWT_SECRET: ${JWT_SECRET:-development-jwt-secret-key-123}
       PORT: "8001"
-      CORS_ORIGINS: http://localhost:3001,http://app.erp.local
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      CORS_ORIGINS: http://crm.erp.local,http://app.erp.local
     ports:
       - "8001:8001"
     depends_on:
       postgres:
         condition: service_healthy
-    healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request, os; urllib.request.urlopen('http://localhost:' + os.environ.get('PORT', '8001') + '/')"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 15s
     networks:
       - erp-network
 
@@ -156,12 +147,6 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request, os; urllib.request.urlopen('http://localhost:' + os.environ.get('PORT', '8004') + '/')"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 15s
     networks:
       - erp-network
 
@@ -220,7 +205,9 @@ services:
       NODE_ENV: production
       PORT: "3001"
       HOSTNAME: "0.0.0.0"
-      NEXT_PUBLIC_API_URL: http://localhost:8000
+      IAM_API_URL: http://core-iam:8002
+      CRM_API_URL: http://crm-service:8001
+      NEXT_PUBLIC_API_URL: /api
       NEXT_PUBLIC_APP_URL: ${CRM_APP_URL:-http://crm.erp.local}
       NEXT_PUBLIC_SHELL_APP_URL: ${SHELL_APP_URL:-http://app.erp.local}
     ports:

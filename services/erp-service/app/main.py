@@ -78,6 +78,10 @@ app.include_router(inventory_router)
 app.include_router(settings_router)
 
 
-@app.get("/")
+@app.get("/health")
 async def health_check():
+    return {"status": "healthy"}
+
+@app.get("/")
+async def root():
     return {"message": "DATAVEX ERP API Running", "status": "healthy"}

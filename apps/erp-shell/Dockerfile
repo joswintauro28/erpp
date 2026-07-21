@@ -1,11 +1,14 @@
-FROM node:24-alpine AS builder
+FROM node:24-alpine AS base
 WORKDIR /app
+ENV NEXT_TELEMETRY_DISABLED=1
 COPY --from=oven/bun:1.2-alpine /usr/local/bin/bun /usr/local/bin/bun
 
+FROM base AS deps
+RUN apk add --no-cache libc6-compat
+
 COPY package.json bun.lock nx.json ./
-# Copy all workspace package.json files so Bun resolves the full dependency graph
 COPY apps/erp-shell/package.json apps/erp-shell/
-COPY apps/crm-shell/package.json apps/crm-shell/
+COPY apps/crm-ui/package.json apps/crm-ui/
 COPY apps/billing-ui/package.json apps/billing-ui/
 COPY apps/inventory-ui/package.json apps/inventory-ui/
 COPY services/core-iam/package.json services/core-iam/
@@ -15,6 +18,12 @@ COPY packages/ui-theme/package.json packages/ui-theme/
 RUN --mount=type=cache,target=/root/.cache/bun \
     bun install --frozen-lockfile --ignore-scripts
 
+FROM base AS builder
+
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/package.json ./package.json
+COPY --from=deps /app/bun.lock ./bun.lock
+
 COPY packages/ packages/
 COPY apps/erp-shell/ apps/erp-shell/
 
@@ -23,26 +32,30 @@ ARG NEXT_PUBLIC_CRM_APP_URL=http://crm.erp.local
 ARG NEXT_PUBLIC_INVENTORY_APP_URL=http://inventory.erp.local
 ENV NEXT_PUBLIC_BILLING_APP_URL=$NEXT_PUBLIC_BILLING_APP_URL \
     NEXT_PUBLIC_CRM_APP_URL=$NEXT_PUBLIC_CRM_APP_URL \
-    NEXT_PUBLIC_INVENTORY_APP_URL=$NEXT_PUBLIC_INVENTORY_APP_URL \
-    NEXT_STANDALONE=true
+    NEXT_PUBLIC_INVENTORY_APP_URL=$NEXT_PUBLIC_INVENTORY_APP_URL
 
-RUN mkdir -p apps/erp-shell/public && cd apps/erp-shell && bun run build
+RUN --mount=type=cache,target=/app/apps/erp-shell/.next/cache \
+    mkdir -p apps/erp-shell/public && cd apps/erp-shell && bun run build
 
 FROM node:24-alpine AS runner
 WORKDIR /app
+
 ENV NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1 \
-    PORT=3000
+    PORT=3000 \
+    HOSTNAME="0.0.0.0"
+
+RUN apk add --no-cache dumb-init
 
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs
 
-# Copy Next.js standalone files (minimal footprint)
 COPY --from=builder --chown=nextjs:nodejs /app/apps/erp-shell/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/apps/erp-shell/public ./apps/erp-shell/public
 COPY --from=builder --chown=nextjs:nodejs /app/apps/erp-shell/.next/static ./apps/erp-shell/.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/apps/erp-shell/public ./apps/erp-shell/public
 
 USER nextjs
 EXPOSE 3000
-CMD ["node", "apps/erp-shell/server.js"]
 
+ENTRYPOINT ["/usr/bin/dumb-init", "--"]
+CMD ["node", "apps/erp-shell/server.js"]
