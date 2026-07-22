@@ -6,14 +6,76 @@ from app.integrations import crm_client
 router = APIRouter(prefix="/crm", tags=["crm-passthrough"])
 
 VALID_ENTITIES = {
-    "customers", "contacts", "documents", "opportunities",
+    "customers", "contacts", "documents", "opportunities", "sales",
     "requirements", "quotations", "sales-orders",
     "reports", "ai-assistant", "lead-discovery",
+    "enquiries", "site-visits", "follow-ups", "tasks",
+    "communications", "visit-plans", "complaints", "feedback",
+    "leads",
 }
 
 
 def _get_token(payload: dict) -> str:
     return payload.get("_raw_token", "")
+
+
+# ─── Lead Mapping ────────────────────────────────────────────
+
+def _map_lead(l: dict) -> dict:
+    return {
+        "id": l.get("id"),
+        "owner_id": l.get("owner_id"),
+        "company_name": l.get("company"),
+        "contact_person": l.get("name"),
+        "email": None,
+        "phone": None,
+        "lead_score": 0,
+        "assigned_to": None,
+        "source": l.get("source"),
+        "expected_value": l.get("est_value", 0),
+        "status": l.get("status"),
+        "gst_number": None,
+        "state": None,
+        "address": None,
+        "website": None,
+        "industry": None,
+        "notes": None,
+        "converted_client_id": None,
+        "converted_at": None,
+        "created_at": l.get("updated_at"),
+    }
+
+
+def _reverse_map_lead(body: dict) -> dict:
+    crm_body = {}
+    if "contact_person" in body:
+        crm_body["name"] = body["contact_person"]
+    if "company_name" in body:
+        crm_body["company"] = body["company_name"]
+    if "source" in body:
+        crm_body["source"] = body["source"]
+    if "expected_value" in body:
+        crm_body["est_value"] = body["expected_value"]
+    if "status" in body:
+        crm_body["status"] = body["status"]
+    if "notes" in body:
+        crm_body["notes"] = body["notes"]
+    return crm_body
+
+
+def _maybe_map_leads(data: dict | list, mapper=_map_lead) -> list | dict:
+    items = crm_client.extract_list(data, "leads")
+    mapped = [mapper(item) for item in items]
+    if isinstance(data, dict):
+        data["leads"] = mapped
+        return data
+    return mapped
+
+
+def _maybe_map_lead(item: dict | None) -> dict | None:
+    if item:
+        return _map_lead(item)
+    return None
 
 
 # ─── Reports Dashboard (specific sub-path) ────────────────────────────
@@ -83,7 +145,43 @@ async def pinned_lead_delete(company_name: str, payload: dict = Depends(get_curr
     return await crm_client.unpin_lead(token, company_name)
 
 
-# ─── Generic Entity List ─────────────────────────────────────────────
+# ─── Lead-specific endpoints ──────────────────────────────────
+
+@router.post("/leads/{lead_id}/convert")
+async def convert_lead(
+    lead_id: str,
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = _get_token(payload)
+    id_str = lead_id
+    lead_data = None
+    try:
+        lead_data = await crm_client.get_entity_detail("leads", id_str, token)
+    except Exception:
+        pass
+
+    if not lead_data or not id_str.startswith("lead_"):
+        data = crm_client.extract_list(
+            await crm_client.get_entity_list("leads", token), "leads"
+        )
+        for l in data:
+            if str(l.get("id")) == str(lead_id) or l.get("id_str") == lead_id:
+                lead_data = l
+                id_str = l.get("id_str")
+                break
+
+    if not lead_data:
+        raise HTTPException(status_code=404, detail="Lead not found")
+
+    crm_body = {**lead_data, "status": "Converted"}
+    try:
+        result = await crm_client.update_entity("leads", id_str, token, crm_body)
+        return _map_lead(result)
+    except Exception:
+        raise HTTPException(status_code=404, detail="Lead not found")
+
+
+# ─── Generic Entity List ─────────────────────────────────────
 
 @router.get("/{entity_type}")
 async def list_entities(
@@ -93,7 +191,6 @@ async def list_entities(
     if entity_type not in VALID_ENTITIES:
         raise HTTPException(status_code=404, detail=f"Unknown entity type: {entity_type}")
 
-    # Quotations are not yet implemented in crm-service; return empty data
     if entity_type == "quotations":
         return {
             "summary": {"total_quotations": 0, "open": 0, "overdue_at_risk": 0, "owners": 0},
@@ -101,7 +198,12 @@ async def list_entities(
         }
 
     token = _get_token(payload)
-    return await crm_client.get_entity_list(entity_type, token)
+    data = await crm_client.get_entity_list(entity_type, token)
+
+    if entity_type == "leads":
+        return _maybe_map_leads(data)
+
+    return data
 
 
 @router.get("/{entity_type}/{id_str}")
@@ -113,7 +215,10 @@ async def get_entity(
     if entity_type not in VALID_ENTITIES:
         raise HTTPException(status_code=404, detail=f"Unknown entity type: {entity_type}")
     token = _get_token(payload)
-    return await crm_client.get_entity_detail(entity_type, id_str, token)
+    data = await crm_client.get_entity_detail(entity_type, id_str, token)
+    if entity_type == "leads":
+        return _maybe_map_lead(data)
+    return data
 
 
 @router.post("/{entity_type}")
@@ -125,7 +230,13 @@ async def create_entity(
     if entity_type not in VALID_ENTITIES:
         raise HTTPException(status_code=404, detail=f"Unknown entity type: {entity_type}")
     token = _get_token(payload)
-    return await crm_client.create_entity(entity_type, token, body)
+
+    mapped_body = _reverse_map_lead(body) if entity_type == "leads" else body
+    data = await crm_client.create_entity(entity_type, token, mapped_body)
+
+    if entity_type == "leads":
+        return _map_lead(data)
+    return data
 
 
 @router.put("/{entity_type}/{id_str}")
@@ -138,7 +249,13 @@ async def update_entity(
     if entity_type not in VALID_ENTITIES:
         raise HTTPException(status_code=404, detail=f"Unknown entity type: {entity_type}")
     token = _get_token(payload)
-    return await crm_client.update_entity(entity_type, id_str, token, body)
+
+    mapped_body = _reverse_map_lead(body) if entity_type == "leads" else body
+    data = await crm_client.update_entity(entity_type, id_str, token, mapped_body)
+
+    if entity_type == "leads":
+        return _map_lead(data)
+    return data
 
 
 @router.delete("/{entity_type}/{id_str}")

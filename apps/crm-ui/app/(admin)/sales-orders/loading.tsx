@@ -29,7 +29,7 @@ export default function SalesOrdersLoading() {
       </div>
 
       {/* Table Mock Layout */}
-      <div className="rounded-xl border border-[--shell-border] bg-[--shell-surface] overflow-hidden shadow-sm">
+      <div className="rounded-xl border border-[--shell-border] bg-[--shell-surface] overflow-hidden shadow-engineered">
         {/* Table Header */}
         <div className="grid grid-cols-12 gap-4 border-b border-[--shell-border] bg-[--shell-surface-alt]/50 px-6 py-3">
           <div className="col-span-3"><div className="h-3.5 w-16 rounded shimmer-glow" /></div>

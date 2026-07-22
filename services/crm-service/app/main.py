@@ -22,6 +22,7 @@ from app.sales_orders.router import router as sales_orders_router
 from app.reports.router import router as reports_router
 from app.ai_assistant.router import router as ai_assistant_router
 from app.lead_discovery.router import router as lead_discovery_router
+from app.quotations.router import router as quotations_router
 
 
 @asynccontextmanager
@@ -67,6 +68,7 @@ app.include_router(sales_orders_router, dependencies=crm_auth)
 app.include_router(reports_router, dependencies=crm_auth)
 app.include_router(ai_assistant_router, dependencies=crm_auth)
 app.include_router(lead_discovery_router, dependencies=crm_auth)
+app.include_router(quotations_router, dependencies=crm_auth)
 
 # Dynamic Entity Mapping
 ENTITY_MODEL_MAP = {

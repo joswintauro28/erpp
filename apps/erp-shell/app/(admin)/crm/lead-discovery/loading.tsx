@@ -2,9 +2,14 @@ export default function LeadDiscoveryLoading() {
   return (
     <div className="relative space-y-6">
       <span className="absolute -top-6 left-0 h-0.5 w-1/3 rounded-full bg-[--shell-brand] shimmer-glow" />
+
       <div className="flex items-center justify-between">
-        <div className="space-y-2"><div className="h-6 w-28 rounded-md shimmer-glow" /><div className="h-4 w-64 rounded shimmer-glow" /></div>
+        <div className="space-y-2">
+          <div className="h-6 w-28 rounded-md shimmer-glow" />
+          <div className="h-4 w-64 rounded shimmer-glow" />
+        </div>
       </div>
+
       <div className="space-y-6">
         <div className="h-4 w-32 rounded shimmer-glow" />
         <div className="rounded-xl border border-[--shell-border] bg-[--shell-surface] p-6 space-y-4">
@@ -13,6 +18,7 @@ export default function LeadDiscoveryLoading() {
             <div className="h-10 w-28 rounded-md shimmer-glow" />
           </div>
         </div>
+
         <div className="space-y-4">
           <div className="flex justify-between items-center">
             <div className="h-4.5 w-36 rounded shimmer-glow" />

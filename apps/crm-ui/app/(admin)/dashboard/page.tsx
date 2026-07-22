@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  PieChart, Pie, Cell, Tooltip, ResponsiveContainer, BarChart, Bar, CartesianGrid, XAxis, YAxis,
+  BarChart, Bar, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell,
 } from "recharts";
 import {
   TrendingUp, Users, Target, FileText, UserPlus, Layers, Plus,
@@ -15,6 +15,9 @@ import { Button } from "@/components/ui/button";
 import { api } from "@/services/api";
 import { useAuth } from "@/contexts/AuthContext";
 import DashboardLoading from "./loading";
+import MetricCard from "./MetricCard";
+import PipelineChart from "./PipelineChart";
+import Recommendations from "./Recommendations";
 
 const STAGE_COLORS = ["#6366f1", "#0ea5e9", "#14b8a6", "#f59e0b", "#10b981"];
 const KPI_COLORS = ["var(--chart-1)", "var(--chart-2)", "var(--chart-4)", "var(--chart-3)"];
@@ -33,35 +36,6 @@ function formatPipelineValue(value: number) {
   return `$${value.toFixed(0)}`;
 }
 
-function KpiCard({ label, value, subtitle, icon: Icon, trend, color, index }: {
-  label: string; value: string; subtitle?: string; icon: typeof TrendingUp;
-  trend?: { dir: "up" | "down"; pct: string }; color: string; index: number;
-}) {
-  return (
-    <div
-      className="animate-kpi flex flex-col gap-1.5 rounded-xl border border-[--shell-border] bg-[--shell-surface] p-5 transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1)]"
-      style={{ animationDelay: `${index * 0.05}s` }}
-    >
-      <div className="flex items-center justify-between">
-        <span className="text-xs font-medium uppercase tracking-[0.08em] text-[--shell-muted]">{label}</span>
-        <div className="flex h-7 w-7 items-center justify-center rounded-md border border-[--shell-border] bg-[--shell-bg]">
-          <Icon className="h-3.5 w-3.5" style={{ color }} />
-        </div>
-      </div>
-      <span className="font-heading text-2xl font-semibold tracking-tight text-[--shell-foreground]">{value}</span>
-      <div className="flex items-center gap-2">
-        {trend && (
-          <span className={`flex items-center gap-0.5 text-xs font-medium ${trend.dir === "up" ? "text-[--shell-success]" : "text-[--shell-danger]"}`}>
-            {trend.dir === "up" ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />}
-            {trend.pct}
-          </span>
-        )}
-        {subtitle && <span className="text-xs text-[--shell-muted]">{subtitle}</span>}
-      </div>
-    </div>
-  );
-}
-
 function MiniStat({ icon: Icon, label, value, color }: { icon: typeof FileText; label: string; value: string; color: string }) {
   return (
     <div className="flex items-center gap-3 rounded-lg border border-[--shell-border] bg-[--shell-surface] px-3.5 py-2.5">
@@ -74,6 +48,13 @@ function MiniStat({ icon: Icon, label, value, color }: { icon: typeof FileText; 
       </div>
     </div>
   );
+}
+
+function getGreeting(): string {
+  const h = new Date().getHours();
+  if (h < 12) return "Good morning";
+  if (h < 17) return "Good afternoon";
+  return "Good evening";
 }
 
 export default function DashboardPage() {
@@ -116,6 +97,14 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-10 lg:space-y-12">
+      {/* Welcome Greeting */}
+      <div className="flex flex-col gap-1">
+        <h1 className="font-heading text-xl font-semibold tracking-tight text-[--shell-foreground]">
+          {getGreeting()}, {user?.full_name || user?.email || "User"}
+        </h1>
+        <p className="text-sm text-[--shell-muted]">Here&apos;s what&apos;s moving across your pipeline and accounts today.</p>
+      </div>
+
       {/* Alert Banner */}
       {hasAlerts && (
         <div className="flex flex-wrap items-center gap-3 rounded-xl border border-[--shell-accent]/20 bg-gradient-to-r from-[--shell-accent]/5 to-transparent px-5 py-3.5">
@@ -141,11 +130,11 @@ export default function DashboardPage() {
           {metrics.map((m: any, i: number) => {
             const trendDir = m.is_positive ? ("up" as const) : ("down" as const);
             return (
-              <KpiCard
+              <MetricCard
                 key={m.id}
                 label={m.name}
                 value={m.formatted_value}
-                subtitle={m.trend}
+                // subtitle={m.trend}
                 icon={metricIcons[i] ?? TrendingUp}
                 trend={{ dir: trendDir, pct: m.trend }}
                 color={KPI_COLORS[i]}
@@ -153,7 +142,7 @@ export default function DashboardPage() {
               />
             );
           })}
-          <KpiCard
+          <MetricCard
             label="Pipeline Value"
             value={formatPipelineValue(pipelineValue)}
             subtitle={`${stages.length} stage${stages.length !== 1 ? "s" : ""} active`}
@@ -186,141 +175,8 @@ export default function DashboardPage() {
           <div className="h-px flex-1 bg-[--shell-border]" />
         </div>
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          {/* Pipeline Donut */}
-          <Card className="hover:shadow-md transition-shadow duration-200 border-[--shell-border] bg-[--shell-surface]">
-            <CardHeader className="flex flex-row items-center justify-between pb-2 border-b border-[--shell-border]/20">
-              <div>
-                <CardTitle className="flex items-center gap-2 text-sm font-semibold text-[--shell-foreground]">
-                  <BarChart3 className="h-4 w-4 text-[--shell-accent]" />
-                  Pipeline Distribution
-                </CardTitle>
-                <CardDescription className="text-xs text-[--shell-muted]">Value breakdown by stage</CardDescription>
-              </div>
-            </CardHeader>
-            <CardContent className="pt-4">
-              {stages.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center min-h-[300px]">
-                  <div className="col-span-12 md:col-span-7 flex justify-center items-center relative h-[250px] md:h-[280px]">
-                    <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-0">
-                      <div className="flex flex-col items-center justify-center bg-[--shell-surface] border border-[--shell-border] rounded-full h-32 w-32 shadow-engineered">
-                        <span className="font-heading text-3xl font-bold tracking-tight text-[--shell-foreground] leading-none">
-                          {stages.length}
-                        </span>
-                        <span className="text-[10px] font-heading font-semibold uppercase tracking-[0.12em] text-[--shell-muted] mt-1">Stages</span>
-                      </div>
-                    </div>
-                    <ResponsiveContainer width="100%" height="100%" className="relative z-10">
-                      <PieChart>
-                        <Pie
-                          data={stages.map((s: any) => ({ name: s.name, value: s.value }))}
-                          cx="50%" cy="50%"
-                          innerRadius={78}
-                          outerRadius={108}
-                          paddingAngle={3}
-                          dataKey="value"
-                          stroke="var(--shell-surface)"
-                          strokeWidth={2}
-                        >
-                          {stages.map((_: any, i: number) => (
-                            <Cell key={i} fill={STAGE_COLORS[i % STAGE_COLORS.length]} className="outline-none hover:opacity-90 transition-opacity" />
-                          ))}
-                        </Pie>
-                        <Tooltip
-                          contentStyle={tooltipStyle}
-                          formatter={(_value: unknown, _name: unknown, entry: any) => {
-                            const v = entry?.payload?.value ?? 0;
-                            return [formatPipelineValue(v), entry?.payload?.name];
-                          }}
-                        />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </div>
-                  <div className="col-span-12 md:col-span-5 space-y-3">
-                    <div className="text-[11px] font-heading font-semibold uppercase tracking-[0.12em] text-[--shell-muted] border-b border-[--shell-border]/20 pb-1.5 mb-3">
-                      Stage Breakdown
-                    </div>
-                    <div className="space-y-2.5 max-h-[250px] overflow-y-auto pr-1">
-                      {stages.map((s: any, i: number) => {
-                        const pct = pipelineValue > 0 ? (s.value / pipelineValue) * 100 : 0;
-                        return (
-                          <div key={s.id} className="flex flex-col gap-1.5 p-2 rounded-lg hover:bg-[--shell-border]/10 transition-all duration-150 group">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2">
-                                <span className="h-2.5 w-2.5 rounded-full shrink-0 transition-transform group-hover:scale-110" style={{ background: STAGE_COLORS[i % STAGE_COLORS.length] }} />
-                                <span className="text-xs font-heading font-semibold tracking-tight text-[--shell-foreground]">{s.name}</span>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <span className="text-xs font-mono font-bold text-[--shell-foreground]">{formatPipelineValue(s.value)}</span>
-                                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[--shell-border]/30 text-[--shell-muted] font-medium">{pct.toFixed(1)}%</span>
-                              </div>
-                            </div>
-                            <div className="h-1 w-full bg-[--shell-border]/20 rounded-full overflow-hidden">
-                              <div className="h-full rounded-full transition-all duration-500" style={{ width: `${pct}%`, background: STAGE_COLORS[i % STAGE_COLORS.length] }} />
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                    <div className="pt-2 border-t border-[--shell-border]/20">
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-[--shell-muted]">Total Pipeline</span>
-                        <span className="font-heading font-semibold text-[--shell-foreground]">{formatPipelineValue(pipelineValue)}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="flex min-h-[300px] items-center justify-center text-sm text-[--shell-muted] border border-dashed border-[--shell-border] rounded-lg">
-                  No pipeline data available
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* AI Recommendations */}
-          <Card className="hover:shadow-md transition-shadow duration-200 border-[--shell-border] bg-[--shell-surface]">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <div>
-                <CardTitle className="flex items-center gap-2 text-sm">
-                  <Lightbulb className="h-4 w-4 text-[--shell-accent]" />
-                  AI Recommendations
-                </CardTitle>
-                <CardDescription className="text-xs text-[--shell-muted]">Actionable insights from your pipeline</CardDescription>
-              </div>
-              <Button variant="ghost" size="sm" className="text-xs gap-1" onClick={() => router.push("/ai-assistant")}>
-                View all <ArrowUp className="h-3 w-3 rotate-90" />
-              </Button>
-            </CardHeader>
-            <CardContent>
-              {recommendations.length === 0 ? (
-                <div className="flex min-h-[200px] items-center justify-center text-sm text-[--shell-muted]">
-                  No recommendations yet
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {recommendations.slice(0, 5).map((r: any) => (
-                    <div key={r.id} className="rounded-lg border border-[--shell-border] bg-[--shell-bg] p-3.5 hover:border-[--shell-accent]/30 transition-colors">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="min-w-0 flex-1">
-                          <p className="text-sm font-medium text-[--shell-foreground]">{r.text}</p>
-                          <div className="flex items-center gap-2 mt-1.5">
-                            <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-auto capitalize">
-                              {r.type ?? "general"}
-                            </Badge>
-                            {r.confidence != null && (
-                              <span className="text-[10px] text-[--shell-muted] font-mono">
-                                {r.confidence}% confidence
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          <PipelineChart stages={stages} pipelineValue={pipelineValue} />
+          <Recommendations recommendations={recommendations} />
         </div>
       </section>
 
@@ -332,7 +188,7 @@ export default function DashboardPage() {
         </div>
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           {/* Stage Value Bar Chart */}
-          <Card className="hover:shadow-md transition-shadow duration-200 border-[--shell-border] bg-[--shell-surface]">
+          <Card className="hover:shadow-engineered transition-shadow duration-200 border-[--shell-border] bg-[--shell-surface]">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <div>
                 <CardTitle className="flex items-center gap-2 text-sm">
@@ -356,15 +212,9 @@ export default function DashboardPage() {
                       <CartesianGrid strokeDasharray="4 4" stroke="var(--shell-border)" strokeOpacity={0.4} />
                       <XAxis dataKey="name" tick={{ fontSize: 11, fill: "var(--shell-muted)" }} stroke="var(--shell-border)" axisLine={false} tickLine={false} />
                       <YAxis tick={{ fontSize: 11, fill: "var(--shell-muted)" }} stroke="var(--shell-border)" axisLine={false} tickLine={false} tickFormatter={(v) => formatPipelineValue(v)} />
-                      <Tooltip
-                        contentStyle={tooltipStyle}
-                        formatter={(value) => [formatPipelineValue(Number(value)), "Stage Value"]}
-                        labelStyle={{ fontWeight: 600, marginBottom: 4, color: "var(--shell-foreground)" }}
-                      />
+                      <Tooltip contentStyle={tooltipStyle} formatter={(value) => [formatPipelineValue(Number(value)), "Stage Value"]} labelStyle={{ fontWeight: 600, marginBottom: 4, color: "var(--shell-foreground)" }} />
                       <Bar dataKey="value" radius={[4, 4, 0, 0]} maxBarSize={64}>
-                        {stages.map((_: any, i: number) => (
-                          <Cell key={i} fill={STAGE_COLORS[i % STAGE_COLORS.length]} />
-                        ))}
+                        {stages.map((_: any, i: number) => <Cell key={i} fill={STAGE_COLORS[i % STAGE_COLORS.length]} />)}
                       </Bar>
                     </BarChart>
                   </ResponsiveContainer>
@@ -376,7 +226,7 @@ export default function DashboardPage() {
           </Card>
 
           {/* Quick Insights */}
-          <Card className="hover:shadow-md transition-shadow duration-200 border-[--shell-border] bg-[--shell-surface]">
+          <Card className="hover:shadow-engineered transition-shadow duration-200 border-[--shell-border] bg-[--shell-surface]">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <div>
                 <CardTitle className="flex items-center gap-2 text-sm">
@@ -388,18 +238,12 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 gap-3">
-                {insights.map((insight) => (
-                  <MiniStat key={insight.label} {...insight} />
-                ))}
+                {insights.map((insight) => <MiniStat key={insight.label} {...insight} />)}
               </div>
               {hasAlerts ? (
                 <div className="mt-3 rounded-lg border border-[--shell-accent]/20 bg-[--shell-accent]/5 px-3.5 py-2.5">
-                  <p className="text-xs font-medium text-[--shell-accent-text]">
-                    {recommendations.length} AI recommendation{recommendations.length !== 1 ? "s" : ""} available
-                  </p>
-                  <p className="mt-0.5 text-[11px] text-[--shell-muted]">
-                    Review insights to optimize your sales pipeline.
-                  </p>
+                  <p className="text-xs font-medium text-[--shell-accent-text]">{recommendations.length} AI recommendation{recommendations.length !== 1 ? "s" : ""} available</p>
+                  <p className="mt-0.5 text-[11px] text-[--shell-muted]">Review insights to optimize your sales pipeline.</p>
                 </div>
               ) : (
                 <div className="mt-3 rounded-lg border border-[--shell-success]/20 bg-[--shell-success]/5 px-3.5 py-2.5">
@@ -410,7 +254,6 @@ export default function DashboardPage() {
           </Card>
         </div>
       </section>
-
     </div>
   );
 }

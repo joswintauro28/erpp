@@ -1,36 +1,24 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Download, Search, Filter, Sparkles } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Plus, Download, Search, Filter, Sparkles, RotateCw } from "lucide-react";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
+import { exportToCSV } from "@/utils/exportCsv";
+import LeadTable from "./LeadTable";
+import LeadDetailsModal from "./LeadDetailsModal";
 import { Spinner } from "@/components/ui/spinner";
-import { cn } from "@/lib/utils";
 import { api } from "@/services/api";
 import GenericCreateModal from "@/components/GenericCreateModal";
-import GenericDetailsModal from "@/components/GenericDetailsModal";
 
-const statusVariant: Record<string, "default" | "secondary" | "outline" | "destructive"> = {
-  New: "secondary",
-  Qualified: "default",
-  "In Progress": "outline",
-  Converted: "default",
-  Lost: "destructive",
-};
 
-function formatCurrency(value: number | string) {
-  const n = Number(value);
-  if (isNaN(n)) return String(value);
-  return new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(n);
-}
 
 export default function LeadsPage() {
   const router = useRouter();
   const [data, setData] = useState({ summary: { total_leads: 0, open: 0, overdue_at_risk: 0, owners: 0 }, leads: [] });
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState<any>(null);
@@ -57,6 +45,11 @@ export default function LeadsPage() {
 
   if (loading) return <div className="space-y-10 lg:space-y-12"><div className="flex h-full items-center justify-center py-20"><Spinner /></div></div>;
 
+  const items = data?.leads || [];
+  const filtered = search
+    ? items.filter((i: any) => JSON.stringify(i).toLowerCase().includes(search.toLowerCase()))
+    : items;
+
   return (
     <div className="space-y-10 lg:space-y-12">
       <div>
@@ -66,22 +59,22 @@ export default function LeadsPage() {
         </div>
 
         <div className="grid gap-4 sm:grid-cols-4">
-          <div className="rounded-xl border border-[--shell-border] bg-[--shell-surface] p-4 space-y-2 hover:shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1)] transition-shadow">
+          <div className="rounded-xl border border-[--shell-border] bg-[--shell-surface] p-4 space-y-2 hover:shadow-engineered transition-shadow">
             <p className="text-xs font-medium uppercase tracking-[0.08em] text-[--shell-muted]">TOTAL LEADS</p>
             <p className="font-heading text-2xl font-semibold tracking-tight text-[--shell-foreground]">{data.summary.total_leads}</p>
             <p className="text-xs text-[--shell-muted]">leads in pipeline</p>
           </div>
-          <div className="rounded-xl border border-[--shell-border] bg-[--shell-surface] p-4 space-y-2 hover:shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1)] transition-shadow">
+          <div className="rounded-xl border border-[--shell-border] bg-[--shell-surface] p-4 space-y-2 hover:shadow-engineered transition-shadow">
             <p className="text-xs font-medium uppercase tracking-[0.08em] text-[--shell-muted]">OPEN</p>
             <p className="font-heading text-2xl font-semibold tracking-tight text-[--shell-foreground]">{data.summary.open}</p>
             <p className="text-xs text-[--shell-muted]">open leads</p>
           </div>
-          <div className="rounded-xl border border-[--shell-border] bg-[--shell-surface] p-4 space-y-2 hover:shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1)] transition-shadow">
+          <div className="rounded-xl border border-[--shell-border] bg-[--shell-surface] p-4 space-y-2 hover:shadow-engineered transition-shadow">
             <p className="text-xs font-medium uppercase tracking-[0.08em] text-[--shell-muted]">OVERDUE / AT RISK</p>
             <p className="font-heading text-2xl font-semibold tracking-tight text-[--shell-foreground]">{data.summary.overdue_at_risk}</p>
             <p className="text-xs text-[--shell-muted]">{data.summary.overdue_at_risk > 0 ? "needs attention" : "on track"}</p>
           </div>
-          <div className="rounded-xl border border-[--shell-border] bg-[--shell-surface] p-4 space-y-2 hover:shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1)] transition-shadow">
+          <div className="rounded-xl border border-[--shell-border] bg-[--shell-surface] p-4 space-y-2 hover:shadow-engineered transition-shadow">
             <p className="text-xs font-medium uppercase tracking-[0.08em] text-[--shell-muted]">OWNERS</p>
             <p className="font-heading text-2xl font-semibold tracking-tight text-[--shell-foreground]">{data.summary.owners}</p>
             <p className="text-xs text-[--shell-muted]">active reps</p>
@@ -97,7 +90,10 @@ export default function LeadsPage() {
 
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
-            <Button variant="outline" size="sm" onClick={() => {}}>
+            <Button variant="outline" size="sm" onClick={fetchData}>
+              <RotateCw className={"h-4 w-4 mr-1.5" + (loading ? " animate-spin" : "")} /> Refresh
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => exportToCSV(filtered, "leads")}>
               <Download size={14} className="mr-1.5" /> Export
             </Button>
             <Button variant="secondary" size="sm" onClick={() => router.push("/lead-discovery")}>
@@ -109,54 +105,25 @@ export default function LeadsPage() {
           </div>
         </div>
 
-        <Card className="hover:shadow-md transition-shadow duration-200 border-[--shell-border] bg-[--shell-surface]">
+        <Card className="hover:shadow-engineered transition-shadow duration-200 border-[--shell-border] bg-[--shell-surface]">
           <div className="flex items-center gap-3 p-4 border-b border-[--shell-border]">
             <div className="relative flex-1">
               <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[--shell-muted]" />
-              <Input placeholder="Search leads..." className="pl-9 h-9 text-sm" />
+              <Input placeholder="Search leads..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 h-9 text-sm" />
             </div>
             <Filter size={15} className="text-[--shell-muted] shrink-0" />
           </div>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>ID</TableHead>
-                <TableHead>LEAD</TableHead>
-                <TableHead>COMPANY</TableHead>
-                <TableHead>SOURCE</TableHead>
-                <TableHead>EST. VALUE</TableHead>
-                <TableHead>STATUS</TableHead>
-                <TableHead>OWNER</TableHead>
-                <TableHead>UPDATED</TableHead>
-                <TableHead />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {data.leads?.map((lead: any) => (
-                <TableRow key={lead.id}>
-                  <TableCell className="text-[--shell-muted] cursor-pointer" onClick={() => { setSelectedRecord(lead); setIsDetailsOpen(true); }}>{lead.id_str}</TableCell>
-                  <TableCell className="font-medium text-primary cursor-pointer" onClick={() => { setSelectedRecord(lead); setIsDetailsOpen(true); }}>{lead.name}</TableCell>
-                  <TableCell>{lead.company}</TableCell>
-                  <TableCell>{lead.source}</TableCell>
-                  <TableCell>{formatCurrency(lead.est_value)}</TableCell>
-                  <TableCell><Badge variant={statusVariant[lead.status] || "outline"}>{lead.status}</Badge></TableCell>
-                  <TableCell>{lead.owner}</TableCell>
-                  <TableCell className="text-[--shell-muted]">{lead.updated_at}</TableCell>
-                  <TableCell>
-                    <div className="flex gap-2 text-[--shell-muted]">
-                      <button className="hover:text-[--shell-foreground] cursor-pointer" onClick={() => { setEditRecord(lead); setIsModalOpen(true); }}>Edit</button>
-                      <button className="hover:text-red-500 cursor-pointer" onClick={() => handleDelete(lead)}>Delete</button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          <LeadTable
+            leads={filtered}
+            onView={(rec) => { setSelectedRecord(rec); setIsDetailsOpen(true); }}
+            onEdit={(rec) => { setEditRecord(rec); setIsModalOpen(true); }}
+            onDelete={handleDelete}
+          />
         </Card>
       </div>
 
       <GenericCreateModal entityType="leads" entityName="Lead" isOpen={isModalOpen} onClose={() => { setIsModalOpen(false); setEditRecord(null); }} editRecord={editRecord} onSuccess={fetchData} />
-      <GenericDetailsModal record={selectedRecord} entityName="Lead" isOpen={isDetailsOpen} onClose={() => { setIsDetailsOpen(false); setSelectedRecord(null); }} onSuccess={fetchData} />
+      <LeadDetailsModal lead={selectedRecord} isOpen={isDetailsOpen} onClose={() => { setIsDetailsOpen(false); setSelectedRecord(null); }} onSuccess={fetchData} />
     </div>
   );
 }

@@ -12,7 +12,6 @@ from app.core.middleware import SecurityHeadersMiddleware
 
 # Import feature routers
 from app.client.router import router as clients_router
-from app.lead.router import router as leads_router
 from app.product.router import router as products_router
 from app.dashboard.router import router as dashboard_router
 from app.notification.router import router as notifications_router
@@ -68,7 +67,6 @@ async def unhandled_exception_handler(request, exc):
 
 # Include Routers
 app.include_router(clients_router)
-app.include_router(leads_router)
 app.include_router(products_router)
 app.include_router(dashboard_router)
 app.include_router(notifications_router)

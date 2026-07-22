@@ -17,7 +17,7 @@ export default function DashboardLoading() {
         {Array.from({ length: 4 }).map((_, i) => (
           <div
             key={i}
-            className="flex flex-col gap-3 rounded-xl border border-[--shell-border] bg-[--shell-surface] p-5 shadow-sm"
+            className="flex flex-col gap-3 rounded-xl border border-[--shell-border] bg-[--shell-surface] p-5 shadow-engineered"
           >
             <div className="flex items-center justify-between">
               <div className="h-4 w-24 rounded shimmer-glow" />

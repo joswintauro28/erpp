@@ -25,7 +25,8 @@ COPY --from=deps /app/package.json /app/bun.lock ./
 COPY services/billing-service ./services/billing-service
 
 WORKDIR /app/services/billing-service
-RUN bun x prisma generate
+RUN --mount=type=cache,target=/root/.cache/bun \
+    bun x prisma generate
 RUN bun run build
 
 FROM base AS prod-deps

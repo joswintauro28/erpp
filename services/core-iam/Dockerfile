@@ -25,7 +25,8 @@ COPY --from=deps /app/package.json /app/bun.lock ./
 COPY services/core-iam ./services/core-iam
 
 WORKDIR /app/services/core-iam
-RUN bun x prisma generate
+RUN --mount=type=cache,target=/root/.cache/bun \
+    bun x prisma generate
 
 RUN mkdir -p /app/node_modules/@prisma /app/node_modules/.prisma && \
     cp -r /app/services/core-iam/node_modules/@prisma/client-iam /app/node_modules/@prisma/client-iam && \

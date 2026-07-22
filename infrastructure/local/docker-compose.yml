@@ -120,6 +120,7 @@ services:
       PORT: "8001"
       GROQ_API_KEY: ${GROQ_API_KEY:-}
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      BILLING_SERVICE_URL: http://billing-service:8003
       CORS_ORIGINS: http://crm.erp.local,http://app.erp.local
     ports:
       - "8001:8001"

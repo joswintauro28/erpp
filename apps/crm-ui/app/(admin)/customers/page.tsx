@@ -1,27 +1,16 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Plus, Download, Search, Filter } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Plus, Download, Search, Filter, RotateCw } from "lucide-react";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Spinner } from "@/components/ui/spinner";
 import { api } from "@/services/api";
-import { cn } from "@/lib/utils";
+import { exportToCSV } from "@/utils/exportCsv";
 import GenericCreateModal from "@/components/GenericCreateModal";
 import GenericDetailsModal from "@/components/GenericDetailsModal";
-
-const badgeVariant = (status: string) => {
-  switch (status) {
-    case "Active": return "default";
-    case "Prospect": return "secondary";
-    case "Dormant": return "outline";
-    case "Churned": return "destructive";
-    default: return "default";
-  }
-};
+import CustomerTable from "./CustomerTable";
 
 export default function CustomersPage() {
   const [data, setData] = useState({ summary: { total_customers: 0, open: 0, overdue_at_risk: 0, owners: 0 }, customers: [] });
@@ -36,7 +25,7 @@ export default function CustomersPage() {
     try {
       const result = await api.get<any>("/customers");
       setData(result);
-    } catch { /* silent */ }
+    } catch {}
     finally { setLoading(false); }
   }, []);
 
@@ -71,7 +60,7 @@ export default function CustomersPage() {
             { label: "OVERDUE / AT RISK", value: data.summary?.overdue_at_risk, trend: "attention" },
             { label: "REPRESENTATIVES", value: data.summary?.owners, trend: "active" },
           ].map((m) => (
-            <div key={m.label} className="rounded-xl border border-[--shell-border] bg-[--shell-surface] p-4 space-y-2 hover:shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1)] transition-shadow">
+            <div key={m.label} className="rounded-xl border border-[--shell-border] bg-[--shell-surface] p-4 space-y-2 hover:shadow-engineered transition-shadow">
               <p className="text-xs font-medium uppercase tracking-[0.08em] text-[--shell-muted]">{m.label}</p>
               <p className="font-heading text-2xl font-semibold tracking-tight text-[--shell-foreground]">{m.value ?? 0}</p>
               <p className="text-xs text-[--shell-muted]">{m.trend}</p>
@@ -88,12 +77,19 @@ export default function CustomersPage() {
 
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
-            <Button variant="outline" size="sm"><Download className="h-4 w-4" /> Export</Button>
-            <Button size="sm" onClick={() => setIsModalOpen(true)}><Plus className="h-4 w-4" /> New Customer</Button>
+            <Button variant="outline" size="sm" onClick={fetchData}>
+              <RotateCw className={"h-4 w-4 mr-1.5" + (loading ? " animate-spin" : "")} /> Refresh
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => exportToCSV(filtered, "customers")}>
+              <Download size={14} className="mr-1.5" /> Export
+            </Button>
+            <Button size="sm" onClick={() => setIsModalOpen(true)}>
+              <Plus size={14} className="mr-1.5" /> New Customer
+            </Button>
           </div>
         </div>
 
-        <Card className="hover:shadow-md transition-shadow duration-200 border-[--shell-border] bg-[--shell-surface]">
+        <Card className="hover:shadow-engineered transition-shadow duration-200 border-[--shell-border] bg-[--shell-surface]">
           <div className="flex items-center gap-3 border-b border-[--shell-border] p-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[--shell-muted]" />
@@ -101,43 +97,12 @@ export default function CustomersPage() {
             </div>
             <Filter className="h-4 w-4 text-[--shell-muted]" />
           </div>
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>ID</TableHead>
-                  <TableHead>ACCOUNT</TableHead>
-                  <TableHead>INDUSTRY</TableHead>
-                  <TableHead>TIER</TableHead>
-                  <TableHead>ARR</TableHead>
-                  <TableHead>STATUS</TableHead>
-                  <TableHead>OWNER</TableHead>
-                  <TableHead>UPDATED</TableHead>
-                  <TableHead></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filtered.map((item: any) => (
-                  <TableRow key={item.id}>
-                    <TableCell className="text-[--shell-muted] cursor-pointer" onClick={() => { setSelectedRecordForDetails(item); setIsDetailsOpen(true); }}>{item.id_str}</TableCell>
-                    <TableCell className="font-medium text-[--shell-foreground] cursor-pointer" onClick={() => { setSelectedRecordForDetails(item); setIsDetailsOpen(true); }}>{item.account}</TableCell>
-                    <TableCell>{item.industry}</TableCell>
-                    <TableCell>{item.tier}</TableCell>
-                    <TableCell>{new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(item.arr)}</TableCell>
-                    <TableCell><Badge variant={badgeVariant(item.status)}>{item.status}</Badge></TableCell>
-                    <TableCell>{item.owner}</TableCell>
-                    <TableCell className="text-[--shell-muted]">{item.updated_at}</TableCell>
-                    <TableCell>
-                      <div className="flex gap-2">
-                        <button className="text-[--shell-muted] hover:text-[--shell-foreground]" onClick={() => { setEditRecord(item); setIsModalOpen(true); }}>Edit</button>
-                        <button className="text-[--shell-muted] hover:text-destructive" onClick={() => handleDelete(item)}>Delete</button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+          <CustomerTable
+            customers={filtered}
+            onView={(rec) => { setSelectedRecordForDetails(rec); setIsDetailsOpen(true); }}
+            onEdit={(rec) => { setEditRecord(rec); setIsModalOpen(true); }}
+            onDelete={handleDelete}
+          />
         </Card>
       </div>
 

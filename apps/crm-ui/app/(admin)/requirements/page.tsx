@@ -2,34 +2,16 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Plus, Download, Search, Filter } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
+import { exportToCSV } from "@/utils/exportCsv";
+import RequirementTable from "./RequirementTable";
 import { Spinner } from "@/components/ui/spinner";
 import { api } from "@/services/api";
-import { cn } from "@/lib/utils";
 import GenericCreateModal from "@/components/GenericCreateModal";
 import GenericDetailsModal from "@/components/GenericDetailsModal";
 
-const priorityVariant = (priority: string) => {
-  switch (priority) {
-    case "High": return "destructive";
-    case "Medium": return "secondary";
-    case "Low": return "outline";
-    default: return "outline";
-  }
-};
-
-const statusVariant = (status: string) => {
-  switch (status) {
-    case "Draft": return "outline";
-    case "Submitted": return "secondary";
-    case "Approved": return "default";
-    default: return "default";
-  }
-};
 
 export default function RequirementsPage() {
   const [data, setData] = useState({ summary: { total_requirements: 0, open: 0, overdue_at_risk: 0, owners: 0 }, requirements: [] });
@@ -67,7 +49,7 @@ export default function RequirementsPage() {
   return (
     <div className="space-y-10 lg:space-y-12">
       <div className="flex items-center justify-end gap-3">
-        <Button variant="outline" size="sm"><Download className="h-4 w-4" /> Export</Button>
+        <Button variant="outline" size="sm" onClick={() => exportToCSV(items, "requirements")}><Download className="h-4 w-4" /> Export</Button>
         <Button size="sm" onClick={() => setIsModalOpen(true)}><Plus className="h-4 w-4" /> New Requirement</Button>
       </div>
 
@@ -83,7 +65,7 @@ export default function RequirementsPage() {
             { label: "OVERDUE / AT RISK", value: data.summary?.overdue_at_risk, trend: data.summary?.overdue_at_risk > 0 ? "cancelled" : "none critical" },
             { label: "REPRESENTATIVES", value: data.summary?.owners, trend: "active reps" },
           ].map((m) => (
-            <div key={m.label} className="rounded-xl border border-[--shell-border] bg-[--shell-surface] p-4 space-y-2 hover:shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1)] transition-shadow">
+            <div key={m.label} className="rounded-xl border border-[--shell-border] bg-[--shell-surface] p-4 space-y-2 hover:shadow-engineered transition-shadow">
               <p className="text-xs font-medium uppercase tracking-[0.08em] text-[--shell-muted]">{m.label}</p>
               <p className="font-heading text-2xl font-semibold tracking-tight text-[--shell-foreground]">{m.value ?? 0}</p>
               <p className="text-xs text-[--shell-muted]">{m.trend}</p>
@@ -97,7 +79,7 @@ export default function RequirementsPage() {
           <h2 className="font-heading text-xs font-light uppercase tracking-[0.12em] text-[--shell-muted]">RECORDS</h2>
           <div className="h-px flex-1 bg-[--shell-border]" />
         </div>
-        <Card className="hover:shadow-md transition-shadow duration-200 border-[--shell-border] bg-[--shell-surface]">
+        <Card className="hover:shadow-engineered transition-shadow duration-200 border-[--shell-border] bg-[--shell-surface]">
           <div className="flex items-center gap-3 border-b border-[--shell-border] p-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[--shell-muted]" />
@@ -106,39 +88,12 @@ export default function RequirementsPage() {
             <Filter className="h-4 w-4 text-[--shell-muted]" />
           </div>
           <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>ID</TableHead>
-                  <TableHead>NAME</TableHead>
-                  <TableHead>CATEGORY</TableHead>
-                  <TableHead>ACCOUNT</TableHead>
-                  <TableHead>PRIORITY</TableHead>
-                  <TableHead>STATUS</TableHead>
-                  <TableHead>OWNER</TableHead>
-                  <TableHead></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filtered.map((item: any) => (
-                  <TableRow key={item.id}>
-                    <TableCell className="text-[--shell-muted] cursor-pointer" onClick={() => { setSelectedRecordForDetails(item); setIsDetailsOpen(true); }}>{item.id_str}</TableCell>
-                    <TableCell className="font-medium text-[--shell-foreground] cursor-pointer" onClick={() => { setSelectedRecordForDetails(item); setIsDetailsOpen(true); }}>{item.name}</TableCell>
-                    <TableCell>{item.category}</TableCell>
-                    <TableCell>{item.account}</TableCell>
-                    <TableCell><Badge variant={priorityVariant(item.priority)}>{item.priority}</Badge></TableCell>
-                    <TableCell><Badge variant={statusVariant(item.status)}>{item.status}</Badge></TableCell>
-                    <TableCell>{item.owner}</TableCell>
-                    <TableCell>
-                      <div className="flex gap-2">
-                        <button className="text-[--shell-muted] hover:text-[--shell-foreground]" onClick={() => { setEditRecord(item); setIsModalOpen(true); }}>Edit</button>
-                        <button className="text-[--shell-muted] hover:text-destructive" onClick={() => handleDelete(item)}>Delete</button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <RequirementTable 
+              requirements={filtered} 
+              onView={(rec) => { setSelectedRecordForDetails(rec); setIsDetailsOpen(true); }} 
+              onEdit={(rec) => { setEditRecord(rec); setIsModalOpen(true); }} 
+              onDelete={handleDelete} 
+            />
           </div>
         </Card>
       </div>

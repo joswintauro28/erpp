@@ -1,19 +1,14 @@
 "use client";
 import { useState, useEffect, useCallback, useRef } from "react";
-import { MessageCircle, Send, Sparkles, Trash2, Bot, User, Search, Filter } from "lucide-react";
+import { Send, Sparkles, Trash2, Bot, User, Search, Filter } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
 import { api } from "@/services/api";
-
-const statusVariant: Record<string, "default" | "secondary" | "outline" | "destructive"> = {
-  Success: "default",
-  Failed: "destructive",
-};
+import AIAssistantTable from "./AIAssistantTable";
+import AIAssistantLoading from "./loading";
 
 export default function AIAssistantPage() {
   const [data, setData] = useState({ summary: { total_ai_logs: 0, open: 0, overdue_at_risk: 0, owners: 0 }, ai_logs: [] });
@@ -79,13 +74,15 @@ export default function AIAssistantPage() {
     });
   };
 
-  if (loading) return <div className="flex h-full items-center justify-center py-20"><Spinner /></div>;
+  if (loading) return <AIAssistantLoading />;
 
   return (
     <div className="space-y-10 lg:space-y-12">
       <div>
         <div className="mb-5 flex items-center gap-2">
-          <h2 className="font-heading text-xs font-light uppercase tracking-[0.12em] text-[--shell-muted]">CHAT</h2>
+          <h2 className="font-heading text-xs font-light uppercase tracking-[0.12em] text-[--shell-muted]">
+            <Sparkles size={14} className="inline mr-1 text-[--shell-accent]" /> INSIGHTS
+          </h2>
           <div className="h-px flex-1 bg-[--shell-border]" />
         </div>
         <div className="flex items-center gap-3 mb-6">
@@ -100,11 +97,7 @@ export default function AIAssistantPage() {
 
         {activeTab === "logs" && (
           <>
-            <div className="mb-5 flex items-center gap-2">
-              <h2 className="font-heading text-xs font-light uppercase tracking-[0.12em] text-[--shell-muted]">OVERVIEW</h2>
-              <div className="h-px flex-1 bg-[--shell-border]" />
-            </div>
-            <div className="grid gap-4 sm:grid-cols-4">
+            <div className="grid gap-4 sm:grid-cols-4 mb-6">
               <div className="rounded-xl border border-[--shell-border] bg-[--shell-surface] p-4 space-y-2">
                 <p className="text-xs font-medium uppercase tracking-[0.08em] text-[--shell-muted]">TOTAL LOGS</p>
                 <p className="font-heading text-2xl font-semibold tracking-tight text-[--shell-foreground]">{data.summary.total_ai_logs}</p>
@@ -123,11 +116,7 @@ export default function AIAssistantPage() {
               </div>
             </div>
 
-            <div className="mb-5 flex items-center gap-2">
-              <h2 className="font-heading text-xs font-light uppercase tracking-[0.12em] text-[--shell-muted]">LOGS</h2>
-              <div className="h-px flex-1 bg-[--shell-border]" />
-            </div>
-            <Card className="hover:shadow-md transition-shadow duration-200 border-[--shell-border] bg-[--shell-surface]">
+            <Card className="hover:shadow-engineered transition-shadow duration-200 border-[--shell-border] bg-[--shell-surface]">
               <div className="flex items-center gap-3 p-4 border-b border-[--shell-border]">
                 <div className="relative flex-1">
                   <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[--shell-muted]" />
@@ -135,41 +124,18 @@ export default function AIAssistantPage() {
                 </div>
                 <Filter size={15} className="text-[--shell-muted] shrink-0" />
               </div>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>ID</TableHead>
-                    <TableHead>QUERY</TableHead>
-                    <TableHead>RESPONSE</TableHead>
-                    <TableHead>CATEGORY</TableHead>
-                    <TableHead>STATUS</TableHead>
-                    <TableHead>TIMESTAMP</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {data.ai_logs?.map((log: any) => (
-                    <TableRow key={log.id}>
-                      <TableCell className="text-[--shell-muted]">{log.id_str}</TableCell>
-                      <TableCell className="max-w-[200px] truncate font-medium">{log.query}</TableCell>
-                      <TableCell className="max-w-[250px] truncate text-[--shell-muted]">{(log.response || "").substring(0, 100)}</TableCell>
-                      <TableCell>{log.category}</TableCell>
-                      <TableCell><Badge variant={statusVariant[log.status] || "outline"}>{log.status}</Badge></TableCell>
-                      <TableCell className="text-[--shell-muted]">{log.created_at}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+              <AIAssistantTable logs={data.ai_logs || []} />
             </Card>
           </>
         )}
 
         {activeTab === "chat" && (
           <div className="grid gap-6 lg:grid-cols-[1fr_260px]">
-            <Card className="flex flex-col overflow-hidden hover:shadow-md transition-shadow duration-200 border-[--shell-border] bg-[--shell-surface]">
+            <Card className="flex flex-col overflow-hidden hover:shadow-engineered transition-shadow duration-200 border-[--shell-border] bg-[--shell-surface]">
               <div className="flex-1 overflow-y-auto p-5 space-y-4 max-h-[480px]">
                 {chatHistory.map((msg, i) => (
                   <div key={i} className={cn("flex gap-3 items-start", msg.role === "user" ? "flex-row-reverse" : "")}>
-                    <div className={cn("p-2 rounded-full shrink-0", msg.role === "user" ? "bg-primary text-primary-foreground" : "bg-[--shell-bg] text-accent")}>
+                    <div className={cn("p-2 rounded-full shrink-0", msg.role === "user" ? "bg-primary text-primary-foreground" : "bg-[--shell-bg] text-accent-foreground")}>
                       {msg.role === "user" ? <User size={14} /> : <Bot size={14} />}
                     </div>
                     <div className={cn("px-4 py-2.5 rounded-2xl max-w-[80%] text-sm leading-relaxed", msg.role === "user" ? "bg-primary text-primary-foreground rounded-tr-none" : "bg-[--shell-bg] text-[--shell-foreground] rounded-tl-none")}>
@@ -179,7 +145,7 @@ export default function AIAssistantPage() {
                 ))}
                 {chatLoading && (
                   <div className="flex gap-3 items-start">
-                    <div className="p-2 rounded-full bg-[--shell-bg] text-accent shrink-0"><Bot size={14} /></div>
+                    <div className="p-2 rounded-full bg-[--shell-bg] text-accent-foreground shrink-0"><Bot size={14} /></div>
                     <div className="px-4 py-2.5 rounded-2xl rounded-tl-none bg-[--shell-bg] text-[--shell-muted] text-sm">
                       <div className="flex gap-1 items-center">
                         <span className="w-1.5 h-1.5 bg-[--shell-muted] rounded-full animate-bounce" style={{ animationDelay: "0s" }} />
@@ -203,10 +169,10 @@ export default function AIAssistantPage() {
             </Card>
 
             <div className="space-y-3">
-              <Card className="hover:shadow-md transition-shadow duration-200 border-[--shell-border] bg-[--shell-surface]">
+              <Card className="hover:shadow-engineered transition-shadow duration-200 border-[--shell-border] bg-[--shell-surface]">
                 <CardContent className="p-4">
                   <h4 className="text-sm font-semibold text-[--shell-foreground] flex items-center gap-1.5 mb-3">
-                    <Bot size={14} className="text-accent" /> Quick Suggestions
+                    <Bot size={14} className="text-accent-foreground" /> Quick Suggestions
                   </h4>
                   <div className="space-y-2">
                     {suggestions.map((s, i) => (

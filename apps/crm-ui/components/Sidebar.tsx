@@ -31,7 +31,7 @@ const navItems: NavItem[] = [
       { name: "Leads", href: "/leads", icon: Users },
       { name: "Opportunities", href: "/opportunities", icon: Target },
       { name: "Requirements", href: "/requirements", icon: ClipboardList },
-      { name: "Quotes", href: "/quotes", icon: FileText },
+      { name: "Quotations", href: "/quotations", icon: FileText },
       { name: "Sales Orders", href: "/sales-orders", icon: ShoppingCart },
     ],
   },
