@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Query
 
 from app.core.deps import get_current_token_payload
 from app.integrations.billing_client import (
-    get_invoices, get_invoice, create_invoice, create_invoice_from_dispatch, update_invoice_status, delete_invoice,
+    get_invoices, get_invoice, create_invoice, update_invoice, create_invoice_from_dispatch, update_invoice_status, delete_invoice,
     get_quotations, get_quotation, create_quotation, update_quotation,
     update_quotation_status, convert_quotation, delete_quotation,
     get_credit_notes, create_credit_note, delete_credit_note,
@@ -225,6 +225,16 @@ async def get_invoice_by_id(
 ):
     token = payload.get("_raw_token", "")
     return await get_invoice(token, invoice_id)
+
+
+@router.put("/invoices/{invoice_id}", response_model=dict)
+async def update_invoice_by_id(
+    invoice_id: int,
+    body: dict,
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await update_invoice(token, invoice_id, body)
 
 
 @router.put("/invoices/{invoice_id}/status", response_model=dict)
