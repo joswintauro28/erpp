@@ -48,15 +48,15 @@ export interface InvoiceDetailView {
 }
 
 export interface InvoiceItemView {
-  product: string;
+  product_id: number | null;
   description: string;
   quantity: number;
   unit_price: number;
-  gst_percent: number;
+  gst_rate: number;
   cgst: number;
   sgst: number;
   igst: number;
-  total: number;
+  amount: number;
 }
 
 export interface ApiPayment {
@@ -95,12 +95,12 @@ export interface ApiInvoice {
 
 export interface ApiItem {
   id: number;
-  product: string;
+  product_id: number | null;
   description: string;
   quantity: number;
   unit_price: number;
-  gst_percent: number;
-  total: number;
+  gst_rate: number;
+  amount: number;
   cgst: number;
   sgst: number;
   igst: number;
