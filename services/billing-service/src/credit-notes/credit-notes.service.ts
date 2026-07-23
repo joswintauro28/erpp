@@ -2,10 +2,15 @@ import { Injectable, NotFoundException } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 import { Prisma } from "@prisma/client";
 import { CreateCreditNoteDto } from "./dto/create-credit-note.dto";
+import { EventBusService } from "../event-bus/event-bus.service";
+import { Events } from "../event-bus/event-types";
 
 @Injectable()
 export class CreditNotesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly eventBus: EventBusService,
+  ) {}
 
   private flatten(note: any) {
     return {
@@ -80,6 +85,51 @@ export class CreditNotesService {
           },
         });
       }
+
+      const accounts = await tx.account.findMany({
+        where: { organizationId, code: { in: ["1002", "4001"] } },
+        select: { code: true, id: true },
+      });
+      const arId = accounts.find((a: any) => a.code === "1002")?.id;
+      const revenueId = accounts.find((a: any) => a.code === "4001")?.id;
+
+      if (arId && revenueId) {
+        const amount = Number(dto.amount);
+        const entryDate = new Date();
+        const desc = `Credit Note #${creditNote.creditNoteNumber ?? creditNote.id} for Invoice ${invoice.invoiceNumber ?? `#${dto.invoiceId}`} — ${dto.reason ?? "Credit applied"}`;
+        await tx.ledgerEntry.createMany({
+          data: [
+            {
+              organizationId,
+              accountId: revenueId,
+              entryDate,
+              description: desc,
+              debit: new Prisma.Decimal(amount),
+              credit: 0,
+              referenceType: "CreditNote",
+              referenceId: creditNote.id,
+            },
+            {
+              organizationId,
+              accountId: arId,
+              entryDate,
+              description: desc,
+              debit: 0,
+              credit: new Prisma.Decimal(amount),
+              referenceType: "CreditNote",
+              referenceId: creditNote.id,
+            },
+          ],
+        });
+      }
+
+      this.eventBus.emit(Events.CreditNoteIssued, {
+        organizationId,
+        creditNoteId: creditNote.id,
+        invoiceId: dto.invoiceId,
+        amount: Number(dto.amount),
+        timestamp: new Date(),
+      });
 
       return this.flatten(creditNote);
     });
