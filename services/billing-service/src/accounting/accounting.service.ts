@@ -1,10 +1,15 @@
 import { Injectable } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 import { Prisma } from "@prisma/client";
+import { EventBusService } from "../event-bus/event-bus.service";
+import { Events } from "../event-bus/event-types";
 
 @Injectable()
 export class AccountingService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly eventBus: EventBusService,
+  ) {}
 
   async getAccounts(organizationId: number) {
     const accounts = await this.prisma.account.findMany({
@@ -87,7 +92,7 @@ export class AccountingService {
       return monthNames[m - 1] ?? k;
     };
 
-    const [invoices, expenses, accounts, invoiceItems] = await Promise.all([
+    const [invoices, expenses, accounts, invoiceItems, creditNotes, debitNotes] = await Promise.all([
       this.prisma.invoice.findMany({
         where: {
           organizationId,
@@ -118,6 +123,14 @@ export class AccountingService {
           invoice: { select: { issueDate: true } },
         },
       }),
+      this.prisma.creditNote.findMany({
+        where: { organizationId, status: "issued" },
+        select: { amount: true, issueDate: true },
+      }),
+      this.prisma.debitNote.findMany({
+        where: { organizationId, status: "issued" },
+        select: { amount: true, issueDate: true },
+      }),
     ]);
 
     const revenueByMonth: Record<string, number> = {};
@@ -125,6 +138,28 @@ export class AccountingService {
       if (!inv.issueDate) continue;
       const k = key(inv.issueDate);
       revenueByMonth[k] = (revenueByMonth[k] ?? 0) + Number(inv.total);
+    }
+
+    const creditNoteByMonth: Record<string, number> = {};
+    for (const cn of creditNotes) {
+      if (!cn.issueDate) continue;
+      const k = key(cn.issueDate);
+      creditNoteByMonth[k] = (creditNoteByMonth[k] ?? 0) + Number(cn.amount);
+    }
+
+    const debitNoteByMonth: Record<string, number> = {};
+    for (const dn of debitNotes) {
+      if (!dn.issueDate) continue;
+      const k = key(dn.issueDate);
+      debitNoteByMonth[k] = (debitNoteByMonth[k] ?? 0) + Number(dn.amount);
+    }
+
+    // Adjust revenue: credit notes reduce, debit notes increase
+    for (const k of Object.keys(creditNoteByMonth)) {
+      revenueByMonth[k] = (revenueByMonth[k] ?? 0) - creditNoteByMonth[k];
+    }
+    for (const k of Object.keys(debitNoteByMonth)) {
+      revenueByMonth[k] = (revenueByMonth[k] ?? 0) + debitNoteByMonth[k];
     }
 
     const cogsByMonth: Record<string, number> = {};
@@ -179,7 +214,9 @@ export class AccountingService {
       };
     });
 
-    return { pl, balance_sheet };
+    const cashFlow = this.computeCashFlow(organizationId, revenueByMonth, expenseByMonth, cogsByMonth, allMonths, label);
+
+    return { pl, balance_sheet, cash_flow: cashFlow };
   }
 
   async createAccount(organizationId: number, body: any) {
@@ -239,6 +276,44 @@ export class AccountingService {
     await this.prisma.account.update({
       where: { id: account.id },
       data: { balance: { increment: new Prisma.Decimal(body.amount ?? 0) } },
+    });
+
+    const cashBankAccount = await this.prisma.account.findFirst({
+      where: { organizationId, code: "1001" },
+    });
+    if (cashBankAccount && account.id !== cashBankAccount.id) {
+      await this.prisma.ledgerEntry.createMany({
+        data: [
+          {
+            organizationId,
+            accountId: account.id,
+            entryDate: expense.date,
+            description: `Expense: ${body.description ?? "Expense recorded"}`,
+            debit: new Prisma.Decimal(body.amount ?? 0),
+            credit: 0,
+            referenceType: "Expense",
+            referenceId: expense.id,
+          },
+          {
+            organizationId,
+            accountId: cashBankAccount.id,
+            entryDate: expense.date,
+            description: `Expense: ${body.description ?? "Expense recorded"}`,
+            debit: 0,
+            credit: new Prisma.Decimal(body.amount ?? 0),
+            referenceType: "Expense",
+            referenceId: expense.id,
+          },
+        ],
+      });
+    }
+
+    this.eventBus.emit(Events.ExpenseCreated, {
+      organizationId,
+      expenseId: expense.id,
+      amount: Number(body.amount ?? 0),
+      category: body.category ?? "General",
+      timestamp: new Date(),
     });
 
     return { id: expense.id, amount: Number(expense.amount), message: "Expense recorded" };
@@ -443,5 +518,42 @@ export class AccountingService {
     });
 
     return { aging };
+  }
+
+  private computeCashFlow(
+    organizationId: number,
+    revenueByMonth: Record<string, number>,
+    expenseByMonth: Record<string, number>,
+    cogsByMonth: Record<string, number>,
+    allMonths: string[],
+    labelFn: (k: string) => string,
+  ) {
+    return allMonths.map((k) => {
+      const rev = revenueByMonth[k] ?? 0;
+      const cogs = cogsByMonth[k] ?? 0;
+      const exp = expenseByMonth[k] ?? 0;
+      const operatingCashInflow = rev;
+      const operatingCashOutflow = cogs + exp;
+      const netOperating = operatingCashInflow - operatingCashOutflow;
+      return {
+        month: labelFn(k),
+        operating_activities: {
+          cash_inflow: Math.round(operatingCashInflow),
+          cash_outflow: Math.round(operatingCashOutflow),
+          net_cash: Math.round(netOperating),
+        },
+        investing_activities: {
+          cash_inflow: 0,
+          cash_outflow: 0,
+          net_cash: 0,
+        },
+        financing_activities: {
+          cash_inflow: 0,
+          cash_outflow: 0,
+          net_cash: 0,
+        },
+        net_change_in_cash: Math.round(netOperating),
+      };
+    });
   }
 }
