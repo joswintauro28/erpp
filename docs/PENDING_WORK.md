@@ -54,7 +54,7 @@ All flows below are currently approximated via synchronous REST calls. A central
 - [ ] **Month-End Close Process (F5)** — Ledger locking, cut-off dates, close checklist with sign-off workflow
 - [ ] **Revenue Recognition Schedule (F2)** — Deferred revenue tracking for subscription/prepaid invoices, accrual vs cash basis
 - [ ] **COGS Tracking (F1)** — Pull product cost price from inventory-service on invoice creation to compute per-invoice COGS
-- [ ] **AR Aging Report** — Bucketed balance-due report (Current / 30 / 60 / 90+ days overdue)
+- [x] **AR Aging Report** — Bucketed balance-due report (Current / 30 / 60 / 90+ days overdue)
 
 ---
 
