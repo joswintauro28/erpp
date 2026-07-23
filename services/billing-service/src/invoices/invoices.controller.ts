@@ -18,6 +18,7 @@ import { InvoicesService } from "./invoices.service";
 import { CreateInvoiceDto } from "./dto/create-invoice.dto";
 import { CreateInvoiceFromDispatchDto } from "./dto/create-invoice-from-dispatch.dto";
 import { UpdateInvoiceStatusDto } from "./dto/update-invoice-status.dto";
+import { UpdateInvoiceDto } from "./dto/update-invoice.dto";
 import type { JwtPayload } from "../auth/auth.guard";
 
 @Controller("invoices")
@@ -51,6 +52,16 @@ export class InvoicesController {
     @CurrentUser() user: JwtPayload,
   ) {
     return this.invoicesService.create(user.organization_id, dto);
+  }
+
+  @Put(":id")
+  @Permissions("invoices.edit")
+  async update(
+    @Param("id", ParseIntPipe) id: number,
+    @Body() dto: UpdateInvoiceDto,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return this.invoicesService.update(id, user.organization_id, dto);
   }
 
   @Post("from-dispatch")
