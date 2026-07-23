@@ -5,25 +5,25 @@
   "sourceRoot": "services/crm-service",
   "targets": {
     "dev": {
-      "command": ".venv\\Scripts\\uvicorn app.main:app --port 8001 --reload",
+      "command": ".venv/bin/uvicorn app.main:app --port 8001 --reload",
       "options": {
         "cwd": "services/crm-service"
       }
     },
     "seed": {
-      "command": ".venv\\Scripts\\python scripts/seed_data.py",
+      "command": ".venv/bin/python scripts/seed_data.py",
       "options": {
         "cwd": "services/crm-service"
       }
     },
     "migrate": {
-      "command": ".venv\\Scripts\\alembic upgrade head",
+      "command": ".venv/bin/alembic upgrade head",
       "options": {
         "cwd": "services/crm-service"
       }
     },
     "migration": {
-      "command": ".venv\\Scripts\\alembic revision --autogenerate -m",
+      "command": ".venv/bin/alembic revision --autogenerate -m",
       "options": {
         "cwd": "services/crm-service"
       }
