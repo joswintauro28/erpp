@@ -2,10 +2,15 @@ import { Injectable, NotFoundException } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 import { Prisma } from "@prisma/client";
 import { CreateDebitNoteDto } from "./dto/create-debit-note.dto";
+import { EventBusService } from "../event-bus/event-bus.service";
+import { Events } from "../event-bus/event-types";
 
 @Injectable()
 export class DebitNotesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly eventBus: EventBusService,
+  ) {}
 
   private flatten(note: any) {
     return {
@@ -64,6 +69,51 @@ export class DebitNotesService {
           total: new Prisma.Decimal(totalD),
           balanceDue: new Prisma.Decimal(balanceDue),
         },
+      });
+
+      const accounts = await tx.account.findMany({
+        where: { organizationId, code: { in: ["1002", "4001"] } },
+        select: { code: true, id: true },
+      });
+      const arId = accounts.find((a: any) => a.code === "1002")?.id;
+      const revenueId = accounts.find((a: any) => a.code === "4001")?.id;
+
+      if (arId && revenueId) {
+        const amount = Number(dto.amount);
+        const entryDate = new Date();
+        const desc = `Debit Note #${debitNote.debitNoteNumber ?? debitNote.id} for Invoice ${invoice.invoiceNumber ?? `#${dto.invoiceId}`} — ${dto.reason ?? "Debit applied"}`;
+        await tx.ledgerEntry.createMany({
+          data: [
+            {
+              organizationId,
+              accountId: arId,
+              entryDate,
+              description: desc,
+              debit: new Prisma.Decimal(amount),
+              credit: 0,
+              referenceType: "DebitNote",
+              referenceId: debitNote.id,
+            },
+            {
+              organizationId,
+              accountId: revenueId,
+              entryDate,
+              description: desc,
+              debit: 0,
+              credit: new Prisma.Decimal(amount),
+              referenceType: "DebitNote",
+              referenceId: debitNote.id,
+            },
+          ],
+        });
+      }
+
+      this.eventBus.emit(Events.DebitNoteIssued, {
+        organizationId,
+        debitNoteId: debitNote.id,
+        invoiceId: dto.invoiceId,
+        amount: Number(dto.amount),
+        timestamp: new Date(),
       });
 
       return this.flatten(debitNote);
