@@ -26,6 +26,7 @@ from app.interaction.router import router as interaction_router
 from app.service.router import router as service_router
 from app.ai.router import router as ai_router
 from app.generic.router import router as generic_router
+from app.events.router import router as events_router
 
 
 @asynccontextmanager
@@ -79,6 +80,7 @@ app.include_router(interaction_router, dependencies=crm_view)
 app.include_router(service_router, dependencies=crm_view)
 app.include_router(ai_router, dependencies=crm_view)
 app.include_router(generic_router, dependencies=crm_view)
+app.include_router(events_router)
 
 
 @app.get("/")
