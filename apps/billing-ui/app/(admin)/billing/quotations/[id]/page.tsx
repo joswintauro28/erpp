@@ -154,7 +154,7 @@ export default function QuotationDetail() {
       {/* Header Actions */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-[--shell-border] pb-5">
         <div className="flex items-center gap-4">
-          <Button variant="outline" size="icon" className="rounded-full border-[--shell-border] hover:bg-[--shell-surface-alt]" aria-label="Back to quotations" title="Back to quotations" onClick={() => router.back()}>
+          <Button variant="outline" size="icon" className="rounded-full border-[--shell-border] hover:bg-[--shell-surface-alt]" aria-label="Back to quotations" title="Back to quotations" onClick={() => router.push("/billing/quotations")}>
             <ArrowLeft className="h-4 w-4" />
           </Button>
           {quotation.status === "draft" && (
