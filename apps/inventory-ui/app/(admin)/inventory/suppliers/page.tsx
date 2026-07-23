@@ -36,8 +36,8 @@ export default function SuppliersPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-heading text-2xl font-semibold tracking-tight text-[--shell-foreground]">Suppliers</h1>
-          <p className="mt-1 text-sm text-[--shell-muted]">{suppliers.length} registered suppliers</p>
+          <h1 className="font-heading text-2xl font-semibold tracking-tight text-[var(--shell-foreground)]">Suppliers</h1>
+          <p className="mt-1 text-sm text-[var(--shell-muted)]">{suppliers.length} registered suppliers</p>
         </div>
         <Button><Plus className="h-4 w-4" /> Add Supplier</Button>
       </div>

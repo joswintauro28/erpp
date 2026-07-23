@@ -4,7 +4,7 @@ export default function QuotationsLoading() {
   return (
     <div className="relative space-y-8">
       {/* Brand progress sweep bar */}
-      <span className="absolute -top-6 left-0 h-0.5 w-1/3 rounded-full bg-[--shell-brand] shimmer-glow" />
+      <span className="absolute -top-6 left-0 h-0.5 w-1/3 rounded-full bg-[var(--shell-brand)] shimmer-glow" />
 
       {/* Header */}
       <div className="flex items-center justify-between">
@@ -17,15 +17,15 @@ export default function QuotationsLoading() {
 
       {/* Search & Filter Bar */}
       <div className="flex flex-wrap items-center gap-3">
-        <div className="h-9 w-64 rounded-lg border border-[--shell-border] bg-[--shell-surface] shimmer-glow" />
-        <div className="h-9 w-36 rounded-lg border border-[--shell-border] bg-[--shell-surface] shimmer-glow" />
+        <div className="h-9 w-64 rounded-lg border border-[var(--shell-border)] bg-[var(--shell-surface)] shimmer-glow" />
+        <div className="h-9 w-36 rounded-lg border border-[var(--shell-border)] bg-[var(--shell-surface)] shimmer-glow" />
       </div>
 
       {/* Mock Table Layout */}
       <Card className="overflow-hidden shadow-sm">
         <CardContent className="p-0">
           {/* Table Header */}
-          <div className="grid grid-cols-12 gap-4 border-b border-[--shell-border] bg-[--shell-surface-alt]/50 px-6 py-3">
+          <div className="grid grid-cols-12 gap-4 border-b border-[var(--shell-border)] bg-[var(--shell-surface-alt)]/50 px-6 py-3">
             <div className="col-span-2"><div className="h-3.5 w-14 rounded shimmer-glow" /></div>
             <div className="col-span-3"><div className="h-3.5 w-24 rounded shimmer-glow" /></div>
             <div className="col-span-2 text-right"><div className="h-3.5 w-12 rounded shimmer-glow ml-auto" /></div>
@@ -34,7 +34,7 @@ export default function QuotationsLoading() {
             <div className="col-span-1 text-right flex justify-end"><div className="h-3.5 w-8 rounded shimmer-glow" /></div>
           </div>
           {/* Table Rows */}
-          <div className="divide-y divide-[--shell-border]/40">
+          <div className="divide-y divide-[var(--shell-border)]/40">
             {Array.from({ length: 5 }).map((_, idx) => (
               <div key={idx} className="grid grid-cols-12 gap-4 px-6 py-4 items-center">
                 <div className="col-span-2"><div className="h-4 w-16 rounded shimmer-glow" /></div>

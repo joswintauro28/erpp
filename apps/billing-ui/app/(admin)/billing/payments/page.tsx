@@ -118,8 +118,8 @@ export default function Payments() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-heading text-xl font-semibold tracking-tight text-[--shell-foreground]">Payments</h1>
-          <p className="mt-0.5 text-sm text-[--shell-muted]">Record and manage payments received</p>
+          <h1 className="font-heading text-xl font-semibold tracking-tight text-[var(--shell-foreground)]">Payments</h1>
+          <p className="mt-0.5 text-sm text-[var(--shell-muted)]">Record and manage payments received</p>
         </div>
         <Button aria-label="Record Payment" onClick={() => setRecordOpen(true)}><Plus className="h-4 w-4" /> Record Payment</Button>
       </div>
@@ -127,24 +127,24 @@ export default function Payments() {
       {metrics && (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-5">
           <Card><CardContent className="pt-6">
-            <p className="text-xs text-[--shell-muted]">Today</p>
-            <p className="font-heading text-lg font-semibold text-[--shell-foreground]">{money(metrics.dailyTotal)}</p>
+            <p className="text-xs text-[var(--shell-muted)]">Today</p>
+            <p className="font-heading text-lg font-semibold text-[var(--shell-foreground)]">{money(metrics.dailyTotal)}</p>
           </CardContent></Card>
           <Card><CardContent className="pt-6">
-            <p className="text-xs text-[--shell-muted]">This Month</p>
-            <p className="font-heading text-lg font-semibold text-[--shell-foreground]">{money(metrics.monthlyTotal)}</p>
+            <p className="text-xs text-[var(--shell-muted)]">This Month</p>
+            <p className="font-heading text-lg font-semibold text-[var(--shell-foreground)]">{money(metrics.monthlyTotal)}</p>
           </CardContent></Card>
           <Card><CardContent className="pt-6">
-            <p className="text-xs text-[--shell-muted]">Outstanding</p>
-            <p className="font-heading text-lg font-semibold text-[--shell-danger]">{money(metrics.outstandingTotal)}</p>
+            <p className="text-xs text-[var(--shell-muted)]">Outstanding</p>
+            <p className="font-heading text-lg font-semibold text-[var(--shell-danger)]">{money(metrics.outstandingTotal)}</p>
           </CardContent></Card>
           <Card><CardContent className="pt-6">
-            <p className="text-xs text-[--shell-muted]">Refunds</p>
-            <p className="font-heading text-lg font-semibold text-[--shell-danger]">{money(metrics.totalRefunds)}</p>
+            <p className="text-xs text-[var(--shell-muted)]">Refunds</p>
+            <p className="font-heading text-lg font-semibold text-[var(--shell-danger)]">{money(metrics.totalRefunds)}</p>
           </CardContent></Card>
           <Card><CardContent className="pt-6">
-            <p className="text-xs text-[--shell-muted]">Failed</p>
-            <p className="font-heading text-lg font-semibold text-[--shell-danger]">{metrics.failedTransactions}</p>
+            <p className="text-xs text-[var(--shell-muted)]">Failed</p>
+            <p className="font-heading text-lg font-semibold text-[var(--shell-danger)]">{metrics.failedTransactions}</p>
           </CardContent></Card>
         </div>
       )}
@@ -177,11 +177,11 @@ export default function Payments() {
                   <TableRow key={p.id}>
                     <TableCell><span className="font-mono text-xs font-medium">{p.payment_id}</span></TableCell>
                     <TableCell className="font-mono text-xs">{p.invoice_number}</TableCell>
-                    <TableCell className="text-[--shell-muted]">{p.client_name}</TableCell>
+                    <TableCell className="text-[var(--shell-muted)]">{p.client_name}</TableCell>
                     <TableCell className="font-mono text-sm text-right">{money(p.amount)}</TableCell>
                     <TableCell className="capitalize text-xs">{p.method.replace("_", " ")}</TableCell>
-                    <TableCell className="text-xs text-[--shell-muted]">{p.date}</TableCell>
-                    <TableCell className="text-xs text-[--shell-muted]">{p.reference}</TableCell>
+                    <TableCell className="text-xs text-[var(--shell-muted)]">{p.date}</TableCell>
+                    <TableCell className="text-xs text-[var(--shell-muted)]">{p.reference}</TableCell>
                     <TableCell>
                       <div className="flex justify-end">
                         <Button
@@ -209,10 +209,10 @@ export default function Payments() {
             <DialogTitle>Record Payment</DialogTitle>
           </DialogHeader>
           <form className="space-y-5" onSubmit={handleRecordPayment}>
-            <div className="rounded-lg border border-[--shell-border] bg-[--shell-surface] p-4">
+            <div className="rounded-lg border border-[var(--shell-border)] bg-[var(--shell-surface)] p-4">
               <div className="mb-3 flex items-center gap-2">
-                <Receipt className="h-3.5 w-3.5 text-[--shell-brand]" />
-                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[--shell-foreground]">Select Invoice</span>
+                <Receipt className="h-3.5 w-3.5 text-[var(--shell-brand)]" />
+                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--shell-foreground)]">Select Invoice</span>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="bi-pay-invoice">Invoice</Label>
@@ -228,17 +228,17 @@ export default function Payments() {
                 </Select>
               </div>
               {selectedInvoice && (
-                <div className="mt-3 flex items-center justify-between rounded-md bg-[--shell-bg] px-3 py-2 text-xs">
-                  <span className="text-[--shell-muted]">Balance Due</span>
-                  <span className="font-mono font-semibold text-[--shell-brand]">{money(selectedInvoice.balance)}</span>
+                <div className="mt-3 flex items-center justify-between rounded-md bg-[var(--shell-bg)] px-3 py-2 text-xs">
+                  <span className="text-[var(--shell-muted)]">Balance Due</span>
+                  <span className="font-mono font-semibold text-[var(--shell-brand)]">{money(selectedInvoice.balance)}</span>
                 </div>
               )}
             </div>
 
-            <div className="rounded-lg border border-[--shell-border] bg-[--shell-surface] p-4">
+            <div className="rounded-lg border border-[var(--shell-border)] bg-[var(--shell-surface)] p-4">
               <div className="mb-3 flex items-center gap-2">
-                <DollarSign className="h-3.5 w-3.5 text-[--shell-accent]" />
-                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[--shell-foreground]">Payment Amount</span>
+                <DollarSign className="h-3.5 w-3.5 text-[var(--shell-accent)]" />
+                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--shell-foreground)]">Payment Amount</span>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="bi-pay-amount">Amount (₹)</Label>
@@ -246,10 +246,10 @@ export default function Payments() {
               </div>
             </div>
 
-            <div className="rounded-lg border border-[--shell-border] bg-[--shell-surface] p-4">
+            <div className="rounded-lg border border-[var(--shell-border)] bg-[var(--shell-surface)] p-4">
               <div className="mb-3 flex items-center gap-2">
-                <Building2 className="h-3.5 w-3.5 text-[--shell-accent]" />
-                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[--shell-foreground]">Payment Method</span>
+                <Building2 className="h-3.5 w-3.5 text-[var(--shell-accent)]" />
+                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--shell-foreground)]">Payment Method</span>
               </div>
               <div className="space-y-4">
                 <div className="space-y-2">

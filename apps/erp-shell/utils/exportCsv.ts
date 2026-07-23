@@ -1,4 +1,4 @@
-export const exportToCSV = (dataArray, filename) => {
+export const exportToCSV = (dataArray: any[], filename: string) => {
   if (!dataArray || !dataArray.length) {
     alert("No data available to export.");
     return;

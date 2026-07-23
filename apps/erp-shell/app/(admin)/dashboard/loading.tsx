@@ -4,7 +4,7 @@ export default function DashboardLoading() {
   return (
     <div className="relative space-y-10 lg:space-y-12">
       {/* Brand progress sweep bar */}
-      <span className="absolute -top-6 left-0 h-0.5 w-1/3 rounded-full bg-[--shell-brand] shimmer-glow" />
+      <span className="absolute -top-6 left-0 h-0.5 w-1/3 rounded-full bg-[var(--shell-brand)] shimmer-glow" />
 
       {/* Header Info */}
       <div className="flex items-center justify-between">
@@ -19,7 +19,7 @@ export default function DashboardLoading() {
       <section className="space-y-5">
         <div className="flex items-center gap-2">
           <div className="h-4 w-20 rounded shimmer-glow" />
-          <div className="h-px flex-1 bg-[--shell-border]/20" />
+          <div className="h-px flex-1 bg-[var(--shell-border)]/20" />
         </div>
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
           {Array.from({ length: 4 }).map((_, i) => (
@@ -41,11 +41,11 @@ export default function DashboardLoading() {
       <section className="space-y-5">
         <div className="flex items-center gap-2">
           <div className="h-4 w-28 rounded shimmer-glow" />
-          <div className="h-px flex-1 bg-[--shell-border]/20" />
+          <div className="h-px flex-1 bg-[var(--shell-border)]/20" />
         </div>
         <div className="flex flex-wrap gap-2">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="h-8.5 w-32 rounded-md border border-[--shell-border] bg-[--shell-surface] shimmer-glow" />
+            <div key={i} className="h-8.5 w-32 rounded-md border border-[var(--shell-border)] bg-[var(--shell-surface)] shimmer-glow" />
           ))}
         </div>
       </section>
@@ -54,13 +54,13 @@ export default function DashboardLoading() {
       <section className="space-y-5">
         <div className="flex items-center gap-2">
           <div className="h-4 w-20 rounded shimmer-glow" />
-          <div className="h-px flex-1 bg-[--shell-border]/20" />
+          <div className="h-px flex-1 bg-[var(--shell-border)]/20" />
         </div>
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           {/* Revenue Trend Chart Card */}
           <Card>
             <CardContent className="p-5 space-y-4">
-              <div className="flex items-center justify-between border-b border-[--shell-border]/20 pb-3">
+              <div className="flex items-center justify-between border-b border-[var(--shell-border)]/20 pb-3">
                 <div className="space-y-1.5">
                   <div className="h-4.5 w-32 rounded shimmer-glow" />
                   <div className="h-3 w-48 rounded shimmer-glow" />
@@ -82,7 +82,7 @@ export default function DashboardLoading() {
           {/* Invoice Distribution Chart Card */}
           <Card>
             <CardContent className="p-5 space-y-4">
-              <div className="flex items-center justify-between border-b border-[--shell-border]/20 pb-3">
+              <div className="flex items-center justify-between border-b border-[var(--shell-border)]/20 pb-3">
                 <div className="space-y-1.5">
                   <div className="h-4.5 w-36 rounded shimmer-glow" />
                   <div className="h-3 w-40 rounded shimmer-glow" />
@@ -91,8 +91,8 @@ export default function DashboardLoading() {
               <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center h-56 pt-2">
                 {/* Mock Ring */}
                 <div className="col-span-7 flex justify-center items-center relative">
-                  <div className="h-40 w-40 rounded-full border-[14px] border-[--shell-surface-alt] flex items-center justify-center">
-                    <div className="flex flex-col items-center justify-center rounded-full h-24 w-24 border border-[--shell-border] bg-[--shell-surface] shadow-sm">
+                  <div className="h-40 w-40 rounded-full border-[14px] border-[var(--shell-surface-alt)] flex items-center justify-center">
+                    <div className="flex flex-col items-center justify-center rounded-full h-24 w-24 border border-[var(--shell-border)] bg-[var(--shell-surface)] shadow-sm">
                       <div className="h-6 w-10 rounded shimmer-glow" />
                       <div className="h-3 w-12 rounded shimmer-glow mt-1.5" />
                     </div>
@@ -109,7 +109,7 @@ export default function DashboardLoading() {
                         </div>
                         <div className="h-3.5 w-8 rounded shimmer-glow" />
                       </div>
-                      <div className="h-1.5 w-full rounded-full bg-[--shell-surface-alt]" />
+                      <div className="h-1.5 w-full rounded-full bg-[var(--shell-surface-alt)]" />
                     </div>
                   ))}
                 </div>
@@ -123,7 +123,7 @@ export default function DashboardLoading() {
       <section className="space-y-5">
         <div className="flex items-center gap-2">
           <div className="h-4 w-20 rounded shimmer-glow" />
-          <div className="h-px flex-1 bg-[--shell-border]/20" />
+          <div className="h-px flex-1 bg-[var(--shell-border)]/20" />
         </div>
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           {/* Recent Invoices list */}
@@ -132,7 +132,7 @@ export default function DashboardLoading() {
               <div className="h-4 w-32 rounded shimmer-glow" />
               <div className="space-y-3">
                 {Array.from({ length: 4 }).map((_, idx) => (
-                  <div key={idx} className="flex items-center justify-between py-2 border-b border-[--shell-border]/10 last:border-0">
+                  <div key={idx} className="flex items-center justify-between py-2 border-b border-[var(--shell-border)]/10 last:border-0">
                     <div className="space-y-1.5">
                       <div className="h-4 w-28 rounded shimmer-glow" />
                       <div className="h-3.5 w-20 rounded shimmer-glow" />
@@ -171,7 +171,7 @@ export default function DashboardLoading() {
       <section className="space-y-5">
         <div className="flex items-center gap-2">
           <div className="h-4 w-20 rounded shimmer-glow" />
-          <div className="h-px flex-1 bg-[--shell-border]/20" />
+          <div className="h-px flex-1 bg-[var(--shell-border)]/20" />
         </div>
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
           {Array.from({ length: 4 }).map((_, idx) => (

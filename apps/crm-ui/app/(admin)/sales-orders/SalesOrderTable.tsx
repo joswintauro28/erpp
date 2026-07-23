@@ -29,7 +29,7 @@ interface SalesOrderTableProps {
 export default function SalesOrderTable({ salesOrders, onView, onEdit, onDelete }: SalesOrderTableProps) {
   if (!salesOrders?.length) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 text-[--shell-muted]">
+      <div className="flex flex-col items-center justify-center py-16 text-[var(--shell-muted)]">
         <p className="text-sm">No sales orders found.</p>
       </div>
     );
@@ -52,8 +52,8 @@ export default function SalesOrderTable({ salesOrders, onView, onEdit, onDelete 
       <TableBody>
         {salesOrders.map((item: any) => (
           <TableRow key={item.id}>
-            <TableCell className="text-[--shell-muted] cursor-pointer" onClick={() => onView(item)}>{item.id_str}</TableCell>
-            <TableCell className="font-medium text-[--shell-foreground] cursor-pointer" onClick={() => onView(item)}>{item.so_no}</TableCell>
+            <TableCell className="text-[var(--shell-muted)] cursor-pointer" onClick={() => onView(item)}>{item.id_str}</TableCell>
+            <TableCell className="font-medium text-[var(--shell-foreground)] cursor-pointer" onClick={() => onView(item)}>{item.so_no}</TableCell>
             <TableCell>{item.account}</TableCell>
             <TableCell>{formatCurrency(item.value)}</TableCell>
             <TableCell>{item.eta}</TableCell>
@@ -61,8 +61,8 @@ export default function SalesOrderTable({ salesOrders, onView, onEdit, onDelete 
             <TableCell>{item.owner}</TableCell>
             <TableCell>
               <div className="flex gap-2">
-                <Button size="icon-sm" className="text-[--shell-muted] hover:text-[--shell-foreground]" onClick={() => onEdit(item)} title="Edit"><Edit2 size={14} /></Button>
-                <Button size="icon-sm" className="text-[--shell-muted] hover:text-destructive" onClick={() => onDelete(item)} title="Delete"><Trash2 size={14} /></Button>
+                <Button size="icon-sm" className="text-[var(--shell-muted)] hover:text-[var(--shell-foreground)]" onClick={() => onEdit(item)} title="Edit"><Edit2 size={14} /></Button>
+                <Button size="icon-sm" className="text-[var(--shell-muted)] hover:text-destructive" onClick={() => onDelete(item)} title="Delete"><Trash2 size={14} /></Button>
               </div>
             </TableCell>
           </TableRow>

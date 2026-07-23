@@ -2,14 +2,14 @@ from pydantic import BaseModel
 from typing import List, Optional
 
 class OpportunityBase(BaseModel):
-    id_str: str
-    name: str
-    account: str
-    value: str
-    probability: str
-    close_date: str
-    stage: str
-    owner: str
+    id_str: Optional[str] = None
+    name: Optional[str] = None
+    account: Optional[str] = None
+    value: Optional[str] = None
+    probability: Optional[str] = None
+    close_date: Optional[str] = None
+    stage: Optional[str] = None
+    owner: Optional[str] = None
     updated_at: Optional[str] = None
 
 class Opportunity(OpportunityBase):

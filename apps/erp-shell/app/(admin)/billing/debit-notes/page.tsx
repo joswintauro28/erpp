@@ -92,21 +92,21 @@ export default function DebitNotes() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-heading text-xl font-semibold tracking-tight text-[--shell-foreground]">
+          <h1 className="font-heading text-xl font-semibold tracking-tight text-[var(--shell-foreground)]">
             Debit Notes
           </h1>
-          <p className="mt-0.5 text-sm text-[--shell-muted]">
+          <p className="mt-0.5 text-sm text-[var(--shell-muted)]">
             Debit notes raised against invoices
           </p>
         </div>
-        <Button className="bg-[--shell-brand] hover:bg-[--shell-brand]/90 text-white" onClick={() => setCreateOpen(true)}>
+        <Button className="bg-[var(--shell-brand)] hover:bg-[var(--shell-brand)]/90 text-white" onClick={() => setCreateOpen(true)}>
           <Plus className="h-4 w-4" /> Create Debit Note
         </Button>
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
         <div className="relative flex-1 max-w-xs">
-          <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[--shell-muted]" />
+          <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--shell-muted)]" />
           <Input
             placeholder="Search debit notes..."
             className="pl-8"
@@ -119,7 +119,7 @@ export default function DebitNotes() {
       <Card>
         <CardContent className="p-0">
             {filtered.length === 0 ? (
-              <div className="flex flex-col items-center gap-2 py-16 text-[--shell-muted]">
+              <div className="flex flex-col items-center gap-2 py-16 text-[var(--shell-muted)]">
                 <FileUp className="h-10 w-10" />
                 <p className="text-sm">No debit notes found</p>
               </div>
@@ -142,7 +142,7 @@ export default function DebitNotes() {
                       <TableCell className="font-mono text-xs font-medium">{n.note_number}</TableCell>
                       <TableCell className="font-mono text-xs">{n.invoice_number}</TableCell>
                       <TableCell>{n.client_name}</TableCell>
-                      <TableCell className="text-xs text-[--shell-muted]">{n.date}</TableCell>
+                      <TableCell className="text-xs text-[var(--shell-muted)]">{n.date}</TableCell>
                       <TableCell className="font-mono text-sm text-right">{money(n.amount)}</TableCell>
                       <TableCell>
                         <Badge
@@ -158,7 +158,7 @@ export default function DebitNotes() {
                             <Download className="h-3.5 w-3.5" />
                           </Button>
                           <Button variant="ghost" size="icon-sm" onClick={() => handleDelete(n.id)}>
-                            <Trash2 className="h-3.5 w-3.5 text-[--shell-danger]" />
+                            <Trash2 className="h-3.5 w-3.5 text-[var(--shell-danger)]" />
                           </Button>
                         </div>
                       </TableCell>
@@ -177,10 +177,10 @@ export default function DebitNotes() {
             <DialogTitle>Create Debit Note</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleCreate} className="space-y-5">
-            <div className="rounded-lg border border-[--shell-border] bg-[--shell-surface] p-4">
+            <div className="rounded-lg border border-[var(--shell-border)] bg-[var(--shell-surface)] p-4">
               <div className="mb-3 flex items-center gap-2">
-                <Receipt className="h-3.5 w-3.5 text-[--shell-brand]" />
-                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[--shell-foreground]">Reference Invoice</span>
+                <Receipt className="h-3.5 w-3.5 text-[var(--shell-brand)]" />
+                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--shell-foreground)]">Reference Invoice</span>
               </div>
               <div className="space-y-2">
                 <Label>Invoice</Label>
@@ -196,23 +196,23 @@ export default function DebitNotes() {
                 </Select>
               </div>
               {selectedInvoice && (
-                <div className="mt-3 grid grid-cols-2 gap-3 rounded-md bg-[--shell-bg] p-3 text-xs">
+                <div className="mt-3 grid grid-cols-2 gap-3 rounded-md bg-[var(--shell-bg)] p-3 text-xs">
                   <div>
-                    <span className="text-[--shell-muted]">Invoice Total</span>
-                    <p className="font-mono font-medium text-[--shell-foreground]">{money(selectedInvoice.total)}</p>
+                    <span className="text-[var(--shell-muted)]">Invoice Total</span>
+                    <p className="font-mono font-medium text-[var(--shell-foreground)]">{money(selectedInvoice.total)}</p>
                   </div>
                   <div>
-                    <span className="text-[--shell-muted]">Balance Due</span>
-                    <p className="font-mono font-medium text-[--shell-brand]">{money(selectedInvoice.balance)}</p>
+                    <span className="text-[var(--shell-muted)]">Balance Due</span>
+                    <p className="font-mono font-medium text-[var(--shell-brand)]">{money(selectedInvoice.balance)}</p>
                   </div>
                 </div>
               )}
             </div>
 
-            <div className="rounded-lg border border-[--shell-border] bg-[--shell-surface] p-4">
+            <div className="rounded-lg border border-[var(--shell-border)] bg-[var(--shell-surface)] p-4">
               <div className="mb-3 flex items-center gap-2">
-                <Building2 className="h-3.5 w-3.5 text-[--shell-accent]" />
-                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[--shell-foreground]">Debit Details</span>
+                <Building2 className="h-3.5 w-3.5 text-[var(--shell-accent)]" />
+                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--shell-foreground)]">Debit Details</span>
               </div>
               <div className="space-y-4">
                 <div className="space-y-2">
@@ -228,7 +228,7 @@ export default function DebitNotes() {
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setCreateOpen(false)}>Cancel</Button>
-              <Button type="submit" disabled={saving} className="bg-[--shell-brand] hover:bg-[--shell-brand]/90 text-white">
+              <Button type="submit" disabled={saving} className="bg-[var(--shell-brand)] hover:bg-[var(--shell-brand)]/90 text-white">
                 {saving && <Loader2 className="mr-1 h-4 w-4 animate-spin" />}
                 Create Debit Note
               </Button>

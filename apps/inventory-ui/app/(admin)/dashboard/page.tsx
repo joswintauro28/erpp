@@ -50,17 +50,17 @@ function KpiCard({ label, value, subtitle, icon: Icon, color, index }: {
 }) {
   return (
     <div
-      className="animate-kpi flex flex-col gap-1 rounded-xl border border-[--shell-border] bg-[--shell-surface] p-4 transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1)]"
+      className="animate-kpi flex flex-col gap-1 rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface)] p-4 transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1)]"
       style={{ animationDelay: `${index * 0.05}s` }}
     >
       <div className="flex items-center justify-between">
-        <span className="text-xs font-medium uppercase tracking-[0.08em] text-[--shell-muted]">{label}</span>
-        <div className="flex h-7 w-7 items-center justify-center rounded-md border border-[--shell-border] bg-[--shell-bg]">
+        <span className="text-xs font-medium uppercase tracking-[0.08em] text-[var(--shell-muted)]">{label}</span>
+        <div className="flex h-7 w-7 items-center justify-center rounded-md border border-[var(--shell-border)] bg-[var(--shell-bg)]">
           <Icon className="h-3.5 w-3.5" style={{ color }} />
         </div>
       </div>
-      <span className="font-heading text-2xl font-semibold tracking-tight text-[--shell-foreground]">{value}</span>
-      {subtitle && <span className="text-xs text-[--shell-muted]">{subtitle}</span>}
+      <span className="font-heading text-2xl font-semibold tracking-tight text-[var(--shell-foreground)]">{value}</span>
+      {subtitle && <span className="text-xs text-[var(--shell-muted)]">{subtitle}</span>}
     </div>
   );
 }
@@ -99,8 +99,8 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="font-heading text-2xl font-semibold tracking-tight text-[--shell-foreground]">Dashboard</h1>
-        <p className="mt-1 text-sm text-[--shell-muted]">Inventory overview and key metrics</p>
+        <h1 className="font-heading text-2xl font-semibold tracking-tight text-[var(--shell-foreground)]">Dashboard</h1>
+        <p className="mt-1 text-sm text-[var(--shell-muted)]">Inventory overview and key metrics</p>
       </div>
 
       {/* KPI Cards */}

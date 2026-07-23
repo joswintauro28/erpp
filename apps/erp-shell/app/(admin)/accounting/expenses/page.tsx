@@ -126,8 +126,8 @@ export default function Expenses() {
   };
 
   const summaryCards = [
-    { label: "Total Expenses", value: money(totalAmount), subtitle: `${expenses.length} entries`, gradient: "from-[--shell-brand]/5" },
-    { label: "This Month", value: money(thisMonth), subtitle: new Date().toLocaleString("default", { month: "long", year: "numeric" }), gradient: "from-[--shell-accent]/5" },
+    { label: "Total Expenses", value: money(totalAmount), subtitle: `${expenses.length} entries`, gradient: "from-[var(--shell-brand)]/5" },
+    { label: "This Month", value: money(thisMonth), subtitle: new Date().toLocaleString("default", { month: "long", year: "numeric" }), gradient: "from-[var(--shell-accent)]/5" },
     { label: "Pending", value: money(pendingAmount), subtitle: `${expenses.filter((e) => e.status === "pending").length} unpaid`, gradient: "from-amber-500/5" },
     { label: "Categories", value: String(new Set(expenses.map((e) => e.category)).size), subtitle: "distinct categories", gradient: "from-blue-500/5" },
   ];
@@ -138,14 +138,14 @@ export default function Expenses() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-heading text-xl font-semibold tracking-tight text-[--shell-foreground]">
+          <h1 className="font-heading text-xl font-semibold tracking-tight text-[var(--shell-foreground)]">
             Expenses
           </h1>
-          <p className="mt-0.5 text-sm text-[--shell-muted]">
+          <p className="mt-0.5 text-sm text-[var(--shell-muted)]">
             Track and manage business expenses
           </p>
         </div>
-        <Button className="bg-[--shell-brand] hover:bg-[--shell-brand]/90 text-white" size="sm" onClick={() => setCreateOpen(true)}>
+        <Button className="bg-[var(--shell-brand)] hover:bg-[var(--shell-brand)]/90 text-white" size="sm" onClick={() => setCreateOpen(true)}>
           <Plus className="mr-1.5 h-3.5 w-3.5" />
           Add Expense
         </Button>
@@ -162,24 +162,24 @@ export default function Expenses() {
         {summaryCards.map((item, idx) => (
           <div
             key={item.label}
-            className="animate-kpi relative flex flex-col gap-1.5 rounded-xl border border-[--shell-border] bg-[--shell-surface] p-4.5 transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1)] overflow-hidden"
+            className="animate-kpi relative flex flex-col gap-1.5 rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface)] p-4.5 transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1)] overflow-hidden"
             style={{ animationDelay: `${idx * 0.05}s` }}
           >
             <div className={`absolute inset-0 bg-gradient-to-br ${item.gradient} pointer-events-none`} />
-            <span className="relative z-10 text-xs font-medium uppercase tracking-[0.08em] text-[--shell-muted]">
+            <span className="relative z-10 text-xs font-medium uppercase tracking-[0.08em] text-[var(--shell-muted)]">
               {item.label}
             </span>
-            <span className={`relative z-10 font-heading text-lg font-semibold tracking-tight ${item.label === "Pending" ? "text-[--shell-brand]" : "text-[--shell-foreground]"}`}>
+            <span className={`relative z-10 font-heading text-lg font-semibold tracking-tight ${item.label === "Pending" ? "text-[var(--shell-brand)]" : "text-[var(--shell-foreground)]"}`}>
               {item.value}
             </span>
-            <span className="relative z-10 text-xs text-[--shell-muted]">{item.subtitle}</span>
+            <span className="relative z-10 text-xs text-[var(--shell-muted)]">{item.subtitle}</span>
           </div>
         ))}
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
         <div className="relative flex-1 max-w-xs">
-          <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[--shell-muted]" />
+          <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--shell-muted)]" />
           <Input
             placeholder="Search expenses..."
             className="pl-8"
@@ -208,7 +208,7 @@ export default function Expenses() {
             <TableBody>
               {filtered.map((e) => (
                 <TableRow key={e.id}>
-                  <TableCell className="font-mono text-xs text-[--shell-muted]">{e.date}</TableCell>
+                  <TableCell className="font-mono text-xs text-[var(--shell-muted)]">{e.date}</TableCell>
                   <TableCell>
                     <Badge
                       variant="outline"
@@ -219,10 +219,10 @@ export default function Expenses() {
                       {e.category}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-xs text-[--shell-foreground] max-w-sm truncate">{e.description}</TableCell>
-                  <TableCell className="text-xs text-[--shell-muted]">{e.paid_to}</TableCell>
-                  <TableCell className="font-mono text-xs text-[--shell-muted]">{e.bill_number}</TableCell>
-                  <TableCell className="text-xs text-[--shell-muted]">{e.payment_method}</TableCell>
+                  <TableCell className="text-xs text-[var(--shell-foreground)] max-w-sm truncate">{e.description}</TableCell>
+                  <TableCell className="text-xs text-[var(--shell-muted)]">{e.paid_to}</TableCell>
+                  <TableCell className="font-mono text-xs text-[var(--shell-muted)]">{e.bill_number}</TableCell>
+                  <TableCell className="text-xs text-[var(--shell-muted)]">{e.payment_method}</TableCell>
                   <TableCell className="font-mono text-sm text-right">{money(e.amount)}</TableCell>
                   <TableCell>
                     <Badge
@@ -238,7 +238,7 @@ export default function Expenses() {
                         <Download className="h-3 w-3" />
                       </Button>
                       <Button variant="ghost" size="icon-sm" onClick={() => handleDelete(e.id)} disabled={deleting === e.id}>
-                        {deleting === e.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Trash2 className="h-3 w-3 text-[--shell-danger]" />}
+                        {deleting === e.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Trash2 className="h-3 w-3 text-[var(--shell-danger)]" />}
                       </Button>
                     </div>
                   </TableCell>
@@ -256,10 +256,10 @@ export default function Expenses() {
             <DialogTitle>Add Expense</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleCreate} className="space-y-5">
-            <div className="rounded-lg border border-[--shell-border] bg-[--shell-surface] p-4">
+            <div className="rounded-lg border border-[var(--shell-border)] bg-[var(--shell-surface)] p-4">
               <div className="mb-3 flex items-center gap-2">
-                <Wallet className="h-3.5 w-3.5 text-[--shell-brand]" />
-                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[--shell-foreground]">Expense Details</span>
+                <Wallet className="h-3.5 w-3.5 text-[var(--shell-brand)]" />
+                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--shell-foreground)]">Expense Details</span>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -277,10 +277,10 @@ export default function Expenses() {
               </div>
             </div>
 
-            <div className="rounded-lg border border-[--shell-border] bg-[--shell-surface] p-4">
+            <div className="rounded-lg border border-[var(--shell-border)] bg-[var(--shell-surface)] p-4">
               <div className="mb-3 flex items-center gap-2">
-                <CalendarDays className="h-3.5 w-3.5 text-[--shell-accent]" />
-                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[--shell-foreground]">Payment Info</span>
+                <CalendarDays className="h-3.5 w-3.5 text-[var(--shell-accent)]" />
+                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--shell-foreground)]">Payment Info</span>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -309,7 +309,7 @@ export default function Expenses() {
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setCreateOpen(false)}>Cancel</Button>
-              <Button type="submit" disabled={saving} className="bg-[--shell-brand] hover:bg-[--shell-brand]/90 text-white">
+              <Button type="submit" disabled={saving} className="bg-[var(--shell-brand)] hover:bg-[var(--shell-brand)]/90 text-white">
                 {saving && <Loader2 className="mr-1 h-4 w-4 animate-spin" />}
                 Add Expense
               </Button>

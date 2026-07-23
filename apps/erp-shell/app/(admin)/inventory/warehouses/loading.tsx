@@ -2,7 +2,7 @@ export default function WarehousesLoading() {
   return (
     <div className="relative space-y-6 animate-pulse">
       {/* Brand Sweep Loader */}
-      <span className="absolute -top-6 left-0 h-0.5 w-1/3 rounded-full bg-[--shell-brand] shimmer-glow" />
+      <span className="absolute -top-6 left-0 h-0.5 w-1/3 rounded-full bg-[var(--shell-brand)] shimmer-glow" />
 
       {/* Header */}
       <div className="flex items-center justify-between">
@@ -21,7 +21,7 @@ export default function WarehousesLoading() {
         {Array.from({ length: 4 }).map((_, i) => (
           <div
             key={i}
-            className="rounded-xl border border-[--shell-border] bg-[--shell-surface] p-4 shadow-sm space-y-3.5"
+            className="rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface)] p-4 shadow-sm space-y-3.5"
           >
             <div className="flex items-start justify-between">
               <div className="space-y-2 flex-1">

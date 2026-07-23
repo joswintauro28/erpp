@@ -38,13 +38,13 @@ function formatPipelineValue(value: number) {
 
 function MiniStat({ icon: Icon, label, value, color }: { icon: typeof FileText; label: string; value: string; color: string }) {
   return (
-    <div className="flex items-center gap-3 rounded-lg border border-[--shell-border] bg-[--shell-surface] px-3.5 py-2.5">
+    <div className="flex items-center gap-3 rounded-lg border border-[var(--shell-border)] bg-[var(--shell-surface)] px-3.5 py-2.5">
       <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md" style={{ backgroundColor: `${color}15` }}>
         <Icon className="h-4 w-4" style={{ color }} />
       </div>
       <div className="min-w-0">
-        <p className="text-xs text-[--shell-muted] truncate">{label}</p>
-        <p className="font-heading text-sm font-semibold text-[--shell-foreground]">{value}</p>
+        <p className="text-xs text-[var(--shell-muted)] truncate">{label}</p>
+        <p className="font-heading text-sm font-semibold text-[var(--shell-foreground)]">{value}</p>
       </div>
     </div>
   );
@@ -99,19 +99,19 @@ export default function DashboardPage() {
     <div className="space-y-10 lg:space-y-12">
       {/* Welcome Greeting */}
       <div className="flex flex-col gap-1">
-        <h1 className="font-heading text-xl font-semibold tracking-tight text-[--shell-foreground]">
+        <h1 className="font-heading text-xl font-semibold tracking-tight text-[var(--shell-foreground)]">
           {getGreeting()}, {user?.full_name || user?.email || "User"}
         </h1>
-        <p className="text-sm text-[--shell-muted]">Here&apos;s what&apos;s moving across your pipeline and accounts today.</p>
+        <p className="text-sm text-[var(--shell-muted)]">Here&apos;s what&apos;s moving across your pipeline and accounts today.</p>
       </div>
 
       {/* Alert Banner */}
       {hasAlerts && (
-        <div className="flex flex-wrap items-center gap-3 rounded-xl border border-[--shell-accent]/20 bg-gradient-to-r from-[--shell-accent]/5 to-transparent px-5 py-3.5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[--shell-accent]/10">
-            <Lightbulb className="h-4 w-4 text-[--shell-accent]" />
+        <div className="flex flex-wrap items-center gap-3 rounded-xl border border-[var(--shell-accent)]/20 bg-gradient-to-r from-[var(--shell-accent)]/5 to-transparent px-5 py-3.5">
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--shell-accent)]/10">
+            <Lightbulb className="h-4 w-4 text-[var(--shell-accent)]" />
           </div>
-          <span className="text-sm font-medium text-[--shell-accent-text]">AI recommendations available</span>
+          <span className="text-sm font-medium text-[var(--shell-accent-text)]">AI recommendations available</span>
           <div className="flex flex-wrap gap-2">
             <Badge variant="secondary" className="text-xs">
               {recommendations.length} insight{recommendations.length !== 1 ? "s" : ""}
@@ -123,8 +123,8 @@ export default function DashboardPage() {
       {/* Overview KPIs */}
       <section>
         <div className="mb-5 flex items-center gap-2">
-          <h2 className="font-heading text-xs font-light uppercase tracking-[0.12em] text-[--shell-muted]">Overview</h2>
-          <div className="h-px flex-1 bg-[--shell-border]" />
+          <h2 className="font-heading text-xs font-light uppercase tracking-[0.12em] text-[var(--shell-muted)]">Overview</h2>
+          <div className="h-px flex-1 bg-[var(--shell-border)]" />
         </div>
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
           {metrics.map((m: any, i: number) => {
@@ -156,8 +156,8 @@ export default function DashboardPage() {
       {/* Quick Actions */}
       <section>
         <div className="mb-5 flex items-center gap-2">
-          <h2 className="font-heading text-xs font-light uppercase tracking-[0.12em] text-[--shell-muted]">Quick Actions</h2>
-          <div className="h-px flex-1 bg-[--shell-border]" />
+          <h2 className="font-heading text-xs font-light uppercase tracking-[0.12em] text-[var(--shell-muted)]">Quick Actions</h2>
+          <div className="h-px flex-1 bg-[var(--shell-border)]" />
         </div>
         <div className="flex flex-wrap gap-2">
           {quickActions.map((action) => (
@@ -171,8 +171,8 @@ export default function DashboardPage() {
       {/* Pipeline Analytics */}
       <section>
         <div className="mb-5 flex items-center gap-2">
-          <h2 className="font-heading text-xs font-light uppercase tracking-[0.12em] text-[--shell-muted]">Pipeline Analytics</h2>
-          <div className="h-px flex-1 bg-[--shell-border]" />
+          <h2 className="font-heading text-xs font-light uppercase tracking-[0.12em] text-[var(--shell-muted)]">Pipeline Analytics</h2>
+          <div className="h-px flex-1 bg-[var(--shell-border)]" />
         </div>
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           <PipelineChart stages={stages} pipelineValue={pipelineValue} />
@@ -183,24 +183,24 @@ export default function DashboardPage() {
       {/* Activity & Insights */}
       <section>
         <div className="mb-4 lg:mb-5 flex items-center gap-2">
-          <h2 className="font-heading text-xs font-light uppercase tracking-[0.12em] text-[--shell-muted]">Activity & Insights</h2>
-          <div className="h-px flex-1 bg-[--shell-border]" />
+          <h2 className="font-heading text-xs font-light uppercase tracking-[0.12em] text-[var(--shell-muted)]">Activity & Insights</h2>
+          <div className="h-px flex-1 bg-[var(--shell-border)]" />
         </div>
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           {/* Stage Value Bar Chart */}
-          <Card className="hover:shadow-engineered transition-shadow duration-200 border-[--shell-border] bg-[--shell-surface]">
+          <Card className="hover:shadow-engineered transition-shadow duration-200 border-[var(--shell-border)] bg-[var(--shell-surface)]">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <div>
                 <CardTitle className="flex items-center gap-2 text-sm">
-                  <BarChart3 className="h-4 w-4 text-[--chart-1]" />
+                  <BarChart3 className="h-4 w-4 text-[var(--chart-1)]" />
                   Stage Value Comparison
                 </CardTitle>
-                <CardDescription className="text-xs text-[--shell-muted]">Pipeline value across all stages</CardDescription>
+                <CardDescription className="text-xs text-[var(--shell-muted)]">Pipeline value across all stages</CardDescription>
               </div>
               {pipelineValue > 0 && (
                 <div className="text-right">
-                  <p className="font-heading text-lg font-semibold text-[--shell-foreground]">{formatPipelineValue(pipelineValue)}</p>
-                  <p className="text-[10px] text-[--shell-muted]">Total pipeline</p>
+                  <p className="font-heading text-lg font-semibold text-[var(--shell-foreground)]">{formatPipelineValue(pipelineValue)}</p>
+                  <p className="text-[10px] text-[var(--shell-muted)]">Total pipeline</p>
                 </div>
               )}
             </CardHeader>
@@ -219,21 +219,21 @@ export default function DashboardPage() {
                     </BarChart>
                   </ResponsiveContainer>
                 ) : (
-                  <div className="flex h-full items-center justify-center text-sm text-[--shell-muted]">No stage data yet</div>
+                  <div className="flex h-full items-center justify-center text-sm text-[var(--shell-muted)]">No stage data yet</div>
                 )}
               </div>
             </CardContent>
           </Card>
 
           {/* Quick Insights */}
-          <Card className="hover:shadow-engineered transition-shadow duration-200 border-[--shell-border] bg-[--shell-surface]">
+          <Card className="hover:shadow-engineered transition-shadow duration-200 border-[var(--shell-border)] bg-[var(--shell-surface)]">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <div>
                 <CardTitle className="flex items-center gap-2 text-sm">
-                  <Sparkles className="h-4 w-4 text-[--chart-4]" />
+                  <Sparkles className="h-4 w-4 text-[var(--chart-4)]" />
                   Quick Insights
                 </CardTitle>
-                <CardDescription className="text-xs text-[--shell-muted]">Pipeline summary at a glance</CardDescription>
+                <CardDescription className="text-xs text-[var(--shell-muted)]">Pipeline summary at a glance</CardDescription>
               </div>
             </CardHeader>
             <CardContent>
@@ -241,13 +241,13 @@ export default function DashboardPage() {
                 {insights.map((insight) => <MiniStat key={insight.label} {...insight} />)}
               </div>
               {hasAlerts ? (
-                <div className="mt-3 rounded-lg border border-[--shell-accent]/20 bg-[--shell-accent]/5 px-3.5 py-2.5">
-                  <p className="text-xs font-medium text-[--shell-accent-text]">{recommendations.length} AI recommendation{recommendations.length !== 1 ? "s" : ""} available</p>
-                  <p className="mt-0.5 text-[11px] text-[--shell-muted]">Review insights to optimize your sales pipeline.</p>
+                <div className="mt-3 rounded-lg border border-[var(--shell-accent)]/20 bg-[var(--shell-accent)]/5 px-3.5 py-2.5">
+                  <p className="text-xs font-medium text-[var(--shell-accent-text)]">{recommendations.length} AI recommendation{recommendations.length !== 1 ? "s" : ""} available</p>
+                  <p className="mt-0.5 text-[11px] text-[var(--shell-muted)]">Review insights to optimize your sales pipeline.</p>
                 </div>
               ) : (
-                <div className="mt-3 rounded-lg border border-[--shell-success]/20 bg-[--shell-success]/5 px-3.5 py-2.5">
-                  <p className="text-xs font-medium text-[--shell-success]">All pipeline metrics are healthy</p>
+                <div className="mt-3 rounded-lg border border-[var(--shell-success)]/20 bg-[var(--shell-success)]/5 px-3.5 py-2.5">
+                  <p className="text-xs font-medium text-[var(--shell-success)]">All pipeline metrics are healthy</p>
                 </div>
               )}
             </CardContent>

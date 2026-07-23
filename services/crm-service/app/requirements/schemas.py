@@ -1,14 +1,14 @@
 from pydantic import BaseModel
-from typing import List
+from typing import List, Optional
 
 class RequirementBase(BaseModel):
-    id_str: str
-    name: str
-    account: str
-    category: str
-    priority: str
-    status: str
-    owner: str
+    id_str: Optional[str] = None
+    name: Optional[str] = None
+    account: Optional[str] = None
+    category: Optional[str] = None
+    priority: Optional[str] = None
+    status: Optional[str] = None
+    owner: Optional[str] = None
 
 class Requirement(RequirementBase):
     id: int

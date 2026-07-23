@@ -147,10 +147,10 @@ export default function Quotations() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-heading text-xl font-semibold tracking-tight text-[--shell-foreground]">
+          <h1 className="font-heading text-xl font-semibold tracking-tight text-[var(--shell-foreground)]">
             Quotations
           </h1>
-          <p className="mt-0.5 text-sm text-[--shell-muted]">
+          <p className="mt-0.5 text-sm text-[var(--shell-muted)]">
             Create and manage client quotations
           </p>
         </div>
@@ -162,7 +162,7 @@ export default function Quotations() {
 
       <div className="flex flex-wrap items-center gap-3">
         <div className="relative flex-1 max-w-xs">
-          <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[--shell-muted]" />
+          <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--shell-muted)]" />
           <Input
             placeholder="Search quotations..."
             className="pl-8"
@@ -186,7 +186,7 @@ export default function Quotations() {
       <Card>
         <CardContent className="p-0">
             {filtered.length === 0 ? (
-              <div className="flex flex-col items-center gap-2 py-16 text-[--shell-muted]">
+              <div className="flex flex-col items-center gap-2 py-16 text-[var(--shell-muted)]">
                 <ClipboardList className="h-10 w-10" />
                 <p className="text-sm">No quotations found</p>
               </div>
@@ -209,8 +209,8 @@ export default function Quotations() {
                       <TableCell className="font-mono text-xs font-medium">{q.quote_number}</TableCell>
                       <TableCell>{q.client_name}</TableCell>
                       <TableCell className="font-mono text-sm text-right">{money(q.total)}</TableCell>
-                      <TableCell className="text-xs text-[--shell-muted]">{q.issue_date}</TableCell>
-                      <TableCell className="text-xs text-[--shell-muted]">{q.valid_until}</TableCell>
+                      <TableCell className="text-xs text-[var(--shell-muted)]">{q.issue_date}</TableCell>
+                      <TableCell className="text-xs text-[var(--shell-muted)]">{q.valid_until}</TableCell>
                       <TableCell>
                         <Badge variant={statusVariant(q.status)} className="capitalize">
                           {q.status}
@@ -227,10 +227,10 @@ export default function Quotations() {
                           {q.status === "sent" && (
                             <>
                               <Button variant="ghost" size="icon-sm" onClick={() => updateStatus(q.id, "accepted")} title="Accept">
-                                <CheckCircle className="h-3.5 w-3.5 text-[--shell-success]" />
+                                <CheckCircle className="h-3.5 w-3.5 text-[var(--shell-success)]" />
                               </Button>
                               <Button variant="ghost" size="icon-sm" onClick={() => updateStatus(q.id, "rejected")} title="Reject">
-                                <XCircle className="h-3.5 w-3.5 text-[--shell-danger]" />
+                                <XCircle className="h-3.5 w-3.5 text-[var(--shell-danger)]" />
                               </Button>
                             </>
                           )}
@@ -243,7 +243,7 @@ export default function Quotations() {
                             <Edit className="h-3.5 w-3.5" />
                           </Button>
                           <Button variant="ghost" size="icon-sm" onClick={() => handleDelete(q.id)}>
-                            <Trash2 className="h-3.5 w-3.5 text-[--shell-danger]" />
+                            <Trash2 className="h-3.5 w-3.5 text-[var(--shell-danger)]" />
                           </Button>
                         </div>
                       </TableCell>
@@ -272,7 +272,7 @@ export default function Quotations() {
         {step === 0 && (
           <div className="space-y-5">
             <div className="space-y-2">
-              <Label htmlFor="q-client" className="text-[--shell-muted]">Client</Label>
+              <Label htmlFor="q-client" className="text-[var(--shell-muted)]">Client</Label>
               <Select
                 value={String(form.client_id)}
                 onValueChange={(v) => setForm({ ...form, client_id: Number(v) })}
@@ -290,7 +290,7 @@ export default function Quotations() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="q-total" className="text-[--shell-muted]">Total Amount</Label>
+              <Label htmlFor="q-total" className="text-[var(--shell-muted)]">Total Amount</Label>
               <Input id="q-total" type="number" min={0} value={form.total}
                 onChange={(e) => setForm({ ...form, total: Number(e.target.value) })} required />
             </div>
@@ -298,7 +298,7 @@ export default function Quotations() {
         )}
         {step === 1 && (
           <div className="space-y-2">
-            <Label htmlFor="q-notes" className="text-[--shell-muted]">Notes</Label>
+            <Label htmlFor="q-notes" className="text-[var(--shell-muted)]">Notes</Label>
             <Textarea id="q-notes" value={form.notes}
               onChange={(e) => setForm({ ...form, notes: e.target.value })}
               rows={3} />

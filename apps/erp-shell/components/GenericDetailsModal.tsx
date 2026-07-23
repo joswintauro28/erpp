@@ -74,11 +74,11 @@ const GenericDetailsModal: React.FC<GenericDetailsModalProps> = ({ record, entit
   const [showInvoiceForm, setShowInvoiceForm] = useState(false);
   const [invoiceSubmitting, setInvoiceSubmitting] = useState(false);
   const [invoiceError, setInvoiceError] = useState('');
-  const [invoiceFile, setInvoiceFile] = useState(null);
+  const [invoiceFile, setInvoiceFile] = useState<{ name: string; base64: string } | null>(null);
   const [invoiceStatus, setInvoiceStatus] = useState('Paid');
 
-  const [relatedRequirements, setRelatedRequirements] = useState([]);
-  const [relatedQuotations, setRelatedQuotations] = useState([]);
+  const [relatedRequirements, setRelatedRequirements] = useState<any[]>([]);
+  const [relatedQuotations, setRelatedQuotations] = useState<any[]>([]);
   const [loadingRelated, setLoadingRelated] = useState(false);
 
   const fetchRelatedData = async () => {
@@ -123,15 +123,15 @@ const GenericDetailsModal: React.FC<GenericDetailsModalProps> = ({ record, entit
 
   if (!isOpen || !record) return null;
 
-  const formatKey = (key) => {
+  const formatKey = (key: string) => {
     if (entityName === 'Requirement' && key === 'name') return 'Requirements';
     if (entityName === 'Opportunity' && key === 'name') return 'Deal';
     return key
       .replace(/_/g, ' ')
-      .replace(/\b\w/g, (char) => char.toUpperCase());
+      .replace(/\b\w/g, (char: string) => char.toUpperCase());
   };
 
-  const formatValue = (key, value) => {
+  const formatValue = (key: string, value: any) => {
     if (value === null || value === undefined) return '';
     return String(value);
   };
@@ -180,13 +180,13 @@ const GenericDetailsModal: React.FC<GenericDetailsModalProps> = ({ record, entit
     return (
       <iframe
         srcDoc={htmlContent}
-        className="w-full h-[360px] border border-[--shell-border] rounded-lg"
+        className="w-full h-[360px] border border-[var(--shell-border)] rounded-lg"
         title={nameField}
       />
     );
   };
 
-  const handleSaleSubmit = async (e) => {
+  const handleSaleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaleSubmitting(true);
     setSaleError('');
@@ -218,7 +218,7 @@ const GenericDetailsModal: React.FC<GenericDetailsModalProps> = ({ record, entit
     }
   };
 
-  const handleRequirementSubmit = async (e) => {
+  const handleRequirementSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setRequirementSubmitting(true);
     setRequirementError('');
@@ -250,7 +250,7 @@ const GenericDetailsModal: React.FC<GenericDetailsModalProps> = ({ record, entit
     }
   };
 
-  const handleQuotationSubmit = async (e) => {
+  const handleQuotationSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setQuotationSubmitting(true);
     setQuotationError('');
@@ -285,7 +285,7 @@ const GenericDetailsModal: React.FC<GenericDetailsModalProps> = ({ record, entit
     }
   };
 
-  const handleSalesOrderSubmit = async (e) => {
+  const handleSalesOrderSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSalesOrderSubmitting(true);
     setSalesOrderError('');
@@ -323,7 +323,7 @@ const GenericDetailsModal: React.FC<GenericDetailsModalProps> = ({ record, entit
     }
   };
 
-  const handleInvoiceSubmit = async (e) => {
+  const handleInvoiceSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setInvoiceSubmitting(true);
     setInvoiceError('');
@@ -350,7 +350,7 @@ const GenericDetailsModal: React.FC<GenericDetailsModalProps> = ({ record, entit
   const handleAddAsCustomer = async () => {
     try {
       const custData = await api.get<any>('/customers');
-      const exists = custData.customers?.some(c => c.account === record.account);
+      const exists = custData.customers?.some((c: any) => c.account === record.account);
       if (exists) {
         alert("This account is already added as a customer!");
         return;
@@ -385,7 +385,7 @@ const GenericDetailsModal: React.FC<GenericDetailsModalProps> = ({ record, entit
   return (
     <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
       <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between border-b border-[--shell-border] pb-4 mb-6">
+        <div className="flex items-center justify-between border-b border-[var(--shell-border)] pb-4 mb-6">
           <div className="flex items-center gap-2">
             <FileText className="size-5 text-accent" />
             <DialogTitle className="m-0">{entityName} Summary: {nameField}</DialogTitle>
@@ -397,7 +397,7 @@ const GenericDetailsModal: React.FC<GenericDetailsModalProps> = ({ record, entit
             {renderFrameContent()}
             
             {record.file_data && (
-              <div className="mt-4 rounded-lg border border-[--shell-border] bg-[--shell-bg]/50 p-4">
+              <div className="mt-4 rounded-lg border border-[var(--shell-border)] bg-[var(--shell-bg)]/50 p-4">
                 <div className="mb-3 flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <FileText className="size-4 text-accent" />
@@ -406,7 +406,7 @@ const GenericDetailsModal: React.FC<GenericDetailsModalProps> = ({ record, entit
                   <a
                     href={record.file_data}
                     download={record.file_name || 'attachment'}
-                    className="inline-flex shrink-0 items-center justify-center rounded-sm border border-transparent bg-[#C81D25] px-2 py-1 text-xs font-medium text-white transition-all hover:bg-[#A0171E] hover:shadow-[0_4px_6px_rgba(0,0,0,0.1)]"
+                    className="inline-flex shrink-0 items-center justify-center rounded-sm border border-transparent bg-[var(--shell-brand)] px-2 py-1 text-xs font-medium text-white transition-all hover:bg-[var(--shell-action)] hover:shadow-[0_4px_6px_rgba(0,0,0,0.1)]"
                   >
                     <Download className="mr-1 size-3" /> Download
                   </a>
@@ -415,11 +415,11 @@ const GenericDetailsModal: React.FC<GenericDetailsModalProps> = ({ record, entit
                 {record.file_data.startsWith('data:application/pdf') ? (
                   <iframe
                     src={record.file_data}
-                    className="w-full h-[300px] border border-[--shell-border] rounded-md"
+                    className="w-full h-[300px] border border-[var(--shell-border)] rounded-md"
                     title="Attached File Preview"
                   />
                 ) : record.file_data.startsWith('data:image/') ? (
-                  <div className="max-h-[300px] overflow-y-auto rounded-md bg-[--shell-bg] p-2 text-center">
+                  <div className="max-h-[300px] overflow-y-auto rounded-md bg-[var(--shell-bg)] p-2 text-center">
                     <img
                       src={record.file_data}
                       alt="Attachment Preview"
@@ -427,7 +427,7 @@ const GenericDetailsModal: React.FC<GenericDetailsModalProps> = ({ record, entit
                     />
                   </div>
                 ) : (
-                  <div className="text-xs text-[--shell-muted]">
+                  <div className="text-xs text-[var(--shell-muted)]">
                     Preview not available for this file type.
                   </div>
                 )}
@@ -435,18 +435,18 @@ const GenericDetailsModal: React.FC<GenericDetailsModalProps> = ({ record, entit
             )}
 
             {entityName === 'Sales Order' && (
-              <div className="mt-6 border-t border-[--shell-border] pt-6">
+              <div className="mt-6 border-t border-[var(--shell-border)] pt-6">
                 <div className="grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-6">
                   
                   <div>
-                    <h4 className="m-0 mb-3 flex items-center gap-1.5 text-sm font-semibold text-[--shell-foreground]">
+                    <h4 className="m-0 mb-3 flex items-center gap-1.5 text-sm font-semibold text-[var(--shell-foreground)]">
                       <FileSpreadsheet className="size-4 text-accent" />
                       Linked Quotations
                     </h4>
                     {loadingRelated ? (
-                      <div className="text-xs text-[--shell-muted]">Loading...</div>
+                      <div className="text-xs text-[var(--shell-muted)]">Loading...</div>
                     ) : relatedQuotations.length === 0 ? (
-                      <div className="text-xs italic text-[--shell-muted]">No linked quotations.</div>
+                      <div className="text-xs italic text-[var(--shell-muted)]">No linked quotations.</div>
                     ) : (
                       <div className="flex flex-col gap-2">
                         {relatedQuotations.map((q, idx) => {
@@ -454,13 +454,13 @@ const GenericDetailsModal: React.FC<GenericDetailsModalProps> = ({ record, entit
                           return (
                             <div key={`${q.id_str}-${idx}`} className={cn(
                               "rounded-lg border p-2.5 text-xs",
-                              isTarget ? "border-amber-400 bg-amber-50" : "border-[--shell-border] bg-[--shell-bg]"
+                              isTarget ? "border-amber-400 bg-amber-50" : "border-[var(--shell-border)] bg-[var(--shell-bg)]"
                             )}>
                               <div className="mb-0.5 flex items-center justify-between">
-                                <span className="font-semibold text-[--shell-foreground]">{q.quote_no}</span>
-                                <span className="rounded-full bg-[--shell-bg] px-1.5 py-0.5 text-[0.7rem] font-semibold text-[--shell-muted]">{q.status}</span>
+                                <span className="font-semibold text-[var(--shell-foreground)]">{q.quote_no}</span>
+                                <span className="rounded-full bg-[var(--shell-bg)] px-1.5 py-0.5 text-[0.7rem] font-semibold text-[var(--shell-muted)]">{q.status}</span>
                               </div>
-                              <div className="text-[--shell-muted] text-xs">
+                              <div className="text-[var(--shell-muted)] text-xs">
                                 Value: {q.value} &middot; Owner: {q.owner}
                               </div>
                             </div>
@@ -471,23 +471,23 @@ const GenericDetailsModal: React.FC<GenericDetailsModalProps> = ({ record, entit
                   </div>
 
                   <div>
-                    <h4 className="m-0 mb-3 flex items-center gap-1.5 text-sm font-semibold text-[--shell-foreground]">
+                    <h4 className="m-0 mb-3 flex items-center gap-1.5 text-sm font-semibold text-[var(--shell-foreground)]">
                       <ClipboardList className="size-4 text-accent" />
                       Linked Requirements
                     </h4>
                     {loadingRelated ? (
-                      <div className="text-xs text-[--shell-muted]">Loading...</div>
+                      <div className="text-xs text-[var(--shell-muted)]">Loading...</div>
                     ) : relatedRequirements.length === 0 ? (
-                      <div className="text-xs italic text-[--shell-muted]">No linked requirements.</div>
+                      <div className="text-xs italic text-[var(--shell-muted)]">No linked requirements.</div>
                     ) : (
                       <div className="flex flex-col gap-2">
                         {relatedRequirements.map((r, idx) => (
-                          <div key={`${r.id_str}-${idx}`} className="rounded-lg border border-[--shell-border] bg-[--shell-bg] p-2.5 text-xs">
+                          <div key={`${r.id_str}-${idx}`} className="rounded-lg border border-[var(--shell-border)] bg-[var(--shell-bg)] p-2.5 text-xs">
                             <div className="mb-0.5 flex items-center justify-between">
-                              <span className="font-semibold text-[--shell-foreground]">{r.name}</span>
-                              <span className="rounded-full bg-[--shell-bg] px-1.5 py-0.5 text-[0.7rem] font-semibold text-[--shell-muted]">{r.status}</span>
+                              <span className="font-semibold text-[var(--shell-foreground)]">{r.name}</span>
+                              <span className="rounded-full bg-[var(--shell-bg)] px-1.5 py-0.5 text-[0.7rem] font-semibold text-[var(--shell-muted)]">{r.status}</span>
                             </div>
-                            <div className="text-[--shell-muted] text-xs">
+                            <div className="text-[var(--shell-muted)] text-xs">
                               Category: {r.category} &middot; Priority: {r.priority} &middot; Owner: {r.owner}
                             </div>
                           </div>
@@ -511,9 +511,9 @@ const GenericDetailsModal: React.FC<GenericDetailsModalProps> = ({ record, entit
               </span>
             </div>
 
-            <div className="mb-5 flex flex-wrap gap-6 rounded-md border border-[--shell-border] bg-[--shell-bg]/50 px-4 py-3 text-xs text-[--shell-muted]">
-              <span>Account: <strong className="text-[--shell-foreground]">{record.account}</strong></span>
-              <span>Amount: <strong className="text-[--shell-foreground]">{record.value}</strong></span>
+            <div className="mb-5 flex flex-wrap gap-6 rounded-md border border-[var(--shell-border)] bg-[var(--shell-bg)]/50 px-4 py-3 text-xs text-[var(--shell-muted)]">
+              <span>Account: <strong className="text-[var(--shell-foreground)]">{record.account}</strong></span>
+              <span>Amount: <strong className="text-[var(--shell-foreground)]">{record.value}</strong></span>
             </div>
 
             {saleError && (
@@ -525,7 +525,7 @@ const GenericDetailsModal: React.FC<GenericDetailsModalProps> = ({ record, entit
             <form onSubmit={handleSaleSubmit}>
               <div className="mb-6 flex flex-col gap-4">
                 <div>
-                  <Label className="mb-1 block text-xs font-semibold uppercase text-[--shell-muted]">Invoice No.</Label>
+                  <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Invoice No.</Label>
                   <Input
                     placeholder="e.g. INV-20260001 (auto-generated if blank)"
                     value={saleData.invoice_no}
@@ -534,29 +534,29 @@ const GenericDetailsModal: React.FC<GenericDetailsModalProps> = ({ record, entit
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label className="mb-1 block text-xs font-semibold uppercase text-[--shell-muted]">Issued Date *</Label>
+                    <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Issued Date *</Label>
                     <input
                       type="date"
                       value={saleData.issued_date}
                       onChange={e => setSaleData(p => ({ ...p, issued_date: e.target.value }))}
-                      className="h-9 w-full rounded-md border border-[--shell-border] bg-[--shell-bg] px-3 text-xs text-[--shell-foreground]"
+                      className="h-9 w-full rounded-md border border-[var(--shell-border)] bg-[var(--shell-bg)] px-3 text-xs text-[var(--shell-foreground)]"
                       required
                     />
                   </div>
                   <div>
-                    <Label className="mb-1 block text-xs font-semibold uppercase text-[--shell-muted]">Due Date *</Label>
+                    <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Due Date *</Label>
                     <input
                       type="date"
                       value={saleData.due_date}
                       onChange={e => setSaleData(p => ({ ...p, due_date: e.target.value }))}
-                      className="h-9 w-full rounded-md border border-[--shell-border] bg-[--shell-bg] px-3 text-xs text-[--shell-foreground]"
+                      className="h-9 w-full rounded-md border border-[var(--shell-border)] bg-[var(--shell-bg)] px-3 text-xs text-[var(--shell-foreground)]"
                       required
                     />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label className="mb-1 block text-xs font-semibold uppercase text-[--shell-muted]">Status *</Label>
+                    <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Status *</Label>
                     <Input
                       placeholder="e.g. Pending, Paid"
                       value={saleData.status}
@@ -565,7 +565,7 @@ const GenericDetailsModal: React.FC<GenericDetailsModalProps> = ({ record, entit
                     />
                   </div>
                   <div>
-                    <Label className="mb-1 block text-xs font-semibold uppercase text-[--shell-muted]">Rep / Sales Rep *</Label>
+                    <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Rep / Sales Rep *</Label>
                     <Input
                       placeholder="Sales representative name"
                       value={saleData.rep}
@@ -583,8 +583,7 @@ const GenericDetailsModal: React.FC<GenericDetailsModalProps> = ({ record, entit
                 <Button
                   type="submit"
                   disabled={saleSubmitting}
-                  className="flex items-center gap-1.5"
-                  style={{ backgroundColor: '#16a34a' }}
+                  className="flex items-center gap-1.5 bg-green-600 hover:bg-green-700"
                 >
                   <ShoppingCart className="size-3.5" />
                   {saleSubmitting ? 'Creating Sale...' : 'Confirm & Add to Sales'}
@@ -603,9 +602,9 @@ const GenericDetailsModal: React.FC<GenericDetailsModalProps> = ({ record, entit
               </span>
             </div>
 
-            <div className="mb-5 flex flex-wrap gap-6 rounded-md border border-[--shell-border] bg-[--shell-bg]/50 px-4 py-3 text-xs text-[--shell-muted]">
-              <span>Account: <strong className="text-[--shell-foreground]">{record.account}</strong></span>
-              <span>Invoice No: <strong className="text-[--shell-foreground]">{record.invoice_no}</strong></span>
+            <div className="mb-5 flex flex-wrap gap-6 rounded-md border border-[var(--shell-border)] bg-[var(--shell-bg)]/50 px-4 py-3 text-xs text-[var(--shell-muted)]">
+              <span>Account: <strong className="text-[var(--shell-foreground)]">{record.account}</strong></span>
+              <span>Invoice No: <strong className="text-[var(--shell-foreground)]">{record.invoice_no}</strong></span>
             </div>
 
             {requirementError && (
@@ -617,7 +616,7 @@ const GenericDetailsModal: React.FC<GenericDetailsModalProps> = ({ record, entit
             <form onSubmit={handleRequirementSubmit}>
               <div className="mb-6 flex flex-col gap-4">
                 <div>
-                  <Label className="mb-1 block text-xs font-semibold uppercase text-[--shell-muted]">Requirements *</Label>
+                  <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Requirements *</Label>
                   <Input
                     placeholder="Describe the requirement..."
                     value={requirementData.name}
@@ -627,7 +626,7 @@ const GenericDetailsModal: React.FC<GenericDetailsModalProps> = ({ record, entit
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label className="mb-1 block text-xs font-semibold uppercase text-[--shell-muted]">Category *</Label>
+                    <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Category *</Label>
                     <Input
                       placeholder="e.g. Security, Technical"
                       value={requirementData.category}
@@ -636,7 +635,7 @@ const GenericDetailsModal: React.FC<GenericDetailsModalProps> = ({ record, entit
                     />
                   </div>
                   <div>
-                    <Label className="mb-1 block text-xs font-semibold uppercase text-[--shell-muted]">Priority *</Label>
+                    <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Priority *</Label>
                     <Input
                       placeholder="e.g. High, Medium, Low"
                       value={requirementData.priority}
@@ -647,7 +646,7 @@ const GenericDetailsModal: React.FC<GenericDetailsModalProps> = ({ record, entit
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label className="mb-1 block text-xs font-semibold uppercase text-[--shell-muted]">Status *</Label>
+                    <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Status *</Label>
                     <Input
                       placeholder="e.g. Draft, Review, Approved"
                       value={requirementData.status}
@@ -656,7 +655,7 @@ const GenericDetailsModal: React.FC<GenericDetailsModalProps> = ({ record, entit
                     />
                   </div>
                   <div>
-                    <Label className="mb-1 block text-xs font-semibold uppercase text-[--shell-muted]">Owner *</Label>
+                    <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Owner *</Label>
                     <Input
                       placeholder="e.g. Aditi Rao"
                       value={requirementData.owner}
@@ -674,8 +673,7 @@ const GenericDetailsModal: React.FC<GenericDetailsModalProps> = ({ record, entit
                 <Button
                   type="submit"
                   disabled={requirementSubmitting}
-                  className="flex items-center gap-1.5"
-                  style={{ backgroundColor: '#2563eb' }}
+                  className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700"
                 >
                   <ClipboardList className="size-3.5" />
                   {requirementSubmitting ? 'Creating...' : 'Confirm & Add to Requirements'}
@@ -694,9 +692,9 @@ const GenericDetailsModal: React.FC<GenericDetailsModalProps> = ({ record, entit
               </span>
             </div>
 
-            <div className="mb-5 flex flex-wrap gap-6 rounded-md border border-[--shell-border] bg-[--shell-bg]/50 px-4 py-3 text-xs text-[--shell-muted]">
-              <span>Account: <strong className="text-[--shell-foreground]">{record.account}</strong></span>
-              <span>Requirement: <strong className="text-[--shell-foreground]">{record.name}</strong></span>
+            <div className="mb-5 flex flex-wrap gap-6 rounded-md border border-[var(--shell-border)] bg-[var(--shell-bg)]/50 px-4 py-3 text-xs text-[var(--shell-muted)]">
+              <span>Account: <strong className="text-[var(--shell-foreground)]">{record.account}</strong></span>
+              <span>Requirement: <strong className="text-[var(--shell-foreground)]">{record.name}</strong></span>
             </div>
 
             {quotationError && (
@@ -708,7 +706,7 @@ const GenericDetailsModal: React.FC<GenericDetailsModalProps> = ({ record, entit
             <form onSubmit={handleQuotationSubmit}>
               <div className="mb-6 flex flex-col gap-4">
                 <div>
-                  <Label className="mb-1 block text-xs font-semibold uppercase text-[--shell-muted]">Quote No.</Label>
+                  <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Quote No.</Label>
                   <Input
                     placeholder="e.g. QT-20260001 (auto-generated if blank)"
                     value={quotationData.quote_no}
@@ -717,7 +715,7 @@ const GenericDetailsModal: React.FC<GenericDetailsModalProps> = ({ record, entit
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label className="mb-1 block text-xs font-semibold uppercase text-[--shell-muted]">Value *</Label>
+                    <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Value *</Label>
                     <Input
                       placeholder="e.g. \u20b95,00,000 or $10,000"
                       value={quotationData.value}
@@ -726,19 +724,19 @@ const GenericDetailsModal: React.FC<GenericDetailsModalProps> = ({ record, entit
                     />
                   </div>
                   <div>
-                    <Label className="mb-1 block text-xs font-semibold uppercase text-[--shell-muted]">Valid Until *</Label>
+                    <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Valid Until *</Label>
                     <input
                       type="date"
                       value={quotationData.valid_until}
                       onChange={e => setQuotationData(p => ({ ...p, valid_until: e.target.value }))}
-                      className="h-9 w-full rounded-md border border-[--shell-border] bg-[--shell-bg] px-3 text-xs text-[--shell-foreground]"
+                      className="h-9 w-full rounded-md border border-[var(--shell-border)] bg-[var(--shell-bg)] px-3 text-xs text-[var(--shell-foreground)]"
                       required
                     />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label className="mb-1 block text-xs font-semibold uppercase text-[--shell-muted]">Status *</Label>
+                    <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Status *</Label>
                     <Input
                       placeholder="e.g. Draft, Sent, Accepted"
                       value={quotationData.status}
@@ -747,7 +745,7 @@ const GenericDetailsModal: React.FC<GenericDetailsModalProps> = ({ record, entit
                     />
                   </div>
                   <div>
-                    <Label className="mb-1 block text-xs font-semibold uppercase text-[--shell-muted]">Owner *</Label>
+                    <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Owner *</Label>
                     <Input
                       placeholder="e.g. Aditi Rao"
                       value={quotationData.owner}
@@ -765,8 +763,7 @@ const GenericDetailsModal: React.FC<GenericDetailsModalProps> = ({ record, entit
                 <Button
                   type="submit"
                   disabled={quotationSubmitting}
-                  className="flex items-center gap-1.5"
-                  style={{ backgroundColor: '#d97706' }}
+                  className="flex items-center gap-1.5 bg-amber-600 hover:bg-amber-700"
                 >
                   <FileSpreadsheet className="size-3.5" />
                   {quotationSubmitting ? 'Creating...' : 'Confirm & Add to Quotation'}
@@ -785,9 +782,9 @@ const GenericDetailsModal: React.FC<GenericDetailsModalProps> = ({ record, entit
               </span>
             </div>
 
-            <div className="mb-5 flex flex-wrap gap-6 rounded-md border border-[--shell-border] bg-[--shell-bg]/50 px-4 py-3 text-xs text-[--shell-muted]">
-              <span>Account: <strong className="text-[--shell-foreground]">{record.account}</strong></span>
-              <span>Value: <strong className="text-[--shell-foreground]">{record.value}</strong></span>
+            <div className="mb-5 flex flex-wrap gap-6 rounded-md border border-[var(--shell-border)] bg-[var(--shell-bg)]/50 px-4 py-3 text-xs text-[var(--shell-muted)]">
+              <span>Account: <strong className="text-[var(--shell-foreground)]">{record.account}</strong></span>
+              <span>Value: <strong className="text-[var(--shell-foreground)]">{record.value}</strong></span>
             </div>
 
             {salesOrderError && (
@@ -799,7 +796,7 @@ const GenericDetailsModal: React.FC<GenericDetailsModalProps> = ({ record, entit
             <form onSubmit={handleSalesOrderSubmit}>
               <div className="mb-6 flex flex-col gap-4">
                 <div>
-                  <Label className="mb-1 block text-xs font-semibold uppercase text-[--shell-muted]">SO No.</Label>
+                  <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">SO No.</Label>
                   <Input
                     placeholder="e.g. SO-20260001 (auto-generated if blank)"
                     value={salesOrderData.so_no}
@@ -808,17 +805,17 @@ const GenericDetailsModal: React.FC<GenericDetailsModalProps> = ({ record, entit
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label className="mb-1 block text-xs font-semibold uppercase text-[--shell-muted]">ETA *</Label>
+                    <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">ETA *</Label>
                     <input
                       type="date"
                       value={salesOrderData.eta}
                       onChange={e => setSalesOrderData(p => ({ ...p, eta: e.target.value }))}
-                      className="h-9 w-full rounded-md border border-[--shell-border] bg-[--shell-bg] px-3 text-xs text-[--shell-foreground]"
+                      className="h-9 w-full rounded-md border border-[var(--shell-border)] bg-[var(--shell-bg)] px-3 text-xs text-[var(--shell-foreground)]"
                       required
                     />
                   </div>
                   <div>
-                    <Label className="mb-1 block text-xs font-semibold uppercase text-[--shell-muted]">Status *</Label>
+                    <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Status *</Label>
                     <Input
                       placeholder="e.g. Pending, Confirmed"
                       value={salesOrderData.status}
@@ -828,7 +825,7 @@ const GenericDetailsModal: React.FC<GenericDetailsModalProps> = ({ record, entit
                   </div>
                 </div>
                 <div>
-                  <Label className="mb-1 block text-xs font-semibold uppercase text-[--shell-muted]">Owner *</Label>
+                  <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Owner *</Label>
                   <Input
                     placeholder="e.g. Priya Shah"
                     value={salesOrderData.owner}
@@ -837,12 +834,12 @@ const GenericDetailsModal: React.FC<GenericDetailsModalProps> = ({ record, entit
                   />
                 </div>
                 <div>
-                  <Label className="mb-1 block text-xs font-semibold uppercase text-[--shell-muted]">Upload Invoice File (PDF or Image)</Label>
+                  <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Upload Invoice File (PDF or Image)</Label>
                   <input
                     type="file"
                     accept="application/pdf,image/*"
-                    onChange={(e) => {
-                      const file = e.target.files[0];
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                      const file = e.target.files?.[0];
                       if (file) {
                         const reader = new FileReader();
                         reader.onloadend = () => {
@@ -855,7 +852,7 @@ const GenericDetailsModal: React.FC<GenericDetailsModalProps> = ({ record, entit
                         reader.readAsDataURL(file);
                       }
                     }}
-                    className="w-full rounded-md border border-[--shell-border] bg-[--shell-bg] px-2 py-1.5 text-xs text-[--shell-foreground] file:mr-2 file:rounded file:border-0 file:bg-primary file:px-2 file:py-0.5 file:text-xs file:font-medium file:text-primary-foreground"
+                    className="w-full rounded-md border border-[var(--shell-border)] bg-[var(--shell-bg)] px-2 py-1.5 text-xs text-[var(--shell-foreground)] file:mr-2 file:rounded file:border-0 file:bg-primary file:px-2 file:py-0.5 file:text-xs file:font-medium file:text-primary-foreground"
                   />
                   {salesOrderData.file_name && (
                     <div className="mt-1 text-xs text-green-600">
@@ -872,8 +869,7 @@ const GenericDetailsModal: React.FC<GenericDetailsModalProps> = ({ record, entit
                 <Button
                   type="submit"
                   disabled={salesOrderSubmitting}
-                  className="flex items-center gap-1.5"
-                  style={{ backgroundColor: '#059669' }}
+                  className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700"
                 >
                   <PackageOpen className="size-3.5" />
                   {salesOrderSubmitting ? 'Creating...' : 'Confirm & Add to Sales Orders'}
@@ -894,7 +890,7 @@ const GenericDetailsModal: React.FC<GenericDetailsModalProps> = ({ record, entit
             {invoiceError && <div className="mb-4 rounded-md bg-red-100 px-3 py-2 text-xs text-red-700">{invoiceError}</div>}
             <form onSubmit={handleInvoiceSubmit} className="flex flex-col gap-4">
               <div>
-                <Label className="mb-1 block text-xs font-semibold uppercase text-[--shell-muted]">Status *</Label>
+                <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Status *</Label>
                 <Input
                   placeholder="e.g. Paid, Delivered"
                   value={invoiceStatus}
@@ -903,18 +899,18 @@ const GenericDetailsModal: React.FC<GenericDetailsModalProps> = ({ record, entit
                 />
               </div>
               <div>
-                <Label className="mb-1 block text-xs font-semibold uppercase text-[--shell-muted]">Upload Invoice *</Label>
+                <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Upload Invoice *</Label>
                 <input
                   type="file"
                   accept="application/pdf,image/*"
-                  onChange={async (e) => {
-                    const file = e.target.files[0];
+                  onChange={async (e: React.ChangeEvent<HTMLInputElement>) => {
+                    const file = e.target.files?.[0];
                     if (!file) { setInvoiceFile(null); return; }
                     const reader = new FileReader();
-                    reader.onload = () => setInvoiceFile({ name: file.name, base64: reader.result });
+                    reader.onload = () => setInvoiceFile({ name: file.name, base64: reader.result as string });
                     reader.readAsDataURL(file);
                   }}
-                  className="w-full rounded-md border border-[--shell-border] bg-[--shell-bg] px-2 py-1.5 text-xs text-[--shell-foreground] file:mr-2 file:rounded file:border-0 file:bg-primary file:px-2 file:py-0.5 file:text-xs file:font-medium file:text-primary-foreground"
+                  className="w-full rounded-md border border-[var(--shell-border)] bg-[var(--shell-bg)] px-2 py-1.5 text-xs text-[var(--shell-foreground)] file:mr-2 file:rounded file:border-0 file:bg-primary file:px-2 file:py-0.5 file:text-xs file:font-medium file:text-primary-foreground"
                   required
                 />
                 {invoiceFile && (
@@ -925,7 +921,7 @@ const GenericDetailsModal: React.FC<GenericDetailsModalProps> = ({ record, entit
               </div>
               <div className="flex justify-end gap-2">
                 <Button type="button" variant="outline" onClick={() => setShowInvoiceForm(false)}>Cancel</Button>
-                <Button type="submit" style={{ backgroundColor: '#10b981' }} disabled={invoiceSubmitting}>
+                <Button type="submit" className="bg-emerald-500 hover:bg-emerald-600" disabled={invoiceSubmitting}>
                   {invoiceSubmitting ? 'Saving...' : 'Confirm & Mark Done'}
                 </Button>
               </div>
@@ -935,13 +931,12 @@ const GenericDetailsModal: React.FC<GenericDetailsModalProps> = ({ record, entit
 
 
         {!showSaleForm && !showRequirementForm && !showQuotationForm && !showSalesOrderForm && !showInvoiceForm && (
-          <div className="flex items-center justify-between border-t border-[--shell-border] pt-4">
+          <div className="flex items-center justify-between border-t border-[var(--shell-border)] pt-4">
             <div>
               {isOpportunity && (
                 <Button
                   onClick={() => setShowSalesOrderForm(true)}
-                  className="flex items-center gap-1.5"
-                  style={{ backgroundColor: '#059669' }}
+                  className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700"
                 >
                   <PackageOpen className="size-3.5" />
                   Add to Sales Orders
@@ -981,8 +976,7 @@ const GenericDetailsModal: React.FC<GenericDetailsModalProps> = ({ record, entit
                             Delete Order
                           </Button>
                           <Button
-                            className="flex items-center gap-1.5"
-                            style={{ backgroundColor: '#2563eb' }}
+                            className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700"
                             onClick={handleAddAsCustomer}
                           >
                             Add as Customer
@@ -991,8 +985,7 @@ const GenericDetailsModal: React.FC<GenericDetailsModalProps> = ({ record, entit
                       ) : (
                         <Button
                           onClick={() => setShowInvoiceForm(true)}
-                          className="flex items-center gap-1.5"
-                          style={{ backgroundColor: '#10b981' }}
+                          className="flex items-center gap-1.5 bg-emerald-500 hover:bg-emerald-600"
                         >
                           <CheckCircle className="size-3.5" />
                           Mark as Done & Upload Invoice
@@ -1005,8 +998,7 @@ const GenericDetailsModal: React.FC<GenericDetailsModalProps> = ({ record, entit
               {isRequirement && (
                 <Button
                   onClick={() => setShowQuotationForm(true)}
-                  className="flex items-center gap-1.5"
-                  style={{ backgroundColor: '#d97706' }}
+                  className="flex items-center gap-1.5 bg-amber-600 hover:bg-amber-700"
                 >
                   <FileSpreadsheet className="size-3.5" />
                   Add to Quotation
@@ -1026,8 +1018,7 @@ const GenericDetailsModal: React.FC<GenericDetailsModalProps> = ({ record, entit
                       }
                     }
                   }}
-                  className="flex items-center gap-1.5 mr-2"
-                  style={{ backgroundColor: '#16a34a' }}
+                  className="flex items-center gap-1.5 mr-2 bg-green-600 hover:bg-green-700"
                 >
                   <ShoppingCart className="size-3.5" />
                   Finalize & Send to Sales
@@ -1037,8 +1028,7 @@ const GenericDetailsModal: React.FC<GenericDetailsModalProps> = ({ record, entit
               {isQuotation && (
                 <Button
                   onClick={() => setShowSalesOrderForm(true)}
-                  className="flex items-center gap-1.5"
-                  style={{ backgroundColor: '#059669' }}
+                  className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700"
                 >
                   <PackageOpen className="size-3.5" />
                   Add to Sales Orders

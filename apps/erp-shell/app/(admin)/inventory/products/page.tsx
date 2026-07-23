@@ -70,19 +70,19 @@ export default function Products() {
   return (
     <div className="relative space-y-8">
       {/* Brand Sweep Line */}
-      <span className="absolute -top-6 left-0 h-0.5 w-1/3 rounded-full bg-[--shell-brand] shimmer-glow" />
+      <span className="absolute -top-6 left-0 h-0.5 w-1/3 rounded-full bg-[var(--shell-brand)] shimmer-glow" />
 
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-heading text-xl font-semibold tracking-tight text-[--shell-foreground]">
+          <h1 className="font-heading text-xl font-semibold tracking-tight text-[var(--shell-foreground)]">
             Products
           </h1>
-          <p className="mt-0.5 text-sm text-[--shell-muted]">
+          <p className="mt-0.5 text-sm text-[var(--shell-muted)]">
             Manage inventory products and pricing
           </p>
         </div>
-        <Button size="sm" className="bg-[--shell-brand] hover:bg-[--shell-brand]/90 text-white">
+        <Button size="sm" className="bg-[var(--shell-brand)] hover:bg-[var(--shell-brand)]/90 text-white">
           <Plus className="mr-1.5 h-3.5 w-3.5" />
           Add Product
         </Button>
@@ -91,10 +91,10 @@ export default function Products() {
       {/* Product Overview KPIs */}
       <section>
         <div className="mb-5 flex items-center gap-2">
-          <h2 className="font-heading text-xs font-medium uppercase tracking-[0.12em] text-[--shell-muted]">
+          <h2 className="font-heading text-xs font-medium uppercase tracking-[0.12em] text-[var(--shell-muted)]">
             Product Overview
           </h2>
-          <div className="h-px flex-1 bg-[--shell-border]/20" />
+          <div className="h-px flex-1 bg-[var(--shell-border)]/20" />
         </div>
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
           {[
@@ -121,21 +121,21 @@ export default function Products() {
           ].map((kpi, i) => (
             <div
               key={kpi.label}
-              className="animate-kpi flex flex-col gap-1.5 rounded-xl border border-[--shell-border] bg-[--shell-surface] p-5 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
+              className="animate-kpi flex flex-col gap-1.5 rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface)] p-5 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
               style={{ animationDelay: `${i * 0.05}s` }}
             >
               <div className="flex items-center justify-between">
-                <span className="text-xs font-medium uppercase tracking-[0.08em] text-[--shell-muted]">
+                <span className="text-xs font-medium uppercase tracking-[0.08em] text-[var(--shell-muted)]">
                   {kpi.label}
                 </span>
-                <div className="flex h-7 w-7 items-center justify-center rounded-md border border-[--shell-border]/40 bg-[--shell-surface-alt]">
+                <div className="flex h-7 w-7 items-center justify-center rounded-md border border-[var(--shell-border)]/40 bg-[var(--shell-surface-alt)]">
                   <kpi.icon className="h-3.5 w-3.5" style={{ color: kpi.color }} />
                 </div>
               </div>
-              <span className="font-heading text-2xl font-semibold tracking-tight text-[--shell-foreground]">
+              <span className="font-heading text-2xl font-semibold tracking-tight text-[var(--shell-foreground)]">
                 {kpi.value}
               </span>
-              <span className="text-xs text-[--shell-muted]">{kpi.subtitle}</span>
+              <span className="text-xs text-[var(--shell-muted)]">{kpi.subtitle}</span>
             </div>
           ))}
         </div>
@@ -144,15 +144,15 @@ export default function Products() {
       {/* Product Registry */}
       <section>
         <div className="mb-5 flex items-center gap-2">
-          <h2 className="font-heading text-xs font-medium uppercase tracking-[0.12em] text-[--shell-muted]">
+          <h2 className="font-heading text-xs font-medium uppercase tracking-[0.12em] text-[var(--shell-muted)]">
             Product Registry
           </h2>
-          <div className="h-px flex-1 bg-[--shell-border]/20" />
+          <div className="h-px flex-1 bg-[var(--shell-border)]/20" />
         </div>
 
         <div className="mb-5 flex flex-wrap items-center gap-3">
           <div className="relative flex-1 max-w-xs">
-            <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[--shell-muted]" />
+            <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--shell-muted)]" />
             <Input
               placeholder="Search by name, SKU, or barcode..."
               className="pl-8"
@@ -173,12 +173,12 @@ export default function Products() {
           </Select>
         </div>
 
-        <Card className="hover:shadow-md transition-shadow duration-200 border-[--shell-border] bg-[--shell-surface]">
+        <Card className="hover:shadow-md transition-shadow duration-200 border-[var(--shell-border)] bg-[var(--shell-surface)]">
           <CardContent className="p-0">
             {filtered.length === 0 ? (
-              <div className="flex flex-col items-center gap-3 py-20 text-[--shell-muted]">
+              <div className="flex flex-col items-center gap-3 py-20 text-[var(--shell-muted)]">
                 <Package className="h-12 w-12" />
-                <p className="text-base font-medium text-[--shell-foreground]">
+                <p className="text-base font-medium text-[var(--shell-foreground)]">
                   {apiProducts.length === 0 ? "No products yet" : "No products match your search"}
                 </p>
                 <p className="text-sm">
@@ -187,7 +187,7 @@ export default function Products() {
                     : "Try adjusting your search or category filter."}
                 </p>
                 {apiProducts.length === 0 && (
-                  <Button size="sm" className="mt-2 bg-[--shell-brand] hover:bg-[--shell-brand]/90 text-white">
+                  <Button size="sm" className="mt-2 bg-[var(--shell-brand)] hover:bg-[var(--shell-brand)]/90 text-white">
                     <Plus className="mr-1 h-4 w-4" /> Add Product
                   </Button>
                 )}
@@ -196,53 +196,53 @@ export default function Products() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[--shell-muted]">SKU</TableHead>
-                    <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[--shell-muted]">Product Name</TableHead>
-                    <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[--shell-muted]">Category</TableHead>
-                    <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[--shell-muted]">Unit</TableHead>
-                    <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[--shell-muted] text-right">Price</TableHead>
-                    <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[--shell-muted] text-right">Cost</TableHead>
-                    <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[--shell-muted] text-right">Tax</TableHead>
-                    <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[--shell-muted]">Tracking</TableHead>
-                    <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[--shell-muted]">Status</TableHead>
-                    <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[--shell-muted] text-right w-16">Actions</TableHead>
+                    <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--shell-muted)]">SKU</TableHead>
+                    <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--shell-muted)]">Product Name</TableHead>
+                    <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--shell-muted)]">Category</TableHead>
+                    <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--shell-muted)]">Unit</TableHead>
+                    <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--shell-muted)] text-right">Price</TableHead>
+                    <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--shell-muted)] text-right">Cost</TableHead>
+                    <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--shell-muted)] text-right">Tax</TableHead>
+                    <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--shell-muted)]">Tracking</TableHead>
+                    <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--shell-muted)]">Status</TableHead>
+                    <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--shell-muted)] text-right w-16">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filtered.map((p) => (
-                    <TableRow key={p.id} className="hover:bg-[--shell-surface-alt]/30 transition-colors">
+                    <TableRow key={p.id} className="hover:bg-[var(--shell-surface-alt)]/30 transition-colors">
                       <TableCell>
-                        <span className="font-mono text-xs text-[--shell-muted]">{p.sku ?? "—"}</span>
+                        <span className="font-mono text-xs text-[var(--shell-muted)]">{p.sku ?? "—"}</span>
                       </TableCell>
-                      <TableCell className="font-medium text-[--shell-foreground]">{p.name}</TableCell>
+                      <TableCell className="font-medium text-[var(--shell-foreground)]">{p.name}</TableCell>
                       <TableCell>
                         <Badge variant={categoryVariant(p.category ?? "")} className="uppercase text-[10px]">
                           {p.category ?? "Uncategorized"}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-[--shell-muted] text-xs">{p.unit}</TableCell>
-                      <TableCell className="font-mono text-sm text-right text-[--shell-foreground]">
+                      <TableCell className="text-[var(--shell-muted)] text-xs">{p.unit}</TableCell>
+                      <TableCell className="font-mono text-sm text-right text-[var(--shell-foreground)]">
                         {money(p.price)}
                       </TableCell>
-                      <TableCell className="font-mono text-sm text-right text-[--shell-muted]">
+                      <TableCell className="font-mono text-sm text-right text-[var(--shell-muted)]">
                         {money(p.cost_price)}
                       </TableCell>
-                      <TableCell className="font-mono text-xs text-right text-[--shell-muted]">
+                      <TableCell className="font-mono text-xs text-right text-[var(--shell-muted)]">
                         {p.tax_rate}%
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-1">
                           {p.track_inventory && (
-                            <Badge variant="default" className="text-[10px] bg-[--shell-brand]/10 text-[--shell-brand] border-[--shell-brand]/20">Stock</Badge>
+                            <Badge variant="default" className="text-[10px] bg-[var(--shell-brand)]/10 text-[var(--shell-brand)] border-[var(--shell-brand)]/20">Stock</Badge>
                           )}
                           {p.uses_serial_tracking && (
-                            <Badge variant="secondary" className="text-[10px] bg-[--shell-accent]/10 text-[--shell-accent] border-[--shell-accent]/20">Serial</Badge>
+                            <Badge variant="secondary" className="text-[10px] bg-[var(--shell-accent)]/10 text-[var(--shell-accent)] border-[var(--shell-accent)]/20">Serial</Badge>
                           )}
                           {p.uses_batch_tracking && (
                             <Badge variant="outline" className="text-[10px]">Batch</Badge>
                           )}
                           {!p.track_inventory && !p.uses_serial_tracking && !p.uses_batch_tracking && (
-                            <span className="text-xs text-[--shell-muted]">None</span>
+                            <span className="text-xs text-[var(--shell-muted)]">None</span>
                           )}
                         </div>
                       </TableCell>
@@ -253,7 +253,7 @@ export default function Products() {
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center justify-end gap-1">
-                          <Button variant="ghost" size="icon-sm" className="hover:bg-[--shell-surface-alt]">
+                          <Button variant="ghost" size="icon-sm" className="hover:bg-[var(--shell-surface-alt)]">
                             <Pencil className="h-3.5 w-3.5" />
                           </Button>
                         </div>

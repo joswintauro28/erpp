@@ -52,14 +52,14 @@ export default function Suppliers() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="font-heading text-xl font-semibold tracking-tight text-[--shell-foreground]">Suppliers</h1>
-            <p className="mt-0.5 text-sm text-[--shell-muted]">Manage vendor and supplier information</p>
+            <h1 className="font-heading text-xl font-semibold tracking-tight text-[var(--shell-foreground)]">Suppliers</h1>
+            <p className="mt-0.5 text-sm text-[var(--shell-muted)]">Manage vendor and supplier information</p>
           </div>
           <Button size="sm"><Plus className="mr-1.5 h-3.5 w-3.5" />Add Supplier</Button>
         </div>
-        <div className="flex flex-col items-center gap-3 py-20 text-[--shell-muted]">
+        <div className="flex flex-col items-center gap-3 py-20 text-[var(--shell-muted)]">
           <Truck className="h-12 w-12" />
-          <p className="text-base font-medium text-[--shell-foreground]">No suppliers yet</p>
+          <p className="text-base font-medium text-[var(--shell-foreground)]">No suppliers yet</p>
           <p className="text-sm">Add your first supplier to start tracking vendors.</p>
         </div>
       </div>
@@ -70,10 +70,10 @@ export default function Suppliers() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-heading text-xl font-semibold tracking-tight text-[--shell-foreground]">
+          <h1 className="font-heading text-xl font-semibold tracking-tight text-[var(--shell-foreground)]">
             Suppliers
           </h1>
-          <p className="mt-0.5 text-sm text-[--shell-muted]">
+          <p className="mt-0.5 text-sm text-[var(--shell-muted)]">
             Manage vendor and supplier information
           </p>
         </div>
@@ -84,7 +84,7 @@ export default function Suppliers() {
       </div>
 
       <div className="relative max-w-xs">
-        <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[--shell-muted]" />
+        <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--shell-muted)]" />
         <Input placeholder="Search suppliers..." className="pl-8" value={search} onChange={(e) => setSearch(e.target.value)} />
       </div>
 
@@ -108,12 +108,12 @@ export default function Suppliers() {
               {filtered.map((s) => (
                 <TableRow key={s.id}>
                   <TableCell className="text-sm font-medium">{s.name}</TableCell>
-                  <TableCell className="text-xs text-[--shell-muted]">{s.contact_person ?? "-"}</TableCell>
+                  <TableCell className="text-xs text-[var(--shell-muted)]">{s.contact_person ?? "-"}</TableCell>
                   <TableCell className="text-xs">{s.email ?? "-"}</TableCell>
                   <TableCell className="font-mono text-xs">{s.phone ?? "-"}</TableCell>
-                  <TableCell className="font-mono text-xs text-[--shell-muted]">{s.gst_number ?? "-"}</TableCell>
+                  <TableCell className="font-mono text-xs text-[var(--shell-muted)]">{s.gst_number ?? "-"}</TableCell>
                   <TableCell className="text-xs">{s.state ?? "-"}</TableCell>
-                  <TableCell className="text-xs text-[--shell-muted]">{s.payment_terms ?? "-"}</TableCell>
+                  <TableCell className="text-xs text-[var(--shell-muted)]">{s.payment_terms ?? "-"}</TableCell>
                   <TableCell>
                     <Badge variant={s.is_active ? "default" : "secondary"} className="text-xs">
                       {s.is_active ? "Active" : "Inactive"}
@@ -123,7 +123,7 @@ export default function Suppliers() {
                     <div className="flex items-center justify-end gap-1">
                       <Button variant="ghost" size="icon-sm"><Pencil className="h-3 w-3" /></Button>
                       <Button variant="ghost" size="icon-sm" onClick={() => toggleActive(s.id)}>
-                        {s.is_active ? <PowerOff className="h-3 w-3 text-[--shell-muted]" /> : <Power className="h-3 w-3 text-[--shell-success]" />}
+                        {s.is_active ? <PowerOff className="h-3 w-3 text-[var(--shell-muted)]" /> : <Power className="h-3 w-3 text-[var(--shell-success)]" />}
                       </Button>
                     </div>
                   </TableCell>

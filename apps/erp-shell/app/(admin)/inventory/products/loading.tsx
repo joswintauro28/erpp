@@ -2,7 +2,7 @@ export default function ProductsLoading() {
   return (
     <div className="relative space-y-8 animate-pulse">
       {/* Brand Sweep Loader */}
-      <span className="absolute -top-6 left-0 h-0.5 w-1/3 rounded-full bg-[--shell-brand] shimmer-glow" />
+      <span className="absolute -top-6 left-0 h-0.5 w-1/3 rounded-full bg-[var(--shell-brand)] shimmer-glow" />
 
       {/* Header */}
       <div className="flex items-center justify-between">
@@ -17,13 +17,13 @@ export default function ProductsLoading() {
       <div className="space-y-4">
         <div className="flex items-center gap-2">
           <div className="h-3.5 w-32 rounded shimmer-glow" />
-          <div className="h-px flex-1 bg-[--shell-border]" />
+          <div className="h-px flex-1 bg-[var(--shell-border)]" />
         </div>
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
           {Array.from({ length: 4 }).map((_, i) => (
             <div
               key={i}
-              className="flex flex-col gap-3 rounded-xl border border-[--shell-border] bg-[--shell-surface] p-5 shadow-sm"
+              className="flex flex-col gap-3 rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface)] p-5 shadow-sm"
             >
               <div className="flex items-center justify-between">
                 <div className="h-3.5 w-24 rounded shimmer-glow" />
@@ -40,7 +40,7 @@ export default function ProductsLoading() {
       <div className="space-y-5">
         <div className="flex items-center gap-2">
           <div className="h-3.5 w-32 rounded shimmer-glow" />
-          <div className="h-px flex-1 bg-[--shell-border]" />
+          <div className="h-px flex-1 bg-[var(--shell-border)]" />
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
@@ -49,8 +49,8 @@ export default function ProductsLoading() {
         </div>
 
         {/* Table representation */}
-        <div className="overflow-hidden rounded-xl border border-[--shell-border] bg-[--shell-surface]">
-          <div className="border-b border-[--shell-border] bg-[--shell-surface] px-4 py-3">
+        <div className="overflow-hidden rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface)]">
+          <div className="border-b border-[var(--shell-border)] bg-[var(--shell-surface)] px-4 py-3">
             <div className="flex items-center gap-4">
               {Array.from({ length: 8 }).map((_, i) => (
                 <div
@@ -64,7 +64,7 @@ export default function ProductsLoading() {
           {Array.from({ length: 6 }).map((_, i) => (
             <div
               key={i}
-              className="flex items-center gap-4 border-b border-[--shell-border] px-4 py-3.5 last:border-0"
+              className="flex items-center gap-4 border-b border-[var(--shell-border)] px-4 py-3.5 last:border-0"
             >
               {Array.from({ length: 8 }).map((_, j) => (
                 <div

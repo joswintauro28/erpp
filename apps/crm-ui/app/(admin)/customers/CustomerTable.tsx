@@ -28,7 +28,7 @@ interface CustomerTableProps {
 export default function CustomerTable({ customers, onView, onEdit, onDelete }: CustomerTableProps) {
   if (!customers?.length) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 text-[--shell-muted]">
+      <div className="flex flex-col items-center justify-center py-16 text-[var(--shell-muted)]">
         <p className="text-sm">No customers found.</p>
       </div>
     );
@@ -52,18 +52,18 @@ export default function CustomerTable({ customers, onView, onEdit, onDelete }: C
       <TableBody>
         {customers.map((item: any) => (
           <TableRow key={item.id}>
-            <TableCell className="text-[--shell-muted] cursor-pointer" onClick={() => onView(item)}>{item.id_str}</TableCell>
-            <TableCell className="font-medium text-[--shell-foreground] cursor-pointer" onClick={() => onView(item)}>{item.account}</TableCell>
+            <TableCell className="text-[var(--shell-muted)] cursor-pointer" onClick={() => onView(item)}>{item.id_str}</TableCell>
+            <TableCell className="font-medium text-[var(--shell-foreground)] cursor-pointer" onClick={() => onView(item)}>{item.account}</TableCell>
             <TableCell>{item.industry}</TableCell>
             <TableCell>{item.tier}</TableCell>
             <TableCell>{formatCurrency(item.arr)}</TableCell>
             <TableCell><Badge variant={badgeVariant(item.status)}>{item.status}</Badge></TableCell>
             <TableCell>{item.owner}</TableCell>
-            <TableCell className="text-[--shell-muted]">{item.updated_at}</TableCell>
+            <TableCell className="text-[var(--shell-muted)]">{item.updated_at}</TableCell>
             <TableCell>
-              <div className="flex gap-2 text-[--shell-muted]">
-                <Button size="icon-sm" className="hover:text-[--shell-foreground] cursor-pointer" onClick={() => onEdit(item)} title="Edit"><Edit2 size={14} /></Button>
-                <Button size="icon-sm" className="hover:text-[--shell-danger] cursor-pointer" onClick={() => onDelete(item)} title="Delete"><Trash2 size={14} /></Button>
+              <div className="flex gap-2 text-[var(--shell-muted)]">
+                <Button size="icon-sm" className="hover:text-[var(--shell-foreground)] cursor-pointer" onClick={() => onEdit(item)} title="Edit"><Edit2 size={14} /></Button>
+                <Button size="icon-sm" className="hover:text-[var(--shell-danger)] cursor-pointer" onClick={() => onDelete(item)} title="Delete"><Trash2 size={14} /></Button>
               </div>
             </TableCell>
           </TableRow>

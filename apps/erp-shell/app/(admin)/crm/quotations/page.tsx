@@ -57,37 +57,37 @@ export default function QuotationsPage() {
     <div className="space-y-10 lg:space-y-12">
       <div>
         <div className="mb-5 flex items-center gap-2">
-          <h2 className="font-heading text-xs font-light uppercase tracking-[0.12em] text-[--shell-muted]">OVERVIEW</h2>
-          <div className="h-px flex-1 bg-[--shell-border]" />
+          <h2 className="font-heading text-xs font-light uppercase tracking-[0.12em] text-[var(--shell-muted)]">OVERVIEW</h2>
+          <div className="h-px flex-1 bg-[var(--shell-border)]" />
         </div>
         <div className="grid gap-4 sm:grid-cols-4">
-          <div className="rounded-xl border border-[--shell-border] bg-[--shell-surface] p-4 space-y-2 hover:shadow-engineered transition-shadow">
-            <p className="text-xs font-medium uppercase tracking-[0.08em] text-[--shell-muted]">TOTAL QUOTATIONS</p>
-            <p className="font-heading text-2xl font-semibold tracking-tight text-[--shell-foreground]">{data.summary.total_quotations}</p>
-            <p className="text-xs text-[--shell-muted]">active quotes</p>
+          <div className="rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface)] p-4 space-y-2 hover:shadow-engineered transition-shadow">
+            <p className="text-xs font-medium uppercase tracking-[0.08em] text-[var(--shell-muted)]">TOTAL QUOTATIONS</p>
+            <p className="font-heading text-2xl font-semibold tracking-tight text-[var(--shell-foreground)]">{data.summary.total_quotations}</p>
+            <p className="text-xs text-[var(--shell-muted)]">active quotes</p>
           </div>
-          <div className="rounded-xl border border-[--shell-border] bg-[--shell-surface] p-4 space-y-2 hover:shadow-engineered transition-shadow">
-            <p className="text-xs font-medium uppercase tracking-[0.08em] text-[--shell-muted]">OPEN</p>
-            <p className="font-heading text-2xl font-semibold tracking-tight text-[--shell-foreground]">{data.summary.open}</p>
-            <p className="text-xs text-[--shell-muted]">pending response</p>
+          <div className="rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface)] p-4 space-y-2 hover:shadow-engineered transition-shadow">
+            <p className="text-xs font-medium uppercase tracking-[0.08em] text-[var(--shell-muted)]">OPEN</p>
+            <p className="font-heading text-2xl font-semibold tracking-tight text-[var(--shell-foreground)]">{data.summary.open}</p>
+            <p className="text-xs text-[var(--shell-muted)]">pending response</p>
           </div>
-          <div className="rounded-xl border border-[--shell-border] bg-[--shell-surface] p-4 space-y-2 hover:shadow-engineered transition-shadow">
-            <p className="text-xs font-medium uppercase tracking-[0.08em] text-[--shell-muted]">NEEDS ATTENTION</p>
-            <p className="font-heading text-2xl font-semibold tracking-tight text-[--shell-foreground]">{data.summary.overdue_at_risk}</p>
-            <p className="text-xs text-[--shell-muted]">{data.summary.overdue_at_risk > 0 ? "expired quotes" : "all valid"}</p>
+          <div className="rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface)] p-4 space-y-2 hover:shadow-engineered transition-shadow">
+            <p className="text-xs font-medium uppercase tracking-[0.08em] text-[var(--shell-muted)]">NEEDS ATTENTION</p>
+            <p className="font-heading text-2xl font-semibold tracking-tight text-[var(--shell-foreground)]">{data.summary.overdue_at_risk}</p>
+            <p className="text-xs text-[var(--shell-muted)]">{data.summary.overdue_at_risk > 0 ? "expired quotes" : "all valid"}</p>
           </div>
-          <div className="rounded-xl border border-[--shell-border] bg-[--shell-surface] p-4 space-y-2 hover:shadow-engineered transition-shadow">
-            <p className="text-xs font-medium uppercase tracking-[0.08em] text-[--shell-muted]">REPRESENTATIVES</p>
-            <p className="font-heading text-2xl font-semibold tracking-tight text-[--shell-foreground]">{data.summary.owners}</p>
-            <p className="text-xs text-[--shell-muted]">active reps</p>
+          <div className="rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface)] p-4 space-y-2 hover:shadow-engineered transition-shadow">
+            <p className="text-xs font-medium uppercase tracking-[0.08em] text-[var(--shell-muted)]">REPRESENTATIVES</p>
+            <p className="font-heading text-2xl font-semibold tracking-tight text-[var(--shell-foreground)]">{data.summary.owners}</p>
+            <p className="text-xs text-[var(--shell-muted)]">active reps</p>
           </div>
         </div>
       </div>
 
       <div>
         <div className="mb-5 flex items-center gap-2">
-          <h2 className="font-heading text-xs font-light uppercase tracking-[0.12em] text-[--shell-muted]">RECORDS</h2>
-          <div className="h-px flex-1 bg-[--shell-border]" />
+          <h2 className="font-heading text-xs font-light uppercase tracking-[0.12em] text-[var(--shell-muted)]">RECORDS</h2>
+          <div className="h-px flex-1 bg-[var(--shell-border)]" />
         </div>
 
         <div className="flex items-center justify-between mb-4">
@@ -104,13 +104,13 @@ export default function QuotationsPage() {
           </div>
         </div>
 
-        <Card className="hover:shadow-engineered transition-shadow duration-200 border-[--shell-border] bg-[--shell-surface]">
-          <div className="flex items-center gap-3 p-4 border-b border-[--shell-border]">
+        <Card className="hover:shadow-engineered transition-shadow duration-200 border-[var(--shell-border)] bg-[var(--shell-surface)]">
+          <div className="flex items-center gap-3 p-4 border-b border-[var(--shell-border)]">
             <div className="relative flex-1">
-              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[--shell-muted]" />
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--shell-muted)]" />
               <Input placeholder="Search quotations..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 h-9 text-sm" />
             </div>
-            <Filter size={15} className="text-[--shell-muted] shrink-0" />
+            <Filter size={15} className="text-[var(--shell-muted)] shrink-0" />
           </div>
           <QuotationTable
             quotations={filtered}

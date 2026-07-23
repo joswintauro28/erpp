@@ -28,10 +28,10 @@ interface PaymentMetrics {
 function SectionHeading({ label }: { label: string }) {
   return (
     <div className="mb-5 flex items-center gap-2">
-      <h2 className="font-heading text-xs font-medium uppercase tracking-[0.12em] text-[--shell-muted]">
+      <h2 className="font-heading text-xs font-medium uppercase tracking-[0.12em] text-[var(--shell-muted)]">
         {label}
       </h2>
-      <div className="h-px flex-1 bg-[--shell-border]/20" />
+      <div className="h-px flex-1 bg-[var(--shell-border)]/20" />
     </div>
   );
 }
@@ -42,8 +42,8 @@ const CHART_VARS = [
 ];
 
 const metricCards = [
-  { key: "today" as const, icon: ArrowDownLeft, label: "Today", gradient: "from-[--shell-brand]/5 to-transparent", idx: 0 },
-  { key: "thisMonth" as const, icon: DollarSign, label: "This Month", gradient: "from-[--shell-accent]/5 to-transparent", idx: 1 },
+  { key: "today" as const, icon: ArrowDownLeft, label: "Today", gradient: "from-[var(--shell-brand)]/5 to-transparent", idx: 0 },
+  { key: "thisMonth" as const, icon: DollarSign, label: "This Month", gradient: "from-[var(--shell-accent)]/5 to-transparent", idx: 1 },
   { key: "outstanding" as const, icon: ArrowUpRight, label: "Outstanding", gradient: "from-amber-500/5 to-transparent", idx: 2 },
   { key: "refunds" as const, icon: Ban, label: "Refunds", gradient: "from-orange-500/5 to-transparent", idx: 3 },
   { key: "failed" as const, icon: XCircle, label: "Failed", gradient: "from-red-500/5 to-transparent", idx: 4 },
@@ -149,14 +149,14 @@ export default function Payments() {
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-heading text-xl font-semibold tracking-tight text-[--shell-foreground]">
+          <h1 className="font-heading text-xl font-semibold tracking-tight text-[var(--shell-foreground)]">
             Payments
           </h1>
-          <p className="mt-0.5 text-sm text-[--shell-muted]">
+          <p className="mt-0.5 text-sm text-[var(--shell-muted)]">
             Track collections, refunds, and payment links
           </p>
         </div>
-        <Button className="bg-[--shell-brand] hover:bg-[--shell-brand]/90 text-white" onClick={() => setRecordOpen(true)}>
+        <Button className="bg-[var(--shell-brand)] hover:bg-[var(--shell-brand)]/90 text-white" onClick={() => setRecordOpen(true)}>
           <Wallet className="h-4 w-4" />
           Record Payment
         </Button>
@@ -180,19 +180,19 @@ export default function Payments() {
               return (
                 <div
                   key={card.key}
-                  className="animate-kpi relative flex flex-col gap-1.5 rounded-xl border border-[--shell-border] bg-[--shell-surface] p-4.5 transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1)] overflow-hidden"
+                  className="animate-kpi relative flex flex-col gap-1.5 rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface)] p-4.5 transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1)] overflow-hidden"
                   style={{ animationDelay: `${card.idx * 0.05}s` }}
                 >
                   <div className={`absolute inset-0 bg-gradient-to-br ${card.gradient} pointer-events-none`} />
                   <div className="relative z-10 flex items-center justify-between">
-                    <span className="text-xs font-medium uppercase tracking-[0.08em] text-[--shell-muted]">
+                    <span className="text-xs font-medium uppercase tracking-[0.08em] text-[var(--shell-muted)]">
                       {card.label}
                     </span>
-                    <div className="flex h-7 w-7 items-center justify-center rounded-md border border-[--shell-border] bg-[--shell-bg]">
+                    <div className="flex h-7 w-7 items-center justify-center rounded-md border border-[var(--shell-border)] bg-[var(--shell-bg)]">
                       <Icon className="h-3.5 w-3.5" style={{ color: CHART_VARS[card.idx] }} />
                     </div>
                   </div>
-                  <span className={`relative z-10 font-heading text-lg font-semibold tracking-tight ${isDestructive ? "text-[--shell-brand]" : "text-[--shell-foreground]"}`}>
+                  <span className={`relative z-10 font-heading text-lg font-semibold tracking-tight ${isDestructive ? "text-[var(--shell-brand)]" : "text-[var(--shell-foreground)]"}`}>
                     {values[card.key]}
                   </span>
                 </div>
@@ -207,10 +207,10 @@ export default function Payments() {
         <SectionHeading label="Payment History" />
         <div className="mb-5 flex flex-wrap items-center gap-3">
           <div className="relative flex-1 max-w-xs">
-            <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[--shell-muted]" />
+            <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--shell-muted)]" />
             <Input
               placeholder="Search payments..."
-              className="pl-8 border-[--shell-border] bg-[--shell-surface]"
+              className="pl-8 border-[var(--shell-border)] bg-[var(--shell-surface)]"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
@@ -289,10 +289,10 @@ export default function Payments() {
       >
         {payStep === 0 && (
           <div className="space-y-5">
-            <div className="rounded-lg border border-[--shell-border] bg-[--shell-surface] p-4">
+            <div className="rounded-lg border border-[var(--shell-border)] bg-[var(--shell-surface)] p-4">
               <div className="mb-3 flex items-center gap-2">
-                <Receipt className="h-3.5 w-3.5 text-[--shell-brand]" />
-                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[--shell-foreground]">Select Invoice</span>
+                <Receipt className="h-3.5 w-3.5 text-[var(--shell-brand)]" />
+                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--shell-foreground)]">Select Invoice</span>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="payment-invoice">Invoice</Label>
@@ -311,16 +311,16 @@ export default function Payments() {
                 </Select>
               </div>
               {selectedInvoice && (
-                <div className="mt-3 flex items-center justify-between rounded-md bg-[--shell-bg] px-3 py-2 text-xs">
-                  <span className="text-[--shell-muted]">Balance Due</span>
-                  <span className="font-mono font-semibold text-[--shell-brand]">{money(selectedInvoice.balance)}</span>
+                <div className="mt-3 flex items-center justify-between rounded-md bg-[var(--shell-bg)] px-3 py-2 text-xs">
+                  <span className="text-[var(--shell-muted)]">Balance Due</span>
+                  <span className="font-mono font-semibold text-[var(--shell-brand)]">{money(selectedInvoice.balance)}</span>
                 </div>
               )}
             </div>
-            <div className="rounded-lg border border-[--shell-border] bg-[--shell-surface] p-4">
+            <div className="rounded-lg border border-[var(--shell-border)] bg-[var(--shell-surface)] p-4">
               <div className="mb-3 flex items-center gap-2">
-                <DollarSign className="h-3.5 w-3.5 text-[--shell-accent]" />
-                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[--shell-foreground]">Payment Amount</span>
+                <DollarSign className="h-3.5 w-3.5 text-[var(--shell-accent)]" />
+                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--shell-foreground)]">Payment Amount</span>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="payment-amount">Amount (₹)</Label>
@@ -331,10 +331,10 @@ export default function Payments() {
         )}
         {payStep === 1 && (
           <div className="space-y-5">
-            <div className="rounded-lg border border-[--shell-border] bg-[--shell-surface] p-4">
+            <div className="rounded-lg border border-[var(--shell-border)] bg-[var(--shell-surface)] p-4">
               <div className="mb-3 flex items-center gap-2">
-                <Building2 className="h-3.5 w-3.5 text-[--shell-accent]" />
-                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[--shell-foreground]">Payment Method</span>
+                <Building2 className="h-3.5 w-3.5 text-[var(--shell-accent)]" />
+                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--shell-foreground)]">Payment Method</span>
               </div>
               <div className="space-y-4">
                 <div className="space-y-2">

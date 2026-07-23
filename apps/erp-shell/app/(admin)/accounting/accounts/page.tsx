@@ -129,14 +129,14 @@ export default function ChartOfAccounts() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-heading text-xl font-semibold tracking-tight text-[--shell-foreground]">
+          <h1 className="font-heading text-xl font-semibold tracking-tight text-[var(--shell-foreground)]">
             Chart of Accounts
           </h1>
-          <p className="mt-0.5 text-sm text-[--shell-muted]">
+          <p className="mt-0.5 text-sm text-[var(--shell-muted)]">
             Manage your accounting chart of accounts
           </p>
         </div>
-        <Button className="bg-[--shell-brand] hover:bg-[--shell-brand]/90 text-white" size="sm" onClick={openCreate}>
+        <Button className="bg-[var(--shell-brand)] hover:bg-[var(--shell-brand)]/90 text-white" size="sm" onClick={openCreate}>
           <Plus className="mr-1.5 h-3.5 w-3.5" />
           Add Account
         </Button>
@@ -161,8 +161,8 @@ export default function ChartOfAccounts() {
               key={type}
               className={`animate-kpi relative flex flex-col gap-1.5 rounded-xl border p-4.5 transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1)] cursor-pointer overflow-hidden ${
                 isActiveFilter
-                  ? "border-[--shell-brand] bg-[--shell-surface-alt]/50 ring-1 ring-[--shell-brand]"
-                  : "border-[--shell-border] bg-[--shell-surface]"
+                  ? "border-[var(--shell-brand)] bg-[var(--shell-surface-alt)]/50 ring-1 ring-[var(--shell-brand)]"
+                  : "border-[var(--shell-border)] bg-[var(--shell-surface)]"
               }`}
               style={{ animationDelay: `${idx * 0.05}s` }}
               onClick={() => setTypeFilter(typeFilter === type ? "" : type)}
@@ -174,10 +174,10 @@ export default function ChartOfAccounts() {
                 </span>
                 <Icon className="h-3.5 w-3.5" style={{ color: config.color }} />
               </div>
-              <span className="relative z-10 font-heading text-lg font-semibold tracking-tight text-[--shell-foreground]">
+              <span className="relative z-10 font-heading text-lg font-semibold tracking-tight text-[var(--shell-foreground)]">
                 {money(info.total)}
               </span>
-              <span className="relative z-10 text-xs text-[--shell-muted]">{info.count} accounts</span>
+              <span className="relative z-10 text-xs text-[var(--shell-muted)]">{info.count} accounts</span>
             </div>
           );
         })}
@@ -185,7 +185,7 @@ export default function ChartOfAccounts() {
 
       <div className="flex flex-wrap items-center gap-3">
         <div className="relative flex-1 max-w-xs">
-          <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[--shell-muted]" />
+          <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--shell-muted)]" />
           <Input
             placeholder="Search by name, code, or group..."
             className="pl-8"
@@ -196,7 +196,7 @@ export default function ChartOfAccounts() {
         {typeFilter && (
           <Badge variant="secondary" className="gap-1">
             {typeFilter}
-            <button className="ml-1 text-[--shell-muted] hover:text-[--shell-foreground]" onClick={() => setTypeFilter("")}>×</button>
+            <button className="ml-1 text-[var(--shell-muted)] hover:text-[var(--shell-foreground)]" onClick={() => setTypeFilter("")}>×</button>
           </Badge>
         )}
       </div>
@@ -232,9 +232,9 @@ export default function ChartOfAccounts() {
                         <span className="text-sm font-medium">{a.name}</span>
                       </div>
                     </TableCell>
-                    <TableCell className="text-xs text-[--shell-muted]">{a.group}</TableCell>
-                    <TableCell className="font-mono text-xs text-[--shell-muted]">{money(a.opening_balance)}</TableCell>
-                    <TableCell className={`font-mono text-sm text-right ${a.current_balance < 0 ? "text-[--shell-danger]" : "text-[--shell-foreground]"}`}>
+                    <TableCell className="text-xs text-[var(--shell-muted)]">{a.group}</TableCell>
+                    <TableCell className="font-mono text-xs text-[var(--shell-muted)]">{money(a.opening_balance)}</TableCell>
+                    <TableCell className={`font-mono text-sm text-right ${a.current_balance < 0 ? "text-[var(--shell-danger)]" : "text-[var(--shell-foreground)]"}`}>
                       {money(Math.abs(a.current_balance))}
                     </TableCell>
                     <TableCell>
@@ -249,9 +249,9 @@ export default function ChartOfAccounts() {
                         </Button>
                         <Button variant="ghost" size="icon-sm" onClick={() => toggleActive(a.id)}>
                           {a.is_active ? (
-                            <PowerOff className="h-3 w-3 text-[--shell-muted]" />
+                            <PowerOff className="h-3 w-3 text-[var(--shell-muted)]" />
                           ) : (
-                            <Power className="h-3 w-3 text-[--shell-success]" />
+                            <Power className="h-3 w-3 text-[var(--shell-success)]" />
                           )}
                         </Button>
                       </div>
@@ -271,7 +271,7 @@ export default function ChartOfAccounts() {
             <DialogTitle>{editId !== null ? "Edit Account" : "Add Account"}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleCreate} className="space-y-5">
-            <div className="rounded-lg border border-[--shell-border] bg-[--shell-surface] p-4">
+            <div className="rounded-lg border border-[var(--shell-border)] bg-[var(--shell-surface)] p-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Account Code</Label>
@@ -314,7 +314,7 @@ export default function ChartOfAccounts() {
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setCreateOpen(false)}>Cancel</Button>
-              <Button type="submit" disabled={saving} className="bg-[--shell-brand] hover:bg-[--shell-brand]/90 text-white">
+              <Button type="submit" disabled={saving} className="bg-[var(--shell-brand)] hover:bg-[var(--shell-brand)]/90 text-white">
                 {saving && <Loader2 className="mr-1 h-4 w-4 animate-spin" />}
                 {editId !== null ? "Update Account" : "Create Account"}
               </Button>

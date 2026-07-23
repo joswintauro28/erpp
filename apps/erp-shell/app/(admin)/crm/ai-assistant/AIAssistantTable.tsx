@@ -19,7 +19,7 @@ interface AIAssistantTableProps {
 export default function AIAssistantTable({ logs }: AIAssistantTableProps) {
   if (!logs?.length) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 text-[--shell-muted]">
+      <div className="flex flex-col items-center justify-center py-16 text-[var(--shell-muted)]">
         <p className="text-sm">No AI assistant logs found.</p>
       </div>
     );
@@ -40,12 +40,12 @@ export default function AIAssistantTable({ logs }: AIAssistantTableProps) {
       <TableBody>
         {logs.map((log: any) => (
           <TableRow key={log.id}>
-            <TableCell className="text-[--shell-muted]">{log.id_str}</TableCell>
+            <TableCell className="text-[var(--shell-muted)]">{log.id_str}</TableCell>
             <TableCell className="max-w-[200px] truncate font-medium" title={log.query}>{log.query}</TableCell>
-            <TableCell className="max-w-[250px] truncate text-[--shell-muted]" title={log.response || ""}>{(log.response || "").substring(0, 100)}</TableCell>
+            <TableCell className="max-w-[250px] truncate text-[var(--shell-muted)]" title={log.response || ""}>{(log.response || "").substring(0, 100)}</TableCell>
             <TableCell>{log.category}</TableCell>
             <TableCell><Badge variant={badgeVariant(log.status)}>{log.status}</Badge></TableCell>
-            <TableCell className="text-[--shell-muted]">{log.created_at}</TableCell>
+            <TableCell className="text-[var(--shell-muted)]">{log.created_at}</TableCell>
           </TableRow>
         ))}
       </TableBody>

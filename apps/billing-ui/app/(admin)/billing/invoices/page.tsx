@@ -216,8 +216,8 @@ export default function Invoices() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-heading text-xl font-semibold tracking-tight text-[--shell-foreground]">Invoices</h1>
-          <p className="mt-0.5 text-sm text-[--shell-muted]">Create, manage, and track all client invoices</p>
+          <h1 className="font-heading text-xl font-semibold tracking-tight text-[var(--shell-foreground)]">Invoices</h1>
+          <p className="mt-0.5 text-sm text-[var(--shell-muted)]">Create, manage, and track all client invoices</p>
         </div>
         <div className="flex items-center gap-2">
           <div className="flex items-center rounded-lg border border-border bg-card p-0.5">
@@ -244,24 +244,24 @@ export default function Invoices() {
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-5">
         <Card><CardContent className="flex items-center gap-3 pt-6">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[--chart-1]/10"><Receipt className="h-4 w-4 text-[--chart-1]" /></div>
-          <div><p className="font-heading text-base font-semibold">{money(gstSummary.taxable_value)}</p><p className="text-xs text-[--shell-muted]">Taxable Value</p></div>
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--chart-1)]/10"><Receipt className="h-4 w-4 text-[var(--chart-1)]" /></div>
+          <div><p className="font-heading text-base font-semibold">{money(gstSummary.taxable_value)}</p><p className="text-xs text-[var(--shell-muted)]">Taxable Value</p></div>
         </CardContent></Card>
         <Card><CardContent className="flex items-center gap-3 pt-6">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[--chart-2]/10"><BadgePercent className="h-4 w-4 text-[--chart-2]" /></div>
-          <div><p className="font-heading text-base font-semibold">{money(gstSummary.total_gst)}</p><p className="text-xs text-[--shell-muted]">Total GST</p></div>
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--chart-2)]/10"><BadgePercent className="h-4 w-4 text-[var(--chart-2)]" /></div>
+          <div><p className="font-heading text-base font-semibold">{money(gstSummary.total_gst)}</p><p className="text-xs text-[var(--shell-muted)]">Total GST</p></div>
         </CardContent></Card>
         <Card><CardContent className="flex items-center gap-3 pt-6">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[--chart-3]/10"><DollarSign className="h-4 w-4 text-[--chart-3]" /></div>
-          <div><p className="font-heading text-base font-semibold">{money(gstSummary.total_cgst + gstSummary.total_sgst)}</p><p className="text-xs text-[--shell-muted]">CGST + SGST</p></div>
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--chart-3)]/10"><DollarSign className="h-4 w-4 text-[var(--chart-3)]" /></div>
+          <div><p className="font-heading text-base font-semibold">{money(gstSummary.total_cgst + gstSummary.total_sgst)}</p><p className="text-xs text-[var(--shell-muted)]">CGST + SGST</p></div>
         </CardContent></Card>
         <Card><CardContent className="flex items-center gap-3 pt-6">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[--chart-4]/10"><CreditCard className="h-4 w-4 text-[--chart-4]" /></div>
-          <div><p className="font-heading text-base font-semibold">{money(gstSummary.total_igst)}</p><p className="text-xs text-[--shell-muted]">IGST</p></div>
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--chart-4)]/10"><CreditCard className="h-4 w-4 text-[var(--chart-4)]" /></div>
+          <div><p className="font-heading text-base font-semibold">{money(gstSummary.total_igst)}</p><p className="text-xs text-[var(--shell-muted)]">IGST</p></div>
         </CardContent></Card>
         <Card><CardContent className="flex items-center gap-3 pt-6">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[--shell-success]/10"><FileText className="h-4 w-4 text-[--shell-success]" /></div>
-          <div><p className="font-heading text-base font-semibold">{invoices.length}</p><p className="text-xs text-[--shell-muted]">Total Invoices</p></div>
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--shell-success)]/10"><FileText className="h-4 w-4 text-[var(--shell-success)]" /></div>
+          <div><p className="font-heading text-base font-semibold">{invoices.length}</p><p className="text-xs text-[var(--shell-muted)]">Total Invoices</p></div>
         </CardContent></Card>
       </div>
 
@@ -307,15 +307,15 @@ export default function Invoices() {
                     {filtered.map((inv) => (
                       <TableRow key={inv.id}>
                         <TableCell><span className="font-mono text-xs font-medium">{inv.invoice_number}</span></TableCell>
-                        <TableCell className="text-[--shell-muted]">{inv.client_name}</TableCell>
+                        <TableCell className="text-[var(--shell-muted)]">{inv.client_name}</TableCell>
                         <TableCell className="font-mono text-sm text-right">{money(inv.total)}</TableCell>
                         <TableCell className="font-mono text-sm text-right">{money(inv.paid_amount)}</TableCell>
                         <TableCell className="font-mono text-sm text-right">{money(inv.balance_due)}</TableCell>
                         <TableCell>
                           <Badge variant={statusVariant(inv.status)} className="capitalize">{inv.status.replace("_", " ")}</Badge>
                         </TableCell>
-                        <TableCell className="text-xs text-[--shell-muted]">{formatDate(inv.issue_date)}</TableCell>
-                        <TableCell className="text-xs text-[--shell-muted]">{formatDate(inv.due_date)}</TableCell>
+                        <TableCell className="text-xs text-[var(--shell-muted)]">{formatDate(inv.issue_date)}</TableCell>
+                        <TableCell className="text-xs text-[var(--shell-muted)]">{formatDate(inv.due_date)}</TableCell>
                         <TableCell>
                           <div className="flex items-center justify-end gap-1">
                             <Button variant="ghost" size="icon-sm" onClick={() => router.push(`/billing/invoices/${inv.id}`)} aria-label="View invoice">
@@ -347,10 +347,10 @@ export default function Invoices() {
             <DialogTitle>Create Invoice</DialogTitle>
           </DialogHeader>
           <form className="space-y-5" onSubmit={handleCreateInvoice}>
-            <div className="rounded-lg border border-[--shell-border] bg-[--shell-surface] p-4">
+            <div className="rounded-lg border border-[var(--shell-border)] bg-[var(--shell-surface)] p-4">
               <div className="mb-3 flex items-center gap-2">
-                <Receipt className="h-3.5 w-3.5 text-[--shell-brand]" />
-                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[--shell-foreground]">Invoice Details</span>
+                <Receipt className="h-3.5 w-3.5 text-[var(--shell-brand)]" />
+                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--shell-foreground)]">Invoice Details</span>
               </div>
               <div className="space-y-4">
                 <div className="space-y-2">
@@ -370,11 +370,11 @@ export default function Invoices() {
               </div>
             </div>
 
-            <div className="rounded-lg border border-[--shell-border] bg-[--shell-surface] p-4">
+            <div className="rounded-lg border border-[var(--shell-border)] bg-[var(--shell-surface)] p-4">
               <div className="mb-3 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <DollarSign className="h-3.5 w-3.5 text-[--shell-accent]" />
-                  <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[--shell-foreground]">Line Items</span>
+                  <DollarSign className="h-3.5 w-3.5 text-[var(--shell-accent)]" />
+                  <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--shell-foreground)]">Line Items</span>
                 </div>
                 <Button type="button" variant="outline" size="sm" onClick={() => setFormItems([...formItems, { description: "", quantity: 1, unitPrice: 0, gstRate: 18 }])}>
                   <Plus className="h-3 w-3" /> Add Item
@@ -382,7 +382,7 @@ export default function Invoices() {
               </div>
               <div className="space-y-3">
                 {formItems.map((item, idx) => (
-                  <div key={idx} className="flex items-start gap-2 rounded-md border border-[--shell-border] bg-[--shell-bg] p-3">
+                  <div key={idx} className="flex items-start gap-2 rounded-md border border-[var(--shell-border)] bg-[var(--shell-bg)] p-3">
                     <div className="flex-1 space-y-2">
                       <Input placeholder="Description" value={item.description} onChange={(e) => {
                         const next = [...formItems];
@@ -424,10 +424,10 @@ export default function Invoices() {
               </div>
             </div>
 
-            <div className="rounded-lg border border-[--shell-border] bg-[--shell-surface] p-4">
+            <div className="rounded-lg border border-[var(--shell-border)] bg-[var(--shell-surface)] p-4">
               <div className="mb-3 flex items-center gap-2">
-                <BadgePercent className="h-3.5 w-3.5 text-[--shell-accent]" />
-                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[--shell-foreground]">Discount</span>
+                <BadgePercent className="h-3.5 w-3.5 text-[var(--shell-accent)]" />
+                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--shell-foreground)]">Discount</span>
               </div>
               <div className="flex items-start gap-3">
                 <div className="flex-1 space-y-2">
@@ -447,26 +447,26 @@ export default function Invoices() {
               </div>
             </div>
 
-            <div className="rounded-lg border border-[--shell-border] bg-[--shell-surface] p-4">
+            <div className="rounded-lg border border-[var(--shell-border)] bg-[var(--shell-surface)] p-4">
               <div className="flex items-center justify-between text-sm">
-                <span className="text-[--shell-muted]">Subtotal</span>
+                <span className="text-[var(--shell-muted)]">Subtotal</span>
                 <span className="font-mono font-medium">{money(subtotal)}</span>
               </div>
               {Number(formDiscount) > 0 && (
                 <div className="mt-1 flex items-center justify-between text-sm">
-                  <span className="text-[--shell-muted]">Discount</span>
-                  <span className="font-mono font-medium text-[--shell-danger]">
+                  <span className="text-[var(--shell-muted)]">Discount</span>
+                  <span className="font-mono font-medium text-[var(--shell-danger)]">
                     -{money(formDiscountType === "percentage" ? subtotal * Number(formDiscount) / 100 : Number(formDiscount))}
                   </span>
                 </div>
               )}
               <div className="mt-1 flex items-center justify-between text-sm">
-                <span className="text-[--shell-muted]">GST</span>
+                <span className="text-[var(--shell-muted)]">GST</span>
                 <span className="font-mono font-medium">{money(totalGst)}</span>
               </div>
-              <div className="mt-2 flex items-center justify-between border-t border-[--shell-border] pt-2">
-                <span className="text-sm font-semibold text-[--shell-foreground]">Grand Total</span>
-                <span className="font-heading text-lg font-bold text-[--shell-brand]">{money(grandTotal)}</span>
+              <div className="mt-2 flex items-center justify-between border-t border-[var(--shell-border)] pt-2">
+                <span className="text-sm font-semibold text-[var(--shell-foreground)]">Grand Total</span>
+                <span className="font-heading text-lg font-bold text-[var(--shell-brand)]">{money(grandTotal)}</span>
               </div>
             </div>
 

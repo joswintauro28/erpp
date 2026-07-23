@@ -28,22 +28,22 @@ interface ReqRowProps {
 function ReqRow({ req, onDelete, onEdit }: ReqRowProps) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="rounded-xl border border-[--shell-border] bg-[--shell-surface] mb-2 overflow-hidden">
+    <div className="rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface)] mb-2 overflow-hidden">
       <div
         onClick={() => setOpen((o) => !o)}
         className="flex items-center gap-3 p-3 cursor-pointer select-none"
       >
-        <ClipboardList size={14} className="shrink-0 text-[--shell-brand]" />
+        <ClipboardList size={14} className="shrink-0 text-[var(--shell-brand)]" />
         <div className="flex-1 min-w-0">
-          <div className="font-semibold text-sm text-[--shell-foreground] truncate">{req.name}</div>
-          <div className="text-xs text-[--shell-muted] mt-px">{req.category} &middot; {req.priority} priority &middot; {req.owner}</div>
+          <div className="font-semibold text-sm text-[var(--shell-foreground)] truncate">{req.name}</div>
+          <div className="text-xs text-[var(--shell-muted)] mt-px">{req.category} &middot; {req.priority} priority &middot; {req.owner}</div>
         </div>
         <Badge variant="secondary">{req.status}</Badge>
-        {open ? <ChevronDown size={14} className="shrink-0 text-[--shell-muted]" /> : <ChevronRight size={14} className="shrink-0 text-[--shell-muted]" />}
+        {open ? <ChevronDown size={14} className="shrink-0 text-[var(--shell-muted)]" /> : <ChevronRight size={14} className="shrink-0 text-[var(--shell-muted)]" />}
       </div>
 
       {open && (
-        <div className="border-t border-[--shell-border] p-3 bg-[--shell-bg]">
+        <div className="border-t border-[var(--shell-border)] p-3 bg-[var(--shell-bg)]">
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-3">
             {[
               { label: "ID", value: req.id_str },
@@ -54,14 +54,14 @@ function ReqRow({ req, onDelete, onEdit }: ReqRowProps) {
               { label: "Owner", value: req.owner },
             ].filter((f) => f.value).map((f) => (
               <div key={f.label}>
-                <div className="text-[10px] font-semibold uppercase text-[--shell-muted] mb-0.5">{f.label}</div>
-                <div className="text-xs font-medium text-[--shell-foreground]">{f.value}</div>
+                <div className="text-[10px] font-semibold uppercase text-[var(--shell-muted)] mb-0.5">{f.label}</div>
+                <div className="text-xs font-medium text-[var(--shell-foreground)]">{f.value}</div>
               </div>
             ))}
           </div>
-          <div className="border-t border-[--shell-border] pt-3">
-            <div className="text-[11px] font-bold uppercase tracking-wider text-[--shell-muted] mb-1">Description</div>
-            <div className="text-xs text-[--shell-foreground] leading-relaxed">{req.name}</div>
+          <div className="border-t border-[var(--shell-border)] pt-3">
+            <div className="text-[11px] font-bold uppercase tracking-wider text-[var(--shell-muted)] mb-1">Description</div>
+            <div className="text-xs text-[var(--shell-foreground)] leading-relaxed">{req.name}</div>
           </div>
           <div className="flex justify-end gap-2 mt-3">
             <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); onEdit(req); }}><Edit2 size={12} className="mr-1" /> Edit</Button>
@@ -127,7 +127,7 @@ function QuoteRow({ quote, onDelete, onPreview, onConverted, onEdit }: QuoteRowP
   return (
     <div
       className={`rounded-xl border mb-2 overflow-hidden ${
-        isConverted ? "border-green-300 bg-green-50" : "border-[--shell-border] bg-[--shell-surface]"
+        isConverted ? "border-green-300 bg-green-50" : "border-[var(--shell-border)] bg-[var(--shell-surface)]"
       }`}
     >
       <div
@@ -136,7 +136,7 @@ function QuoteRow({ quote, onDelete, onPreview, onConverted, onEdit }: QuoteRowP
       >
         <FileSpreadsheet size={14} className={`shrink-0 ${isConverted ? "text-green-600" : "text-amber-600"}`} />
         <div className="flex-1 min-w-0">
-          <div className="font-semibold text-sm text-[--shell-foreground] flex items-center gap-1.5 flex-wrap">
+          <div className="font-semibold text-sm text-[var(--shell-foreground)] flex items-center gap-1.5 flex-wrap">
             {quote.quote_no}
             {quote.file_data && <Paperclip size={11} className="text-amber-600" />}
             {isConverted && (
@@ -145,16 +145,16 @@ function QuoteRow({ quote, onDelete, onPreview, onConverted, onEdit }: QuoteRowP
               </span>
             )}
           </div>
-          <div className="text-xs text-[--shell-muted] mt-px">
+          <div className="text-xs text-[var(--shell-muted)] mt-px">
             Value: {quote.value} &middot; Valid until: {quote.valid_until} &middot; {quote.owner}
           </div>
         </div>
         <Badge variant={isConverted ? "default" : isAccepted ? "default" : "secondary"}>{quote.status}</Badge>
-        {open ? <ChevronDown size={14} className="shrink-0 text-[--shell-muted]" /> : <ChevronRight size={14} className="shrink-0 text-[--shell-muted]" />}
+        {open ? <ChevronDown size={14} className="shrink-0 text-[var(--shell-muted)]" /> : <ChevronRight size={14} className="shrink-0 text-[var(--shell-muted)]" />}
       </div>
 
       {open && (
-        <div className="border-t border-[--shell-border] p-3 bg-[--shell-bg]">
+        <div className="border-t border-[var(--shell-border)] p-3 bg-[var(--shell-bg)]">
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-3">
             {[
               { label: "Quote No.", value: quote.quote_no },
@@ -166,18 +166,18 @@ function QuoteRow({ quote, onDelete, onPreview, onConverted, onEdit }: QuoteRowP
               { label: "Owner", value: quote.owner },
             ].filter((f) => f.value).map((f) => (
               <div key={f.label}>
-                <div className="text-[10px] font-semibold uppercase text-[--shell-muted] mb-0.5">{f.label}</div>
-                <div className="text-xs font-medium text-[--shell-foreground]">{f.value}</div>
+                <div className="text-[10px] font-semibold uppercase text-[var(--shell-muted)] mb-0.5">{f.label}</div>
+                <div className="text-xs font-medium text-[var(--shell-foreground)]">{f.value}</div>
               </div>
             ))}
           </div>
 
           {quote.file_data ? (
-            <div className="border-t border-[--shell-border] pt-3 mb-3">
-              <div className="text-[11px] font-bold uppercase tracking-wider text-[--shell-muted] mb-2">Attached File</div>
+            <div className="border-t border-[var(--shell-border)] pt-3 mb-3">
+              <div className="text-[11px] font-bold uppercase tracking-wider text-[var(--shell-muted)] mb-2">Attached File</div>
               <div className="flex items-center gap-3 p-2.5 rounded-lg border border-amber-300 bg-amber-50">
                 <Paperclip size={13} className="text-amber-600 shrink-0" />
-                <span className="flex-1 text-xs font-medium text-[--shell-foreground] truncate">{quote.file_name || "attachment"}</span>
+                <span className="flex-1 text-xs font-medium text-[var(--shell-foreground)] truncate">{quote.file_name || "attachment"}</span>
                 <Button variant="outline" size="sm" className="h-7 text-[11px]" onClick={(e) => { e.stopPropagation(); onPreview(quote); }}><Eye size={12} className="mr-1" /> View</Button>
                 <a href={quote.file_data} download={quote.file_name || "attachment"} onClick={(e) => e.stopPropagation()}>
                   <Button variant="outline" size="sm" className="h-7 text-[11px] border-green-300 text-green-700"><Download size={12} className="mr-1" /> Download</Button>
@@ -185,17 +185,17 @@ function QuoteRow({ quote, onDelete, onPreview, onConverted, onEdit }: QuoteRowP
               </div>
             </div>
           ) : (
-            <div className="border-t border-[--shell-border] pt-3 mb-3 text-[11px] italic text-[--shell-muted]">No file attached.</div>
+            <div className="border-t border-[var(--shell-border)] pt-3 mb-3 text-[11px] italic text-[var(--shell-muted)]">No file attached.</div>
           )}
 
-          <div className="border-t border-[--shell-border] pt-3">
+          <div className="border-t border-[var(--shell-border)] pt-3">
             {isConverted || saleSuccess ? (
               <div className="flex items-center gap-2 p-2.5 rounded-lg bg-green-50 border border-green-300 text-green-700 text-xs font-semibold">
                 <CheckCircle size={14} /> This quotation has been converted to a Sales Order.
               </div>
             ) : !showSaleForm ? (
               <div className="flex items-center justify-between gap-4 flex-wrap">
-                <span className="text-[11px] text-[--shell-muted]">
+                <span className="text-[11px] text-[var(--shell-muted)]">
                   {isAccepted
                     ? "Quotation accepted — ready to convert to a Sales Order."
                     : 'Set status to <strong>Accepted</strong> to enable sales order conversion.'
@@ -220,17 +220,17 @@ function QuoteRow({ quote, onDelete, onPreview, onConverted, onEdit }: QuoteRowP
                 {saleError && <div className="p-2 bg-red-100 text-red-700 rounded-md text-[11px] mb-3">{saleError}</div>}
                 <div className="grid grid-cols-2 gap-3 mb-3">
                   <div>
-                    <label className="block text-[10px] font-semibold uppercase text-[--shell-muted] mb-1">Order Date *</label>
-                    <input type="date" value={saleData.issued_date} onChange={(e) => setSaleData((p) => ({ ...p, issued_date: e.target.value }))} className="h-8 w-full rounded-md border border-[--shell-border] bg-[--shell-surface] px-2.5 text-xs" required />
+                    <label className="block text-[10px] font-semibold uppercase text-[var(--shell-muted)] mb-1">Order Date *</label>
+                    <input type="date" value={saleData.issued_date} onChange={(e) => setSaleData((p) => ({ ...p, issued_date: e.target.value }))} className="h-8 w-full rounded-md border border-[var(--shell-border)] bg-[var(--shell-surface)] px-2.5 text-xs" required />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-semibold uppercase text-[--shell-muted] mb-1">ETA Date *</label>
-                    <input type="date" value={saleData.due_date} onChange={(e) => setSaleData((p) => ({ ...p, due_date: e.target.value }))} className="h-8 w-full rounded-md border border-[--shell-border] bg-[--shell-surface] px-2.5 text-xs" required />
+                    <label className="block text-[10px] font-semibold uppercase text-[var(--shell-muted)] mb-1">ETA Date *</label>
+                    <input type="date" value={saleData.due_date} onChange={(e) => setSaleData((p) => ({ ...p, due_date: e.target.value }))} className="h-8 w-full rounded-md border border-[var(--shell-border)] bg-[var(--shell-surface)] px-2.5 text-xs" required />
                   </div>
                 </div>
                 <div className="mb-3">
-                  <label className="block text-[10px] font-semibold uppercase text-[--shell-muted] mb-1">Sales Rep *</label>
-                  <input type="text" placeholder="e.g. Rohan Mehta" value={saleData.rep} onChange={(e) => setSaleData((p) => ({ ...p, rep: e.target.value }))} className="h-8 w-full rounded-md border border-[--shell-border] bg-[--shell-surface] px-2.5 text-xs" required />
+                  <label className="block text-[10px] font-semibold uppercase text-[var(--shell-muted)] mb-1">Sales Rep *</label>
+                  <input type="text" placeholder="e.g. Rohan Mehta" value={saleData.rep} onChange={(e) => setSaleData((p) => ({ ...p, rep: e.target.value }))} className="h-8 w-full rounded-md border border-[var(--shell-border)] bg-[var(--shell-surface)] px-2.5 text-xs" required />
                 </div>
                 <div className="flex gap-2 justify-end">
                   <Button type="button" variant="outline" size="sm" onClick={() => { setShowSaleForm(false); setSaleError(""); }}>Cancel</Button>
@@ -464,18 +464,18 @@ export default function OpportunityDetailModal({ record, isOpen, onClose, onSucc
         className="fixed inset-0 bg-black/45 flex items-center justify-center z-50 p-4"
         onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
       >
-        <div className="w-full max-w-[860px] max-h-[90vh] flex flex-col rounded-xl border border-[--shell-border] bg-[--shell-surface] overflow-hidden shadow-xl">
-          <div className="flex items-center gap-3 px-6 py-5 border-b border-[--shell-border] shrink-0">
-            <TrendingUp size={20} className="shrink-0 text-[--shell-brand]" />
+        <div className="w-full max-w-[860px] max-h-[90vh] flex flex-col rounded-xl border border-border bg-card overflow-hidden shadow-xl">
+          <div className="flex items-center gap-3 px-6 py-5 border-b border-border shrink-0">
+            <TrendingUp size={20} className="shrink-0 text-primary" />
             <div className="flex-1 min-w-0">
-              <h3 className="text-base font-bold text-[--shell-foreground] truncate">{record.name}</h3>
-              <div className="text-[11px] text-[--shell-muted] mt-px">{record.account} &middot; {record.id_str}</div>
+              <h3 className="text-base font-bold text-foreground truncate">{record.name}</h3>
+              <div className="text-[11px] text-muted-foreground mt-px">{record.account} &middot; {record.id_str}</div>
             </div>
             <span className="px-3 py-0.5 rounded-full text-[11px] font-bold shrink-0" style={{ backgroundColor: sc.bg, color: sc.color }}>{record.stage}</span>
-            <button className="p-1 rounded-md hover:bg-[--shell-border] text-[--shell-muted] cursor-pointer" onClick={onClose}><X size={18} /></button>
+            <button className="p-1 rounded-md hover:bg-muted text-muted-foreground cursor-pointer" onClick={onClose}><X size={18} /></button>
           </div>
 
-          <div className="flex px-6 border-b border-[--shell-border] overflow-x-auto shrink-0">
+          <div className="flex px-6 border-b border-border shrink-0">
             {["details", "requirements", "quotations"].map((t) => (
               <button
                 key={t}
@@ -494,29 +494,29 @@ export default function OpportunityDetailModal({ record, isOpen, onClose, onSucc
           <div className="flex-1 overflow-y-auto p-6">
             {tab === "details" && (
               <div>
-                <div className="grid grid-cols-3 gap-3 mb-6">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
                   {[
                     { label: "Value", value: formatValue(record.value), icon: "\uD83D\uDCB0" },
                     { label: "Probability", value: record.probability, icon: "\uD83C\uDFAF" },
                     { label: "Close Date", value: record.close_date, icon: "\uD83D\uDCC5" },
                   ].map((m) => (
-                    <div key={m.label} className="rounded-xl border border-[--shell-border] bg-[--shell-surface] p-3.5 text-center">
+                    <div key={m.label} className="rounded-xl border border-border bg-card p-3.5 text-center">
                       <div className="text-lg mb-1">{m.icon}</div>
-                      <div className="text-[10px] uppercase text-[--shell-muted] font-semibold mb-0.5">{m.label}</div>
-                      <div className="text-sm font-bold text-[--shell-foreground]">{m.value}</div>
+                      <div className="text-[10px] uppercase text-muted-foreground font-semibold mb-0.5">{m.label}</div>
+                      <div className="text-sm font-bold text-foreground">{m.value}</div>
                     </div>
                   ))}
                 </div>
 
-                <div className="rounded-xl border border-[--shell-border] overflow-hidden">
+                <div className="rounded-xl border border-border overflow-hidden">
                   {detailRows.map((row, i) => (
                     <div
                       key={row.label}
-                      className="flex px-4 py-2.5 text-xs"
+                      className="flex flex-col sm:flex-row px-4 py-2.5 text-xs gap-1 sm:gap-0"
                       style={{ backgroundColor: i % 2 === 0 ? "var(--shell-surface)" : "var(--shell-bg)", borderBottom: i < detailRows.length - 1 ? "1px solid var(--shell-border)" : "none" }}
                     >
-                      <span className="w-[140px] shrink-0 font-semibold uppercase text-[--shell-muted]">{row.label}</span>
-                      <span className="font-medium text-[--shell-foreground]">{row.value}</span>
+                      <span className="w-[140px] shrink-0 font-semibold uppercase text-[var(--shell-muted)]">{row.label}</span>
+                      <span className="font-medium text-[var(--shell-foreground)] break-words">{row.value}</span>
                     </div>
                   ))}
                 </div>
@@ -532,8 +532,8 @@ export default function OpportunityDetailModal({ record, isOpen, onClose, onSucc
               <div>
                 <div className="flex justify-between items-center mb-4">
                   <div>
-                    <div className="text-sm font-bold text-[--shell-foreground]">Requirements</div>
-                    <div className="text-[11px] text-[--shell-muted]">Linked to: <strong>{record.account}</strong></div>
+                    <div className="text-sm font-bold text-[var(--shell-foreground)]">Requirements</div>
+                    <div className="text-[11px] text-[var(--shell-muted)]">Linked to: <strong>{record.account}</strong></div>
                   </div>
                   {!showReqForm && (
                     <Button size="sm" onClick={() => setShowReqForm(true)}><Plus size={14} className="mr-1" /> Add Requirement</Button>
@@ -548,27 +548,27 @@ export default function OpportunityDetailModal({ record, isOpen, onClose, onSucc
                     {reqError && <div className="p-2 bg-red-100 text-red-700 rounded-md text-[11px] mb-3">{reqError}</div>}
                     <div className="flex flex-col gap-3">
                       <div>
-                        <label className="block text-[10px] font-semibold uppercase text-[--shell-muted] mb-1">Description *</label>
-                        <input type="text" placeholder="Describe the requirement..." value={reqData.name} onChange={(e) => setReqData((p) => ({ ...p, name: e.target.value }))} className="h-8 w-full rounded-md border border-[--shell-border] bg-[--shell-surface] px-2.5 text-xs" required />
+                        <label className="block text-[10px] font-semibold uppercase text-[var(--shell-muted)] mb-1">Description *</label>
+                        <input type="text" placeholder="Describe the requirement..." value={reqData.name} onChange={(e) => setReqData((p) => ({ ...p, name: e.target.value }))} className="h-8 w-full rounded-md border border-[var(--shell-border)] bg-[var(--shell-surface)] px-2.5 text-xs" required />
                       </div>
                       <div className="grid grid-cols-2 gap-3">
                         <div>
-                          <label className="block text-[10px] font-semibold uppercase text-[--shell-muted] mb-1">Category *</label>
-                          <input type="text" placeholder="e.g. Technical, Security" value={reqData.category} onChange={(e) => setReqData((p) => ({ ...p, category: e.target.value }))} className="h-8 w-full rounded-md border border-[--shell-border] bg-[--shell-surface] px-2.5 text-xs" required />
+                          <label className="block text-[10px] font-semibold uppercase text-[var(--shell-muted)] mb-1">Category *</label>
+                          <input type="text" placeholder="e.g. Technical, Security" value={reqData.category} onChange={(e) => setReqData((p) => ({ ...p, category: e.target.value }))} className="h-8 w-full rounded-md border border-[var(--shell-border)] bg-[var(--shell-surface)] px-2.5 text-xs" required />
                         </div>
                         <div>
-                          <label className="block text-[10px] font-semibold uppercase text-[--shell-muted] mb-1">Priority</label>
-                          <input type="text" placeholder="e.g. High, Medium, Low" value={reqData.priority} onChange={(e) => setReqData((p) => ({ ...p, priority: e.target.value }))} className="h-8 w-full rounded-md border border-[--shell-border] bg-[--shell-surface] px-2.5 text-xs" required />
+                          <label className="block text-[10px] font-semibold uppercase text-[var(--shell-muted)] mb-1">Priority</label>
+                          <input type="text" placeholder="e.g. High, Medium, Low" value={reqData.priority} onChange={(e) => setReqData((p) => ({ ...p, priority: e.target.value }))} className="h-8 w-full rounded-md border border-[var(--shell-border)] bg-[var(--shell-surface)] px-2.5 text-xs" required />
                         </div>
                       </div>
                       <div className="grid grid-cols-2 gap-3">
                         <div>
-                          <label className="block text-[10px] font-semibold uppercase text-[--shell-muted] mb-1">Status</label>
-                          <input type="text" placeholder="e.g. Draft, Review, Approved" value={reqData.status} onChange={(e) => setReqData((p) => ({ ...p, status: e.target.value }))} className="h-8 w-full rounded-md border border-[--shell-border] bg-[--shell-surface] px-2.5 text-xs" required />
+                          <label className="block text-[10px] font-semibold uppercase text-[var(--shell-muted)] mb-1">Status</label>
+                          <input type="text" placeholder="e.g. Draft, Review, Approved" value={reqData.status} onChange={(e) => setReqData((p) => ({ ...p, status: e.target.value }))} className="h-8 w-full rounded-md border border-[var(--shell-border)] bg-[var(--shell-surface)] px-2.5 text-xs" required />
                         </div>
                         <div>
-                          <label className="block text-[10px] font-semibold uppercase text-[--shell-muted] mb-1">Owner *</label>
-                          <input type="text" placeholder="e.g. Aditi Rao" value={reqData.owner} onChange={(e) => setReqData((p) => ({ ...p, owner: e.target.value }))} className="h-8 w-full rounded-md border border-[--shell-border] bg-[--shell-surface] px-2.5 text-xs" required />
+                          <label className="block text-[10px] font-semibold uppercase text-[var(--shell-muted)] mb-1">Owner *</label>
+                          <input type="text" placeholder="e.g. Aditi Rao" value={reqData.owner} onChange={(e) => setReqData((p) => ({ ...p, owner: e.target.value }))} className="h-8 w-full rounded-md border border-[var(--shell-border)] bg-[var(--shell-surface)] px-2.5 text-xs" required />
                         </div>
                       </div>
                     </div>
@@ -583,9 +583,9 @@ export default function OpportunityDetailModal({ record, isOpen, onClose, onSucc
                 )}
 
                 {reqLoading ? (
-                  <div className="text-center py-8 text-[--shell-muted] text-sm">Loading...</div>
+                  <div className="text-center py-8 text-[var(--shell-muted)] text-sm">Loading...</div>
                 ) : requirements.length === 0 ? (
-                  <div className="py-10 border border-dashed border-[--shell-border] rounded-xl">
+                  <div className="py-10 border border-dashed border-[var(--shell-border)] rounded-xl">
                     <EmptyState icon={ClipboardList} title={`No requirements linked to ${record.account} yet.`} />
                   </div>
                 ) : (
@@ -609,8 +609,8 @@ export default function OpportunityDetailModal({ record, isOpen, onClose, onSucc
               <div>
                 <div className="flex justify-between items-center mb-4">
                   <div>
-                    <div className="text-sm font-bold text-[--shell-foreground]">Quotations</div>
-                    <div className="text-[11px] text-[--shell-muted]">Linked to: <strong>{record.account}</strong></div>
+                    <div className="text-sm font-bold text-[var(--shell-foreground)]">Quotations</div>
+                    <div className="text-[11px] text-[var(--shell-muted)]">Linked to: <strong>{record.account}</strong></div>
                   </div>
                   {!showQuoteForm && (
                     <Button size="sm" onClick={() => setShowQuoteForm(true)}><Plus size={14} className="mr-1" /> Add Quotation</Button>
@@ -626,33 +626,33 @@ export default function OpportunityDetailModal({ record, isOpen, onClose, onSucc
                     <div className="flex flex-col gap-3">
                       <div className="grid grid-cols-2 gap-3">
                         <div>
-                          <label className="block text-[10px] font-semibold uppercase text-[--shell-muted] mb-1">Quote No.</label>
-                          <input type="text" placeholder="Auto-generated if blank" value={quoteData.quote_no} onChange={(e) => setQuoteData((p) => ({ ...p, quote_no: e.target.value }))} className="h-8 w-full rounded-md border border-[--shell-border] bg-[--shell-surface] px-2.5 text-xs" />
+                          <label className="block text-[10px] font-semibold uppercase text-[var(--shell-muted)] mb-1">Quote No.</label>
+                          <input type="text" placeholder="Auto-generated if blank" value={quoteData.quote_no} onChange={(e) => setQuoteData((p) => ({ ...p, quote_no: e.target.value }))} className="h-8 w-full rounded-md border border-[var(--shell-border)] bg-[var(--shell-surface)] px-2.5 text-xs" />
                         </div>
                         <div>
-                          <label className="block text-[10px] font-semibold uppercase text-[--shell-muted] mb-1">Value *</label>
-                          <input type="text" placeholder="e.g. 500000" value={quoteData.value} onChange={(e) => setQuoteData((p) => ({ ...p, value: e.target.value }))} className="h-8 w-full rounded-md border border-[--shell-border] bg-[--shell-surface] px-2.5 text-xs" required />
+                          <label className="block text-[10px] font-semibold uppercase text-[var(--shell-muted)] mb-1">Value *</label>
+                          <input type="text" placeholder="e.g. 500000" value={quoteData.value} onChange={(e) => setQuoteData((p) => ({ ...p, value: e.target.value }))} className="h-8 w-full rounded-md border border-[var(--shell-border)] bg-[var(--shell-surface)] px-2.5 text-xs" required />
                         </div>
                       </div>
                       <div className="grid grid-cols-2 gap-3">
                         <div>
-                          <label className="block text-[10px] font-semibold uppercase text-[--shell-muted] mb-1">Valid Until *</label>
-                          <input type="date" value={quoteData.valid_until} onChange={(e) => setQuoteData((p) => ({ ...p, valid_until: e.target.value }))} className="h-8 w-full rounded-md border border-[--shell-border] bg-[--shell-surface] px-2.5 text-xs" required />
+                          <label className="block text-[10px] font-semibold uppercase text-[var(--shell-muted)] mb-1">Valid Until *</label>
+                          <input type="date" value={quoteData.valid_until} onChange={(e) => setQuoteData((p) => ({ ...p, valid_until: e.target.value }))} className="h-8 w-full rounded-md border border-[var(--shell-border)] bg-[var(--shell-surface)] px-2.5 text-xs" required />
                         </div>
                         <div>
-                          <label className="block text-[10px] font-semibold uppercase text-[--shell-muted] mb-1">Status</label>
-                          <input type="text" placeholder="e.g. Draft, Sent, Accepted" value={quoteData.status} onChange={(e) => setQuoteData((p) => ({ ...p, status: e.target.value }))} className="h-8 w-full rounded-md border border-[--shell-border] bg-[--shell-surface] px-2.5 text-xs" required />
+                          <label className="block text-[10px] font-semibold uppercase text-[var(--shell-muted)] mb-1">Status</label>
+                          <input type="text" placeholder="e.g. Draft, Sent, Accepted" value={quoteData.status} onChange={(e) => setQuoteData((p) => ({ ...p, status: e.target.value }))} className="h-8 w-full rounded-md border border-[var(--shell-border)] bg-[var(--shell-surface)] px-2.5 text-xs" required />
                         </div>
                       </div>
                       <div>
-                        <label className="block text-[10px] font-semibold uppercase text-[--shell-muted] mb-1">Owner *</label>
-                        <input type="text" placeholder="e.g. Rohan Mehta" value={quoteData.owner} onChange={(e) => setQuoteData((p) => ({ ...p, owner: e.target.value }))} className="h-8 w-full rounded-md border border-[--shell-border] bg-[--shell-surface] px-2.5 text-xs" required />
+                        <label className="block text-[10px] font-semibold uppercase text-[var(--shell-muted)] mb-1">Owner *</label>
+                        <input type="text" placeholder="e.g. Rohan Mehta" value={quoteData.owner} onChange={(e) => setQuoteData((p) => ({ ...p, owner: e.target.value }))} className="h-8 w-full rounded-md border border-[var(--shell-border)] bg-[var(--shell-surface)] px-2.5 text-xs" required />
                       </div>
                       <div>
-                        <label className="block text-[10px] font-semibold uppercase text-[--shell-muted] mb-1">
-                          Attach File <span className="font-normal lowercase text-[--shell-muted]">(PDF or image, optional)</span>
+                        <label className="block text-[10px] font-semibold uppercase text-[var(--shell-muted)] mb-1">
+                          Attach File <span className="font-normal lowercase text-[var(--shell-muted)]">(PDF or image, optional)</span>
                         </label>
-                        <label className="flex items-center gap-2 p-2.5 rounded-md border border-dashed border-[--shell-border] bg-[--shell-surface] cursor-pointer text-xs text-[--shell-muted]">
+                        <label className="flex items-center gap-2 p-2.5 rounded-md border border-dashed border-[var(--shell-border)] bg-[var(--shell-surface)] cursor-pointer text-xs text-[var(--shell-muted)]">
                           <Paperclip size={14} className="text-amber-600 shrink-0" />
                           <span className="flex-1 truncate">{quoteFile ? quoteFile.name : "Click to choose PDF or image..."}</span>
                           {quoteFile && (
@@ -675,9 +675,9 @@ export default function OpportunityDetailModal({ record, isOpen, onClose, onSucc
                 )}
 
                 {quoteLoading ? (
-                  <div className="text-center py-8 text-[--shell-muted] text-sm">Loading...</div>
+                  <div className="text-center py-8 text-[var(--shell-muted)] text-sm">Loading...</div>
                 ) : quotations.length === 0 ? (
-                  <div className="py-10 border border-dashed border-[--shell-border] rounded-xl">
+                  <div className="py-10 border border-dashed border-[var(--shell-border)] rounded-xl">
                     <EmptyState icon={FileSpreadsheet} title={`No quotations linked to ${record.account} yet.`} />
                   </div>
                 ) : (
@@ -705,29 +705,29 @@ export default function OpportunityDetailModal({ record, isOpen, onClose, onSucc
 
       {previewQuote && (
         <div className="fixed inset-0 bg-black/70 z-[60] flex items-center justify-center p-4" onClick={() => setPreviewQuote(null)}>
-          <div className="bg-white rounded-xl p-4 max-w-[860px] w-full max-h-[90vh] flex flex-col gap-3 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-popover rounded-xl p-4 max-w-[860px] w-full max-h-[90vh] flex flex-col gap-3 shadow-2xl" onClick={(e) => e.stopPropagation()}>
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-2">
                 <Paperclip size={15} className="text-amber-600" />
-                <span className="text-sm font-bold text-[--shell-foreground]">{previewQuote.file_name || "Attachment"}</span>
-                <span className="text-[11px] text-[--shell-muted]">&middot; {previewQuote.quote_no}</span>
+                <span className="text-sm font-bold text-[var(--shell-foreground)]">{previewQuote.file_name || "Attachment"}</span>
+                <span className="text-[11px] text-[var(--shell-muted)]">&middot; {previewQuote.quote_no}</span>
               </div>
               <div className="flex gap-2 items-center">
                 <a href={previewQuote.file_data} download={previewQuote.file_name || "attachment"}>
                   <Button size="sm" variant="outline"><Download size={13} className="mr-1" /> Download</Button>
                 </a>
-                <button onClick={() => setPreviewQuote(null)} className="text-[--shell-muted] hover:text-[--shell-foreground] cursor-pointer"><X size={18} /></button>
+                <button onClick={() => setPreviewQuote(null)} className="text-[var(--shell-muted)] hover:text-[var(--shell-foreground)] cursor-pointer"><X size={18} /></button>
               </div>
             </div>
-            <div className="flex-1 overflow-hidden rounded-lg border border-[--shell-border] min-h-[400px] max-h-[70vh]">
+            <div className="flex-1 overflow-hidden rounded-lg border border-[var(--shell-border)] min-h-[400px] max-h-[70vh]">
               {previewQuote.file_data?.startsWith("data:application/pdf") ? (
                 <iframe src={previewQuote.file_data} className="w-full h-full min-h-[400px] border-none" title="PDF Preview" />
               ) : previewQuote.file_data?.startsWith("data:image/") ? (
-                <div className="flex items-center justify-center bg-slate-50 h-full min-h-[400px] p-4">
+                <div className="flex items-center justify-center bg-[var(--shell-bg)] h-full min-h-[400px] p-4">
                   <img src={previewQuote.file_data} alt="Attachment" className="max-w-full max-h-[65vh] object-contain rounded-md" />
                 </div>
               ) : (
-                <div className="flex items-center justify-center h-full min-h-[200px] text-[--shell-muted] text-xs">Preview not available for this file type.</div>
+                <div className="flex items-center justify-center h-full min-h-[200px] text-[var(--shell-muted)] text-xs">Preview not available for this file type.</div>
               )}
             </div>
           </div>

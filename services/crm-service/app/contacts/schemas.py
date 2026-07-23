@@ -1,15 +1,15 @@
 from pydantic import BaseModel
-from typing import List
+from typing import List, Optional
 
 class ContactBase(BaseModel):
-    id_str: str
-    name: str
-    role: str
-    account: str
-    email: str
-    phone: str
-    type: str
-    last_contact: str
+    id_str: Optional[str] = None
+    name: Optional[str] = None
+    role: Optional[str] = None
+    account: Optional[str] = None
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    type: Optional[str] = None
+    last_contact: Optional[str] = None
 
 class Contact(ContactBase):
     id: int

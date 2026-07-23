@@ -11,7 +11,7 @@ interface SearchInputProps {
 export function SearchInput({ value, onChange, placeholder = "Search...", className }: SearchInputProps) {
   return (
     <div className={`relative ${className ?? ""}`}>
-      <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[--shell-muted]" />
+      <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--shell-muted)]" />
       <Input
         placeholder={placeholder}
         className="pl-8"

@@ -40,8 +40,8 @@ export default function StockMovementsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="font-heading text-2xl font-semibold tracking-tight text-[--shell-foreground]">Stock Movements</h1>
-        <p className="mt-1 text-sm text-[--shell-muted]">{movements.length} recorded movements</p>
+        <h1 className="font-heading text-2xl font-semibold tracking-tight text-[var(--shell-foreground)]">Stock Movements</h1>
+        <p className="mt-1 text-sm text-[var(--shell-muted)]">{movements.length} recorded movements</p>
       </div>
 
       <Card>

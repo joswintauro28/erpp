@@ -134,8 +134,8 @@ export default function RecurringInvoices() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-heading text-xl font-semibold tracking-tight text-[--shell-foreground]">Recurring Invoices</h1>
-          <p className="mt-0.5 text-sm text-[--shell-muted]">Manage automated recurring billing schedules</p>
+          <h1 className="font-heading text-xl font-semibold tracking-tight text-[var(--shell-foreground)]">Recurring Invoices</h1>
+          <p className="mt-0.5 text-sm text-[var(--shell-muted)]">Manage automated recurring billing schedules</p>
         </div>
         <Button aria-label="Create Schedule" onClick={() => setCreateOpen(true)}><Plus className="h-4 w-4" /> Create Schedule</Button>
       </div>
@@ -177,16 +177,16 @@ export default function RecurringInvoices() {
                 {filtered.map((r) => (
                   <TableRow key={r.id}>
                     <TableCell><span className="font-mono text-xs font-medium">{r.invoice_number}</span></TableCell>
-                    <TableCell className="text-[--shell-muted]">{r.client_name}</TableCell>
+                    <TableCell className="text-[var(--shell-muted)]">{r.client_name}</TableCell>
                     <TableCell>
                       <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider border ${frequencyColors[r.frequency] ?? "bg-gray-500/10 text-gray-500 border-gray-500/20"}`}>
                         {r.frequency}
                       </span>
                     </TableCell>
-                    <TableCell className="text-xs text-[--shell-muted]">{r.next_run}</TableCell>
-                    <TableCell className="text-xs text-[--shell-muted]">{r.last_generated || "-"}</TableCell>
+                    <TableCell className="text-xs text-[var(--shell-muted)]">{r.next_run}</TableCell>
+                    <TableCell className="text-xs text-[var(--shell-muted)]">{r.last_generated || "-"}</TableCell>
                     <TableCell>
-                      <span className={`text-xs font-medium ${r.auto_email ? "text-[--shell-success]" : "text-[--shell-muted]"}`}>
+                      <span className={`text-xs font-medium ${r.auto_email ? "text-[var(--shell-success)]" : "text-[var(--shell-muted)]"}`}>
                         {r.auto_email ? "Yes" : "No"}
                       </span>
                     </TableCell>
@@ -218,7 +218,7 @@ export default function RecurringInvoices() {
                           {deleting === r.id ? (
                             <Loader2 className="h-3.5 w-3.5 animate-spin" />
                           ) : (
-                            <Trash2 className="h-3.5 w-3.5 text-[--shell-danger]" />
+                            <Trash2 className="h-3.5 w-3.5 text-[var(--shell-danger)]" />
                           )}
                         </Button>
                       </div>
@@ -238,10 +238,10 @@ export default function RecurringInvoices() {
             <DialogTitle>Create Recurring Schedule</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleCreate} className="space-y-5">
-            <div className="rounded-lg border border-[--shell-border] bg-[--shell-surface] p-4">
+            <div className="rounded-lg border border-[var(--shell-border)] bg-[var(--shell-surface)] p-4">
               <div className="mb-3 flex items-center gap-2">
-                <Building2 className="h-3.5 w-3.5 text-[--shell-brand]" />
-                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[--shell-foreground]">Schedule Details</span>
+                <Building2 className="h-3.5 w-3.5 text-[var(--shell-brand)]" />
+                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--shell-foreground)]">Schedule Details</span>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -283,24 +283,24 @@ export default function RecurringInvoices() {
               </div>
             </div>
 
-            <div className="rounded-lg border border-[--shell-accent]/20 bg-[--shell-accent]/5 p-3">
-              <div className="flex items-center gap-2 text-xs text-[--shell-muted]">
-                <Calculator className="h-3.5 w-3.5 text-[--shell-accent]" />
-                <span className="font-medium text-[--shell-foreground]">{formItems.length} item{formItems.length > 1 ? "s" : ""}</span>
-                <span className="mx-1.5 text-[--shell-border]">|</span>
-                <span>Estimated total: <strong className="text-[--shell-foreground]">{money(liveTotal)}</strong></span>
+            <div className="rounded-lg border border-[var(--shell-accent)]/20 bg-[var(--shell-accent)]/5 p-3">
+              <div className="flex items-center gap-2 text-xs text-[var(--shell-muted)]">
+                <Calculator className="h-3.5 w-3.5 text-[var(--shell-accent)]" />
+                <span className="font-medium text-[var(--shell-foreground)]">{formItems.length} item{formItems.length > 1 ? "s" : ""}</span>
+                <span className="mx-1.5 text-[var(--shell-border)]">|</span>
+                <span>Estimated total: <strong className="text-[var(--shell-foreground)]">{money(liveTotal)}</strong></span>
               </div>
             </div>
 
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-medium text-[--shell-muted]">Line Items</span>
+                <span className="text-xs font-medium text-[var(--shell-muted)]">Line Items</span>
                 <Button type="button" variant="outline" size="sm" onClick={addFormItem}>
                   <Plus className="mr-1 h-3 w-3" /> Add Item
                 </Button>
               </div>
               {formItems.map((item, idx) => (
-                <div key={idx} className="flex items-end gap-3 rounded-lg border border-[--shell-border] bg-[--shell-surface] p-3">
+                <div key={idx} className="flex items-end gap-3 rounded-lg border border-[var(--shell-border)] bg-[var(--shell-surface)] p-3">
                   <div className="flex-1 space-y-2">
                     <Label className="text-xs">Product / Service</Label>
                     <Input placeholder="Name" value={item.product} onChange={(e) => updateFormItem(idx, "product", e.target.value)} />
@@ -315,7 +315,7 @@ export default function RecurringInvoices() {
                   </div>
                   <div className="w-20 space-y-2">
                     <Label className="text-xs">Amount</Label>
-                    <div className="flex h-9 items-center rounded-md border border-[--shell-border] bg-[--shell-bg] px-2 text-xs font-mono text-[--shell-foreground]">
+                    <div className="flex h-9 items-center rounded-md border border-[var(--shell-border)] bg-[var(--shell-bg)] px-2 text-xs font-mono text-[var(--shell-foreground)]">
                       {money(item.quantity * item.unit_price)}
                     </div>
                   </div>

@@ -88,8 +88,8 @@ export default function Quotations() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-heading text-xl font-semibold tracking-tight text-[--shell-foreground]">Quotations</h1>
-          <p className="mt-0.5 text-sm text-[--shell-muted]">Create and manage client quotations</p>
+          <h1 className="font-heading text-xl font-semibold tracking-tight text-[var(--shell-foreground)]">Quotations</h1>
+          <p className="mt-0.5 text-sm text-[var(--shell-muted)]">Create and manage client quotations</p>
         </div>
         <Button aria-label="Create Quotation" onClick={() => router.push("/billing/quotations/new")}><Plus className="h-4 w-4" /> New Quotation</Button>
       </div>
@@ -128,13 +128,13 @@ export default function Quotations() {
                 {filtered.map((qt) => (
                   <TableRow key={qt.id}>
                     <TableCell className="cursor-pointer" onClick={() => router.push(`/billing/quotations/${qt.id}`)}>
-                      <span className="font-mono text-xs font-medium hover:text-[--shell-brand] transition-colors">{qt.quote_number}</span>
+                      <span className="font-mono text-xs font-medium hover:text-[var(--shell-brand)] transition-colors">{qt.quote_number}</span>
                     </TableCell>
-                    <TableCell className="text-[--shell-muted]">{qt.client_name}</TableCell>
+                    <TableCell className="text-[var(--shell-muted)]">{qt.client_name}</TableCell>
                     <TableCell className="font-mono text-sm text-right">{money(qt.total)}</TableCell>
                     <TableCell><Badge variant={statusVariant(qt.status)} className="capitalize">{qt.status}</Badge></TableCell>
-                    <TableCell className="text-xs text-[--shell-muted]">{formatDate(qt.issue_date)}</TableCell>
-                    <TableCell className="text-xs text-[--shell-muted]">{formatDate(qt.valid_until)}</TableCell>
+                    <TableCell className="text-xs text-[var(--shell-muted)]">{formatDate(qt.issue_date)}</TableCell>
+                    <TableCell className="text-xs text-[var(--shell-muted)]">{formatDate(qt.valid_until)}</TableCell>
                     <TableCell>
                       <div className="flex items-center justify-end gap-1">
                         <Button
@@ -201,7 +201,7 @@ export default function Quotations() {
       <Dialog open={deleteConfirm !== null} onOpenChange={() => setDeleteConfirm(null)}>
         <DialogContent>
           <DialogHeader><DialogTitle>Delete Quotation</DialogTitle></DialogHeader>
-          <p className="text-sm text-[--shell-muted]">
+          <p className="text-sm text-[var(--shell-muted)]">
             Are you sure you want to delete this quotation? This action cannot be undone.
           </p>
           <DialogFooter>

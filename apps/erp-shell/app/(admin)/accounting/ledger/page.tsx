@@ -62,10 +62,10 @@ export default function GeneralLedger() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-heading text-xl font-semibold tracking-tight text-[--shell-foreground]">
+          <h1 className="font-heading text-xl font-semibold tracking-tight text-[var(--shell-foreground)]">
             General Ledger
           </h1>
-          <p className="mt-0.5 text-sm text-[--shell-muted]">
+          <p className="mt-0.5 text-sm text-[var(--shell-muted)]">
             View all journal entries across accounts
           </p>
         </div>
@@ -80,7 +80,7 @@ export default function GeneralLedger() {
 
       <div className="flex flex-wrap items-center gap-3">
         <div className="relative flex-1 max-w-xs">
-          <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[--shell-muted]" />
+          <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--shell-muted)]" />
           <Input
             placeholder="Search entries..."
             className="pl-8"
@@ -115,30 +115,30 @@ export default function GeneralLedger() {
             <TableBody>
               {sorted.map((e) => (
                 <TableRow key={e.id}>
-                  <TableCell className="font-mono text-xs text-[--shell-muted]">{e.date}</TableCell>
+                  <TableCell className="font-mono text-xs text-[var(--shell-muted)]">{e.date}</TableCell>
                   <TableCell className="text-sm font-medium">{e.account_name}</TableCell>
-                  <TableCell className="text-xs text-[--shell-muted] max-w-xs truncate">{e.description}</TableCell>
+                  <TableCell className="text-xs text-[var(--shell-muted)] max-w-xs truncate">{e.description}</TableCell>
                   <TableCell>
                     <Badge variant="outline" className="font-mono text-xs">
                       {e.voucher_type}
                     </Badge>
-                    <span className="ml-1.5 font-mono text-xs text-[--shell-muted]">{e.voucher_number}</span>
+                    <span className="ml-1.5 font-mono text-xs text-[var(--shell-muted)]">{e.voucher_number}</span>
                   </TableCell>
-                  <TableCell className="font-mono text-sm text-right text-[--shell-success]">
+                  <TableCell className="font-mono text-sm text-right text-[var(--shell-success)]">
                     {e.debit > 0 ? money(e.debit) : "-"}
                   </TableCell>
-                  <TableCell className="font-mono text-sm text-right text-[--shell-action]">
+                  <TableCell className="font-mono text-sm text-right text-[var(--shell-action)]">
                     {e.credit > 0 ? money(e.credit) : "-"}
                   </TableCell>
                   <TableCell className="font-mono text-sm text-right">{money(e.balance)}</TableCell>
                 </TableRow>
               ))}
-              <TableRow className="border-t-2 border-[--shell-border] font-semibold">
-                <TableCell colSpan={4} className="text-right text-sm text-[--shell-muted]">
+              <TableRow className="border-t-2 border-[var(--shell-border)] font-semibold">
+                <TableCell colSpan={4} className="text-right text-sm text-[var(--shell-muted)]">
                   Totals ({filtered.length} entries)
                 </TableCell>
-                <TableCell className="font-mono text-sm text-right text-[--shell-success]">{money(totalDebit)}</TableCell>
-                <TableCell className="font-mono text-sm text-right text-[--shell-action]">{money(totalCredit)}</TableCell>
+                <TableCell className="font-mono text-sm text-right text-[var(--shell-success)]">{money(totalDebit)}</TableCell>
+                <TableCell className="font-mono text-sm text-right text-[var(--shell-action)]">{money(totalCredit)}</TableCell>
                 <TableCell />
               </TableRow>
             </TableBody>

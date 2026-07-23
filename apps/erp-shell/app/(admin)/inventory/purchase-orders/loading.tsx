@@ -2,7 +2,7 @@ export default function PurchaseOrdersLoading() {
   return (
     <div className="relative space-y-6 animate-pulse">
       {/* Brand Sweep Loader */}
-      <span className="absolute -top-6 left-0 h-0.5 w-1/3 rounded-full bg-[--shell-brand] shimmer-glow" />
+      <span className="absolute -top-6 left-0 h-0.5 w-1/3 rounded-full bg-[var(--shell-brand)] shimmer-glow" />
 
       {/* Header */}
       <div className="flex items-center justify-between">
@@ -24,8 +24,8 @@ export default function PurchaseOrdersLoading() {
       </div>
 
       {/* Table Card container */}
-      <div className="overflow-hidden rounded-xl border border-[--shell-border] bg-[--shell-surface]">
-        <div className="border-b border-[--shell-border] bg-[--shell-surface] px-4 py-3">
+      <div className="overflow-hidden rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface)]">
+        <div className="border-b border-[var(--shell-border)] bg-[var(--shell-surface)] px-4 py-3">
           <div className="flex items-center gap-4">
             {Array.from({ length: 6 }).map((_, i) => (
               <div
@@ -39,7 +39,7 @@ export default function PurchaseOrdersLoading() {
         {Array.from({ length: 6 }).map((_, i) => (
           <div
             key={i}
-            className="flex items-center gap-4 border-b border-[--shell-border] px-4 py-3.5 last:border-0"
+            className="flex items-center gap-4 border-b border-[var(--shell-border)] px-4 py-3.5 last:border-0"
           >
             {Array.from({ length: 6 }).map((_, j) => (
               <div

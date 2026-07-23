@@ -2,7 +2,7 @@ export default function DashboardLoading() {
   return (
     <div className="relative space-y-10 lg:space-y-12">
       {/* Brand progress sweep bar */}
-      <span className="absolute -top-6 left-0 h-0.5 w-1/3 rounded-full bg-[--shell-brand] shimmer-glow" />
+      <span className="absolute -top-6 left-0 h-0.5 w-1/3 rounded-full bg-[var(--shell-brand)] shimmer-glow" />
 
       {/* Header Info */}
       <div className="flex items-center justify-between">
@@ -17,7 +17,7 @@ export default function DashboardLoading() {
         {Array.from({ length: 4 }).map((_, i) => (
           <div
             key={i}
-            className="flex flex-col gap-3 rounded-xl border border-[--shell-border] bg-[--shell-surface] p-5 shadow-engineered"
+            className="flex flex-col gap-3 rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface)] p-5 shadow-engineered"
           >
             <div className="flex items-center justify-between">
               <div className="h-4 w-24 rounded shimmer-glow" />
@@ -32,8 +32,8 @@ export default function DashboardLoading() {
       {/* Analytics Charts Mock Blocks */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Mock Chart Card 1 */}
-        <div className="rounded-xl border border-[--shell-border] bg-[--shell-surface] p-5 space-y-4">
-          <div className="flex items-center justify-between border-b border-[--shell-border]/20 pb-3">
+        <div className="rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface)] p-5 space-y-4">
+          <div className="flex items-center justify-between border-b border-[var(--shell-border)]/20 pb-3">
             <div className="space-y-1.5">
               <div className="h-4.5 w-32 rounded shimmer-glow" />
               <div className="h-3 w-48 rounded shimmer-glow" />
@@ -51,8 +51,8 @@ export default function DashboardLoading() {
         </div>
 
         {/* Mock Chart Card 2 */}
-        <div className="rounded-xl border border-[--shell-border] bg-[--shell-surface] p-5 space-y-4">
-          <div className="flex items-center justify-between border-b border-[--shell-border]/20 pb-3">
+        <div className="rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface)] p-5 space-y-4">
+          <div className="flex items-center justify-between border-b border-[var(--shell-border)]/20 pb-3">
             <div className="space-y-1.5">
               <div className="h-4.5 w-36 rounded shimmer-glow" />
               <div className="h-3 w-40 rounded shimmer-glow" />
@@ -68,7 +68,7 @@ export default function DashboardLoading() {
                   </div>
                   <div className="h-3.5 w-8 rounded shimmer-glow" />
                 </div>
-                <div className="h-1.5 w-full rounded-full bg-[--shell-surface-alt]" />
+                <div className="h-1.5 w-full rounded-full bg-[var(--shell-surface-alt)]" />
               </div>
             ))}
           </div>
@@ -78,7 +78,7 @@ export default function DashboardLoading() {
       {/* Mini Stats Footer */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="flex items-center gap-3 rounded-lg border border-[--shell-border] bg-[--shell-surface] px-3.5 py-2.5">
+          <div key={i} className="flex items-center gap-3 rounded-lg border border-[var(--shell-border)] bg-[var(--shell-surface)] px-3.5 py-2.5">
             <div className="h-8 w-8 rounded-md shimmer-glow" />
             <div className="space-y-1.5 flex-1">
               <div className="h-3 w-16 rounded shimmer-glow" />

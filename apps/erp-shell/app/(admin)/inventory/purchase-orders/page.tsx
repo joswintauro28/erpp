@@ -54,14 +54,14 @@ export default function PurchaseOrders() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="font-heading text-xl font-semibold tracking-tight text-[--shell-foreground]">Purchase Orders</h1>
-            <p className="mt-0.5 text-sm text-[--shell-muted]">Manage purchase orders and supplier deliveries</p>
+            <h1 className="font-heading text-xl font-semibold tracking-tight text-[var(--shell-foreground)]">Purchase Orders</h1>
+            <p className="mt-0.5 text-sm text-[var(--shell-muted)]">Manage purchase orders and supplier deliveries</p>
           </div>
           <Button size="sm"><Plus className="mr-1.5 h-3.5 w-3.5" />New PO</Button>
         </div>
-        <div className="flex flex-col items-center gap-3 py-20 text-[--shell-muted]">
+        <div className="flex flex-col items-center gap-3 py-20 text-[var(--shell-muted)]">
           <ShoppingCart className="h-12 w-12" />
-          <p className="text-base font-medium text-[--shell-foreground]">No purchase orders yet</p>
+          <p className="text-base font-medium text-[var(--shell-foreground)]">No purchase orders yet</p>
           <p className="text-sm">Create your first purchase order to start tracking procurement.</p>
         </div>
       </div>
@@ -72,10 +72,10 @@ export default function PurchaseOrders() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-heading text-xl font-semibold tracking-tight text-[--shell-foreground]">
+          <h1 className="font-heading text-xl font-semibold tracking-tight text-[var(--shell-foreground)]">
             Purchase Orders
           </h1>
-          <p className="mt-0.5 text-sm text-[--shell-muted]">
+          <p className="mt-0.5 text-sm text-[var(--shell-muted)]">
             Manage purchase orders and supplier deliveries
           </p>
         </div>
@@ -87,7 +87,7 @@ export default function PurchaseOrders() {
 
       <div className="flex flex-wrap items-center gap-3">
         <div className="relative flex-1 max-w-xs">
-          <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[--shell-muted]" />
+          <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--shell-muted)]" />
           <Input placeholder="Search POs..." className="pl-8" value={search} onChange={(e) => setSearch(e.target.value)} />
         </div>
         <div className="flex gap-1">
@@ -108,7 +108,7 @@ export default function PurchaseOrders() {
       <Card>
         <CardContent className="p-0">
           {filtered.length === 0 ? (
-            <div className="flex flex-col items-center gap-2 py-16 text-[--shell-muted]">
+            <div className="flex flex-col items-center gap-2 py-16 text-[var(--shell-muted)]">
               <p className="text-sm">No purchase orders match your filters</p>
             </div>
           ) : (
@@ -129,11 +129,11 @@ export default function PurchaseOrders() {
                 {filtered.map((o) => (
                   <TableRow key={o.id}>
                     <TableCell className="font-mono text-xs font-medium">{o.order_number}</TableCell>
-                    <TableCell className="text-xs text-[--shell-muted]">#{o.supplier_id}</TableCell>
-                    <TableCell className="font-mono text-xs text-[--shell-muted]">
+                    <TableCell className="text-xs text-[var(--shell-muted)]">#{o.supplier_id}</TableCell>
+                    <TableCell className="font-mono text-xs text-[var(--shell-muted)]">
                       {o.ordered_at ? o.ordered_at.split("T")[0] : o.created_at.split("T")[0]}
                     </TableCell>
-                    <TableCell className="font-mono text-xs text-[--shell-muted]">
+                    <TableCell className="font-mono text-xs text-[var(--shell-muted)]">
                       {o.expected_at ? o.expected_at.split("T")[0] : "-"}
                     </TableCell>
                     <TableCell className="font-mono text-sm text-right">{o.items.length}</TableCell>

@@ -60,10 +60,10 @@ export default function StockMovements() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-heading text-xl font-semibold tracking-tight text-[--shell-foreground]">
+          <h1 className="font-heading text-xl font-semibold tracking-tight text-[var(--shell-foreground)]">
             Stock Movements
           </h1>
-          <p className="mt-0.5 text-sm text-[--shell-muted]">
+          <p className="mt-0.5 text-sm text-[var(--shell-muted)]">
             Track all stock inflows, outflows, and adjustments
           </p>
         </div>
@@ -71,7 +71,7 @@ export default function StockMovements() {
 
       <div className="flex flex-wrap items-center gap-3">
         <div className="relative flex-1 max-w-xs">
-          <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[--shell-muted]" />
+          <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--shell-muted)]" />
           <Input placeholder="Search by product ID..." className="pl-8" value={search} onChange={(e) => setSearch(e.target.value)} />
         </div>
         <div className="flex gap-1">
@@ -97,7 +97,7 @@ export default function StockMovements() {
       <Card>
         <CardContent className="p-0">
           {filtered.length === 0 ? (
-            <div className="flex flex-col items-center gap-2 py-16 text-[--shell-muted]">
+            <div className="flex flex-col items-center gap-2 py-16 text-[var(--shell-muted)]">
               <p className="text-sm">No stock movements found</p>
             </div>
           ) : (
@@ -115,7 +115,7 @@ export default function StockMovements() {
               <TableBody>
                 {filtered.map((m) => (
                   <TableRow key={m.id}>
-                    <TableCell className="font-mono text-xs text-[--shell-muted]">
+                    <TableCell className="font-mono text-xs text-[var(--shell-muted)]">
                       {m.created_at.split("T")[0]}
                     </TableCell>
                     <TableCell>
@@ -132,7 +132,7 @@ export default function StockMovements() {
                     <TableCell className="font-mono text-sm text-right">#{m.product_id}</TableCell>
                     <TableCell className="font-mono text-sm text-right">#{m.warehouse_id}</TableCell>
                     <TableCell className="font-mono text-sm text-right">{m.quantity.toLocaleString()}</TableCell>
-                    <TableCell className="text-xs text-[--shell-muted] max-w-xs truncate">{m.notes ?? "-"}</TableCell>
+                    <TableCell className="text-xs text-[var(--shell-muted)] max-w-xs truncate">{m.notes ?? "-"}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

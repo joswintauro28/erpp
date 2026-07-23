@@ -91,9 +91,9 @@ export default function InvoiceDetail() {
 
   if (!invoice) {
     return (
-      <div className="flex flex-col items-center gap-3 py-20 text-[--shell-muted]">
+      <div className="flex flex-col items-center gap-3 py-20 text-[var(--shell-muted)]">
         <FileText className="h-12 w-12" />
-        <h2 className="font-heading text-lg font-semibold text-[--shell-foreground]">Invoice not found</h2>
+        <h2 className="font-heading text-lg font-semibold text-[var(--shell-foreground)]">Invoice not found</h2>
         <Button variant="outline" onClick={() => router.push("/billing/invoices")}>Back to Invoices</Button>
       </div>
     );
@@ -108,10 +108,10 @@ export default function InvoiceDetail() {
           </Button>
           <div>
             <div className="flex items-center gap-3">
-              <h1 className="font-heading text-xl font-semibold tracking-tight text-[--shell-foreground]">{invoice.invoice_number}</h1>
+              <h1 className="font-heading text-xl font-semibold tracking-tight text-[var(--shell-foreground)]">{invoice.invoice_number}</h1>
               <Badge variant={statusVariant(invoice.status)} className="capitalize">{invoice.status.replace("_", " ")}</Badge>
             </div>
-            <p className="text-sm text-[--shell-muted]">{invoice.client_name} &middot; Due {invoice.due_date}</p>
+            <p className="text-sm text-[var(--shell-muted)]">{invoice.client_name} &middot; Due {invoice.due_date}</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -127,45 +127,45 @@ export default function InvoiceDetail() {
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         <Card>
           <CardContent className="flex items-center gap-3 pt-6">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[--chart-1]/10">
-              <DollarSign className="h-4 w-4 text-[--chart-1]" />
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--chart-1)]/10">
+              <DollarSign className="h-4 w-4 text-[var(--chart-1)]" />
             </div>
             <div>
               <p className="font-heading text-lg font-semibold">{money(invoice.total)}</p>
-              <p className="text-xs text-[--shell-muted]">Total</p>
+              <p className="text-xs text-[var(--shell-muted)]">Total</p>
             </div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="flex items-center gap-3 pt-6">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[--chart-2]/10">
-              <Receipt className="h-4 w-4 text-[--chart-2]" />
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--chart-2)]/10">
+              <Receipt className="h-4 w-4 text-[var(--chart-2)]" />
             </div>
             <div>
               <p className="font-heading text-lg font-semibold">{money(invoice.paid_amount)}</p>
-              <p className="text-xs text-[--shell-muted]">Paid</p>
+              <p className="text-xs text-[var(--shell-muted)]">Paid</p>
             </div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="flex items-center gap-3 pt-6">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[--chart-3]/10">
-              <Clock className="h-4 w-4 text-[--chart-3]" />
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--chart-3)]/10">
+              <Clock className="h-4 w-4 text-[var(--chart-3)]" />
             </div>
             <div>
               <p className="font-heading text-lg font-semibold">{money(invoice.balance_due)}</p>
-              <p className="text-xs text-[--shell-muted]">Balance</p>
+              <p className="text-xs text-[var(--shell-muted)]">Balance</p>
             </div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="flex items-center gap-3 pt-6">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[--chart-4]/10">
-              <Calendar className="h-4 w-4 text-[--chart-4]" />
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--chart-4)]/10">
+              <Calendar className="h-4 w-4 text-[var(--chart-4)]" />
             </div>
             <div>
               <p className="font-heading text-lg font-semibold">{invoice.due_date}</p>
-              <p className="text-xs text-[--shell-muted]">Due Date</p>
+              <p className="text-xs text-[var(--shell-muted)]">Due Date</p>
             </div>
           </CardContent>
         </Card>
@@ -175,7 +175,7 @@ export default function InvoiceDetail() {
         <Card className="lg:col-span-2">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Building2 className="h-4 w-4 text-[--shell-muted]" />
+              <Building2 className="h-4 w-4 text-[var(--shell-muted)]" />
               Invoice Details
             </CardTitle>
           </CardHeader>
@@ -190,16 +190,16 @@ export default function InvoiceDetail() {
                 { icon: Calendar, label: "Due Date", value: invoice.due_date },
               ].map(({ icon: Icon, label, value }) => (
                 <div key={label} className="flex items-start gap-2.5">
-                  <Icon className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[--shell-muted]" />
+                  <Icon className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[var(--shell-muted)]" />
                   <div>
-                    <p className="text-xs text-[--shell-muted]">{label}</p>
+                    <p className="text-xs text-[var(--shell-muted)]">{label}</p>
                     <p className="text-sm font-medium">{value}</p>
                   </div>
                 </div>
               ))}
             </dl>
             {invoice.notes && (
-              <p className="mt-4 text-sm text-[--shell-muted]">
+              <p className="mt-4 text-sm text-[var(--shell-muted)]">
                 <span className="text-xs font-medium">Notes: </span>{invoice.notes}
               </p>
             )}
@@ -209,35 +209,35 @@ export default function InvoiceDetail() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <BadgePercent className="h-4 w-4 text-[--chart-2]" />
+              <BadgePercent className="h-4 w-4 text-[var(--chart-2)]" />
               GST Breakdown
             </CardTitle>
           </CardHeader>
           <CardContent>
             <dl className="space-y-3">
               <div className="flex justify-between">
-                <span className="text-sm text-[--shell-muted]">Taxable Value</span>
+                <span className="text-sm text-[var(--shell-muted)]">Taxable Value</span>
                 <span className="font-mono text-sm font-medium">{money(invoice.taxable_value)}</span>
               </div>
               {invoice.cgst > 0 && (
                 <>
                   <div className="flex justify-between">
-                    <span className="text-sm text-[--shell-muted]">CGST @ 9%</span>
+                    <span className="text-sm text-[var(--shell-muted)]">CGST @ 9%</span>
                     <span className="font-mono text-sm">{money(invoice.cgst)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-sm text-[--shell-muted]">SGST @ 9%</span>
+                    <span className="text-sm text-[var(--shell-muted)]">SGST @ 9%</span>
                     <span className="font-mono text-sm">{money(invoice.sgst)}</span>
                   </div>
                 </>
               )}
               {invoice.igst > 0 && (
                 <div className="flex justify-between">
-                  <span className="text-sm text-[--shell-muted]">IGST @ 18%</span>
+                  <span className="text-sm text-[var(--shell-muted)]">IGST @ 18%</span>
                   <span className="font-mono text-sm">{money(invoice.igst)}</span>
                 </div>
               )}
-              <hr className="border-[--shell-border]" />
+              <hr className="border-[var(--shell-border)]" />
               <div className="flex justify-between font-medium">
                 <span className="text-sm">Total GST</span>
                 <span className="font-mono text-sm">{money(invoice.cgst + invoice.sgst + invoice.igst)}</span>
@@ -254,7 +254,7 @@ export default function InvoiceDetail() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <FileText className="h-4 w-4 text-[--shell-muted]" />
+            <FileText className="h-4 w-4 text-[var(--shell-muted)]" />
             Line Items
           </CardTitle>
         </CardHeader>
@@ -294,7 +294,7 @@ export default function InvoiceDetail() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Receipt className="h-4 w-4 text-[--shell-muted]" />
+              <Receipt className="h-4 w-4 text-[var(--shell-muted)]" />
               Payment History
             </CardTitle>
           </CardHeader>
@@ -315,8 +315,8 @@ export default function InvoiceDetail() {
                     <TableCell className="font-mono text-xs">{p.reference_id || `#${p.id}`}</TableCell>
                     <TableCell className="font-mono text-sm font-medium text-right">{money(p.amount)}</TableCell>
                     <TableCell>{p.payment_method || "-"}</TableCell>
-                    <TableCell className="font-mono text-xs text-[--shell-muted]">{p.reference_id || "-"}</TableCell>
-                    <TableCell className="text-[--shell-muted]">{p.payment_date || "-"}</TableCell>
+                    <TableCell className="font-mono text-xs text-[var(--shell-muted)]">{p.reference_id || "-"}</TableCell>
+                    <TableCell className="text-[var(--shell-muted)]">{p.payment_date || "-"}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -341,7 +341,7 @@ export default function InvoiceDetail() {
         {recStep === 0 && (
           <div className="grid grid-cols-2 gap-x-5 gap-y-4">
             <div className="space-y-2">
-              <Label htmlFor="recurring-frequency" className="text-[--shell-muted]">Frequency</Label>
+              <Label htmlFor="recurring-frequency" className="text-[var(--shell-muted)]">Frequency</Label>
               <Select defaultValue="Monthly">
                 <SelectTrigger id="recurring-frequency"><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -353,29 +353,29 @@ export default function InvoiceDetail() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="recurring-start" className="text-[--shell-muted]">Start Date</Label>
+              <Label htmlFor="recurring-start" className="text-[var(--shell-muted)]">Start Date</Label>
               <Input id="recurring-start" type="date" defaultValue={invoice?.issue_date} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="recurring-end" className="text-[--shell-muted]">End Date</Label>
+              <Label htmlFor="recurring-end" className="text-[var(--shell-muted)]">End Date</Label>
               <Input id="recurring-end" type="date" />
             </div>
           </div>
         )}
         {recStep === 1 && (
           <div className="space-y-5">
-            <div className="flex items-center gap-3 rounded-sm border border-[--shell-border] bg-[--shell-surface] px-4 py-3">
+            <div className="flex items-center gap-3 rounded-sm border border-[var(--shell-border)] bg-[var(--shell-surface)] px-4 py-3">
               <input
                 type="checkbox"
                 id="recurring-email"
                 defaultChecked
-                className="h-4 w-4 rounded border-input accent-[--shell-brand]"
+                className="h-4 w-4 rounded border-input accent-[var(--shell-brand)]"
               />
-              <Label htmlFor="recurring-email" className="text-[--shell-foreground] cursor-pointer leading-normal">
+              <Label htmlFor="recurring-email" className="text-[var(--shell-foreground)] cursor-pointer leading-normal">
                 Auto-email invoice to client
               </Label>
             </div>
-            <p className="text-xs text-[--shell-muted]">
+            <p className="text-xs text-[var(--shell-muted)]">
               When enabled, the invoice will be automatically sent to the client on each cycle date.
             </p>
           </div>

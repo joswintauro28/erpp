@@ -31,10 +31,10 @@ function PortalSection({
 }) {
   if (!portalAccess) return null;
   return (
-    <Card className="hover:shadow-md transition-shadow duration-200 border-[--shell-border] bg-[--shell-surface]">
+    <Card className="hover:shadow-md transition-shadow duration-200 border-[var(--shell-border)] bg-[var(--shell-surface)]">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <ShieldAlert className="h-4 w-4 text-[--chart-2]" />
+          <ShieldAlert className="h-4 w-4 text-[var(--chart-2)]" />
           Client Portal Access
         </CardTitle>
       </CardHeader>
@@ -42,23 +42,23 @@ function PortalSection({
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
             <div>
-              <p className="text-xs text-[--shell-muted]">Portal Status</p>
+              <p className="text-xs text-[var(--shell-muted)]">Portal Status</p>
               <div className="mt-1">
                 <Badge variant={statusVariant(portalAccess.status)} className="uppercase">{portalAccess.status}</Badge>
               </div>
             </div>
             <div>
-              <p className="text-xs text-[--shell-muted]">Invitation Status</p>
+              <p className="text-xs text-[var(--shell-muted)]">Invitation Status</p>
               <div className="mt-1">
                 <Badge variant={statusVariant(portalAccess.invitation_status)} className="uppercase">{portalAccess.invitation_status}</Badge>
               </div>
             </div>
             <div>
-              <p className="text-xs text-[--shell-muted]">Portal Email</p>
+              <p className="text-xs text-[var(--shell-muted)]">Portal Email</p>
               <p className="mt-1 text-sm font-medium">{portalAccess.portal_email || "-"}</p>
             </div>
             <div>
-              <p className="text-xs text-[--shell-muted]">Last Login</p>
+              <p className="text-xs text-[var(--shell-muted)]">Last Login</p>
               <p className="mt-1 text-sm font-medium">
                 {portalAccess.last_login ? new Date(portalAccess.last_login).toLocaleDateString() : "-"}
               </p>
@@ -128,9 +128,9 @@ export default function ClientDetail() {
 
   if (!client) {
     return (
-      <div className="flex flex-col items-center gap-3 py-20 text-[--shell-muted]">
+      <div className="flex flex-col items-center gap-3 py-20 text-[var(--shell-muted)]">
         <Building2 className="h-12 w-12" />
-        <h2 className="font-heading text-lg font-semibold text-[--shell-foreground]">Client not found</h2>
+        <h2 className="font-heading text-lg font-semibold text-[var(--shell-foreground)]">Client not found</h2>
         <Button variant="outline" onClick={() => router.push("/crm/clients")}>Back to Clients</Button>
       </div>
     );
@@ -144,8 +144,8 @@ export default function ClientDetail() {
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div>
-            <h1 className="font-heading text-xl font-semibold tracking-tight text-[--shell-foreground]">{client.name}</h1>
-            <p className="text-sm text-[--shell-muted]">
+            <h1 className="font-heading text-xl font-semibold tracking-tight text-[var(--shell-foreground)]">{client.name}</h1>
+            <p className="text-sm text-[var(--shell-muted)]">
               {client.email || "No email"}
               {client.gst_number ? <span className="ml-2 font-mono text-xs">| GST {client.gst_number}</span> : null}
             </p>
@@ -156,10 +156,10 @@ export default function ClientDetail() {
       {/* Client Summary */}
       <section>
         <div className="mb-5 flex items-center gap-2">
-          <h2 className="font-heading text-xs font-light uppercase tracking-[0.12em] text-[--shell-muted]">
+          <h2 className="font-heading text-xs font-light uppercase tracking-[0.12em] text-[var(--shell-muted)]">
             Client Summary
           </h2>
-          <div className="h-px flex-1 bg-[--shell-border]" />
+          <div className="h-px flex-1 bg-[var(--shell-border)]" />
         </div>
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
           {[
@@ -170,18 +170,18 @@ export default function ClientDetail() {
           ].map((kpi, i) => (
             <div
               key={kpi.label}
-              className="animate-kpi flex flex-col gap-1.5 rounded-xl border border-[--shell-border] bg-[--shell-surface] p-5 transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1)]"
+              className="animate-kpi flex flex-col gap-1.5 rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface)] p-5 transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1)]"
               style={{ animationDelay: `${i * 0.05}s` }}
             >
               <div className="flex items-center justify-between">
-                <span className="text-xs font-medium uppercase tracking-[0.08em] text-[--shell-muted]">
+                <span className="text-xs font-medium uppercase tracking-[0.08em] text-[var(--shell-muted)]">
                   {kpi.label}
                 </span>
-                <div className="flex h-7 w-7 items-center justify-center rounded-md border border-[--shell-border] bg-[--shell-bg]">
+                <div className="flex h-7 w-7 items-center justify-center rounded-md border border-[var(--shell-border)] bg-[var(--shell-bg)]">
                   <kpi.icon className="h-3.5 w-3.5" style={{ color: kpi.color }} />
                 </div>
               </div>
-              <span className="font-heading text-2xl font-semibold tracking-tight text-[--shell-foreground]">
+              <span className="font-heading text-2xl font-semibold tracking-tight text-[var(--shell-foreground)]">
                 {kpi.value}
               </span>
             </div>
@@ -192,10 +192,10 @@ export default function ClientDetail() {
       {/* Portal Access */}
       <section>
         <div className="mb-5 flex items-center gap-2">
-          <h2 className="font-heading text-xs font-light uppercase tracking-[0.12em] text-[--shell-muted]">
+          <h2 className="font-heading text-xs font-light uppercase tracking-[0.12em] text-[var(--shell-muted)]">
             Portal Access
           </h2>
-          <div className="h-px flex-1 bg-[--shell-border]" />
+          <div className="h-px flex-1 bg-[var(--shell-border)]" />
         </div>
         <PortalSection portalAccess={portalAccess} clientEmail={client.email ?? ""} onInvite={() => { setInviteEmail(client.email ?? ""); setInviteDialogOpen(true); }} />
       </section>
@@ -203,16 +203,16 @@ export default function ClientDetail() {
       {/* Profile & Payments */}
       <section>
         <div className="mb-5 flex items-center gap-2">
-          <h2 className="font-heading text-xs font-light uppercase tracking-[0.12em] text-[--shell-muted]">
+          <h2 className="font-heading text-xs font-light uppercase tracking-[0.12em] text-[var(--shell-muted)]">
             Profile & Payments
           </h2>
-          <div className="h-px flex-1 bg-[--shell-border]" />
+          <div className="h-px flex-1 bg-[var(--shell-border)]" />
         </div>
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          <Card className="hover:shadow-md transition-shadow duration-200 border-[--shell-border] bg-[--shell-surface]">
+          <Card className="hover:shadow-md transition-shadow duration-200 border-[var(--shell-border)] bg-[var(--shell-surface)]">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Building2 className="h-4 w-4 text-[--shell-muted]" />
+                <Building2 className="h-4 w-4 text-[var(--shell-muted)]" />
                 Client Profile
               </CardTitle>
             </CardHeader>
@@ -226,9 +226,9 @@ export default function ClientDetail() {
                   { icon: FileText, label: "Notes", value: client.notes || "-" },
                 ].map(({ icon: Icon, label, value }) => (
                   <div key={label} className="flex items-start gap-3">
-                    <Icon className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[--shell-muted]" />
+                    <Icon className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[var(--shell-muted)]" />
                     <div>
-                      <p className="text-xs text-[--shell-muted]">{label}</p>
+                      <p className="text-xs text-[var(--shell-muted)]">{label}</p>
                       <p className="text-sm font-medium">{value}</p>
                     </div>
                   </div>
@@ -237,24 +237,24 @@ export default function ClientDetail() {
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-md transition-shadow duration-200 border-[--shell-border] bg-[--shell-surface]">
+          <Card className="hover:shadow-md transition-shadow duration-200 border-[var(--shell-border)] bg-[var(--shell-surface)]">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Receipt className="h-4 w-4 text-[--shell-muted]" />
+                <Receipt className="h-4 w-4 text-[var(--shell-muted)]" />
                 Payment History
               </CardTitle>
             </CardHeader>
             <CardContent>
               {payments.length === 0 ? (
-                <p className="py-8 text-center text-sm text-[--shell-muted]">No payments recorded</p>
+                <p className="py-8 text-center text-sm text-[var(--shell-muted)]">No payments recorded</p>
               ) : (
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[--shell-muted]">Reference</TableHead>
-                      <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[--shell-muted] text-right">Amount</TableHead>
-                      <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[--shell-muted]">Method</TableHead>
-                      <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[--shell-muted]">Date</TableHead>
+                      <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--shell-muted)]">Reference</TableHead>
+                      <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--shell-muted)] text-right">Amount</TableHead>
+                      <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--shell-muted)]">Method</TableHead>
+                      <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--shell-muted)]">Date</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -262,8 +262,8 @@ export default function ClientDetail() {
                       <TableRow key={p.reference_id ?? p.id} className="hover:bg-muted/30 transition-colors">
                         <TableCell className="font-mono text-xs">{p.reference_id || `#${p.id}`}</TableCell>
                         <TableCell className="font-mono text-sm font-medium text-right">{money(p.amount)}</TableCell>
-                        <TableCell className="text-[--shell-muted]">{p.payment_method || "-"}</TableCell>
-                        <TableCell className="text-[--shell-muted]">{p.payment_date || "-"}</TableCell>
+                        <TableCell className="text-[var(--shell-muted)]">{p.payment_method || "-"}</TableCell>
+                        <TableCell className="text-[var(--shell-muted)]">{p.payment_date || "-"}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -277,31 +277,31 @@ export default function ClientDetail() {
       {/* Invoice History */}
       <section>
         <div className="mb-5 flex items-center gap-2">
-          <h2 className="font-heading text-xs font-light uppercase tracking-[0.12em] text-[--shell-muted]">
+          <h2 className="font-heading text-xs font-light uppercase tracking-[0.12em] text-[var(--shell-muted)]">
             Invoice History
           </h2>
-          <div className="h-px flex-1 bg-[--shell-border]" />
+          <div className="h-px flex-1 bg-[var(--shell-border)]" />
         </div>
-        <Card className="hover:shadow-md transition-shadow duration-200 border-[--shell-border] bg-[--shell-surface]">
+        <Card className="hover:shadow-md transition-shadow duration-200 border-[var(--shell-border)] bg-[var(--shell-surface)]">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <FileText className="h-4 w-4 text-[--shell-muted]" />
+              <FileText className="h-4 w-4 text-[var(--shell-muted)]" />
               Invoice History
             </CardTitle>
           </CardHeader>
           <CardContent>
             {invoices.length === 0 ? (
-              <p className="py-8 text-center text-sm text-[--shell-muted]">No invoices</p>
+              <p className="py-8 text-center text-sm text-[var(--shell-muted)]">No invoices</p>
             ) : (
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[--shell-muted]">Invoice</TableHead>
-                      <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[--shell-muted] text-right">Total</TableHead>
-                      <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[--shell-muted] text-right">Paid</TableHead>
-                      <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[--shell-muted] text-right">Balance</TableHead>
-                      <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[--shell-muted]">Status</TableHead>
-                      <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[--shell-muted]">Due Date</TableHead>
+                      <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--shell-muted)]">Invoice</TableHead>
+                      <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--shell-muted)] text-right">Total</TableHead>
+                      <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--shell-muted)] text-right">Paid</TableHead>
+                      <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--shell-muted)] text-right">Balance</TableHead>
+                      <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--shell-muted)]">Status</TableHead>
+                      <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--shell-muted)]">Due Date</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -314,7 +314,7 @@ export default function ClientDetail() {
                       <TableCell>
                         <Badge variant={statusVariant(inv.status)} className="capitalize">{inv.status.replace("_", " ")}</Badge>
                       </TableCell>
-                      <TableCell className="text-[--shell-muted]">{inv.due_date || "-"}</TableCell>
+                      <TableCell className="text-[var(--shell-muted)]">{inv.due_date || "-"}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -334,7 +334,7 @@ export default function ClientDetail() {
         onSubmit={(e) => { e.preventDefault(); setInviteDialogOpen(false); }}
       >
         <div className="space-y-2">
-          <Label htmlFor="invite-email" className="text-[--shell-muted]">Email Address</Label>
+          <Label htmlFor="invite-email" className="text-[var(--shell-muted)]">Email Address</Label>
           <Input id="invite-email" type="email" value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} placeholder="client@example.com" required />
         </div>
       </MultiStepDialog>

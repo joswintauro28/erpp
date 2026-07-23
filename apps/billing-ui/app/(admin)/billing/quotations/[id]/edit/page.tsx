@@ -40,7 +40,7 @@ export default function EditQuotation() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="h-6 w-6 animate-spin text-[--shell-muted]" />
+        <Loader2 className="h-6 w-6 animate-spin text-[var(--shell-muted)]" />
       </div>
     );
   }
@@ -52,7 +52,7 @@ export default function EditQuotation() {
           <Button variant="ghost" size="icon-sm" onClick={() => router.back()}>
             <ArrowLeft className="h-4 w-4" />
           </Button>
-          <h1 className="font-heading text-xl font-semibold tracking-tight text-[--shell-foreground]">
+          <h1 className="font-heading text-xl font-semibold tracking-tight text-[var(--shell-foreground)]">
             {error}
           </h1>
         </div>
@@ -72,10 +72,10 @@ export default function EditQuotation() {
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div>
-          <h1 className="font-heading text-xl font-semibold tracking-tight text-[--shell-foreground]">
+          <h1 className="font-heading text-xl font-semibold tracking-tight text-[var(--shell-foreground)]">
             Edit Quotation
           </h1>
-          <p className="mt-0.5 text-sm text-[--shell-muted]">{data.quote_number}</p>
+          <p className="mt-0.5 text-sm text-[var(--shell-muted)]">{data.quote_number}</p>
         </div>
       </div>
 

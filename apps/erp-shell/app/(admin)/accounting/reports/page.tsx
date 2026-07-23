@@ -54,10 +54,10 @@ export default function Reports() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-heading text-xl font-semibold tracking-tight text-[--shell-foreground]">
+          <h1 className="font-heading text-xl font-semibold tracking-tight text-[var(--shell-foreground)]">
             Financial Reports
           </h1>
-          <p className="mt-0.5 text-sm text-[--shell-muted]">
+          <p className="mt-0.5 text-sm text-[var(--shell-muted)]">
             Profit & Loss, Balance Sheet, and Tax summaries
           </p>
         </div>
@@ -70,15 +70,15 @@ export default function Reports() {
         </div>
       )}
 
-      <div className="flex gap-1 border-b border-[--shell-border]">
+      <div className="flex gap-1 border-b border-[var(--shell-border)]">
         {(["pl", "balance", "tax"] as const).map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
             className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px ${
               activeTab === tab
-                ? "border-[--shell-action] text-[--shell-foreground]"
-                : "border-transparent text-[--shell-muted] hover:text-[--shell-foreground]"
+                ? "border-[var(--shell-action)] text-[var(--shell-foreground)]"
+                : "border-transparent text-[var(--shell-muted)] hover:text-[var(--shell-foreground)]"
             }`}
           >
             {tab === "pl" ? "Profit & Loss" : tab === "balance" ? "Balance Sheet" : "Tax Summary"}
@@ -116,19 +116,19 @@ export default function Reports() {
             ].map((item, idx) => (
               <div
                 key={item.label}
-                className="animate-kpi flex flex-col gap-1.5 rounded-xl border border-[--shell-border] bg-[--shell-surface] p-4.5 transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1)]"
+                className="animate-kpi flex flex-col gap-1.5 rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface)] p-4.5 transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1)]"
                 style={{ animationDelay: `${idx * 0.05}s` }}
               >
-                <span className="text-xs font-medium uppercase tracking-[0.08em] text-[--shell-muted]">
+                <span className="text-xs font-medium uppercase tracking-[0.08em] text-[var(--shell-muted)]">
                   {item.label}
                 </span>
-                <span className="font-heading text-lg font-semibold tracking-tight text-[--shell-foreground]">
+                <span className="font-heading text-lg font-semibold tracking-tight text-[var(--shell-foreground)]">
                   {item.value}
                 </span>
                 <span className={`text-xs ${
-                  item.isSuccess ? "text-[--shell-success]" :
-                  item.isTrend ? (item.trendDir === "up" ? "text-[--shell-success]" : "text-[--shell-brand]") :
-                  "text-[--shell-muted]"
+                  item.isSuccess ? "text-[var(--shell-success)]" :
+                  item.isTrend ? (item.trendDir === "up" ? "text-[var(--shell-success)]" : "text-[var(--shell-brand)]") :
+                  "text-[var(--shell-muted)]"
                 }`}>
                   {item.subtitle}
                 </span>
@@ -185,7 +185,7 @@ export default function Reports() {
                     <TableRow key={row.month}>
                       <TableCell className="font-medium">{row.month}</TableCell>
                       <TableCell className="font-mono text-sm text-right">{money(row.revenue)}</TableCell>
-                      <TableCell className="font-mono text-sm text-right text-[--shell-muted]">{money(row.cost_of_goods)}</TableCell>
+                      <TableCell className="font-mono text-sm text-right text-[var(--shell-muted)]">{money(row.cost_of_goods)}</TableCell>
                       <TableCell className="font-mono text-sm text-right">{money(row.gross_profit)}</TableCell>
                       <TableCell className="font-mono text-sm text-right">{money(row.operating_expenses)}</TableCell>
                       <TableCell className="font-mono text-sm text-right font-semibold">{money(row.net_profit)}</TableCell>
@@ -210,22 +210,22 @@ export default function Reports() {
             const items = section.items.filter((i) => !i.label.startsWith("Total"));
             return (
               <Card key={section.category}>
-                <CardHeader className="p-4 pb-2 border-b border-[--shell-border]">
+                <CardHeader className="p-4 pb-2 border-b border-[var(--shell-border)]">
                   <CardTitle className="text-sm font-medium">{section.category}</CardTitle>
                 </CardHeader>
                 <CardContent className="p-4">
                   <div className="space-y-2">
                     {items.map((item) => (
                       <div key={item.label} className="flex items-center justify-between text-sm">
-                        <span className="text-[--shell-muted]">{item.label}</span>
-                        <span className={`font-mono ${item.amount < 0 ? "text-[--shell-danger]" : "text-[--shell-foreground]"}`}>
+                        <span className="text-[var(--shell-muted)]">{item.label}</span>
+                        <span className={`font-mono ${item.amount < 0 ? "text-[var(--shell-danger)]" : "text-[var(--shell-foreground)]"}`}>
                           {money(Math.abs(item.amount))}
                         </span>
                       </div>
                     ))}
                   </div>
                   {total && (
-                    <div className="mt-3 pt-3 border-t border-[--shell-border] flex items-center justify-between text-sm font-semibold">
+                    <div className="mt-3 pt-3 border-t border-[var(--shell-border)] flex items-center justify-between text-sm font-semibold">
                       <span>{total.label}</span>
                       <span className="font-mono">{money(total.amount)}</span>
                     </div>
@@ -251,13 +251,13 @@ export default function Reports() {
             ].map((item, idx) => (
               <div
                 key={item.label}
-                className="animate-kpi flex flex-col gap-1.5 rounded-xl border border-[--shell-border] bg-[--shell-surface] p-4.5 transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1)]"
+                className="animate-kpi flex flex-col gap-1.5 rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface)] p-4.5 transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1)]"
                 style={{ animationDelay: `${idx * 0.05}s` }}
               >
-                <span className="text-xs font-medium uppercase tracking-[0.08em] text-[--shell-muted]">
+                <span className="text-xs font-medium uppercase tracking-[0.08em] text-[var(--shell-muted)]">
                   {item.label}
                 </span>
-                <span className="font-heading text-lg font-semibold tracking-tight text-[--shell-foreground]">
+                <span className="font-heading text-lg font-semibold tracking-tight text-[var(--shell-foreground)]">
                   {item.value}
                 </span>
               </div>
@@ -270,21 +270,21 @@ export default function Reports() {
             </CardHeader>
             <CardContent className="p-4 pt-2">
               <div className="space-y-3">
-                <div className="flex items-center justify-between py-2 border-b border-[--shell-border]">
-                  <span className="text-sm text-[--shell-muted]">GST Collected (Output)</span>
+                <div className="flex items-center justify-between py-2 border-b border-[var(--shell-border)]">
+                  <span className="text-sm text-[var(--shell-muted)]">GST Collected (Output)</span>
                   <span className="font-mono text-sm">{money(taxData.gstCollected)}</span>
                 </div>
-                <div className="flex items-center justify-between py-2 border-b border-[--shell-border]">
-                  <span className="text-sm text-[--shell-muted]">TDS Deducted</span>
+                <div className="flex items-center justify-between py-2 border-b border-[var(--shell-border)]">
+                  <span className="text-sm text-[var(--shell-muted)]">TDS Deducted</span>
                   <span className="font-mono text-sm">{money(taxData.tdsPayable)}</span>
                 </div>
-                <div className="flex items-center justify-between py-2 border-b border-[--shell-border]">
-                  <span className="text-sm text-[--shell-muted]">Estimated Income Tax</span>
+                <div className="flex items-center justify-between py-2 border-b border-[var(--shell-border)]">
+                  <span className="text-sm text-[var(--shell-muted)]">Estimated Income Tax</span>
                   <span className="font-mono text-sm">{money(Math.round(taxData.taxableIncome * 0.25))}</span>
                 </div>
                 <div className="flex items-center justify-between py-2">
                   <span className="text-sm font-semibold">Total Tax Liability</span>
-                  <span className="font-mono text-sm font-semibold text-[--shell-action]">
+                  <span className="font-mono text-sm font-semibold text-[var(--shell-action)]">
                     {money(taxData.gstCollected + taxData.tdsPayable + Math.round(taxData.taxableIncome * 0.25))}
                   </span>
                 </div>

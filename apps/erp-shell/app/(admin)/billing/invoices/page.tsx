@@ -35,17 +35,17 @@ const statusVariant = (s: string) => {
 function SectionHeading({ label }: { label: string }) {
   return (
     <div className="mb-5 flex items-center gap-2">
-      <h2 className="font-heading text-xs font-medium uppercase tracking-[0.12em] text-[--shell-muted]">
+      <h2 className="font-heading text-xs font-medium uppercase tracking-[0.12em] text-[var(--shell-muted)]">
         {label}
       </h2>
-      <div className="h-px flex-1 bg-[--shell-border]/20" />
+      <div className="h-px flex-1 bg-[var(--shell-border)]/20" />
     </div>
   );
 }
 
 const summaryCards = [
-  { key: "taxable_value" as const, icon: Receipt, label: "Taxable Value", gradient: "from-[--shell-brand]/5 to-transparent", idx: 0 },
-  { key: "total_gst" as const, icon: BadgePercent, label: "Total GST", gradient: "from-[--shell-accent]/5 to-transparent", idx: 1 },
+  { key: "taxable_value" as const, icon: Receipt, label: "Taxable Value", gradient: "from-[var(--shell-brand)]/5 to-transparent", idx: 0 },
+  { key: "total_gst" as const, icon: BadgePercent, label: "Total GST", gradient: "from-[var(--shell-accent)]/5 to-transparent", idx: 1 },
   { key: "total_cgst_sgst" as const, icon: DollarSign, label: "CGST + SGST", gradient: "from-emerald-500/5 to-transparent", idx: 2 },
   { key: "total_igst" as const, icon: CreditCard, label: "IGST", gradient: "from-blue-500/5 to-transparent", idx: 3 },
   { key: "total_invoices" as const, icon: FileText, label: "Total Invoices", gradient: "from-purple-500/5 to-transparent", idx: 4 },
@@ -192,10 +192,10 @@ export default function Invoices() {
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-heading text-xl font-semibold tracking-tight text-[--shell-foreground]">Invoices</h1>
-          <p className="mt-0.5 text-sm text-[--shell-muted]">Create, manage, and track all client invoices</p>
+          <h1 className="font-heading text-xl font-semibold tracking-tight text-[var(--shell-foreground)]">Invoices</h1>
+          <p className="mt-0.5 text-sm text-[var(--shell-muted)]">Create, manage, and track all client invoices</p>
         </div>
-        <Button className="bg-[--shell-brand] hover:bg-[--shell-brand]/90 text-white" onClick={() => setCreateOpen(true)}><Plus className="h-4 w-4" /> Create Invoice</Button>
+        <Button className="bg-[var(--shell-brand)] hover:bg-[var(--shell-brand)]/90 text-white" onClick={() => setCreateOpen(true)}><Plus className="h-4 w-4" /> Create Invoice</Button>
       </div>
 
       {/* GST Summary */}
@@ -216,19 +216,19 @@ export default function Invoices() {
               return (
                 <div
                   key={card.key}
-                  className="animate-kpi relative flex flex-col gap-1.5 rounded-xl border border-[--shell-border] bg-[--shell-surface] p-4.5 transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1)] overflow-hidden"
+                  className="animate-kpi relative flex flex-col gap-1.5 rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface)] p-4.5 transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1)] overflow-hidden"
                   style={{ animationDelay: `${card.idx * 0.05}s` }}
                 >
                   <div className={`absolute inset-0 bg-gradient-to-br ${card.gradient} pointer-events-none`} />
                   <div className="relative z-10 flex items-center justify-between">
-                    <span className="text-xs font-medium uppercase tracking-[0.08em] text-[--shell-muted]">
+                    <span className="text-xs font-medium uppercase tracking-[0.08em] text-[var(--shell-muted)]">
                       {card.label}
                     </span>
-                    <div className="flex h-7 w-7 items-center justify-center rounded-md border border-[--shell-border] bg-[--shell-bg]">
+                    <div className="flex h-7 w-7 items-center justify-center rounded-md border border-[var(--shell-border)] bg-[var(--shell-bg)]">
                       <Icon className="h-3.5 w-3.5" style={{ color: CHART_VARS[card.idx] }} />
                     </div>
                   </div>
-                  <span className="relative z-10 font-heading text-lg font-semibold tracking-tight text-[--shell-foreground]">
+                  <span className="relative z-10 font-heading text-lg font-semibold tracking-tight text-[var(--shell-foreground)]">
                     {values[card.key]}
                   </span>
                 </div>
@@ -243,12 +243,12 @@ export default function Invoices() {
         <SectionHeading label="Invoice List" />
         <div className="mb-5 flex flex-wrap items-center gap-3">
           <div className="relative flex-1 max-w-xs">
-            <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[--shell-muted]" />
-            <Input placeholder="Search invoices..." className="pl-8 border-[--shell-border] bg-[--shell-surface]" value={search} onChange={(e) => setSearch(e.target.value)} />
+            <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--shell-muted)]" />
+            <Input placeholder="Search invoices..." className="pl-8 border-[var(--shell-border)] bg-[var(--shell-surface)]" value={search} onChange={(e) => setSearch(e.target.value)} />
           </div>
           <Select value={statusFilter} onValueChange={(v) => v !== null && setStatusFilter(v)}>
-            <SelectTrigger className="w-36 border-[--shell-border] bg-[--shell-surface]"><SelectValue placeholder="All statuses" /></SelectTrigger>
-            <SelectContent className="border-[--shell-border] bg-[--shell-surface]">
+            <SelectTrigger className="w-36 border-[var(--shell-border)] bg-[var(--shell-surface)]"><SelectValue placeholder="All statuses" /></SelectTrigger>
+            <SelectContent className="border-[var(--shell-border)] bg-[var(--shell-surface)]">
               <SelectItem value="">All statuses</SelectItem>
               {statusOptions.filter(Boolean).map((s) => (
                 <SelectItem key={s} value={s} className="capitalize">{s.replace("_", " ")}</SelectItem>
@@ -338,10 +338,10 @@ export default function Invoices() {
       >
         {createStep === 0 && (
           <div className="space-y-5">
-            <div className="rounded-lg border border-[--shell-border] bg-[--shell-surface] p-4">
+            <div className="rounded-lg border border-[var(--shell-border)] bg-[var(--shell-surface)] p-4">
               <div className="mb-3 flex items-center gap-2">
-                <Building2 className="h-3.5 w-3.5 text-[--shell-brand]" />
-                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[--shell-foreground]">Client Details</span>
+                <Building2 className="h-3.5 w-3.5 text-[var(--shell-brand)]" />
+                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--shell-foreground)]">Client Details</span>
               </div>
               <div className="space-y-4">
                 <div className="space-y-2">
@@ -362,10 +362,10 @@ export default function Invoices() {
               </div>
             </div>
 
-            <div className="rounded-lg border border-[--shell-border] bg-[--shell-surface] p-4">
+            <div className="rounded-lg border border-[var(--shell-border)] bg-[var(--shell-surface)] p-4">
               <div className="mb-3 flex items-center gap-2">
-                <FileSpreadsheet className="h-3.5 w-3.5 text-[--shell-accent]" />
-                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[--shell-foreground]">Tax Settings</span>
+                <FileSpreadsheet className="h-3.5 w-3.5 text-[var(--shell-accent)]" />
+                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--shell-foreground)]">Tax Settings</span>
               </div>
               <div className="space-y-4">
                 <div className="space-y-2">
@@ -387,10 +387,10 @@ export default function Invoices() {
               </div>
             </div>
 
-            <div className="rounded-lg border border-[--shell-border] bg-[--shell-surface] p-4">
+            <div className="rounded-lg border border-[var(--shell-border)] bg-[var(--shell-surface)] p-4">
               <div className="flex items-center gap-2">
-                <CalendarDays className="h-3.5 w-3.5 text-[--shell-muted]" />
-                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[--shell-foreground]">Notes</span>
+                <CalendarDays className="h-3.5 w-3.5 text-[var(--shell-muted)]" />
+                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--shell-foreground)]">Notes</span>
               </div>
               <div className="mt-3 space-y-2">
                 <Textarea rows={2} placeholder="Optional notes or payment instructions" value={formNotes} onChange={(e) => setFormNotes(e.target.value)} />
@@ -400,29 +400,29 @@ export default function Invoices() {
         )}
         {createStep === 1 && (
           <div className="space-y-5">
-            <div className="rounded-lg border border-[--shell-brand]/20 bg-[--shell-brand]/5 p-3">
-              <div className="flex items-center gap-2 text-xs text-[--shell-muted]">
-                <Calculator className="h-3.5 w-3.5 text-[--shell-brand]" />
-                <span className="font-medium text-[--shell-foreground]">{formItems.length} item{formItems.length > 1 ? "s" : ""}</span>
-                <span className="mx-1.5 text-[--shell-border]">|</span>
-                <span>Subtotal: <strong className="text-[--shell-foreground]">{money(liveCalc.subtotal)}</strong></span>
-                <span className="mx-1.5 text-[--shell-border]">|</span>
-                <span>Total: <strong className="text-[--shell-foreground]">{money(liveCalc.grandTotal)}</strong></span>
+            <div className="rounded-lg border border-[var(--shell-brand)]/20 bg-[var(--shell-brand)]/5 p-3">
+              <div className="flex items-center gap-2 text-xs text-[var(--shell-muted)]">
+                <Calculator className="h-3.5 w-3.5 text-[var(--shell-brand)]" />
+                <span className="font-medium text-[var(--shell-foreground)]">{formItems.length} item{formItems.length > 1 ? "s" : ""}</span>
+                <span className="mx-1.5 text-[var(--shell-border)]">|</span>
+                <span>Subtotal: <strong className="text-[var(--shell-foreground)]">{money(liveCalc.subtotal)}</strong></span>
+                <span className="mx-1.5 text-[var(--shell-border)]">|</span>
+                <span>Total: <strong className="text-[var(--shell-foreground)]">{money(liveCalc.grandTotal)}</strong></span>
               </div>
             </div>
 
             <div className="flex items-center justify-between">
-              <span className="text-xs font-medium text-[--shell-muted]">Line Items</span>
+              <span className="text-xs font-medium text-[var(--shell-muted)]">Line Items</span>
               <Button type="button" variant="outline" size="sm" onClick={addItem}>
                 <Plus className="mr-1 h-3 w-3" /> Add Item
               </Button>
             </div>
             {formItems.map((item, idx) => (
-              <div key={idx} className="space-y-3 rounded-lg border border-[--shell-border] bg-[--shell-surface] p-3">
+              <div key={idx} className="space-y-3 rounded-lg border border-[var(--shell-border)] bg-[var(--shell-surface)] p-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-medium text-[--shell-brand]">Item {idx + 1}</span>
+                  <span className="text-xs font-medium text-[var(--shell-brand)]">Item {idx + 1}</span>
                   <div className="flex items-center gap-2">
-                    <span className="text-xs text-[--shell-muted]">
+                    <span className="text-xs text-[var(--shell-muted)]">
                       Line: {money(item.quantity * item.unit_price)}
                     </span>
                     {formItems.length > 1 && (
@@ -466,7 +466,7 @@ export default function Invoices() {
                   </div>
                   <div className="space-y-2">
                     <Label className="text-xs">Amount</Label>
-                    <div className="flex h-9 items-center rounded-md border border-[--shell-border] bg-[--shell-bg] px-3 text-sm font-mono text-[--shell-foreground]">
+                    <div className="flex h-9 items-center rounded-md border border-[var(--shell-border)] bg-[var(--shell-bg)] px-3 text-sm font-mono text-[var(--shell-foreground)]">
                       {money(item.quantity * item.unit_price)}
                     </div>
                   </div>
@@ -475,36 +475,36 @@ export default function Invoices() {
             ))}
 
             {/* Live GST Summary */}
-            <div className="rounded-lg border border-[--shell-accent]/20 bg-[--shell-accent]/5 p-4">
+            <div className="rounded-lg border border-[var(--shell-accent)]/20 bg-[var(--shell-accent)]/5 p-4">
               <div className="flex items-center gap-2 mb-3">
-                <Calculator className="h-3.5 w-3.5 text-[--shell-accent]" />
-                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[--shell-foreground]">Invoice Summary</span>
+                <Calculator className="h-3.5 w-3.5 text-[var(--shell-accent)]" />
+                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--shell-foreground)]">Invoice Summary</span>
               </div>
               <div className="space-y-1.5 text-sm">
-                <div className="flex justify-between text-[--shell-muted]">
+                <div className="flex justify-between text-[var(--shell-muted)]">
                   <span>Subtotal</span>
-                  <span className="font-mono text-[--shell-foreground]">{money(liveCalc.subtotal)}</span>
+                  <span className="font-mono text-[var(--shell-foreground)]">{money(liveCalc.subtotal)}</span>
                 </div>
                 {formGstTreatment === "registered" ? (
                   <>
-                    <div className="flex justify-between text-[--shell-muted]">
+                    <div className="flex justify-between text-[var(--shell-muted)]">
                       <span>CGST (half of GST)</span>
-                      <span className="font-mono text-[--shell-foreground]">{money(liveCalc.cgst)}</span>
+                      <span className="font-mono text-[var(--shell-foreground)]">{money(liveCalc.cgst)}</span>
                     </div>
-                    <div className="flex justify-between text-[--shell-muted]">
+                    <div className="flex justify-between text-[var(--shell-muted)]">
                       <span>SGST (half of GST)</span>
-                      <span className="font-mono text-[--shell-foreground]">{money(liveCalc.sgst)}</span>
+                      <span className="font-mono text-[var(--shell-foreground)]">{money(liveCalc.sgst)}</span>
                     </div>
                   </>
                 ) : (
-                  <div className="flex justify-between text-[--shell-muted]">
+                  <div className="flex justify-between text-[var(--shell-muted)]">
                     <span>IGST</span>
-                    <span className="font-mono text-[--shell-foreground]">{money(liveCalc.igst)}</span>
+                    <span className="font-mono text-[var(--shell-foreground)]">{money(liveCalc.igst)}</span>
                   </div>
                 )}
-                <div className="border-t border-[--shell-border] pt-1.5 mt-1.5 flex justify-between font-semibold text-[--shell-foreground]">
+                <div className="border-t border-[var(--shell-border)] pt-1.5 mt-1.5 flex justify-between font-semibold text-[var(--shell-foreground)]">
                   <span>Grand Total</span>
-                  <span className="font-mono text-[--shell-brand]">{money(liveCalc.grandTotal)}</span>
+                  <span className="font-mono text-[var(--shell-brand)]">{money(liveCalc.grandTotal)}</span>
                 </div>
               </div>
             </div>

@@ -191,7 +191,7 @@ const GenericFormModal: React.FC<GenericFormModalProps> = ({ entityType, entityN
         </DialogHeader>
 
         {loading && (
-          <div className="py-8 text-center text-[--shell-muted]">Loading form...</div>
+          <div className="py-8 text-center text-[var(--shell-muted)]">Loading form...</div>
         )}
         
         {error && (
@@ -205,7 +205,7 @@ const GenericFormModal: React.FC<GenericFormModalProps> = ({ entityType, entityN
             <div className="flex flex-col gap-4 mb-6">
               {entityType === 'documents' && (
                 <div className="mb-2">
-                  <Label className="mb-1 block text-xs font-semibold uppercase text-[--shell-muted]">
+                  <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">
                     Upload Document File (PDF or Image)
                   </Label>
                   <input
@@ -228,7 +228,7 @@ const GenericFormModal: React.FC<GenericFormModalProps> = ({ entityType, entityN
                         reader.readAsDataURL(file);
                       }
                     }}
-                    className="w-full rounded-md border border-[--shell-border] bg-[--shell-bg] px-2 py-1.5 text-xs text-[--shell-foreground] file:mr-2 file:rounded file:border-0 file:bg-primary file:px-2 file:py-0.5 file:text-xs file:font-medium file:text-primary-foreground"
+                    className="w-full rounded-md border border-[var(--shell-border)] bg-[var(--shell-bg)] px-2 py-1.5 text-xs text-[var(--shell-foreground)] file:mr-2 file:rounded file:border-0 file:bg-primary file:px-2 file:py-0.5 file:text-xs file:font-medium file:text-primary-foreground"
                     required={!editRecord}
                   />
                   {formData.name && (
@@ -240,7 +240,7 @@ const GenericFormModal: React.FC<GenericFormModalProps> = ({ entityType, entityN
               )}
               {(entityType === 'sales-orders' || entityType === 'quotations') && (
                 <div className="mb-2">
-                  <Label className="mb-1 block text-xs font-semibold uppercase text-[--shell-muted]">
+                  <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">
                     {entityType === 'quotations' ? 'Upload Quotation File (PDF or Image)' : 'Upload Invoice File (PDF or Image)'}
                   </Label>
                   <input
@@ -260,7 +260,7 @@ const GenericFormModal: React.FC<GenericFormModalProps> = ({ entityType, entityN
                         reader.readAsDataURL(file);
                       }
                     }}
-                    className="w-full rounded-md border border-[--shell-border] bg-[--shell-bg] px-2 py-1.5 text-xs text-[--shell-foreground] file:mr-2 file:rounded file:border-0 file:bg-primary file:px-2 file:py-0.5 file:text-xs file:font-medium file:text-primary-foreground"
+                    className="w-full rounded-md border border-[var(--shell-border)] bg-[var(--shell-bg)] px-2 py-1.5 text-xs text-[var(--shell-foreground)] file:mr-2 file:rounded file:border-0 file:bg-primary file:px-2 file:py-0.5 file:text-xs file:font-medium file:text-primary-foreground"
                   />
                   {formData.file_name && (
                     <div className="mt-1 text-xs text-green-600">
@@ -274,7 +274,7 @@ const GenericFormModal: React.FC<GenericFormModalProps> = ({ entityType, entityN
                 .filter(field => field.name !== 'summary' || (formData.file_data || formData.files || editRecord))
                 .map((field) => (
                   <div key={field.name}>
-                    <Label className="mb-1 block text-xs font-semibold uppercase text-[--shell-muted]">
+                    <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">
                       {entityType === 'opportunities' && field.name === 'name' ? 'Deal' : (entityType === 'requirements' && field.name === 'name') ? 'Requirements' : field.label}
                     </Label>
                                        {((entityType === 'opportunities' && field.name === 'close_date') || (entityType === 'quotations' && field.name === 'valid_until') || (entityType === 'sales-orders' && field.name === 'eta') || (entityType === 'sales' && (field.name === 'issued_date' || field.name === 'due_date'))) ? (
@@ -283,7 +283,7 @@ const GenericFormModal: React.FC<GenericFormModalProps> = ({ entityType, entityN
                         name={field.name}
                         value={formData[field.name] || ''}
                         onChange={handleChange}
-                        className="h-9 w-full rounded-md border border-[--shell-border] bg-[--shell-bg] px-3 text-xs text-[--shell-foreground]"
+                        className="h-9 w-full rounded-md border border-[var(--shell-border)] bg-[var(--shell-bg)] px-3 text-xs text-[var(--shell-foreground)]"
                         required
                       />
                     ) : field.name === 'summary' ? (

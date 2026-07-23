@@ -38,8 +38,8 @@ export default function ProductsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-heading text-2xl font-semibold tracking-tight text-[--shell-foreground]">Products</h1>
-          <p className="mt-1 text-sm text-[--shell-muted]">{products.length} products in catalog</p>
+          <h1 className="font-heading text-2xl font-semibold tracking-tight text-[var(--shell-foreground)]">Products</h1>
+          <p className="mt-1 text-sm text-[var(--shell-muted)]">{products.length} products in catalog</p>
         </div>
         <Button><Plus className="h-4 w-4" /> Add Product</Button>
       </div>

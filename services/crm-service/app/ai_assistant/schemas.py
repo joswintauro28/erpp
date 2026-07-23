@@ -1,14 +1,14 @@
 from pydantic import BaseModel
-from typing import List
+from typing import List, Optional
 from app.core.schemas import GenericSummary
 
 class AIAssistantLogBase(BaseModel):
-    id_str: str
-    query: str
-    category: str
-    date: str
-    status: str
-    owner: str
+    id_str: Optional[str] = None
+    query: Optional[str] = None
+    category: Optional[str] = None
+    date: Optional[str] = None
+    status: Optional[str] = None
+    owner: Optional[str] = None
 
 class AIAssistantLog(AIAssistantLogBase):
     id: int

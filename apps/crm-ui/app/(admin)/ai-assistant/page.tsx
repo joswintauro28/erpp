@@ -80,15 +80,15 @@ export default function AIAssistantPage() {
     <div className="space-y-10 lg:space-y-12">
       <div>
         <div className="mb-5 flex items-center gap-2">
-          <h2 className="font-heading text-xs font-light uppercase tracking-[0.12em] text-[--shell-muted]">
-            <Sparkles size={14} className="inline mr-1 text-[--shell-accent]" /> INSIGHTS
+          <h2 className="font-heading text-xs font-light uppercase tracking-[0.12em] text-[var(--shell-muted)]">
+            <Sparkles size={14} className="inline mr-1 text-[var(--shell-accent)]" /> INSIGHTS
           </h2>
-          <div className="h-px flex-1 bg-[--shell-border]" />
+          <div className="h-px flex-1 bg-[var(--shell-border)]" />
         </div>
         <div className="flex items-center gap-3 mb-6">
-          <div className="flex rounded-lg border border-[--shell-border] overflow-hidden">
-            <button onClick={() => setActiveTab("chat")} className={cn("px-3 py-1.5 text-xs font-medium cursor-pointer transition-colors", activeTab === "chat" ? "bg-primary text-primary-foreground" : "text-[--shell-muted] hover:text-[--shell-foreground]")}>Chat</button>
-            <button onClick={() => setActiveTab("logs")} className={cn("px-3 py-1.5 text-xs font-medium cursor-pointer transition-colors", activeTab === "logs" ? "bg-primary text-primary-foreground" : "text-[--shell-muted] hover:text-[--shell-foreground]")}>Logs</button>
+          <div className="flex rounded-lg border border-[var(--shell-border)] overflow-hidden">
+            <button onClick={() => setActiveTab("chat")} className={cn("px-3 py-1.5 text-xs font-medium cursor-pointer transition-colors", activeTab === "chat" ? "bg-primary text-primary-foreground" : "text-[var(--shell-muted)] hover:text-[var(--shell-foreground)]")}>Chat</button>
+            <button onClick={() => setActiveTab("logs")} className={cn("px-3 py-1.5 text-xs font-medium cursor-pointer transition-colors", activeTab === "logs" ? "bg-primary text-primary-foreground" : "text-[var(--shell-muted)] hover:text-[var(--shell-foreground)]")}>Logs</button>
           </div>
           <Button variant="outline" size="sm" onClick={handleClear}>
             <Trash2 size={14} className="mr-1.5" /> Clear Chat
@@ -98,31 +98,31 @@ export default function AIAssistantPage() {
         {activeTab === "logs" && (
           <>
             <div className="grid gap-4 sm:grid-cols-4 mb-6">
-              <div className="rounded-xl border border-[--shell-border] bg-[--shell-surface] p-4 space-y-2">
-                <p className="text-xs font-medium uppercase tracking-[0.08em] text-[--shell-muted]">TOTAL LOGS</p>
-                <p className="font-heading text-2xl font-semibold tracking-tight text-[--shell-foreground]">{data.summary.total_ai_logs}</p>
+              <div className="rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface)] p-4 space-y-2">
+                <p className="text-xs font-medium uppercase tracking-[0.08em] text-[var(--shell-muted)]">TOTAL LOGS</p>
+                <p className="font-heading text-2xl font-semibold tracking-tight text-[var(--shell-foreground)]">{data.summary.total_ai_logs}</p>
               </div>
-              <div className="rounded-xl border border-[--shell-border] bg-[--shell-surface] p-4 space-y-2">
-                <p className="text-xs font-medium uppercase tracking-[0.08em] text-[--shell-muted]">SUCCESS</p>
-                <p className="font-heading text-2xl font-semibold tracking-tight text-[--shell-foreground]">{data.summary.open}</p>
+              <div className="rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface)] p-4 space-y-2">
+                <p className="text-xs font-medium uppercase tracking-[0.08em] text-[var(--shell-muted)]">SUCCESS</p>
+                <p className="font-heading text-2xl font-semibold tracking-tight text-[var(--shell-foreground)]">{data.summary.open}</p>
               </div>
-              <div className="rounded-xl border border-[--shell-border] bg-[--shell-surface] p-4 space-y-2">
-                <p className="text-xs font-medium uppercase tracking-[0.08em] text-[--shell-muted]">FAILED</p>
-                <p className="font-heading text-2xl font-semibold tracking-tight text-[--shell-foreground]">{data.summary.overdue_at_risk}</p>
+              <div className="rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface)] p-4 space-y-2">
+                <p className="text-xs font-medium uppercase tracking-[0.08em] text-[var(--shell-muted)]">FAILED</p>
+                <p className="font-heading text-2xl font-semibold tracking-tight text-[var(--shell-foreground)]">{data.summary.overdue_at_risk}</p>
               </div>
-              <div className="rounded-xl border border-[--shell-border] bg-[--shell-surface] p-4 space-y-2">
-                <p className="text-xs font-medium uppercase tracking-[0.08em] text-[--shell-muted]">OWNERS</p>
-                <p className="font-heading text-2xl font-semibold tracking-tight text-[--shell-foreground]">{data.summary.owners}</p>
+              <div className="rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface)] p-4 space-y-2">
+                <p className="text-xs font-medium uppercase tracking-[0.08em] text-[var(--shell-muted)]">OWNERS</p>
+                <p className="font-heading text-2xl font-semibold tracking-tight text-[var(--shell-foreground)]">{data.summary.owners}</p>
               </div>
             </div>
 
-            <Card className="hover:shadow-engineered transition-shadow duration-200 border-[--shell-border] bg-[--shell-surface]">
-              <div className="flex items-center gap-3 p-4 border-b border-[--shell-border]">
+            <Card className="hover:shadow-engineered transition-shadow duration-200 border-[var(--shell-border)] bg-[var(--shell-surface)]">
+              <div className="flex items-center gap-3 p-4 border-b border-[var(--shell-border)]">
                 <div className="relative flex-1">
-                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[--shell-muted]" />
+                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--shell-muted)]" />
                   <Input placeholder="Search logs..." className="pl-9 h-9 text-sm" />
                 </div>
-                <Filter size={15} className="text-[--shell-muted] shrink-0" />
+                <Filter size={15} className="text-[var(--shell-muted)] shrink-0" />
               </div>
               <AIAssistantTable logs={data.ai_logs || []} />
             </Card>
@@ -131,34 +131,34 @@ export default function AIAssistantPage() {
 
         {activeTab === "chat" && (
           <div className="grid gap-6 lg:grid-cols-[1fr_260px]">
-            <Card className="flex flex-col overflow-hidden hover:shadow-engineered transition-shadow duration-200 border-[--shell-border] bg-[--shell-surface]">
+            <Card className="flex flex-col overflow-hidden hover:shadow-engineered transition-shadow duration-200 border-[var(--shell-border)] bg-[var(--shell-surface)]">
               <div className="flex-1 overflow-y-auto p-5 space-y-4 max-h-[480px]">
                 {chatHistory.map((msg, i) => (
                   <div key={i} className={cn("flex gap-3 items-start", msg.role === "user" ? "flex-row-reverse" : "")}>
-                    <div className={cn("p-2 rounded-full shrink-0", msg.role === "user" ? "bg-primary text-primary-foreground" : "bg-[--shell-bg] text-accent-foreground")}>
+                    <div className={cn("p-2 rounded-full shrink-0", msg.role === "user" ? "bg-primary text-primary-foreground" : "bg-[var(--shell-bg)] text-accent-foreground")}>
                       {msg.role === "user" ? <User size={14} /> : <Bot size={14} />}
                     </div>
-                    <div className={cn("px-4 py-2.5 rounded-2xl max-w-[80%] text-sm leading-relaxed", msg.role === "user" ? "bg-primary text-primary-foreground rounded-tr-none" : "bg-[--shell-bg] text-[--shell-foreground] rounded-tl-none")}>
+                    <div className={cn("px-4 py-2.5 rounded-2xl max-w-[80%] text-sm leading-relaxed", msg.role === "user" ? "bg-primary text-primary-foreground rounded-tr-none" : "bg-[var(--shell-bg)] text-[var(--shell-foreground)] rounded-tl-none")}>
                       {formatContent(msg.content)}
                     </div>
                   </div>
                 ))}
                 {chatLoading && (
                   <div className="flex gap-3 items-start">
-                    <div className="p-2 rounded-full bg-[--shell-bg] text-accent-foreground shrink-0"><Bot size={14} /></div>
-                    <div className="px-4 py-2.5 rounded-2xl rounded-tl-none bg-[--shell-bg] text-[--shell-muted] text-sm">
+                    <div className="p-2 rounded-full bg-[var(--shell-bg)] text-accent-foreground shrink-0"><Bot size={14} /></div>
+                    <div className="px-4 py-2.5 rounded-2xl rounded-tl-none bg-[var(--shell-bg)] text-[var(--shell-muted)] text-sm">
                       <div className="flex gap-1 items-center">
-                        <span className="w-1.5 h-1.5 bg-[--shell-muted] rounded-full animate-bounce" style={{ animationDelay: "0s" }} />
-                        <span className="w-1.5 h-1.5 bg-[--shell-muted] rounded-full animate-bounce" style={{ animationDelay: "0.2s" }} />
-                        <span className="w-1.5 h-1.5 bg-[--shell-muted] rounded-full animate-bounce" style={{ animationDelay: "0.4s" }} />
-                        <span className="ml-2 text-xs text-[--shell-muted]">Assistant is typing...</span>
+                        <span className="w-1.5 h-1.5 bg-[var(--shell-muted)] rounded-full animate-bounce" style={{ animationDelay: "0s" }} />
+                        <span className="w-1.5 h-1.5 bg-[var(--shell-muted)] rounded-full animate-bounce" style={{ animationDelay: "0.2s" }} />
+                        <span className="w-1.5 h-1.5 bg-[var(--shell-muted)] rounded-full animate-bounce" style={{ animationDelay: "0.4s" }} />
+                        <span className="ml-2 text-xs text-[var(--shell-muted)]">Assistant is typing...</span>
                       </div>
                     </div>
                   </div>
                 )}
                 <div ref={messagesEndRef} />
               </div>
-              <div className="p-4 border-t border-[--shell-border] bg-[--shell-bg]/30">
+              <div className="p-4 border-t border-[var(--shell-border)] bg-[var(--shell-bg)]/30">
                 <form onSubmit={(e) => { e.preventDefault(); handleChat(); }} className="flex gap-3">
                   <Input placeholder="Ask anything about customers, pipelines, draft replies..." value={chatInput} onChange={(e) => setChatInput(e.target.value)} disabled={chatLoading} className="flex-1" />
                   <Button type="submit" disabled={chatLoading || !chatInput.trim()}>
@@ -169,14 +169,14 @@ export default function AIAssistantPage() {
             </Card>
 
             <div className="space-y-3">
-              <Card className="hover:shadow-engineered transition-shadow duration-200 border-[--shell-border] bg-[--shell-surface]">
+              <Card className="hover:shadow-engineered transition-shadow duration-200 border-[var(--shell-border)] bg-[var(--shell-surface)]">
                 <CardContent className="p-4">
-                  <h4 className="text-sm font-semibold text-[--shell-foreground] flex items-center gap-1.5 mb-3">
+                  <h4 className="text-sm font-semibold text-[var(--shell-foreground)] flex items-center gap-1.5 mb-3">
                     <Bot size={14} className="text-accent-foreground" /> Quick Suggestions
                   </h4>
                   <div className="space-y-2">
                     {suggestions.map((s, i) => (
-                      <button key={i} onClick={() => handleChat(s)} disabled={chatLoading} className="w-full text-left text-xs px-3 py-2 rounded-md border border-[--shell-border] bg-[--shell-bg]/50 text-[--shell-foreground] hover:bg-[--shell-bg] transition-colors cursor-pointer disabled:opacity-50">
+                      <button key={i} onClick={() => handleChat(s)} disabled={chatLoading} className="w-full text-left text-xs px-3 py-2 rounded-md border border-[var(--shell-border)] bg-[var(--shell-bg)]/50 text-[var(--shell-foreground)] hover:bg-[var(--shell-bg)] transition-colors cursor-pointer disabled:opacity-50">
                         {s}
                       </button>
                     ))}

@@ -61,13 +61,13 @@ export default function Serials() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="font-heading text-xl font-semibold tracking-tight text-[--shell-foreground]">Serial Numbers</h1>
-            <p className="mt-0.5 text-sm text-[--shell-muted]">Serial number tracking for inventory items</p>
+            <h1 className="font-heading text-xl font-semibold tracking-tight text-[var(--shell-foreground)]">Serial Numbers</h1>
+            <p className="mt-0.5 text-sm text-[var(--shell-muted)]">Serial number tracking for inventory items</p>
           </div>
         </div>
-        <div className="flex flex-col items-center gap-3 py-20 text-[--shell-muted]">
+        <div className="flex flex-col items-center gap-3 py-20 text-[var(--shell-muted)]">
           <ScanBarcode className="h-12 w-12" />
-          <p className="text-base font-medium text-[--shell-foreground]">No serial numbers yet</p>
+          <p className="text-base font-medium text-[var(--shell-foreground)]">No serial numbers yet</p>
           <p className="text-sm">Serial numbers are created when products with serial tracking are received.</p>
         </div>
       </div>
@@ -78,10 +78,10 @@ export default function Serials() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-heading text-xl font-semibold tracking-tight text-[--shell-foreground]">
+          <h1 className="font-heading text-xl font-semibold tracking-tight text-[var(--shell-foreground)]">
             Serial Numbers
           </h1>
-          <p className="mt-0.5 text-sm text-[--shell-muted]">
+          <p className="mt-0.5 text-sm text-[var(--shell-muted)]">
             Serial number tracking for inventory items
           </p>
         </div>
@@ -89,7 +89,7 @@ export default function Serials() {
 
       <div className="flex flex-wrap items-center gap-3">
         <div className="relative flex-1 max-w-xs">
-          <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[--shell-muted]" />
+          <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--shell-muted)]" />
           <Input placeholder="Search by serial number..." className="pl-8" value={search} onChange={(e) => setSearch(e.target.value)} />
         </div>
         <div className="flex gap-1">
@@ -110,9 +110,9 @@ export default function Serials() {
       <Card>
         <CardContent className="p-0">
           {filtered.length === 0 ? (
-            <div className="flex flex-col items-center gap-3 py-20 text-[--shell-muted]">
+            <div className="flex flex-col items-center gap-3 py-20 text-[var(--shell-muted)]">
               <ScanBarcode className="h-12 w-12" />
-              <p className="text-base font-medium text-[--shell-foreground]">
+              <p className="text-base font-medium text-[var(--shell-foreground)]">
                 {serials.length === 0 ? "No serial numbers yet" : "No serials match your search"}
               </p>
             </div>
@@ -131,14 +131,14 @@ export default function Serials() {
                 {filtered.map((s) => (
                   <TableRow key={s.id}>
                     <TableCell className="font-mono text-xs font-medium">{s.serial_number}</TableCell>
-                    <TableCell className="font-mono text-xs text-right text-[--shell-muted]">#{s.product_id}</TableCell>
+                    <TableCell className="font-mono text-xs text-right text-[var(--shell-muted)]">#{s.product_id}</TableCell>
                     <TableCell>
                       <Badge variant="outline" className="text-xs" style={{ borderColor: statusColors[s.status], color: statusColors[s.status] }}>
                         {statusLabels[s.status] || s.status}
                       </Badge>
                     </TableCell>
-                    <TableCell className="font-mono text-xs text-right text-[--shell-muted]">#{s.warehouse_id}</TableCell>
-                    <TableCell className="font-mono text-xs text-[--shell-muted]">
+                    <TableCell className="font-mono text-xs text-right text-[var(--shell-muted)]">#{s.warehouse_id}</TableCell>
+                    <TableCell className="font-mono text-xs text-[var(--shell-muted)]">
                       {s.purchase_order_id ? `PO-${s.purchase_order_id}` : "-"}
                     </TableCell>
                   </TableRow>

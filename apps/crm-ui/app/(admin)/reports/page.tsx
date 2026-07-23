@@ -64,7 +64,7 @@ export default function ReportsPage() {
 
   if (!data) {
     return (
-      <div className="flex h-[80vh] items-center justify-center gap-2 text-[--shell-danger]">
+      <div className="flex h-[80vh] items-center justify-center gap-2 text-[var(--shell-danger)]">
         <ShieldAlert size={24} /> Failed to load reporting metrics.
       </div>
     );
@@ -85,9 +85,9 @@ export default function ReportsPage() {
     <div className="space-y-10 lg:space-y-12">
       <div className="flex items-center justify-between">
         <div>
-          <p className="font-heading text-xs font-light uppercase tracking-[0.12em] text-[--shell-muted]">INSIGHTS</p>
-          <h2 className="text-xl font-semibold tracking-tight text-[--shell-foreground] mt-1">CRM Analytics & Performance Reports</h2>
-          <p className="text-sm text-[--shell-muted] mt-1">Real-time visual reports of sales pipeline, conversion funnels, and representative performance.</p>
+          <p className="font-heading text-xs font-light uppercase tracking-[0.12em] text-[var(--shell-muted)]">INSIGHTS</p>
+          <h2 className="text-xl font-semibold tracking-tight text-[var(--shell-foreground)] mt-1">CRM Analytics & Performance Reports</h2>
+          <p className="text-sm text-[var(--shell-muted)] mt-1">Real-time visual reports of sales pipeline, conversion funnels, and representative performance.</p>
         </div>
         <Button variant="outline" size="sm" onClick={fetchReportData}>
           <RotateCw className={"h-4 w-4 mr-1.5" + (loading ? " animate-spin" : "")} /> Refresh
@@ -96,29 +96,29 @@ export default function ReportsPage() {
 
       <div>
         <div className="mb-5 flex items-center gap-2">
-          <h2 className="font-heading text-xs font-light uppercase tracking-[0.12em] text-[--shell-muted]">OVERVIEW</h2>
-          <div className="h-px flex-1 bg-[--shell-border]" />
+          <h2 className="font-heading text-xs font-light uppercase tracking-[0.12em] text-[var(--shell-muted)]">OVERVIEW</h2>
+          <div className="h-px flex-1 bg-[var(--shell-border)]" />
         </div>
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-          <div className="rounded-xl border border-[--shell-border] bg-[--shell-surface] p-4 space-y-2 hover:shadow-engineered transition-shadow">
-            <p className="text-xs font-medium uppercase tracking-[0.08em] text-[--shell-muted] flex items-center gap-1"><TrendingUp size={14} className="text-[--shell-brand]" /> WIN RATE</p>
-            <p className="font-heading text-2xl font-semibold tracking-tight text-[--shell-foreground]">{summary.win_rate}%</p>
-            <p className="text-xs text-[--shell-muted]">deals won ratio</p>
+          <div className="rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface)] p-4 space-y-2 hover:shadow-engineered transition-shadow">
+            <p className="text-xs font-medium uppercase tracking-[0.08em] text-[var(--shell-muted)] flex items-center gap-1"><TrendingUp size={14} className="text-[var(--shell-brand)]" /> WIN RATE</p>
+            <p className="font-heading text-2xl font-semibold tracking-tight text-[var(--shell-foreground)]">{summary.win_rate}%</p>
+            <p className="text-xs text-[var(--shell-muted)]">deals won ratio</p>
           </div>
-          <div className="rounded-xl border border-[--shell-border] bg-[--shell-surface] p-4 space-y-2 hover:shadow-engineered transition-shadow">
-            <p className="text-xs font-medium uppercase tracking-[0.08em] text-[--shell-muted] flex items-center gap-1"><Users size={14} className="text-[--shell-brand]" /> LEAD CONVERSION</p>
-            <p className="font-heading text-2xl font-semibold tracking-tight text-[--shell-foreground]">{summary.lead_conv_rate}%</p>
-            <p className="text-xs text-[--shell-muted]">qualified leads</p>
+          <div className="rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface)] p-4 space-y-2 hover:shadow-engineered transition-shadow">
+            <p className="text-xs font-medium uppercase tracking-[0.08em] text-[var(--shell-muted)] flex items-center gap-1"><Users size={14} className="text-[var(--shell-brand)]" /> LEAD CONVERSION</p>
+            <p className="font-heading text-2xl font-semibold tracking-tight text-[var(--shell-foreground)]">{summary.lead_conv_rate}%</p>
+            <p className="text-xs text-[var(--shell-muted)]">qualified leads</p>
           </div>
-          <div className="rounded-xl border border-[--shell-border] bg-[--shell-surface] p-4 space-y-2 hover:shadow-engineered transition-shadow">
-            <p className="text-xs font-medium uppercase tracking-[0.08em] text-[--shell-muted] flex items-center gap-1"><Award size={14} className="text-[--shell-brand]" /> TOTAL REVENUE</p>
-            <p className="font-heading text-2xl font-semibold tracking-tight text-[--shell-foreground]">{formatCurrency(summary.total_sales_value)}</p>
-            <p className="text-xs text-[--shell-muted]">confirmed sales value</p>
+          <div className="rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface)] p-4 space-y-2 hover:shadow-engineered transition-shadow">
+            <p className="text-xs font-medium uppercase tracking-[0.08em] text-[var(--shell-muted)] flex items-center gap-1"><Award size={14} className="text-[var(--shell-brand)]" /> TOTAL REVENUE</p>
+            <p className="font-heading text-2xl font-semibold tracking-tight text-[var(--shell-foreground)]">{formatCurrency(summary.total_sales_value)}</p>
+            <p className="text-xs text-[var(--shell-muted)]">confirmed sales value</p>
           </div>
-          <div className="rounded-xl border border-[--shell-border] bg-[--shell-surface] p-4 space-y-2 hover:shadow-engineered transition-shadow">
-            <p className="text-xs font-medium uppercase tracking-[0.08em] text-[--shell-muted] flex items-center gap-1"><BarChart3 size={14} className="text-[--shell-brand]" /> ACTIVE PIPELINE DEALS</p>
-            <p className="font-heading text-2xl font-semibold tracking-tight text-[--shell-foreground]">{summary.total_opportunities}</p>
-            <p className="text-xs text-[--shell-muted]">open opportunities</p>
+          <div className="rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface)] p-4 space-y-2 hover:shadow-engineered transition-shadow">
+            <p className="text-xs font-medium uppercase tracking-[0.08em] text-[var(--shell-muted)] flex items-center gap-1"><BarChart3 size={14} className="text-[var(--shell-brand)]" /> ACTIVE PIPELINE DEALS</p>
+            <p className="font-heading text-2xl font-semibold tracking-tight text-[var(--shell-foreground)]">{summary.total_opportunities}</p>
+            <p className="text-xs text-[var(--shell-muted)]">open opportunities</p>
           </div>
         </div>
       </div>
@@ -134,8 +134,8 @@ export default function ReportsPage() {
               rep_sales.map((item: any, idx: number) => (
                 <div key={idx}>
                   <div className="flex justify-between text-sm font-semibold mb-1">
-                    <span className="text-[--shell-foreground]">{item.rep}</span>
-                    <span className="text-[--shell-brand]">{formatCurrency(item.amount)}</span>
+                    <span className="text-[var(--shell-foreground)]">{item.rep}</span>
+                    <span className="text-[var(--shell-brand)]">{formatCurrency(item.amount)}</span>
                   </div>
                   <Progress value={(item.amount / maxRepSales) * 100} />
                 </div>
@@ -156,8 +156,8 @@ export default function ReportsPage() {
               lead_status.map((item: any, idx: number) => (
                 <div key={idx}>
                   <div className="flex justify-between text-sm font-semibold mb-1">
-                    <span className="text-[--shell-foreground]">{item.status}</span>
-                    <span className="text-[--shell-muted]">{item.count} leads</span>
+                    <span className="text-[var(--shell-foreground)]">{item.status}</span>
+                    <span className="text-[var(--shell-muted)]">{item.count} leads</span>
                   </div>
                   <Progress value={(item.count / maxLeadCount) * 100} className="[&>div]:bg-[#0ea5e9]" />
                 </div>
@@ -178,9 +178,9 @@ export default function ReportsPage() {
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {opp_stages.length > 0 ? (
               opp_stages.map((item: any, idx: number) => (
-                <div key={idx} className="rounded-lg border border-[--shell-border] bg-[--shell-bg] p-4">
-                  <p className="text-xs font-semibold uppercase tracking-[0.08em] text-[--shell-muted]">{item.stage}</p>
-                  <p className="font-heading text-2xl font-semibold tracking-tight text-[--shell-foreground] mt-1">{item.count}</p>
+                <div key={idx} className="rounded-lg border border-[var(--shell-border)] bg-[var(--shell-bg)] p-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--shell-muted)]">{item.stage}</p>
+                  <p className="font-heading text-2xl font-semibold tracking-tight text-[var(--shell-foreground)] mt-1">{item.count}</p>
                   <div className="mt-2">
                     <Progress value={(item.count / maxOppCount) * 100} className="h-1 [&>div]:bg-[#10b981]" />
                   </div>
@@ -197,17 +197,17 @@ export default function ReportsPage() {
 
       <div>
         <div className="mb-5 flex items-center gap-2">
-          <h2 className="font-heading text-xs font-light uppercase tracking-[0.12em] text-[--shell-muted]">RECORDS</h2>
-          <div className="h-px flex-1 bg-[--shell-border]" />
+          <h2 className="font-heading text-xs font-light uppercase tracking-[0.12em] text-[var(--shell-muted)]">RECORDS</h2>
+          <div className="h-px flex-1 bg-[var(--shell-border)]" />
         </div>
         <Card>
-          <div className="flex items-center justify-between border-b border-[--shell-border] p-4">
+          <div className="flex items-center justify-between border-b border-[var(--shell-border)] p-4">
             <div className="relative flex-1 max-w-xs">
-              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[--shell-muted]" />
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--shell-muted)]" />
               <Input placeholder="Search reports..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 h-9 text-sm" />
             </div>
             <div className="flex items-center gap-3">
-              <Filter size={15} className="text-[--shell-muted] shrink-0" />
+              <Filter size={15} className="text-[var(--shell-muted)] shrink-0" />
               <Button variant="outline" size="sm" onClick={() => exportToCSV(filteredReports, "reports")}>
                 <Download size={14} className="mr-1.5" /> Export
               </Button>

@@ -2,14 +2,14 @@ from pydantic import BaseModel
 from typing import List, Optional
 
 class DocumentBase(BaseModel):
-    id_str: str
-    name: str
-    type: str
-    account: str
-    size: str
-    status: str
-    owner: str
-    updated_at: str
+    id_str: Optional[str] = None
+    name: Optional[str] = None
+    type: Optional[str] = None
+    account: Optional[str] = None
+    size: Optional[str] = None
+    status: Optional[str] = None
+    owner: Optional[str] = None
+    updated_at: Optional[str] = None
     file_data: Optional[str] = None
     summary: Optional[str] = None
     files: Optional[str] = None

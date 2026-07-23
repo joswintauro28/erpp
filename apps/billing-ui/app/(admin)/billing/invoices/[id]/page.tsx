@@ -88,9 +88,9 @@ export default function InvoiceDetail() {
 
   if (!invoice) {
     return (
-      <div className="flex flex-col items-center gap-3 py-20 text-[--shell-muted]">
+      <div className="flex flex-col items-center gap-3 py-20 text-[var(--shell-muted)]">
         <FileText className="h-12 w-12" />
-        <p className="text-base font-medium text-[--shell-foreground]">Invoice not found</p>
+        <p className="text-base font-medium text-[var(--shell-foreground)]">Invoice not found</p>
         <Button variant="outline" size="sm" onClick={() => router.push("/billing/invoices")}>Back to Invoices</Button>
       </div>
     );
@@ -107,14 +107,14 @@ export default function InvoiceDetail() {
         </Button>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-3">
-            <h1 className="font-heading text-xl font-semibold tracking-tight text-[--shell-foreground] truncate">
+            <h1 className="font-heading text-xl font-semibold tracking-tight text-[var(--shell-foreground)] truncate">
               {invoice.invoice_number}
             </h1>
             <Badge variant={statusVariant(invoice.status)} className="capitalize shrink-0">
               {invoice.status.replace("_", " ")}
             </Badge>
           </div>
-          <p className="mt-0.5 text-sm text-[--shell-muted] truncate">{invoice.client_name}</p>
+          <p className="mt-0.5 text-sm text-[var(--shell-muted)] truncate">{invoice.client_name}</p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
           {actions.includes("sent") && (
@@ -134,46 +134,46 @@ export default function InvoiceDetail() {
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         <Card><CardContent className="pt-6">
-          <p className="text-xs text-[--shell-muted]">Total Amount</p>
-          <p className="font-heading text-lg font-semibold text-[--shell-foreground]">{money(invoice.total)}</p>
+          <p className="text-xs text-[var(--shell-muted)]">Total Amount</p>
+          <p className="font-heading text-lg font-semibold text-[var(--shell-foreground)]">{money(invoice.total)}</p>
         </CardContent></Card>
         <Card><CardContent className="pt-6">
-          <p className="text-xs text-[--shell-muted]">Paid</p>
-          <p className="font-heading text-lg font-semibold text-[--shell-success]">{money(invoice.paid_amount)}</p>
+          <p className="text-xs text-[var(--shell-muted)]">Paid</p>
+          <p className="font-heading text-lg font-semibold text-[var(--shell-success)]">{money(invoice.paid_amount)}</p>
         </CardContent></Card>
         <Card><CardContent className="pt-6">
-          <p className="text-xs text-[--shell-muted]">Balance Due</p>
-          <p className="font-heading text-lg font-semibold text-[--shell-danger]">{money(invoice.balance_due)}</p>
+          <p className="text-xs text-[var(--shell-muted)]">Balance Due</p>
+          <p className="font-heading text-lg font-semibold text-[var(--shell-danger)]">{money(invoice.balance_due)}</p>
         </CardContent></Card>
         <Card><CardContent className="pt-6">
-          <p className="text-xs text-[--shell-muted]">Due Date</p>
-          <p className="font-heading text-lg font-semibold text-[--shell-foreground]">{formatDate(invoice.due_date)}</p>
+          <p className="text-xs text-[var(--shell-muted)]">Due Date</p>
+          <p className="font-heading text-lg font-semibold text-[var(--shell-foreground)]">{formatDate(invoice.due_date)}</p>
         </CardContent></Card>
       </div>
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         <Card><CardContent className="flex items-center gap-3 pt-6">
-          <Calendar className="h-4 w-4 text-[--shell-accent]" />
-          <div><p className="text-xs text-[--shell-muted]">Issue Date</p><p className="text-sm font-medium">{formatDate(invoice.issue_date)}</p></div>
+          <Calendar className="h-4 w-4 text-[var(--shell-accent)]" />
+          <div><p className="text-xs text-[var(--shell-muted)]">Issue Date</p><p className="text-sm font-medium">{formatDate(invoice.issue_date)}</p></div>
         </CardContent></Card>
         <Card><CardContent className="flex items-center gap-3 pt-6">
-          <MapPin className="h-4 w-4 text-[--chart-3]" />
-          <div><p className="text-xs text-[--shell-muted]">Place of Supply</p><p className="text-sm font-medium">{invoice.place_of_supply || "-"}</p></div>
+          <MapPin className="h-4 w-4 text-[var(--chart-3)]" />
+          <div><p className="text-xs text-[var(--shell-muted)]">Place of Supply</p><p className="text-sm font-medium">{invoice.place_of_supply || "-"}</p></div>
         </CardContent></Card>
         <Card><CardContent className="flex items-center gap-3 pt-6">
-          <Receipt className="h-4 w-4 text-[--chart-2]" />
-          <div><p className="text-xs text-[--shell-muted]">GST Treatment</p><p className="text-sm font-medium capitalize">{invoice.gst_treatment?.replace("_", " ") ?? "-"}</p></div>
+          <Receipt className="h-4 w-4 text-[var(--chart-2)]" />
+          <div><p className="text-xs text-[var(--shell-muted)]">GST Treatment</p><p className="text-sm font-medium capitalize">{invoice.gst_treatment?.replace("_", " ") ?? "-"}</p></div>
         </CardContent></Card>
         <Card><CardContent className="flex items-center gap-3 pt-6">
-          <Building2 className="h-4 w-4 text-[--chart-4]" />
-          <div><p className="text-xs text-[--shell-muted]">Type</p><p className="text-sm font-medium capitalize">{invoice.type?.replace("_", " ") ?? "Receivable"}</p></div>
+          <Building2 className="h-4 w-4 text-[var(--chart-4)]" />
+          <div><p className="text-xs text-[var(--shell-muted)]">Type</p><p className="text-sm font-medium capitalize">{invoice.type?.replace("_", " ") ?? "Receivable"}</p></div>
         </CardContent></Card>
       </div>
 
       {(invoice.status === "sent" || invoice.status === "partially_paid" || invoice.status === "overdue") && invoice.balance_due > 0 && (
-        <div className="flex items-center gap-3 rounded-xl border border-[--shell-accent]/20 bg-gradient-to-r from-[--shell-accent]/5 to-transparent px-5 py-3">
-          <span className="text-sm text-[--shell-muted]">
-            Outstanding: <strong className="text-[--shell-foreground]">{money(invoice.balance_due)}</strong>
+        <div className="flex items-center gap-3 rounded-xl border border-[var(--shell-accent)]/20 bg-gradient-to-r from-[var(--shell-accent)]/5 to-transparent px-5 py-3">
+          <span className="text-sm text-[var(--shell-muted)]">
+            Outstanding: <strong className="text-[var(--shell-foreground)]">{money(invoice.balance_due)}</strong>
           </span>
           <Button size="sm" className="ml-auto" onClick={() => setPayOpen(true)}>
             <CreditCard className="mr-1 h-4 w-4" /> Register Payment
@@ -197,10 +197,10 @@ export default function InvoiceDetail() {
             <TableBody>
               {invoice.items.map((item, i) => (
                 <TableRow key={i}>
-                  <TableCell className="text-xs text-[--shell-muted]">{i + 1}</TableCell>
+                  <TableCell className="text-xs text-[var(--shell-muted)]">{i + 1}</TableCell>
                   <TableCell>
                     <p className="text-sm font-medium">{item.description}</p>
-                    {item.product && <p className="text-xs text-[--shell-muted]">{item.product}</p>}
+                    {item.product && <p className="text-xs text-[var(--shell-muted)]">{item.product}</p>}
                   </TableCell>
                   <TableCell className="text-right">{item.quantity}</TableCell>
                   <TableCell className="text-right font-mono text-xs">{money(item.unit_price)}</TableCell>
@@ -213,8 +213,8 @@ export default function InvoiceDetail() {
               {invoice.discount > 0 && (
                 <TableRow>
                   <TableCell colSpan={4} />
-                  <TableCell className="text-xs text-[--shell-muted] text-right">Discount</TableCell>
-                  <TableCell className="text-right font-mono text-sm text-[--shell-danger]">
+                  <TableCell className="text-xs text-[var(--shell-muted)] text-right">Discount</TableCell>
+                  <TableCell className="text-right font-mono text-sm text-[var(--shell-danger)]">
                     -{money(invoice.discount)}
                   </TableCell>
                 </TableRow>
@@ -222,28 +222,28 @@ export default function InvoiceDetail() {
               {invoice.cgst > 0 && (
                 <TableRow>
                   <TableCell colSpan={4} />
-                  <TableCell className="text-xs text-[--shell-muted] text-right">CGST @{invoice.items[0]?.gst_percent ? (Number(invoice.items[0].gst_percent) / 2) : 0}%</TableCell>
+                  <TableCell className="text-xs text-[var(--shell-muted)] text-right">CGST @{invoice.items[0]?.gst_percent ? (Number(invoice.items[0].gst_percent) / 2) : 0}%</TableCell>
                   <TableCell className="text-right font-mono text-xs">{money(invoice.cgst)}</TableCell>
                 </TableRow>
               )}
               {invoice.sgst > 0 && (
                 <TableRow>
                   <TableCell colSpan={4} />
-                  <TableCell className="text-xs text-[--shell-muted] text-right">SGST @{invoice.items[0]?.gst_percent ? (Number(invoice.items[0].gst_percent) / 2) : 0}%</TableCell>
+                  <TableCell className="text-xs text-[var(--shell-muted)] text-right">SGST @{invoice.items[0]?.gst_percent ? (Number(invoice.items[0].gst_percent) / 2) : 0}%</TableCell>
                   <TableCell className="text-right font-mono text-xs">{money(invoice.sgst)}</TableCell>
                 </TableRow>
               )}
               {invoice.igst > 0 && (
                 <TableRow>
                   <TableCell colSpan={4} />
-                  <TableCell className="text-xs text-[--shell-muted] text-right">IGST @{invoice.items[0]?.gst_percent ?? 0}%</TableCell>
+                  <TableCell className="text-xs text-[var(--shell-muted)] text-right">IGST @{invoice.items[0]?.gst_percent ?? 0}%</TableCell>
                   <TableCell className="text-right font-mono text-xs">{money(invoice.igst)}</TableCell>
                 </TableRow>
               )}
               <TableRow>
                 <TableCell colSpan={4} />
-                <TableCell className="text-xs font-semibold text-[--shell-foreground] text-right">Total</TableCell>
-                <TableCell className="text-right font-heading text-base font-bold text-[--shell-brand]">
+                <TableCell className="text-xs font-semibold text-[var(--shell-foreground)] text-right">Total</TableCell>
+                <TableCell className="text-right font-heading text-base font-bold text-[var(--shell-brand)]">
                   {money(invoice.total)}
                 </TableCell>
               </TableRow>
@@ -256,11 +256,11 @@ export default function InvoiceDetail() {
         <Card>
           <CardContent className="p-0">
             <div className="flex items-center gap-2 px-5 py-3 border-b border-border">
-              <CreditCard className="h-4 w-4 text-[--shell-accent]" />
-              <span className="text-xs font-semibold uppercase tracking-[0.08em] text-[--shell-foreground]">
+              <CreditCard className="h-4 w-4 text-[var(--shell-accent)]" />
+              <span className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--shell-foreground)]">
                 Payment History
               </span>
-              <span className="text-xs text-[--shell-muted] ml-auto">
+              <span className="text-xs text-[var(--shell-muted)] ml-auto">
                 {money(invoice.payments.reduce((s, p) => s + p.amount, 0))} total collected
               </span>
             </div>
@@ -279,7 +279,7 @@ export default function InvoiceDetail() {
                   <TableRow key={p.id}>
                     <TableCell className="text-xs">{formatDate(p.payment_date ?? p.created_at)}</TableCell>
                     <TableCell className="capitalize text-xs">{p.payment_method?.replace("_", " ") ?? "-"}</TableCell>
-                    <TableCell className="text-xs text-[--shell-muted] font-mono">{p.reference_number ?? p.reference_id ?? "-"}</TableCell>
+                    <TableCell className="text-xs text-[var(--shell-muted)] font-mono">{p.reference_number ?? p.reference_id ?? "-"}</TableCell>
                     <TableCell className="text-right font-mono text-sm font-medium">{money(p.amount)}</TableCell>
                     <TableCell><Badge variant={p.status === "cleared" ? "default" : "outline"} className="capitalize text-xs">{p.status}</Badge></TableCell>
                   </TableRow>
@@ -293,10 +293,10 @@ export default function InvoiceDetail() {
       {invoice.notes && (
         <Card>
           <CardContent className="flex items-start gap-3 px-5 py-4">
-            <FileSignature className="h-4 w-4 text-[--shell-muted] mt-0.5 shrink-0" />
+            <FileSignature className="h-4 w-4 text-[var(--shell-muted)] mt-0.5 shrink-0" />
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.08em] text-[--shell-muted] mb-1">Notes</p>
-              <p className="text-sm text-[--shell-foreground] whitespace-pre-wrap">{invoice.notes}</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--shell-muted)] mb-1">Notes</p>
+              <p className="text-sm text-[var(--shell-foreground)] whitespace-pre-wrap">{invoice.notes}</p>
             </div>
           </CardContent>
         </Card>
@@ -308,9 +308,9 @@ export default function InvoiceDetail() {
             <DialogTitle>Register Payment</DialogTitle>
           </DialogHeader>
           <form className="space-y-5" onSubmit={handleRegisterPayment}>
-            <div className="flex items-center justify-between rounded-lg border border-[--shell-border] bg-[--shell-surface] px-4 py-3">
-              <span className="text-sm text-[--shell-muted]">Balance Due</span>
-              <span className="font-mono font-semibold text-[--shell-brand]">{money(invoice.balance_due)}</span>
+            <div className="flex items-center justify-between rounded-lg border border-[var(--shell-border)] bg-[var(--shell-surface)] px-4 py-3">
+              <span className="text-sm text-[var(--shell-muted)]">Balance Due</span>
+              <span className="font-mono font-semibold text-[var(--shell-brand)]">{money(invoice.balance_due)}</span>
             </div>
             <div className="space-y-2">
               <Label htmlFor="pay-amount">Amount (₹)</Label>

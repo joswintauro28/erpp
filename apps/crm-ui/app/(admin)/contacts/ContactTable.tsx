@@ -25,7 +25,7 @@ interface ContactTableProps {
 export default function ContactTable({ contacts, onView, onEdit, onDelete }: ContactTableProps) {
   if (!contacts?.length) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 text-[--shell-muted]">
+      <div className="flex flex-col items-center justify-center py-16 text-[var(--shell-muted)]">
         <p className="text-sm">No contacts found.</p>
       </div>
     );
@@ -49,18 +49,18 @@ export default function ContactTable({ contacts, onView, onEdit, onDelete }: Con
       <TableBody>
         {contacts.map((item: any) => (
           <TableRow key={item.id}>
-            <TableCell className="text-[--shell-muted] cursor-pointer" onClick={() => onView(item)}>{item.id_str}</TableCell>
-            <TableCell className="font-medium text-[--shell-foreground] cursor-pointer" onClick={() => onView(item)}>{item.name}</TableCell>
+            <TableCell className="text-[var(--shell-muted)] cursor-pointer" onClick={() => onView(item)}>{item.id_str}</TableCell>
+            <TableCell className="font-medium text-[var(--shell-foreground)] cursor-pointer" onClick={() => onView(item)}>{item.name}</TableCell>
             <TableCell>{item.role}</TableCell>
             <TableCell>{item.account}</TableCell>
             <TableCell>{item.email}</TableCell>
             <TableCell>{item.phone}</TableCell>
             <TableCell><Badge variant={badgeVariant(item.type)}>{item.type}</Badge></TableCell>
-            <TableCell className="text-[--shell-muted]">{item.last_contact}</TableCell>
+            <TableCell className="text-[var(--shell-muted)]">{item.last_contact}</TableCell>
             <TableCell>
-              <div className="flex gap-2 text-[--shell-muted]">
-                <Button size="icon-sm" className="hover:text-[--shell-foreground] cursor-pointer" onClick={() => onEdit(item)} title="Edit"><Edit2 size={14} /></Button>
-                <Button size="icon-sm" className="hover:text-[--shell-danger] cursor-pointer" onClick={() => onDelete(item)} title="Delete"><Trash2 size={14} /></Button>
+              <div className="flex gap-2 text-[var(--shell-muted)]">
+                <Button size="icon-sm" className="hover:text-[var(--shell-foreground)] cursor-pointer" onClick={() => onEdit(item)} title="Edit"><Edit2 size={14} /></Button>
+                <Button size="icon-sm" className="hover:text-[var(--shell-danger)] cursor-pointer" onClick={() => onDelete(item)} title="Delete"><Trash2 size={14} /></Button>
               </div>
             </TableCell>
           </TableRow>
