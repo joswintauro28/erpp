@@ -69,6 +69,10 @@ async def create_invoice_from_dispatch(token: str, body: dict) -> dict:
     return await _post("/invoices/from-dispatch", token, body)
 
 
+async def update_invoice(token: str, invoice_id: int, body: dict) -> dict:
+    return await _put(f"/invoices/{invoice_id}", token, body)
+
+
 async def update_invoice_status(token: str, invoice_id: int, status: str) -> dict:
     return await _put(f"/invoices/{invoice_id}/status", token, {"status": status})
 
