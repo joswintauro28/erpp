@@ -24,7 +24,7 @@ import PaymentsLoading from "./loading";
 
 export default function Payments() {
   const [payments, setPayments] = useState<BillingPayment[]>([]);
-  const [metrics, setMetrics] = useState<{ dailyTotal: number; monthlyTotal: number; outstandingTotal: number; totalRefunds: number; failedTransactions: number } | null>(null);
+  const [metrics, setMetrics] = useState<{ today: number; this_month: number; outstanding: number; refunds: number; failed: number } | null>(null);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [recordOpen, setRecordOpen] = useState(false);
@@ -32,7 +32,7 @@ export default function Payments() {
   const [saving, setSaving] = useState(false);
   const [formInvoice, setFormInvoice] = useState("");
   const [formAmount, setFormAmount] = useState("");
-  const [formMethod, setFormMethod] = useState("Bank Transfer");
+  const [formMethod, setFormMethod] = useState("Bank_Transfer");
   const [formRef, setFormRef] = useState("");
   const [formNotes, setFormNotes] = useState("");
   const [invoices, setInvoices] = useState<{ id: number; number: string; client: string; balance: number }[]>([]);
@@ -46,7 +46,7 @@ export default function Payments() {
     setLoading(true);
     Promise.all([
       api.get<BillingPayment[]>("/payments"),
-      api.get<{ dailyTotal: number; monthlyTotal: number; outstandingTotal: number; totalRefunds: number; failedTransactions: number }>("/payments/metrics"),
+      api.get<{ today: number; this_month: number; outstanding: number; refunds: number; failed: number }>("/payments/metrics"),
       api.get<any[]>("/invoices?status=sent,partially_paid,overdue").catch(() => []),
     ])
       .then(([p, m, invs]) => {
@@ -79,18 +79,18 @@ export default function Payments() {
   const handleRecordPayment = async (e: React.FormEvent) => {
     e.preventDefault();
     const selected = invoices.find((i) => i.number === formInvoice);
-    if (!formAmount || !formInvoice) return;
+    if (!formAmount || !formInvoice || !selected) return;
     setSaving(true);
     try {
       await api.post("/payments", {
-        invoice_id: selected?.id ?? formInvoice,
+        invoiceId: selected.id,
         amount: Number(formAmount),
-        method: formMethod,
-        reference: formRef || undefined,
+        paymentMethod: formMethod,
+        referenceId: formRef || undefined,
         notes: formNotes || undefined,
       });
       setRecordOpen(false);
-      setFormInvoice(""); setFormAmount(""); setFormMethod("Bank Transfer");
+      setFormInvoice(""); setFormAmount(""); setFormMethod("Bank_Transfer");
       setFormRef(""); setFormNotes("");
       loadData();
     } catch {
@@ -128,23 +128,23 @@ export default function Payments() {
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-5">
           <Card><CardContent className="pt-6">
             <p className="text-xs text-[--shell-muted]">Today</p>
-            <p className="font-heading text-lg font-semibold text-[--shell-foreground]">{money(metrics.dailyTotal)}</p>
+            <p className="font-heading text-lg font-semibold text-[--shell-foreground]">{money(metrics.today)}</p>
           </CardContent></Card>
           <Card><CardContent className="pt-6">
             <p className="text-xs text-[--shell-muted]">This Month</p>
-            <p className="font-heading text-lg font-semibold text-[--shell-foreground]">{money(metrics.monthlyTotal)}</p>
+            <p className="font-heading text-lg font-semibold text-[--shell-foreground]">{money(metrics.this_month)}</p>
           </CardContent></Card>
           <Card><CardContent className="pt-6">
             <p className="text-xs text-[--shell-muted]">Outstanding</p>
-            <p className="font-heading text-lg font-semibold text-[--shell-danger]">{money(metrics.outstandingTotal)}</p>
+            <p className="font-heading text-lg font-semibold text-[--shell-danger]">{money(metrics.outstanding)}</p>
           </CardContent></Card>
           <Card><CardContent className="pt-6">
             <p className="text-xs text-[--shell-muted]">Refunds</p>
-            <p className="font-heading text-lg font-semibold text-[--shell-danger]">{money(metrics.totalRefunds)}</p>
+            <p className="font-heading text-lg font-semibold text-[--shell-danger]">{money(metrics.refunds)}</p>
           </CardContent></Card>
           <Card><CardContent className="pt-6">
             <p className="text-xs text-[--shell-muted]">Failed</p>
-            <p className="font-heading text-lg font-semibold text-[--shell-danger]">{metrics.failedTransactions}</p>
+            <p className="font-heading text-lg font-semibold text-[--shell-danger]">{metrics.failed}</p>
           </CardContent></Card>
         </div>
       )}
@@ -257,9 +257,9 @@ export default function Payments() {
                   <Select value={formMethod} onValueChange={(v) => v !== null && setFormMethod(v)}>
                     <SelectTrigger id="bi-pay-method"><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Bank Transfer">Bank Transfer</SelectItem>
+                      <SelectItem value="Bank_Transfer">Bank Transfer</SelectItem>
                       <SelectItem value="UPI">UPI</SelectItem>
-                      <SelectItem value="Credit Card">Credit Card</SelectItem>
+                      <SelectItem value="Credit_Card">Credit Card</SelectItem>
                       <SelectItem value="Cheque">Cheque</SelectItem>
                       <SelectItem value="Cash">Cash</SelectItem>
                     </SelectContent>
