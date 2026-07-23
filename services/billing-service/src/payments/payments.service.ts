@@ -6,10 +6,15 @@ import {
 import { PrismaService } from "../prisma/prisma.service";
 import { Prisma } from "@prisma/client";
 import { CreatePaymentDto } from "./dto/create-payment.dto";
+import { EventBusService } from "../event-bus/event-bus.service";
+import { Events } from "../event-bus/event-types";
 
 @Injectable()
 export class PaymentsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly eventBus: EventBusService,
+  ) {}
 
   private async getAccountIds(organizationId: number) {
     const accounts = await this.prisma.account.findMany({
@@ -41,11 +46,11 @@ export class PaymentsService {
       id: p.id,
       paymentId: `PAY-${String(p.id).padStart(4, "0")}`,
       invoiceId: p.invoiceId,
-      invoiceNumber: p.invoice?.invoiceNumber ?? `INV-${p.invoiceId}`,
-      clientName: p.invoice?.clientName ?? "Unknown",
+      invoiceNumber: p.invoice?.invoiceNumber ?? (p.invoiceId ? `INV-${p.invoiceId}` : "—"),
+      clientName: p.invoice?.clientName ?? (p.invoiceId ? "Unknown Client" : "—"),
       amount: Number(p.amount),
       refundedAmount: p.status === "refunded" ? Number(p.amount) : 0,
-      method: p.paymentMethod ?? "Unknown",
+      method: p.paymentMethod ?? "—",
       reference: p.referenceId ?? "",
       date: p.paymentDate?.toISOString().split("T")[0] ?? "",
       status: p.status,
@@ -70,10 +75,10 @@ export class PaymentsService {
       id: p.id,
       paymentId: `PAY-${String(p.id).padStart(4, "0")}`,
       invoiceId: p.invoiceId,
-      invoiceNumber: p.invoice?.invoiceNumber ?? `INV-${p.invoiceId}`,
-      clientName: p.invoice?.clientName ?? "Unknown",
+      invoiceNumber: p.invoice?.invoiceNumber ?? (p.invoiceId ? `INV-${p.invoiceId}` : "—"),
+      clientName: p.invoice?.clientName ?? (p.invoiceId ? "Unknown Client" : "—"),
       amount: Number(p.amount),
-      method: p.paymentMethod ?? "Unknown",
+      method: p.paymentMethod ?? "—",
       reference: p.referenceId ?? "",
       date: p.paymentDate?.toISOString().split("T")[0] ?? "",
       status: p.status,
@@ -152,6 +157,14 @@ export class PaymentsService {
               ],
             });
           }
+          this.eventBus.emit(Events.InvoicePaid, {
+            organizationId,
+            invoiceId: payment.invoiceId,
+            invoiceNumber: invoice.invoiceNumber ?? `INV-${payment.invoiceId}`,
+            paymentId: id,
+            amount: Number(payment.amount),
+            timestamp: new Date(),
+          });
         }
       }
 
@@ -177,6 +190,16 @@ export class PaymentsService {
           notes: dto.notes,
           status: "pending",
         },
+      });
+
+      this.eventBus.emit(Events.PaymentRecorded, {
+        organizationId,
+        paymentId: payment.id,
+        invoiceId: dto.invoiceId,
+        invoiceNumber: invoice?.invoiceNumber ?? `INV-${dto.invoiceId}`,
+        amount: Number(dto.amount),
+        method: dto.paymentMethod ?? "Unknown",
+        timestamp: new Date(),
       });
 
       return payment;
@@ -255,6 +278,14 @@ export class PaymentsService {
           ],
         });
       }
+
+      this.eventBus.emit(Events.PaymentRefunded, {
+        organizationId,
+        paymentId: id,
+        invoiceId: payment.invoiceId!,
+        amount: Number(payment.amount),
+        timestamp: new Date(),
+      });
 
       return { message: "Payment refunded successfully" };
     });
