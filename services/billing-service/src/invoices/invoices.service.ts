@@ -8,12 +8,18 @@ import {
 import { PrismaService } from "../prisma/prisma.service";
 import { Prisma, InvoiceStatus, GstTreatment } from "@prisma/client";
 import { CreateInvoiceDto } from "./dto/create-invoice.dto";
+import { UpdateInvoiceDto } from "./dto/update-invoice.dto";
+import { EventBusService } from "../event-bus/event-bus.service";
+import { Events } from "../event-bus/event-types";
 
 @Injectable()
 export class InvoicesService {
   private readonly logger = new Logger(InvoicesService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly eventBus: EventBusService,
+  ) {}
 
   private toNumber(value: any): number {
     return value != null ? Number(value) : 0;
@@ -164,7 +170,129 @@ export class InvoicesService {
       },
     });
 
-    return this.flattenInvoice(raw);
+    const result = this.flattenInvoice(raw);
+
+    this.eventBus.emit(Events.InvoiceCreated, {
+      organizationId,
+      invoiceId: raw.id,
+      invoiceNumber: result.invoiceNumber ?? `INV-${raw.id}`,
+      clientName: dto.clientName ?? "Unknown",
+      total: result.total,
+      timestamp: new Date(),
+    });
+
+    return result;
+  }
+
+  async update(
+    id: number,
+    organizationId: number,
+    dto: UpdateInvoiceDto,
+  ): Promise<any> {
+    this.logger.log(`Updating invoice ${id} for org: ${organizationId}`);
+
+    const existing = await this.prisma.invoice.findFirst({
+      where: { id, organizationId },
+    });
+    if (!existing) throw new NotFoundException("Invoice not found");
+
+    if (existing.status !== "draft") {
+      throw new BadRequestException(
+        "Only draft invoices can be edited. Current status: " + existing.status,
+      );
+    }
+
+    const gstTreatment = dto.gstTreatment ?? dto.gst_treatment ?? existing.gstTreatment;
+    const clientId = dto.clientId ?? dto.client_id ?? existing.clientId;
+    const clientName = dto.clientName ?? dto.client_name ?? existing.clientName;
+    const vendorId = dto.vendorId ?? dto.vendor_id ?? existing.vendorId;
+    const vendorName = dto.vendorName ?? dto.vendor_name ?? existing.vendorName;
+    const invoiceNumber = dto.invoiceNumber ?? dto.invoice_number ?? existing.invoiceNumber;
+    const placeOfSupply = dto.placeOfSupply ?? dto.place_of_supply ?? existing.placeOfSupply;
+    const rawIssueDate = dto.issueDate ?? dto.issue_date;
+    const rawDueDate = dto.dueDate ?? dto.due_date;
+    const discountType = dto.discountType ?? dto.discount_type ?? existing.discountType;
+
+    let subtotal = 0;
+    let cgst = 0;
+    let sgst = 0;
+    let igst = 0;
+
+    const itemsData = dto.items?.map((item) => {
+      const qty = Number(item.quantity ?? 1);
+      const unitPrice = Number(item.unitPrice ?? item.unit_price ?? 0);
+      const gstRate = Number(item.gstRate ?? item.gst_rate ?? item.gst_percent ?? 0);
+      const amount = qty * unitPrice;
+      subtotal += amount;
+
+      if (gstTreatment === GstTreatment.interstate) {
+        igst += (amount * gstRate) / 100;
+      } else {
+        const half = (amount * gstRate) / 200;
+        cgst += half;
+        sgst += half;
+      }
+
+      return {
+        productId: item.productId ?? item.product_id,
+        description: item.description ?? item.product ?? "",
+        quantity: new Prisma.Decimal(qty),
+        unitPrice: new Prisma.Decimal(unitPrice),
+        costPrice: new Prisma.Decimal(item.costPrice ?? item.cost_price ?? 0),
+        gstRate: new Prisma.Decimal(gstRate),
+        amount: new Prisma.Decimal(amount),
+      };
+    });
+
+    const discount = Number(dto.discount ?? existing.discount);
+    const taxableValue = (itemsData ? subtotal : Number(existing.subtotal)) - discount;
+    const taxTotal = itemsData ? (cgst + sgst + igst) : (Number(existing.cgst) + Number(existing.sgst) + Number(existing.igst));
+    const total = taxableValue + taxTotal;
+
+    return this.prisma.$transaction(async (tx) => {
+      if (itemsData) {
+        await tx.invoiceItem.deleteMany({ where: { invoiceId: id } });
+      }
+
+      const updated = await tx.invoice.update({
+        where: { id },
+        data: {
+          type: dto.type,
+          clientId,
+          clientName,
+          vendorId,
+          vendorName,
+          invoiceNumber,
+          gstTreatment,
+          placeOfSupply,
+          issueDate: rawIssueDate ? new Date(rawIssueDate) : undefined,
+          dueDate: rawDueDate ? new Date(rawDueDate) : undefined,
+          notes: dto.notes,
+          discount: dto.discount !== undefined ? new Prisma.Decimal(discount) : undefined,
+          discountType,
+          subtotal: itemsData ? new Prisma.Decimal(subtotal) : undefined,
+          cgst: itemsData ? new Prisma.Decimal(cgst) : undefined,
+          sgst: itemsData ? new Prisma.Decimal(sgst) : undefined,
+          igst: itemsData ? new Prisma.Decimal(igst) : undefined,
+          taxTotal: itemsData ? new Prisma.Decimal(taxTotal) : undefined,
+          total: new Prisma.Decimal(total),
+          balanceDue: new Prisma.Decimal(total),
+          items: itemsData ? { create: itemsData } : undefined,
+        },
+        include: { items: true, payments: true },
+      });
+
+      const result = this.flattenInvoice(updated);
+
+      this.eventBus.emit(Events.InvoiceUpdated, {
+        organizationId,
+        invoiceId: id,
+        invoiceNumber: result.invoiceNumber ?? `INV-${id}`,
+        timestamp: new Date(),
+      });
+
+      return result;
+    });
   }
 
   async createFromDispatch(organizationId: number, dto: any): Promise<any> {
@@ -278,7 +406,29 @@ export class InvoicesService {
         await this.writeSentLedgerEntries(tx, organizationId, updated);
       }
 
-      return this.flattenInvoice(updated);
+      const result = this.flattenInvoice(updated);
+
+      this.eventBus.emit(Events.InvoiceStatusChanged, {
+        organizationId,
+        invoiceId: id,
+        invoiceNumber: result.invoiceNumber ?? `INV-${id}`,
+        fromStatus: invoice.status,
+        toStatus: status,
+        timestamp: new Date(),
+      });
+
+      if (status === "paid") {
+        this.eventBus.emit(Events.InvoicePaid, {
+          organizationId,
+          invoiceId: id,
+          invoiceNumber: result.invoiceNumber ?? `INV-${id}`,
+          paymentId: 0,
+          amount: result.paidAmount,
+          timestamp: new Date(),
+        });
+      }
+
+      return result;
     });
   }
 
