@@ -5,19 +5,19 @@
   "sourceRoot": "services/erp-service",
   "targets": {
     "dev": {
-      "command": ".venv\\Scripts\\uvicorn app.main:app --reload",
+      "command": ".venv/bin/uvicorn app.main:app --reload",
       "options": {
         "cwd": "services/erp-service"
       }
     },
     "migrate": {
-      "command": ".venv\\Scripts\\alembic upgrade head",
+      "command": ".venv/bin/alembic upgrade head",
       "options": {
         "cwd": "services/erp-service"
       }
     },
     "seed": {
-      "command": ".venv\\Scripts\\python scripts/seed.py",
+      "command": ".venv/bin/python scripts/seed.py",
       "options": {
         "cwd": "services/erp-service"
       }
