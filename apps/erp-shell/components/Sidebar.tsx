@@ -29,6 +29,8 @@ import {
   Mail,
   FileClock,
   LogOut,
+  Target,
+  Search,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getAccessToken } from "@datavex/auth-middleware";
@@ -62,10 +64,29 @@ const navItems: NavItem[] = [
     icon: UserPlus,
     sections: [
       {
-        name: "Sales Pipeline",
+        name: "Sales",
         children: [
           { name: "Leads", href: "/crm/leads", icon: UserPlus },
-          { name: "Clients", href: "/crm/clients", icon: Users },
+          { name: "Opportunities", href: "/crm/opportunities", icon: Target },
+          { name: "Requirements", href: "/crm/requirements", icon: ClipboardList },
+          { name: "Quotations", href: "/crm/quotations", icon: FileText },
+          { name: "Sales Orders", href: "/crm/sales-orders", icon: ShoppingCart },
+        ],
+      },
+      {
+        name: "Core",
+        children: [
+          { name: "Customers", href: "/crm/customers", icon: Users },
+          { name: "Contacts", href: "/crm/contacts", icon: Users },
+          { name: "Documents", href: "/crm/documents", icon: FileText },
+        ],
+      },
+      {
+        name: "Intelligence",
+        children: [
+          { name: "Reports", href: "/crm/reports", icon: BarChart2 },
+          { name: "AI Assistant", href: "/crm/ai-assistant", icon: Sparkles },
+          { name: "Lead Discovery", href: "/crm/lead-discovery", icon: Search },
         ],
       },
     ],

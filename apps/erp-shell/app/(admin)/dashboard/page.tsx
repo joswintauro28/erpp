@@ -9,7 +9,7 @@ import {
 import {
   ArrowUp, ArrowDown, Wallet, Clock, FileText, Users, TrendingUp,
   AlertTriangle, ShoppingCart, DollarSign, Plus, UserPlus, Package,
-  BarChart3, Layers,
+  BarChart3, Layers, Target, Lightbulb,
 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +18,8 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@
 import { api } from "@/services/api";
 import type { DashboardData } from "@/types/dashboard";
 import DashboardLoading from "./loading";
+import PipelineChart from "./PipelineChart";
+import Recommendations from "./Recommendations";
 
 const CHART_COLORS = [
   "var(--chart-1)",
@@ -64,7 +66,7 @@ function KpiCard({ label, value, subtitle, icon: Icon, trend, color, index }: {
 }) {
   return (
     <div
-      className="animate-kpi flex flex-col gap-1.5 rounded-xl border border-[--shell-border] bg-[--shell-surface] p-5 transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1)]"
+      className="animate-kpi flex flex-col gap-1.5 rounded-xl border border-[--shell-border] bg-[--shell-surface] p-5 transition-all duration-200 hover:-translate-y-1 hover:shadow-engineered"
       style={{ animationDelay: `${index * 0.05}s` }}
     >
       <div className="flex items-center justify-between">
@@ -115,18 +117,23 @@ export default function Dashboard() {
     recentInvoices: [],
     alerts: { overdue_invoices: 0, low_stock_products: 0 },
     clientGrowth: [],
+    crmDashboard: null,
+    pipelineValue: 0,
+    pipelineStages: [],
+    recommendations: [],
   });
 
   useEffect(() => {
     async function fetchDashboard() {
       try {
-        const [stats, recent, trend, summary, payments, growth] = await Promise.all([
+        const [stats, recent, trend, summary, payments, growth, crm] = await Promise.all([
           api.get<DashboardData["stats"]>("/dashboard/stats"),
           api.get<DashboardData["recentInvoices"]>("/dashboard/recent-invoices"),
           api.get<DashboardData["revenueTrend"]>("/dashboard/revenue-trend"),
           api.get<Record<string, { count: number; percentage: number }>>("/dashboard/invoice-summary"),
           api.get<{ method: string; count: number; amount: number }[]>("/dashboard/payment-analytics"),
           api.get<{ month: string; count: number }[]>("/dashboard/client-growth"),
+          api.get<any>("/dashboard/crm"),
         ]);
 
         const invoiceSummary = Object.entries(summary ?? {}).map(([name, item]) => ({
@@ -134,6 +141,10 @@ export default function Dashboard() {
           count: item.count,
           value: item.percentage,
         }));
+
+        const crmDash = crm ?? { metrics: [], pipeline_stages: [], recommendations: [] };
+        const stages = crmDash.pipeline_stages ?? [];
+        const pv = stages.length > 0 ? stages.reduce((s: number, st: any) => s + st.value, 0) : 0;
 
         setData({
           stats,
@@ -148,6 +159,10 @@ export default function Dashboard() {
             low_stock_products: stats?.low_stock_count ?? 0,
           },
           clientGrowth: growth ?? [],
+          crmDashboard: crmDash,
+          pipelineValue: pv,
+          pipelineStages: stages,
+          recommendations: crmDash.recommendations ?? [],
         });
       } catch {
         // Keep initial state
@@ -164,6 +179,7 @@ export default function Dashboard() {
   const hasAlerts = (data.alerts.overdue_invoices > 0 || data.alerts.low_stock_products > 0);
   const hasLowStock = (s?.low_stock_count ?? 0) > 0;
   const hasOverdue = (data.alerts.overdue_invoices ?? 0) > 0;
+  const hasRecommendations = data.recommendations.length > 0;
 
   const totalRevenue = s?.total_revenue ?? 0;
   const clientGrowthCount = data?.clientGrowth?.length
@@ -173,7 +189,7 @@ export default function Dashboard() {
   return (
     <div className="space-y-10 lg:space-y-12">
       {/* Alert Banner */}
-      {hasAlerts && (
+      {(hasAlerts || hasRecommendations) && (
         <div className="flex flex-wrap items-center gap-3 rounded-xl border border-[--shell-accent]/20 bg-gradient-to-r from-[--shell-accent]/5 to-transparent px-5 py-3.5">
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[--shell-accent]/10">
             <AlertTriangle className="h-4 w-4 text-[--shell-accent]" />
@@ -190,6 +206,12 @@ export default function Dashboard() {
                 {data!.alerts.low_stock_products} low-stock item{data!.alerts.low_stock_products !== 1 ? "s" : ""}
               </Badge>
             )}
+            {hasRecommendations && (
+              <Badge variant="secondary" className="text-xs">
+                <Lightbulb className="h-3 w-3 mr-1 inline" />
+                {data.recommendations.length} AI insight{data.recommendations.length !== 1 ? "s" : ""}
+              </Badge>
+            )}
           </div>
         </div>
       )}
@@ -202,7 +224,7 @@ export default function Dashboard() {
           </h2>
           <div className="h-px flex-1 bg-[--shell-border]" />
         </div>
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
           <KpiCard
             label="Revenue (MTD)"
             value={f(totalRevenue)}
@@ -228,12 +250,28 @@ export default function Dashboard() {
             index={2}
           />
           <KpiCard
+            label="Pipeline Value"
+            value={f(data.pipelineValue)}
+            subtitle={`${data.pipelineStages.length} stage${data.pipelineStages.length !== 1 ? "s" : ""} active`}
+            icon={Layers}
+            color="var(--chart-5)"
+            index={3}
+          />
+          <KpiCard
+            label="Open Opportunities"
+            value={String(s?.open_opportunities ?? 0)}
+            subtitle={s?.open_opportunities ? `${s.open_opportunities} active` : "None active"}
+            icon={Target}
+            color="var(--chart-4)"
+            index={4}
+          />
+          <KpiCard
             label="Clients"
-            value={String(s?.total_clients ?? 0)}
+            value={String(s?.total_customers ?? s?.total_clients ?? 0)}
             subtitle={`${clientGrowthCount > 0 ? `+${clientGrowthCount} this month` : "Registered"}`}
             icon={Users}
             color="var(--chart-4)"
-            index={3}
+            index={5}
           />
         </div>
       </section>
@@ -250,8 +288,8 @@ export default function Dashboard() {
           <Button size="sm" variant="outline" className="gap-1.5 text-xs" onClick={() => router.push("/billing/invoices")}>
             <Plus className="h-3.5 w-3.5" /> New Invoice
           </Button>
-          <Button size="sm" variant="outline" className="gap-1.5 text-xs" onClick={() => router.push("/crm/clients")}>
-            <UserPlus className="h-3.5 w-3.5" /> Add Client
+          <Button size="sm" variant="outline" className="gap-1.5 text-xs" onClick={() => router.push("/crm/customers")}>
+            <UserPlus className="h-3.5 w-3.5" /> Add Customer
           </Button>
           <Button size="sm" variant="outline" className="gap-1.5 text-xs" onClick={() => router.push("/inventory/products")}>
             <Package className="h-3.5 w-3.5" /> New Product
@@ -259,10 +297,13 @@ export default function Dashboard() {
           <Button size="sm" variant="outline" className="gap-1.5 text-xs" onClick={() => router.push("/crm/leads")}>
             <Layers className="h-3.5 w-3.5" /> Add Lead
           </Button>
+          <Button size="sm" variant="outline" className="gap-1.5 text-xs" onClick={() => router.push("/crm/opportunities")}>
+            <Target className="h-3.5 w-3.5" /> New Opportunity
+          </Button>
         </div>
       </section>
 
-      {/* Charts */}
+      {/* Analytics */}
       <section>
         <div className="mb-5 flex items-center gap-2">
           <h2 className="font-heading text-xs font-light uppercase tracking-[0.12em] text-[--shell-muted]">
@@ -272,7 +313,7 @@ export default function Dashboard() {
         </div>
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           {/* Revenue Trend */}
-          <Card className="hover:shadow-md transition-shadow duration-200 border-[--shell-border] bg-[--shell-surface]">
+          <Card className="hover:shadow-engineered transition-shadow duration-200 border-[--shell-border] bg-[--shell-surface]">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <div>
                 <CardTitle className="flex items-center gap-2 text-sm">
@@ -324,7 +365,7 @@ export default function Dashboard() {
           </Card>
 
           {/* Invoice Summary (Donut) */}
-          <Card className="hover:shadow-md transition-shadow duration-200 border-[--shell-border] bg-[--shell-surface]">
+          <Card className="hover:shadow-engineered transition-shadow duration-200 border-[--shell-border] bg-[--shell-surface]">
             <CardHeader className="flex flex-row items-center justify-between pb-2 border-b border-[--shell-border]/20">
               <div>
                 <CardTitle className="flex items-center gap-2 text-sm font-semibold text-[--shell-foreground]">
@@ -337,9 +378,7 @@ export default function Dashboard() {
             <CardContent className="pt-4">
               {data?.invoiceSummary && data.invoiceSummary.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center min-h-[300px]">
-                  {/* Left Side: Donut Chart */}
                   <div className="col-span-12 md:col-span-7 flex justify-center items-center relative h-[250px] md:h-[280px]">
-                    {/* Glassmorphic Center Label */}
                     <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-0">
                       <div className="flex flex-col items-center justify-center bg-[--shell-surface] border border-[--shell-border] rounded-full h-32 w-32 shadow-engineered">
                         <span className="font-heading text-4xl font-bold tracking-tight text-[--shell-foreground] leading-none">
@@ -348,7 +387,6 @@ export default function Dashboard() {
                         <span className="text-[11px] font-heading font-semibold uppercase tracking-[0.12em] text-[--shell-muted] mt-1">Invoices</span>
                       </div>
                     </div>
-
                     <ResponsiveContainer width="100%" height="100%" className="relative z-10">
                       <PieChart>
                         <Pie
@@ -375,8 +413,6 @@ export default function Dashboard() {
                       </PieChart>
                     </ResponsiveContainer>
                   </div>
-
-                  {/* Right Side: High-end Progress Legend */}
                   <div className="col-span-12 md:col-span-5 space-y-3">
                     <div className="text-[11px] font-heading font-semibold uppercase tracking-[0.12em] text-[--shell-muted] border-b border-[--shell-border]/20 pb-1.5 mb-3">
                       Lifecycle Summary
@@ -394,7 +430,6 @@ export default function Dashboard() {
                               <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[--shell-border]/30 text-[--shell-muted] font-medium">{item.value}%</span>
                             </div>
                           </div>
-                          {/* Segment Progress Bar */}
                           <div className="h-1 w-full bg-[--shell-border]/20 rounded-full overflow-hidden">
                             <div className="h-full rounded-full transition-all duration-500" style={{ width: `${item.value}%`, background: statusColor(item.name) }} />
                           </div>
@@ -413,6 +448,20 @@ export default function Dashboard() {
         </div>
       </section>
 
+      {/* Pipeline */}
+      <section>
+        <div className="mb-5 flex items-center gap-2">
+          <h2 className="font-heading text-xs font-light uppercase tracking-[0.12em] text-[--shell-muted]">
+            Pipeline
+          </h2>
+          <div className="h-px flex-1 bg-[--shell-border]" />
+        </div>
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <PipelineChart stages={data.pipelineStages} pipelineValue={data.pipelineValue} />
+          <Recommendations recommendations={data.recommendations} />
+        </div>
+      </section>
+
       {/* Transactions & Monitoring */}
       <section>
         <div className="mb-4 lg:mb-5 flex items-center gap-2">
@@ -423,7 +472,7 @@ export default function Dashboard() {
         </div>
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Recent Invoices */}
-        <Card className="hover:shadow-md transition-shadow duration-200 border-[--shell-border] bg-[--shell-surface]">
+        <Card className="hover:shadow-engineered transition-shadow duration-200 border-[--shell-border] bg-[--shell-surface]">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <div>
               <CardTitle className="flex items-center gap-2 text-sm">
@@ -469,7 +518,7 @@ export default function Dashboard() {
         </Card>
 
         {/* Low Stock / Alerts */}
-        <Card className="hover:shadow-md transition-shadow duration-200 border-[--shell-border] bg-[--shell-surface]">
+        <Card className="hover:shadow-engineered transition-shadow duration-200 border-[--shell-border] bg-[--shell-surface]">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <div>
               <CardTitle className="flex items-center gap-2 text-sm">
@@ -517,7 +566,7 @@ export default function Dashboard() {
         </div>
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Payment Analytics */}
-        <Card className="hover:shadow-md transition-shadow duration-200 border-[--shell-border] bg-[--shell-surface]">
+        <Card className="hover:shadow-engineered transition-shadow duration-200 border-[--shell-border] bg-[--shell-surface]">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <div>
               <CardTitle className="flex items-center gap-2 text-sm">
@@ -568,7 +617,7 @@ export default function Dashboard() {
         </Card>
 
         {/* Client Growth */}
-        <Card className="hover:shadow-md transition-shadow duration-200 border-[--shell-border] bg-[--shell-surface]">
+        <Card className="hover:shadow-engineered transition-shadow duration-200 border-[--shell-border] bg-[--shell-surface]">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <div>
               <CardTitle className="flex items-center gap-2 text-sm">
@@ -636,6 +685,12 @@ export default function Dashboard() {
           <MiniStat icon={ShoppingCart} label="Total Products" value={String(s?.total_products ?? 0)} color="var(--chart-1)" />
           <MiniStat icon={BarChart3} label="Outstanding" value={f(s?.outstanding_revenue ?? 0)} color="var(--chart-3)" />
           <MiniStat icon={DollarSign} label="Total Revenue" value={f(totalRevenue)} color="var(--chart-1)" />
+        </div>
+        <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
+          <MiniStat icon={Layers} label="Pipeline Value" value={f(data.pipelineValue)} color="var(--chart-5)" />
+          <MiniStat icon={Target} label="Open Opportunities" value={String(s?.open_opportunities ?? 0)} color="var(--chart-4)" />
+          <MiniStat icon={Users} label="Total Customers" value={String(s?.total_customers ?? 0)} color="var(--chart-2)" />
+          <MiniStat icon={AlertTriangle} label="Open Complaints" value={String(s?.open_complaints ?? 0)} color={s?.open_complaints && s.open_complaints > 0 ? "var(--shell-warning)" : "var(--chart-2)"} />
         </div>
       </section>
     </div>

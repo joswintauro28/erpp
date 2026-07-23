@@ -31,6 +31,11 @@ async def seed():
         try:
             organization_id = 1
 
+            # Clean up existing data first
+            from sqlalchemy import text
+            await db.execute(text("TRUNCATE TABLE serial_numbers, purchase_order_items, purchase_orders, stock_movements, stock, products, warehouses, suppliers CASCADE"))
+            await db.commit()
+
             # ── Warehouses (5) ─────────────────────────────────────────
             warehouses = [
                 Warehouse(organization_id=organization_id, name="Main Warehouse — Whitefield", code="WH-MAIN",

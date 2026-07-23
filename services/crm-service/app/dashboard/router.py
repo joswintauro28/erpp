@@ -1,114 +1,106 @@
-import sqlalchemy as sa
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
+from sqlalchemy import select, func
+from app import models, database
+from app.dashboard import schemas, crud
+from app.core.router_utils import parse_numeric_value
 
-from app.core.database import Base, BaseRepository
-from app.core.deps import get_db, get_current_org_id
-from app.customer.models import Customer
-from app.lead.models import Lead, Opportunity
-from app.interaction.models import Enquiry, FollowUp, Task
-from app.service.models import Complaint
-from app.dashboard.models import Metric, PipelineStage, Recommendation, HotLead
-from app.sales.models import Sale
+router = APIRouter(prefix="/api/dashboard", tags=["dashboard"])
 
-router = APIRouter(prefix="/api", tags=["dashboard"])
+@router.get("", response_model=schemas.DashboardData)
+async def get_dashboard_data(db: AsyncSession = Depends(database.get_db)):
+    open_leads_result = await db.execute(
+        select(models.Lead).filter(models.Lead.status.in_(["New", "Qualified", "In Progress"]))
+    )
+    open_leads = open_leads_result.scalars().all()
 
+    open_opps_result = await db.execute(
+        select(models.Opportunity).filter(models.Opportunity.stage.in_(
+            ["Discovery", "Proposal", "Negotiation", "RFQ / Inquiry", "Technical Assessment", "Estimation & Quoting"]
+        ))
+    )
+    open_opps = open_opps_result.scalars().all()
 
-@router.get("/dashboard")
-async def get_dashboard_data(
-    db: AsyncSession = Depends(get_db),
-    user_id: int = Depends(get_current_org_id),
-):
-    result = await db.execute(sa.select(Metric))
-    metrics = list(result.scalars().all())
+    open_orders_result = await db.execute(
+        select(models.SalesOrder).filter(models.SalesOrder.status.in_(["Pending", "Confirmed", "In Fulfillment"]))
+    )
+    open_orders = open_orders_result.scalars().all()
 
-    result = await db.execute(sa.select(PipelineStage))
-    pipeline_stages = list(result.scalars().all())
+    total_leads_val = sum(l.est_value for l in open_leads if l.est_value)
+    total_opps_val = sum(parse_numeric_value(o.value) for o in open_opps)
+    total_orders_val = sum(parse_numeric_value(so.value) for so in open_orders)
 
-    result = await db.execute(sa.select(Recommendation))
-    recommendations = list(result.scalars().all())
+    pipeline_value = total_leads_val + total_opps_val + total_orders_val
 
-    result = await db.execute(sa.select(HotLead))
-    hot_leads = list(result.scalars().all())
+    if pipeline_value >= 1_000_000:
+        formatted_val = f"${pipeline_value / 1_000_000:.2f}M"
+    elif pipeline_value >= 1_000:
+        formatted_val = f"${pipeline_value / 1_000:.0f}K"
+    else:
+        formatted_val = f"${pipeline_value}"
 
-    result = await db.execute(sa.select(Customer).where(Customer.organization_id == user_id))
-    customers = list(result.scalars().all())
-    total_customers = len(customers)
+    active_custs_result = await db.execute(
+        select(func.count(models.Customer.id)).filter(models.Customer.status == "Active")
+    )
+    active_custs = active_custs_result.scalar() or 0
 
-    result = await db.execute(sa.select(Opportunity).where(Opportunity.organization_id == user_id))
-    opportunities = list(result.scalars().all())
-    pipeline_value = sum(int(o.value) for o in opportunities if o.value and o.value.isdigit())
-    open_opportunities = len([o for o in opportunities if o.stage not in ("Closed Won", "Lost")])
+    metrics = [
+        {
+            "id": 1,
+            "name": "Pipeline Value",
+            "value": float(pipeline_value),
+            "formatted_value": formatted_val,
+            "trend": "+12.4% MoM",
+            "is_positive": True
+        },
+        {
+            "id": 2,
+            "name": "Open Opportunities",
+            "value": float(len(open_opps)),
+            "formatted_value": str(len(open_opps)),
+            "trend": "+6 this week",
+            "is_positive": True
+        },
+        {
+            "id": 3,
+            "name": "Active Customers",
+            "value": float(active_custs),
+            "formatted_value": str(active_custs),
+            "trend": "+3 net-new",
+            "is_positive": True
+        }
+    ]
 
-    result = await db.execute(sa.select(Complaint).where(Complaint.organization_id == user_id))
-    complaints = list(result.scalars().all())
-    open_complaints = len([c for c in complaints if c.status in ("Open", "In Progress")])
+    all_sales_result = await db.execute(select(models.SalesOrder))
+    all_sales = all_sales_result.scalars().all()
+
+    stages_data = {
+        "Leads": float(total_leads_val),
+        "Opportunities": float(total_opps_val),
+        "Sales Orders": float(total_orders_val),
+        "Sales (Revenue)": float(sum(parse_numeric_value(s.value) for s in all_sales))
+    }
+
+    colors = {
+        "Leads": "#6366f1",
+        "Opportunities": "#0ea5e9",
+        "Sales Orders": "#f59e0b",
+        "Sales (Revenue)": "#10b981"
+    }
+
+    pipeline_stages = []
+    for idx, (stage_name, val) in enumerate(stages_data.items(), 1):
+        pipeline_stages.append({
+            "id": idx,
+            "name": stage_name,
+            "value": val,
+            "color": colors.get(stage_name, "#94a3b8")
+        })
+
+    recommendations = await crud.get_recommendations(db)
 
     return {
         "metrics": metrics,
         "pipeline_stages": pipeline_stages,
-        "recommendations": recommendations,
-        "hot_leads": hot_leads,
-        "total_customers": total_customers,
-        "pipeline_value": pipeline_value,
-        "open_opportunities": open_opportunities,
-        "open_complaints": open_complaints,
-    }
-
-
-@router.get("/reports/dashboard")
-async def get_reports_dashboard(
-    db: AsyncSession = Depends(get_db),
-    user_id: int = Depends(get_current_org_id),
-):
-    result = await db.execute(
-        sa.select(Opportunity).where(Opportunity.organization_id == user_id)
-    )
-    opportunities = list(result.scalars().all())
-    total_opps = len(opportunities)
-    won_opps = len([o for o in opportunities if o.stage == "Won"])
-    win_rate = round((won_opps / total_opps * 100) if total_opps > 0 else 0, 1)
-    open_opps = len([o for o in opportunities if o.stage not in ("Won", "Lost")])
-
-    result = await db.execute(
-        sa.select(Lead).where(Lead.organization_id == user_id)
-    )
-    leads = list(result.scalars().all())
-    total_leads = len(leads)
-    converted_leads = len([l for l in leads if l.status == "Converted"])
-    conv_rate = round((converted_leads / total_leads * 100) if total_leads > 0 else 0, 1)
-
-    result = await db.execute(sa.select(Sale))
-    sales = list(result.scalars().all())
-    total_sales = sum(int(s.amount) for s in sales if s.amount and s.amount.isdigit())
-
-    rep_map: dict[str, int] = {}
-    for s in sales:
-        if s.rep and s.amount and s.amount.isdigit():
-            rep_map[s.rep] = rep_map.get(s.rep, 0) + int(s.amount)
-    rep_sales = [{"rep": k, "amount": v} for k, v in rep_map.items()]
-
-    status_map: dict[str, int] = {}
-    for l in leads:
-        if l.status:
-            status_map[l.status] = status_map.get(l.status, 0) + 1
-    lead_status = [{"status": k, "count": v} for k, v in status_map.items()]
-
-    stage_map: dict[str, int] = {}
-    for o in opportunities:
-        if o.stage:
-            stage_map[o.stage] = stage_map.get(o.stage, 0) + 1
-    opp_stages = [{"stage": k, "count": v} for k, v in stage_map.items()]
-
-    return {
-        "summary": {
-            "win_rate": win_rate,
-            "lead_conv_rate": conv_rate,
-            "total_sales_value": total_sales,
-            "total_opportunities": open_opps,
-        },
-        "rep_sales": rep_sales,
-        "lead_status": lead_status,
-        "opp_stages": opp_stages,
+        "recommendations": recommendations
     }

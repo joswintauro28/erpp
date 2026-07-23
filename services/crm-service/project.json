@@ -5,13 +5,7 @@
   "sourceRoot": "services/crm-service",
   "targets": {
     "dev": {
-      "command": ".venv\\Scripts\\uvicorn app.main:app --port 8001 --reload",
-      "options": {
-        "cwd": "services/crm-service"
-      }
-    },
-    "seed": {
-      "command": ".venv\\Scripts\\python scripts/seed_data.py",
+      "command": ".venv\\Scripts\\uvicorn main:app --port 8001 --reload",
       "options": {
         "cwd": "services/crm-service"
       }
@@ -22,8 +16,20 @@
         "cwd": "services/crm-service"
       }
     },
-    "migration": {
-      "command": ".venv\\Scripts\\alembic revision --autogenerate -m",
+    "create-db": {
+      "command": ".venv\\Scripts\\python scripts/create_db.py",
+      "options": {
+        "cwd": "services/crm-service"
+      }
+    },
+    "reset-db": {
+      "command": ".venv\\Scripts\\python scripts/reset_db.py",
+      "options": {
+        "cwd": "services/crm-service"
+      }
+    },
+    "seed": {
+      "command": ".venv\\Scripts\\python scripts/seed.py",
       "options": {
         "cwd": "services/crm-service"
       }

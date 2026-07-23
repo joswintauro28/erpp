@@ -1,70 +1,81 @@
-import os
 import httpx
+from app.core.config import settings
 
-BILLING_SERVICE_URL = os.environ.get("BILLING_SERVICE_URL", "http://localhost:8003/api")
+BILLING_BASE = f"{settings.BILLING_SERVICE_URL}/api"
 
 
-async def push_quotation_to_billing(token: str, crm_quotation: dict) -> dict:
-    headers = {
-        "Authorization": f"Bearer {token}",
-        "Content-Type": "application/json",
-    }
+async def _get_client() -> httpx.AsyncClient:
+    return httpx.AsyncClient(timeout=30.0)
 
-    body = {
-        "clientId": 0,
-        "clientName": crm_quotation.get("account", ""),
-        "quotationNumber": f"CRM-{crm_quotation.get('quote_no', crm_quotation.get('id_str', ''))}",
-        "validUntil": crm_quotation.get("valid_until", None),
-        "items": [
-            {
-                "description": f"Quotation {crm_quotation.get('quote_no', '')}",
-                "quantity": 1,
-                "unitPrice": float(crm_quotation.get("value", 0) or 0),
-                "gstRate": 0,
-            }
-        ],
-    }
 
-    async with httpx.AsyncClient(timeout=10.0) as client:
-        resp = await client.post(
-            f"{BILLING_SERVICE_URL}/invoices/quotations",
-            headers=headers,
-            json=body,
+async def quotations_list(token: str):
+    async with await _get_client() as client:
+        resp = await client.get(
+            f"{BILLING_BASE}/invoices/quotations",
+            headers={"Authorization": f"Bearer {token}"},
         )
         resp.raise_for_status()
         return resp.json()
 
 
-async def push_sales_invoice_to_billing(
-    token: str,
-    organization_id: int,
-    sales_order: dict,
-) -> dict:
-    headers = {
-        "Authorization": f"Bearer {token}",
-        "Content-Type": "application/json",
-    }
+async def quotations_get(token: str, id: int):
+    async with await _get_client() as client:
+        resp = await client.get(
+            f"{BILLING_BASE}/invoices/quotations/{id}",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        resp.raise_for_status()
+        return resp.json()
 
-    body = {
-        "organizationId": organization_id,
-        "clientId": 0,
-        "clientName": sales_order.get("account", ""),
-        "orderReference": sales_order.get("so_no", sales_order.get("id_str", "")),
-        "items": [
-            {
-                "description": f"Sales Order {sales_order.get('so_no', '')}",
-                "quantity": 1,
-                "unitPrice": float(sales_order.get("value", 0) or 0),
-                "gstRate": 0,
-            }
-        ],
-    }
 
-    async with httpx.AsyncClient(timeout=10.0) as client:
+async def quotations_create(token: str, payload: dict):
+    async with await _get_client() as client:
         resp = await client.post(
-            f"{BILLING_SERVICE_URL}/internal/billing/trigger-sales-invoice",
-            headers=headers,
-            json=body,
+            f"{BILLING_BASE}/invoices/quotations",
+            json=payload,
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        resp.raise_for_status()
+        return resp.json()
+
+
+async def quotations_update(token: str, id: int, payload: dict):
+    async with await _get_client() as client:
+        resp = await client.put(
+            f"{BILLING_BASE}/invoices/quotations/{id}",
+            json=payload,
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        resp.raise_for_status()
+        return resp.json()
+
+
+async def quotations_update_status(token: str, id: int, status: str):
+    async with await _get_client() as client:
+        resp = await client.put(
+            f"{BILLING_BASE}/invoices/quotations/{id}/status",
+            params={"status": status},
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        resp.raise_for_status()
+        return resp.json()
+
+
+async def quotations_delete(token: str, id: int):
+    async with await _get_client() as client:
+        resp = await client.delete(
+            f"{BILLING_BASE}/invoices/quotations/{id}",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        resp.raise_for_status()
+        return resp.json() if resp.status_code != 204 else None
+
+
+async def quotations_convert_to_invoice(token: str, id: int):
+    async with await _get_client() as client:
+        resp = await client.post(
+            f"{BILLING_BASE}/invoices/quotations/{id}/convert",
+            headers={"Authorization": f"Bearer {token}"},
         )
         resp.raise_for_status()
         return resp.json()

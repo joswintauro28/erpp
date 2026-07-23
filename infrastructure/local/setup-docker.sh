@@ -36,7 +36,7 @@ fi
 echo "[4/4] Verifying Dockerfiles..."
 dockerfiles=(
     "../../apps/erp-shell/Dockerfile"
-    "../../apps/crm-shell/Dockerfile"
+    "../../apps/crm-ui/Dockerfile"
     "../../apps/billing-ui/Dockerfile"
     "../../apps/inventory-ui/Dockerfile"
     "../../services/core-iam/Dockerfile"

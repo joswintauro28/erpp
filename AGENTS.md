@@ -44,7 +44,7 @@ DATAVEX/ERP/ (Root)
 
 ## 2. Frontend Project Contexts
 
-### 2.1 Executive Shell (`apps/erp-shell`) — Port 3000
+### 2.1 Executive Shell ([apps/erp-shell](apps/erp-shell/AGENTS.md)) — Port 3000
 
 **Tech Stack**
 - **Framework:** Next.js 16.2.10 (Turbopack)
@@ -81,7 +81,7 @@ All tokens defined in `packages/ui-theme/src/globals.css` as CSS custom properti
 - **Imports & Path Aliases:** Shadcn primitives and `cn` utility from `@/components/ui/*` and `@/lib/utils`, mapped via tsconfig paths to `@datavex/ui-theme`.
 - **Multi-Step Modals:** All forms use `components/multi-step-dialog.tsx` with horizontal step wizard.
 
-### 2.2 CRM Workstation (`apps/crm-shell`) — Port 3001
+### 2.2 CRM Workstation ([apps/crm-ui](apps/crm-ui/AGENTS.md)) — Port 3001
 
 **Tech Stack**
 - Same as erp-shell: Next.js 16, TypeScript, Tailwind v4, lucide-react, recharts
@@ -96,7 +96,7 @@ All tokens defined in `packages/ui-theme/src/globals.css` as CSS custom properti
 
 ---
 
-### 2.3 Billing Workstation (`apps/billing-ui`) — Port 3002
+### 2.3 Billing Workstation ([apps/billing-ui](apps/billing-ui/AGENTS.md)) — Port 3002
 
 **Tech Stack**
 - Same as erp-shell: Next.js 16, TypeScript, Tailwind v4, lucide-react, recharts
@@ -126,7 +126,7 @@ All tokens defined in `packages/ui-theme/src/globals.css` as CSS custom properti
 
 ---
 
-### 2.4 Inventory Workstation (`apps/inventory-ui`) — Port 3004
+### 2.4 Inventory Workstation ([apps/inventory-ui](apps/inventory-ui/AGENTS.md)) — Port 3004
 
 **Tech Stack**
 - Same as erp-shell: Next.js 16, TypeScript, Tailwind v4, lucide-react, recharts
@@ -160,7 +160,7 @@ All tokens defined in `packages/ui-theme/src/globals.css` as CSS custom properti
 
 DATAVEX ERP utilizes a decoupled backend architecture where each business domain has its own service and database.
 
-### 3.1 Central IAM Service (`services/core-iam`) — Port 8002
+### 3.1 Central IAM Service ([services/core-iam](services/core-iam/AGENTS.md)) — Port 8002
 
 - **Framework:** NestJS 11
 - **Language:** TypeScript
@@ -179,7 +179,7 @@ DATAVEX ERP utilizes a decoupled backend architecture where each business domain
   | Priya Sharma | auditor@datavex.com | Aud@123! | Auditor |
 - **Prisma isolation:** Uses `output = "../node_modules/@prisma/client-iam"` in schema.prisma to avoid conflicts with other services' Prisma clients. Imports from `@prisma/client-iam`.
 
-### 3.2 Billing Service (`services/billing-service`) — Port 8003
+### 3.2 Billing Service ([services/billing-service](services/billing-service/AGENTS.md)) — Port 8003
 
 - **Framework:** NestJS 11
 - **Language:** TypeScript
@@ -202,7 +202,7 @@ DATAVEX ERP utilizes a decoupled backend architecture where each business domain
 
 **Prisma Schema (7 models):** Invoice (with InvoiceItem relation), Payment, CreditNote, DebitNote, Quotation, RecurringInvoice. All models use `ownerId` for data isolation.
 
-### 3.3 Inventory Service (`services/inventory-service`) — Port 8004
+### 3.3 Inventory Service ([services/inventory-service](services/inventory-service/AGENTS.md)) — Port 8004
 
 - **Framework:** FastAPI (Python 3.13+)
 - **Database ORM:** SQLAlchemy 2.0 (AsyncSession via `postgresql+asyncpg`)
@@ -224,7 +224,7 @@ DATAVEX ERP utilizes a decoupled backend architecture where each business domain
 | **Purchase Orders** | `GET /purchase-orders`, `GET /:id`, `POST /`, `PUT /:id/status`, `DELETE /:id` | PO with line items, auto-totaling, status lifecycle (draft→ordered→received) |
 | **Serial Numbers** | `GET /serial-numbers`, `GET /:id`, `POST /`, `PUT /:id`, `DELETE /:id` | Serial tracking per product×warehouse with status filter |
 
-### 3.4 FastAPI Business Backend (`services/erp-service`) — Port 8000
+### 3.4 FastAPI Business Backend ([services/erp-service](services/erp-service/AGENTS.md)) — Port 8000
 
 - **Framework:** FastAPI (Python 3.13+)
 - **Database ORM:** SQLAlchemy 2.0 (AsyncSession via `postgresql+asyncpg`)
@@ -241,7 +241,7 @@ DATAVEX ERP utilizes a decoupled backend architecture where each business domain
 
 ---
 
-### 3.5 CRM Service (`services/crm-service`) — Port 8001
+### 3.5 CRM Service ([services/crm-service](services/crm-service/AGENTS.md)) — Port 8001
 
 - **Framework:** FastAPI (Python 3.13+)
 - **Database ORM:** SQLAlchemy 2.0 (sync, via `create_engine` + `SessionLocal`)
@@ -269,14 +269,14 @@ All endpoints require `Authorization: Bearer <jwt>` header and validate via shar
 
 ## 4. Shared Packages
 
-### `packages/auth-middleware`
+### `packages/auth-middleware` ([AGENTS.md](packages/auth-middleware/AGENTS.md))
 
 - **JWT Auth Client:** Shared `setAccessToken`/`getAccessToken`, auto-refresh on 401, typed `api.get/post/put/patch/delete`.
 - **Shared Types:** `User`, `ApiError`, `ApiClientError` — consumed by all frontend apps.
 - **Package Name:** `@datavex/auth-middleware`
 - **Required Dependency:** All frontend apps must list `"@datavex/auth-middleware": "workspace:*"` in `package.json` dependencies. Each app's `types/api.ts` re-exports `ApiError`/`ApiClientError` from this package (not standalone definitions).
 
-### `packages/ui-theme`
+### `packages/ui-theme` ([AGENTS.md](packages/ui-theme/AGENTS.md))
 
 - **Tailwind CSS v4 Configuration:** `components.json` handles Shadcn CLI setups.
 - **Imports & Resolution:** tsconfig maps `@/*` → `./src/*` inside the package.

@@ -1,5 +1,5 @@
 from app.integrations.billing_client import get_dashboard_billing, get_invoice_summary
-from app.integrations.crm_client import get_dashboard_crm, get_customers, get_leads
+from app.integrations.crm_client import get_dashboard_crm
 from app.integrations.inventory_client import get_dashboard_inventory
 
 

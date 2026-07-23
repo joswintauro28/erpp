@@ -33,7 +33,7 @@ if (Test-Path $envFile) {
 Write-Host "[4/4] Verifying Dockerfiles..." -ForegroundColor Yellow
 $dockerfiles = @(
     "../../apps/erp-shell/Dockerfile",
-    "../../apps/crm-shell/Dockerfile",
+    "../../apps/crm-ui/Dockerfile",
     "../../apps/billing-ui/Dockerfile",
     "../../apps/inventory-ui/Dockerfile",
     "../../services/core-iam/Dockerfile",

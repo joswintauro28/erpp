@@ -7,6 +7,11 @@ export interface DashboardData {
     overdue_amount: number;
     total_products: number;
     low_stock_count: number;
+    pipeline_value: number;
+    open_opportunities: number;
+    open_complaints: number;
+    total_customers: number;
+    total_leads: number;
   } | null;
   revenueTrend: { month: string; revenue: number }[];
   invoiceSummary: { name: string; value: number; count: number }[];
@@ -25,4 +30,12 @@ export interface DashboardData {
     low_stock_products: number;
   };
   clientGrowth: { month: string; count: number }[];
+  crmDashboard: {
+    metrics: any[];
+    pipeline_stages: any[];
+    recommendations: any[];
+  } | null;
+  pipelineValue: number;
+  pipelineStages: any[];
+  recommendations: any[];
 }

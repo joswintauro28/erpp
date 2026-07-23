@@ -88,3 +88,104 @@ export interface CrmCustomersResponse {
   summary: CrmCustomerSummary;
   customers: CrmCustomer[];
 }
+
+export interface CrmContact {
+  id: number;
+  id_str: string;
+  name: string;
+  role: string;
+  account: string;
+  email: string;
+  phone: string;
+  type: string;
+  last_contact: string;
+  owner: string;
+}
+
+export interface CrmDocument {
+  id: number;
+  id_str: string;
+  title: string;
+  type: string;
+  account: string;
+  size: string;
+  status: string;
+  owner: string;
+  updated_at: string;
+}
+
+export interface CrmOpportunity {
+  id: number;
+  id_str: string;
+  name: string;
+  account: string;
+  value: number;
+  probability: string;
+  close_date: string;
+  stage: string;
+  owner: string;
+}
+
+export interface CrmRequirement {
+  id: number;
+  id_str: string;
+  name: string;
+  category: string;
+  account: string;
+  priority: string;
+  status: string;
+  owner: string;
+}
+
+export interface CrmQuotation {
+  id: number;
+  id_str: string;
+  quote_no: string;
+  account: string;
+  value: number;
+  valid_until: string;
+  status: string;
+  owner: string;
+}
+
+export interface CrmSalesOrder {
+  id: number;
+  id_str: string;
+  so_no: string;
+  account: string;
+  value: number;
+  eta: string;
+  status: string;
+  owner: string;
+}
+
+export interface CrmReport {
+  id: number;
+  id_str: string;
+  name: string;
+  title?: string;
+  type: string;
+  category?: string;
+  date?: string;
+  last_run?: string;
+  generated_at?: string;
+  status: string;
+  owner: string;
+}
+
+export interface CrmAiLog {
+  id: number;
+  id_str: string;
+  query: string;
+  response: string;
+  category: string;
+  status: string;
+  created_at: string;
+}
+
+export interface CrmSummary {
+  total: number;
+  open: number;
+  overdue_at_risk: number;
+  owners: number;
+}
