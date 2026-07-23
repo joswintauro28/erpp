@@ -27,8 +27,14 @@ const frequencyColors: Record<string, string> = {
   yearly: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
 };
 
+interface ClientRef {
+  id: number;
+  name: string;
+}
+
 export default function RecurringInvoices() {
   const [items, setItems] = useState<RecurringInvoice[]>([]);
+  const [clients, setClients] = useState<ClientRef[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
@@ -49,9 +55,23 @@ export default function RecurringInvoices() {
 
   const loadData = () => {
     setLoading(true);
-    api.get<RecurringInvoice[]>("/invoices/recurring")
-      .then(setItems)
-      .catch(() => setItems([]))
+    Promise.all([
+      api.get<RecurringInvoice[]>("/invoices/recurring"),
+      api.get<any[]>("/invoices"),
+    ])
+      .then(([recurring, invoices]) => {
+        setItems(recurring);
+        const seen = new Set<number>();
+        const unique: ClientRef[] = [];
+        for (const inv of invoices) {
+          if (inv.clientId && !seen.has(inv.clientId)) {
+            seen.add(inv.clientId);
+            unique.push({ id: inv.clientId, name: inv.clientName ?? `Client #${inv.clientId}` });
+          }
+        }
+        setClients(unique);
+      })
+      .catch(() => { setItems([]); })
       .finally(() => setLoading(false));
   };
 
@@ -249,8 +269,11 @@ export default function RecurringInvoices() {
                   <Select value={formClientId} onValueChange={(v) => v !== null && setFormClientId(v)}>
                     <SelectTrigger><SelectValue placeholder="Select client" /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="1">Client #1</SelectItem>
-                      <SelectItem value="2">Client #2</SelectItem>
+                      {clients.length === 0 ? (
+                        <SelectItem value="" disabled>No clients found</SelectItem>
+                      ) : clients.map((c) => (
+                        <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
