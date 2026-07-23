@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { ScrollText, AlertTriangle, Plus, Loader2 } from "lucide-react";
+import { ScrollText, AlertTriangle, Plus, Loader2, Search } from "lucide-react";
 import { api } from "@/services/api";
 import { money } from "@/utils/format";
 import type { ExpenseEntry, AccountEntry } from "@/types/billing";
@@ -21,6 +21,7 @@ export default function ExpensesPage() {
   const [accounts, setAccounts] = useState<AccountEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [search, setSearch] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -66,6 +67,15 @@ export default function ExpensesPage() {
 
   if (loading) return <ExpensesLoading />;
 
+  const q = search.toLowerCase();
+  const filtered = q
+    ? expenses.filter((e) =>
+        e.account_name.toLowerCase().includes(q) ||
+        (e.category ?? "").toLowerCase().includes(q) ||
+        (e.description ?? "").toLowerCase().includes(q) ||
+        e.date.includes(q))
+    : expenses;
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -83,10 +93,20 @@ export default function ExpensesPage() {
         </div>
       )}
 
+      <div className="relative max-w-xs">
+        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          placeholder="Search expenses..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="pl-9"
+        />
+      </div>
+
       <Card>
         <CardHeader>
           <CardTitle>All Expenses</CardTitle>
-          <CardDescription>Recorded expense entries</CardDescription>
+          <CardDescription>{filtered.length} of {expenses.length} entries</CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
@@ -101,16 +121,16 @@ export default function ExpensesPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {expenses.length === 0 ? (
+              {filtered.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
                     <div className="flex flex-col items-center gap-2">
                       <ScrollText className="h-8 w-8 text-muted-foreground/50" />
-                      <p>No expenses recorded</p>
+                      <p>{expenses.length === 0 ? "No expenses recorded" : "No expenses match your search"}</p>
                     </div>
                   </TableCell>
                 </TableRow>
-              ) : expenses.map((e) => (
+              ) : filtered.map((e) => (
                 <TableRow key={e.id}>
                   <TableCell className="text-xs">{e.date}</TableCell>
                   <TableCell className="text-xs font-medium">{e.account_name}</TableCell>
