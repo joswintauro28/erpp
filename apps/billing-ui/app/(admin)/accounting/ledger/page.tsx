@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { BookOpen, AlertTriangle, Plus, Loader2 } from "lucide-react";
+import { BookOpen, AlertTriangle, Plus, Loader2, Search } from "lucide-react";
 import { api } from "@/services/api";
 import { money } from "@/utils/format";
 import type { LedgerEntryView, AccountEntry } from "@/types/billing";
@@ -20,6 +20,7 @@ export default function LedgerPage() {
   const [accounts, setAccounts] = useState<AccountEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [search, setSearch] = useState("");
   const [journalOpen, setJournalOpen] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -65,6 +66,15 @@ export default function LedgerPage() {
 
   if (loading) return <GeneralLedgerLoading />;
 
+  const q = search.toLowerCase();
+  const filtered = q
+    ? entries.filter((e) =>
+        e.account_name.toLowerCase().includes(q) ||
+        e.description.toLowerCase().includes(q) ||
+        (e.reference_type ?? "").toLowerCase().includes(q) ||
+        e.entry_date.includes(q))
+    : entries;
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -82,10 +92,20 @@ export default function LedgerPage() {
         </div>
       )}
 
+      <div className="relative max-w-xs">
+        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          placeholder="Search ledger entries..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="pl-9"
+        />
+      </div>
+
       <Card>
         <CardHeader>
           <CardTitle>Ledger Entries</CardTitle>
-          <CardDescription>All journal entries</CardDescription>
+          <CardDescription>{filtered.length} of {entries.length} entries</CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
@@ -100,16 +120,16 @@ export default function LedgerPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {entries.length === 0 ? (
+              {filtered.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
                     <div className="flex flex-col items-center gap-2">
                       <BookOpen className="h-8 w-8 text-muted-foreground/50" />
-                      <p>No ledger entries yet</p>
+                      <p>{entries.length === 0 ? "No ledger entries yet" : "No entries match your search"}</p>
                     </div>
                   </TableCell>
                 </TableRow>
-              ) : entries.map((e) => (
+              ) : filtered.map((e) => (
                 <TableRow key={e.id}>
                   <TableCell className="text-xs">{e.entry_date}</TableCell>
                   <TableCell className="text-xs font-medium">{e.account_name}</TableCell>
