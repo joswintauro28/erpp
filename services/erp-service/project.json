@@ -5,8 +5,9 @@
   "sourceRoot": "services/erp-service",
   "targets": {
     "dev": {
-      "command": ".venv/bin/uvicorn app.main:app --reload",
+      "executor": "nx:run-commands",
       "options": {
+        "command": ".venv/bin/uvicorn app.main:app --port 8000 --reload",
         "cwd": "services/erp-service"
       }
     },
