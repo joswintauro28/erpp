@@ -13,7 +13,9 @@ from app.integrations.billing_client import (
     get_accounts, get_expenses, create_account, update_account, create_expense, delete_expense, create_expense_from_po, get_ledger, get_reports, get_aging, get_dunning,
     import_bank_csv, get_bank_transactions, match_bank_transaction, get_bank_reports,
     get_periods, close_period, reopen_period, get_periods_status,
+    get_cogs_summary, get_cogs_invoices, get_cogs_products, get_cogs_ledger, get_cogs_invoice_drilldown, get_cogs_dlq,
 )
+
 
 router = APIRouter(tags=["billing"])
 
@@ -469,3 +471,55 @@ async def get_periods_status_endpoint(
 ):
     token = payload.get("_raw_token", "")
     return await get_periods_status(token)
+
+
+# ─── COGS & Profitability ────────────────────────────────────
+
+@router.get("/reports/cogs/summary", response_model=dict)
+async def list_cogs_summary(
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await get_cogs_summary(token)
+
+
+@router.get("/reports/cogs/invoices", response_model=dict)
+async def list_cogs_invoices(
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await get_cogs_invoices(token)
+
+
+@router.get("/reports/cogs/products", response_model=dict)
+async def list_cogs_products(
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await get_cogs_products(token)
+
+
+@router.get("/reports/cogs/ledger", response_model=dict)
+async def list_cogs_ledger(
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await get_cogs_ledger(token)
+
+
+@router.get("/reports/cogs/invoice/{invoice_id}", response_model=dict)
+async def list_cogs_invoice_drilldown(
+    invoice_id: int,
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await get_cogs_invoice_drilldown(token, invoice_id)
+
+
+@router.get("/reports/cogs/dlq", response_model=dict)
+async def list_cogs_dlq(
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await get_cogs_dlq(token)
+
