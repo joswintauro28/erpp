@@ -9,10 +9,11 @@ import ReportsLoading from "./loading";
 import { api } from "@/services/api";
 import { money } from "@/utils/format";
 
-type Tab = "pl" | "balance-sheet" | "cash-flow";
+type Tab = "pl" | "balance-sheet" | "cash-flow" | "cogs";
 
 export default function ReportsPage() {
   const [report, setReport] = useState<{ pl: any[]; balance_sheet: any[]; cash_flow: any[] } | null>(null);
+  const [cogsData, setCogsData] = useState<{ summary: any; invoices: any[]; products: any[] } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [tab, setTab] = useState<Tab>("pl");
@@ -20,8 +21,21 @@ export default function ReportsPage() {
   useEffect(() => {
     async function fetch() {
       try {
-        const d = await api.get<{ pl: any[]; balance_sheet: any[]; cash_flow: any[] }>("/reports");
-        setReport(d);
+        const [d, cSummary, cInvoices, cProducts] = await Promise.all([
+          api.get<{ pl: any[]; balance_sheet: any[]; cash_flow: any[] }>("/reports").catch(() => null),
+          api.get<any>("/reports/cogs/summary").catch(() => null),
+          api.get<any>("/reports/cogs/invoices").catch(() => null),
+          api.get<any>("/reports/cogs/products").catch(() => null),
+        ]);
+
+        if (d) setReport(d);
+        if (cSummary || cInvoices || cProducts) {
+          setCogsData({
+            summary: cSummary,
+            invoices: cInvoices?.invoices || [],
+            products: cProducts?.products || [],
+          });
+        }
       } catch {
         setError("Failed to load financial reports");
       } finally {
@@ -37,7 +51,9 @@ export default function ReportsPage() {
     { key: "pl", label: "Profit & Loss" },
     { key: "balance-sheet", label: "Balance Sheet" },
     { key: "cash-flow", label: "Cash Flow" },
+    { key: "cogs", label: "COGS & Profitability" },
   ];
+
 
   const plTotals = report ? {
     revenue: report.pl.reduce((s: number, r: any) => s + r.revenue, 0),
@@ -365,8 +381,144 @@ export default function ReportsPage() {
               </div>
             </>
           )}
+
+          {tab === "cogs" && (
+
+            <div className="space-y-6">
+              {/* Summary Cards */}
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
+                <Card>
+                  <CardHeader className="py-3">
+                    <CardTitle className="text-xs text-muted-foreground">Total COGS</CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <p className="font-heading text-xl font-bold text-foreground">{money(cogsData?.summary?.total_cogs || 0)}</p>
+                    <p className="text-[11px] text-muted-foreground mt-1">Cost of items sold</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader className="py-3">
+                    <CardTitle className="text-xs text-muted-foreground">Gross Profit</CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <p className="font-heading text-xl font-bold text-emerald-600">{money(cogsData?.summary?.gross_profit || 0)}</p>
+                    <p className="text-[11px] text-emerald-600 mt-1">{cogsData?.summary?.gross_margin_pct || 0}% Gross Margin</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader className="py-3">
+                    <CardTitle className="text-xs text-muted-foreground">Operating Margin</CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <p className="font-heading text-xl font-bold text-sky-600">{cogsData?.summary?.operating_margin_pct || 0}%</p>
+                    <p className="text-[11px] text-muted-foreground mt-1">Net of operating expenses</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader className="py-3">
+                    <CardTitle className="text-xs text-muted-foreground">Inventory Turnover</CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <p className="font-heading text-xl font-bold text-purple-600">{cogsData?.summary?.inventory_turnover || 0}x</p>
+                    <p className="text-[11px] text-muted-foreground mt-1">Annualized turnover ratio</p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Invoice Level COGS Table */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base font-semibold">Invoice-Level COGS Breakdown</CardTitle>
+                  <CardDescription>Product cost price snapshots recorded at invoice issuance/shipment</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Invoice #</TableHead>
+                        <TableHead>Client</TableHead>
+                        <TableHead>Date</TableHead>
+                        <TableHead className="text-right">Revenue</TableHead>
+                        <TableHead className="text-right">COGS</TableHead>
+                        <TableHead className="text-right">Gross Profit</TableHead>
+                        <TableHead className="text-right">Margin %</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {cogsData?.invoices?.length ? (
+                        cogsData.invoices.map((inv: any) => (
+                          <TableRow key={inv.invoice_id}>
+                            <TableCell className="font-mono text-xs font-semibold">{inv.invoice_number}</TableCell>
+                            <TableCell className="text-xs">{inv.client_name}</TableCell>
+                            <TableCell className="text-xs text-muted-foreground">{inv.issue_date}</TableCell>
+                            <TableCell className="text-right font-mono text-xs">{money(inv.revenue)}</TableCell>
+                            <TableCell className="text-right font-mono text-xs text-destructive">{money(inv.cogs)}</TableCell>
+                            <TableCell className="text-right font-mono text-xs font-bold text-emerald-600">{money(inv.gross_profit)}</TableCell>
+                            <TableCell className="text-right font-mono text-xs font-bold">{inv.margin_pct}%</TableCell>
+                          </TableRow>
+                        ))
+                      ) : (
+                        <TableRow>
+                          <TableCell colSpan={7} className="text-center py-6 text-xs text-muted-foreground">
+                            No COGS invoice records found
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+
+              {/* Product Level COGS Table */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base font-semibold">Product-Level Profitability</CardTitle>
+                  <CardDescription>Sales revenue, unit cost snapshots, and profit margin per product</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Product Name</TableHead>
+                        <TableHead className="text-right">Qty Sold</TableHead>
+                        <TableHead className="text-right">Avg Unit Cost</TableHead>
+                        <TableHead className="text-right">Avg Selling Price</TableHead>
+                        <TableHead className="text-right">Total Revenue</TableHead>
+                        <TableHead className="text-right">Total COGS</TableHead>
+                        <TableHead className="text-right">Gross Profit</TableHead>
+                        <TableHead className="text-right">Margin %</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {cogsData?.products?.length ? (
+                        cogsData.products.map((prod: any, idx: number) => (
+                          <TableRow key={idx}>
+                            <TableCell className="text-xs font-medium">{prod.product_name}</TableCell>
+                            <TableCell className="text-right font-mono text-xs">{prod.total_quantity_sold}</TableCell>
+                            <TableCell className="text-right font-mono text-xs text-destructive">{money(prod.avg_unit_cost)}</TableCell>
+                            <TableCell className="text-right font-mono text-xs">{money(prod.avg_selling_price)}</TableCell>
+                            <TableCell className="text-right font-mono text-xs">{money(prod.total_revenue)}</TableCell>
+                            <TableCell className="text-right font-mono text-xs text-destructive">{money(prod.total_cogs)}</TableCell>
+                            <TableCell className="text-right font-mono text-xs font-bold text-emerald-600">{money(prod.gross_profit)}</TableCell>
+                            <TableCell className="text-right font-mono text-xs font-bold">{prod.margin_pct}%</TableCell>
+                          </TableRow>
+                        ))
+                      ) : (
+                        <TableRow>
+                          <TableCell colSpan={8} className="text-center py-6 text-xs text-muted-foreground">
+                            No product COGS records found
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+            </div>
+          )}
         </>
       )}
     </div>
   );
 }
+
