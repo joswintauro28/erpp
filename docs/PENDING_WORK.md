@@ -13,7 +13,8 @@ All flows below are currently approximated via synchronous REST calls. A central
 
 - [ ] **Order.Approved → Inventory** — When a sales order is approved in CRM, publish event so inventory can run ATP check
 - [ ] **Shipment.Dispatched → Billing** — When inventory dispatches stock, publish event so billing auto-generates the invoice (A1)
-- [ ] **Shipment.Dispatched → COGS** — Same event triggers COGS expense recognition (F1)
+- [x] **Shipment.Dispatched → COGS** — Same event triggers COGS expense recognition (F1)
+
 - [ ] **PurchaseOrder.Created → AP** — When inventory creates a PO, publish event so billing creates the Accounts Payable entry (AP1)
 - [ ] **Invoice.Paid → CRM/Notification** — When payment clears, notify CRM and notification service
 
@@ -53,7 +54,8 @@ All flows below are currently approximated via synchronous REST calls. A central
 - [ ] **Bank Reconciliation (F4)** — CSV/XLSX statement import with auto-matching by reference ID, amount, and date
 - [ ] **Month-End Close Process (F5)** — Ledger locking, cut-off dates, close checklist with sign-off workflow
 - [ ] **Revenue Recognition Schedule (F2)** — Deferred revenue tracking for subscription/prepaid invoices, accrual vs cash basis
-- [ ] **COGS Tracking (F1)** — Pull product cost price from inventory-service on invoice creation to compute per-invoice COGS
+- [x] **COGS Tracking (F1)** — Pull product cost price from inventory-service on invoice creation to compute per-invoice COGS
+
 - [x] **AR Aging Report** — Bucketed balance-due report (Current / 30 / 60 / 90+ days overdue)
 
 ---
