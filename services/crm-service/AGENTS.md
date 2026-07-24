@@ -12,6 +12,7 @@ This backend service manages the sales pipelines, interactions, communications, 
 - **Token Verification Only:** No local login or credential storage endpoints. Authentication is delegated to `core-iam` (8002) using the shared `JWT_SECRET`.
 - **Data Isolation:** All database models query using an `owner_id` (Integer index) extracted from JWT claims to prevent cross-organization leaking.
 - **Dynamic CRUD:** Includes generic endpoints (`/api/:entity_type`) that support CRUD operations dynamically based on schema definitions.
+- **Interactive OpenAPI Documentation:** Exposes Swagger UI (`http://localhost:8001/docs`), ReDoc (`http://localhost:8001/redoc`), and OpenAPI spec (`http://localhost:8001/openapi.json`) with Bearer JWT authorization.
 
 ## 3. Modules & Endpoints
 - **Dashboard (`GET /api/dashboard`):** Pipeline value, open opportunities, pipeline stages, hot leads, and recommendations.

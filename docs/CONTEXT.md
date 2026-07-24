@@ -59,11 +59,13 @@ The DATAVEX CRM Workspace handles end-to-end customer relationship management, s
 - **Dependencies:** Workspace package `"@datavex/auth-middleware": "workspace:*"` for API calls (`api.get`, `api.post`, `api.put`, `api.delete`).
 
 #### Authentication & Proxy Gateway Architecture
-- **Token Intake & Verification:** Operates on a token-verification model with no local credentials UI. On mount, checks for `?token=<jwt>` in the URL parameters or verifies session cookies via `/api/auth/refresh`.
-- **SSO Fallback:** Unauthenticated users are redirected to `http://localhost:3000/login?redirect=http://localhost:3001`.
+- **Token Intake & Verification:** Operates on a token-verification model with no local credentials UI. On mount, checks for `?token=<jwt>` in the URL parameters, restores stored tokens via `getAccessToken()`, or verifies session cookies via `/api/auth/refresh`.
+- **SSO Fallback & Page Reload Stability:** Unauthenticated users are redirected to `http://localhost:3000/login?redirect=http://localhost:3001`. On browser reload (**Ctrl + R**), token state is restored seamlessly via `@datavex/auth-middleware` without session lockouts.
 - **Routing Proxy (`proxy.ts`):** Next.js middleware intercepting `/api/:path*`:
   - `/api/auth/*` → Routes to `core-iam` (port 8002) preserving `/api` prefix.
-  - All other `/api/*` → Routes to `crm-service` (port 8001).
+  - In `erp-shell`, `CRM_PATHS` whitelists CRM domain routes (including `reports`, `lead-discovery`, `ai-assistant`, `sales-orders`, `opportunities`, `requirements`) and routes them through `erp-service` (`port 8000`) to `crm-service` (`port 8001`).
+  - In `crm-ui`, all non-auth `/api/*` requests route directly to `crm-service` (`port 8001`).
+- **Interactive OpenAPI Documentation:** `crm-service` exposes Swagger UI (`http://localhost:8001/docs`), ReDoc (`http://localhost:8001/redoc`), and OpenAPI JSON schema with `BearerAuth` JWT authorization support.
 
 #### Core UI Components & Shell Topology
 - **`Sidebar.tsx`:** Collapsible sidebar (260px expanded / 64px collapsed) with grouped navigation:

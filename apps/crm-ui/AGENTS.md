@@ -12,15 +12,15 @@ This directory contains the CRM Workstation / Sales Hub of the DATAVEX ERP syste
 - **Theme Shares:** Consumes components and global theme variables from `@datavex/ui-theme`.
 
 ## 2. Authentication & Auth Pattern
-- **Token-verification only:** No local login page or credential handling.
-- **SSO Intake:** On mount, verifies `?token=<jwt>` from the URL (provided by erp-shell), or fetches `/api/auth/refresh` from HttpOnly cookies.
+- **Token-verification & Session Persistence:** No local login page or credential handling.
+- **SSO Intake & Reload Protection:** On mount, verifies `?token=<jwt>` from URL (provided by erp-shell), restores stored tokens via `getAccessToken()` on browser reload (**Ctrl + R**), or fetches `/api/auth/refresh` from HttpOnly cookies.
 - **Fallback Redirect:** If no authentication is active, redirects to:
   `http://localhost:3000/login?redirect=http://localhost:3001`
 - **Auth context (`useAuth`):** Returns `{ user, isAuthenticated, loading, logout }` (does not have a local `login()` handler).
 
 ## 3. Proxy Routing (`proxy.ts`)
-- `/api/auth/*` → core-iam (8002)
-- All other `/api/*` → crm-service (8001)
+- `/api/auth/*` → core-iam (`http://localhost:8002`)
+- All other `/api/*` → crm-service (`http://localhost:8001`)
 
 ## 4. Development Commands
 Run the development server for CRM UI:

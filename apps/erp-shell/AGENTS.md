@@ -12,7 +12,7 @@ This directory contains the main Executive / Super Admin Shell of the DATAVEX ER
 - **Theme Aesthetics:** "Refined Crimson & Brushed Gold"
 
 ## 2. Core Architecture & Patterns
-- **Authentication (`useAuth`):** Handles centralized login status and session persistence via `localStorage`. User payload claims: `id, email, full_name, role, organization_name, permissions`.
+- **Authentication (`useAuth`):** Handles centralized login status, token intake, and session persistence via `@datavex/auth-middleware`. User payload claims: `id, email, full_name, role, organization_name, permissions`.
 - **SSO Redirection:**
   - Login page processes a `?redirect=...` query parameter to redirect the user back to the calling workstation domain.
   - Passes the authenticated token via `?token=<jwt>` to the target workstation on successful login.
@@ -22,9 +22,9 @@ This directory contains the main Executive / Super Admin Shell of the DATAVEX ER
     - Admins → Remain on erp-shell (`http://localhost:3000`)
 - **API Service (`services/api.ts`):** Re-exports API clients from `@datavex/auth-middleware`.
 - **Gateway Proxy (`proxy.ts` / Next.js middleware):**
-  - `/api/auth/*` → core-iam (8002)
-  - CRM paths (20 prefixes in `CRM_PATHS` array) → erp-service (8000) with `/crm` prepended (routes to `/crm/...` on erp-service)
-  - All other `/api/*` → erp-service (8000, aggregation gateway)
+  - `/api/auth/*` → core-iam (`http://localhost:8002`)
+  - CRM paths (20 prefixes in `CRM_PATHS` array, including `reports`, `lead-discovery`, `ai-assistant`) → erp-service (`http://localhost:8000`) with `/crm` prepended (routes to `/crm/...` on erp-service)
+  - All other `/api/*` → erp-service (`http://localhost:8000`, aggregation gateway)
 
 ## 3. Dashboard Architecture
 - **Route:** `/dashboard` — single pane of glass aggregating all services

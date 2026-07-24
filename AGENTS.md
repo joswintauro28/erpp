@@ -349,15 +349,30 @@ bunx prisma generate   # Regenerate Prisma client
 
 ---
 
-## 6. SSO Auth Flow (Cross-Workstation)
+## 6. SSO Auth Flow & Session Persistence
 
 1. User visits a workstation URL (e.g. `http://localhost:3002/dashboard`).
-2. No token found → browser redirects to `http://localhost:3000/login?redirect=http://localhost:3002/dashboard`.
-3. User logs in on erp-shell → calls `POST /api/auth/login` → core-iam validates credentials, returns JWT.
-4. erp-shell stores token in localStorage, then redirects to `http://localhost:3002/dashboard?token=<jwt>`.
-5. billing-ui picks up `?token=` from URL, stores it, fetches `/api/auth/users/me` to verify, and renders authenticated content.
-6. Subsequent API calls include `Authorization: Bearer <jwt>` header.
-7. On 401, the api.ts service attempts `/api/auth/refresh` via HttpOnly cookie before failing.
+2. No active token found → browser redirects to `http://localhost:3000/login?redirect=http://localhost:3002/dashboard`.
+3. User logs in on erp-shell → calls `POST /api/auth/login` → core-iam validates credentials, returns JWT access token, and sets HttpOnly refresh cookie (`refresh_token`).
+4. erp-shell stores access token via `@datavex/auth-middleware` (in memory and `localStorage`), then redirects to `http://localhost:3002/dashboard?token=<jwt>`.
+5. Target workstation (e.g., `billing-ui`, `crm-ui`, `inventory-ui`) picks up `?token=` on mount, stores it, cleans the URL bar (`window.history.replaceState`), and fetches `/api/auth/users/me` to verify user claims.
+6. **Browser Reload (Ctrl+R) Protection:** On page refresh, `AuthProvider` checks active access tokens via `getAccessToken()` before attempting `/api/auth/refresh`. This prevents session lockouts across workstations and Incognito windows.
+7. **Cookie Domain Scoping:** `COOKIE_DOMAIN=localhost` (local dev) and `COOKIE_DOMAIN=erp.local` (Docker Compose) ensure HttpOnly refresh cookies are scoped correctly across all workstation origins.
+8. On 401 Unauthorized response, `api.ts` automatically calls `/api/auth/refresh` with credentials before retrying the original request or redirecting to login.
+
+---
+
+## 7. Interactive Swagger & OpenAPI Documentation
+
+All FastAPI microservices expose interactive OpenAPI 3.0 documentation with built-in **`BearerAuth` JWT authorization** for testing:
+
+| Service | Swagger UI | ReDoc | OpenAPI JSON |
+|---------|------------|-------|--------------|
+| **ERP Gateway Service** (`erp-service` — 8000) | `http://localhost:8000/docs` | `http://localhost:8000/redoc` | `http://localhost:8000/openapi.json` |
+| **CRM Service** (`crm-service` — 8001) | `http://localhost:8001/docs` | `http://localhost:8001/redoc` | `http://localhost:8001/openapi.json` |
+| **Inventory Service** (`inventory-service` — 8004) | `http://localhost:8004/docs` | `http://localhost:8004/redoc` | `http://localhost:8004/openapi.json` |
+
+> **Security Note:** `SecurityHeadersMiddleware` in `erp-service` automatically excludes `/docs`, `/redoc`, and `/openapi.json` from restrictive `Content-Security-Policy` headers to ensure Swagger CDN assets render smoothly.
 
 ---
 

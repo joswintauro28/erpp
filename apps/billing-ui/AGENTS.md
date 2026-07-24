@@ -12,15 +12,15 @@ This directory contains the Billing Workstation UI for Accountants and Auditors.
 - **Theme Shares:** Consumes `@datavex/ui-theme` components and theme.
 
 ## 2. Authentication & Auth Pattern
-- **Token-verification only:** No local login page or credential handling.
-- **SSO Intake:** On mount, verifies `?token=<jwt>` from the URL (provided by erp-shell), or fetches `/api/auth/refresh` from HttpOnly cookies.
+- **Token-verification & Session Persistence:** No local login page or credential handling.
+- **SSO Intake & Reload Protection:** On mount, verifies `?token=<jwt>` from URL (provided by erp-shell), restores stored tokens via `getAccessToken()` on browser reload (**Ctrl + R**), or fetches `/api/auth/refresh` from HttpOnly cookies.
 - **Fallback Redirect:** If no authentication is active, redirects to:
   `http://localhost:3000/login?redirect=http://localhost:3002`
 - **Auth context (`useAuth`):** Returns `{ user, isAuthenticated, loading, logout }`.
 
 ## 3. Proxy Routing (`proxy.ts`)
-- `/api/auth/*` → core-iam (8002)
-- All other `/api/*` → billing-service (8003)
+- `/api/auth/*` → core-iam (`http://localhost:8002`)
+- All other `/api/*` → billing-service (`http://localhost:8003`)
 
 ## 4. Routes (9 Total)
 - `/dashboard`: `GET /api/dashboard/billing` — aggregated KPIs.

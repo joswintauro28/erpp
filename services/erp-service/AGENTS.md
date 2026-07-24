@@ -23,6 +23,7 @@ This backend service acts as the central business logic gateway and handles lead
   - `billing_client.py` -> Connects to billing-service (`http://localhost:8003/api`).
   - `inventory_client.py` -> Connects to inventory-service (`http://localhost:8004`).
   - `crm_client.py` -> Connects to crm-service (`http://localhost:8001/api`) — generic CRUD + specific functions for dashboard, lead-discovery, AI assistant.
+- **Interactive OpenAPI Documentation:** Exposes Swagger UI (`http://localhost:8000/docs`), ReDoc (`http://localhost:8000/redoc`), and OpenAPI spec (`http://localhost:8000/openapi.json`) with Bearer JWT authorization. `SecurityHeadersMiddleware` excludes `/docs`, `/redoc`, and `/openapi.json` from restrictive CSP headers.
 - **Active Models:** Client, Lead, Product.
 
 ## 3. Run & Database Setup Commands

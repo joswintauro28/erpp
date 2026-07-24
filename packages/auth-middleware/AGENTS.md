@@ -4,6 +4,7 @@ This central package provides shared authentication configurations, types, and c
 
 ## 1. Key Features
 - **JWT Auth Client:** Implements `setAccessToken`, `getAccessToken`, token refresh workflows, and automated intercepts on 401 Unauthorized errors.
+- **Session Persistence:** `getToken()` checks `getAccessToken()` (in memory and local storage) on outgoing HTTP requests, enabling seamless authentication recovery on page refresh (**Ctrl + R**).
 - **Typed HTTP Client:** Exposes a configured `api` instance (`api.get`, `api.post`, `api.put`, etc.) using standard types.
 - **Shared Types:** Exposes `User`, `ApiError`, and `ApiClientError` to reduce duplicate declarations.
 
