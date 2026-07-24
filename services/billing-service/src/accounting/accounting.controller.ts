@@ -20,10 +20,18 @@ import { AgingQueryDto } from "./dto/aging-query.dto";
 import type { JwtPayload } from "../auth/auth.guard";
 import type { Response } from "express";
 
+import { CogsReportsService } from "./cogs-reports.service";
+import { CogsAccountingService } from "./cogs-accounting.service";
+
 @Controller()
 @UseGuards(AuthGuard, PermissionsGuard)
 export class AccountingController {
-  constructor(private readonly accountingService: AccountingService) {}
+  constructor(
+    private readonly accountingService: AccountingService,
+    private readonly cogsReportsService: CogsReportsService,
+    private readonly cogsAccountingService: CogsAccountingService,
+  ) {}
+
 
   @Get("accounts")
   @Permissions("invoices.view")
@@ -177,4 +185,103 @@ export class AccountingController {
   ) {
     return this.accountingService.createExpenseFromPo(user.organization_id, body);
   }
+
+  // ─── COGS & PROFITABILITY ENDPOINTS ──────────────────────────────
+
+  @Get("reports/cogs/summary")
+  @Permissions("invoices.view")
+  async getCogsSummary(
+    @Query() query: any,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return this.cogsReportsService.getSummary(user.organization_id, query);
+  }
+
+  @Get("reports/cogs/invoices")
+  @Permissions("invoices.view")
+  async getInvoiceCogsReport(
+    @Query() query: any,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return this.cogsReportsService.getInvoiceCogsReport(user.organization_id, query);
+  }
+
+  @Get("reports/cogs/products")
+  @Permissions("invoices.view")
+  async getProductCogsReport(
+    @Query() query: any,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return this.cogsReportsService.getProductCogsReport(user.organization_id, query);
+  }
+
+  @Get("reports/cogs/ledger")
+  @Permissions("invoices.view")
+  async getCogsLedger(
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return this.cogsReportsService.getCogsLedger(user.organization_id);
+  }
+
+  @Get("reports/cogs/invoice/:id")
+  @Permissions("invoices.view")
+  async getInvoiceCogsDrilldown(
+    @Param("id", ParseIntPipe) id: number,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return this.cogsReportsService.getInvoiceCogsDrilldown(user.organization_id, id);
+  }
+
+  @Get("reports/cogs/dlq")
+  @Permissions("invoices.view")
+  async getDlqRecords(
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return this.cogsReportsService.getDlqRecords(user.organization_id);
+  }
+
+  @Post("reports/cogs/posting")
+  @Permissions("invoices.create")
+  async processCogsPosting(
+    @Body() body: any,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    const idempotencyKey = body.idempotency_key || `post-${user.organization_id}-${Date.now()}`;
+    return this.cogsAccountingService.processShipmentDispatched(
+      user.organization_id,
+      idempotencyKey,
+      {
+        shipmentReference: body.shipment_reference || `SHIP-${Date.now()}`,
+        invoiceId: body.invoice_id,
+        warehouseId: body.warehouse_id,
+        items: body.items || [],
+        performedBy: user.email || `user:${user.sub}`,
+      },
+    );
+  }
+
+  @Post("reports/cogs/posting/:id/reverse")
+  @Permissions("invoices.edit")
+  async reverseCogsPosting(
+    @Param("id", ParseIntPipe) id: number,
+    @Body() body: any,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return this.cogsAccountingService.reverseCogsPosting(
+      user.organization_id,
+      id,
+      body.reason || "Manual Reversal Request",
+      user.email || `user:${user.sub}`,
+    );
+  }
+
+  @Get("reports/cogs/posting/:id/verify")
+  @Permissions("invoices.view")
+  async verifyCogsPosting(
+    @Param("id", ParseIntPipe) id: number,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return this.cogsAccountingService.verifyPostingIntegrity(user.organization_id, id);
+  }
 }
+
