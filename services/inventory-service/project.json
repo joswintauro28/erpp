@@ -5,8 +5,9 @@
   "sourceRoot": "services/inventory-service",
   "targets": {
     "dev": {
-      "command": ".venv/bin/uvicorn app.main:app --reload --port 8004",
+      "executor": "nx:run-commands",
       "options": {
+        "command": ".venv/bin/uvicorn app.main:app --reload --port 8004",
         "cwd": "services/inventory-service"
       }
     },
