@@ -32,7 +32,41 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(title="CRM Dashboard API", lifespan=lifespan)
+from fastapi.openapi.utils import get_openapi
+
+app = FastAPI(
+    title="DATAVEX CRM Service API",
+    description="Sales Pipeline Engine, Customer Registry, Lead Discovery & AI Assistant for DATAVEX ERP.",
+    version="1.0.0",
+    lifespan=lifespan,
+    docs_url="/docs",
+    redoc_url="/redoc",
+    openapi_url="/openapi.json",
+)
+
+def custom_openapi():
+    if app.openapi_schema:
+        return app.openapi_schema
+    openapi_schema = get_openapi(
+        title="DATAVEX CRM Service API",
+        version="1.0.0",
+        description="Sales Pipeline Engine, Customer Registry, Lead Discovery & AI Assistant for DATAVEX ERP.",
+        routes=app.routes,
+    )
+    openapi_schema["components"] = openapi_schema.get("components", {})
+    openapi_schema["components"]["securitySchemes"] = {
+        "BearerAuth": {
+            "type": "http",
+            "scheme": "bearer",
+            "bearerFormat": "JWT",
+            "description": "Enter JWT Bearer token issued by Core IAM SSO",
+        }
+    }
+    openapi_schema["security"] = [{"BearerAuth": []}]
+    app.openapi_schema = openapi_schema
+    return app.openapi_schema
+
+app.openapi = custom_openapi
 
 # Configure CORS
 app.add_middleware(
@@ -43,7 +77,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.get("/health")
+@app.get("/health", tags=["system"])
 async def health_check():
     return {"status": "healthy"}
 

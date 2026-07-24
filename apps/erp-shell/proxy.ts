@@ -8,7 +8,7 @@ const CRM_PATHS = [
   "customers", "contacts", "documents", "lead-discovery", "ai-assistant",
   "quotations", "opportunities", "sales", "sales-orders", "requirements",
   "leads", "enquiries", "site-visits", "follow-ups", "tasks",
-  "communications", "visit-plans", "complaints", "feedback",
+  "communications", "visit-plans", "complaints", "feedback", "reports",
 ];
 
 export function proxy(request: NextRequest) {

@@ -31,12 +31,41 @@ async def lifespan(app: FastAPI):
     await engine.dispose()
 
 
+from fastapi.openapi.utils import get_openapi
+
 app = FastAPI(
-    title="DATAVEX Inventory API",
+    title="DATAVEX Inventory Service API",
+    description="Product Catalog, Warehouse Locations, Stock Movements & Serial Tracking for DATAVEX ERP.",
     version="1.0.0",
     lifespan=lifespan,
-    redirect_slashes=False,
+    docs_url="/docs",
+    redoc_url="/redoc",
+    openapi_url="/openapi.json",
 )
+
+def custom_openapi():
+    if app.openapi_schema:
+        return app.openapi_schema
+    openapi_schema = get_openapi(
+        title="DATAVEX Inventory Service API",
+        version="1.0.0",
+        description="Product Catalog, Warehouse Locations, Stock Movements & Serial Tracking for DATAVEX ERP.",
+        routes=app.routes,
+    )
+    openapi_schema["components"] = openapi_schema.get("components", {})
+    openapi_schema["components"]["securitySchemes"] = {
+        "BearerAuth": {
+            "type": "http",
+            "scheme": "bearer",
+            "bearerFormat": "JWT",
+            "description": "Enter JWT Bearer token issued by Core IAM SSO",
+        }
+    }
+    openapi_schema["security"] = [{"BearerAuth": []}]
+    app.openapi_schema = openapi_schema
+    return app.openapi_schema
+
+app.openapi = custom_openapi
 
 app.add_middleware(SecurityHeadersMiddleware)
 

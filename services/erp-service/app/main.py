@@ -1,10 +1,10 @@
 from contextlib import asynccontextmanager
-
 import logging
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.openapi.utils import get_openapi
 
 from app.core.config import settings
 from app.core.exceptions import TooManyRequestsException
@@ -27,11 +27,38 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="DATAVEX ERP API",
+    title="DATAVEX ERP Gateway API",
+    description="Core Business Logic & Microservice Aggregation Gateway for DATAVEX ERP.",
     version="1.0.0",
     lifespan=lifespan,
-    redirect_slashes=False,
+    docs_url="/docs",
+    redoc_url="/redoc",
+    openapi_url="/openapi.json",
 )
+
+def custom_openapi():
+    if app.openapi_schema:
+        return app.openapi_schema
+    openapi_schema = get_openapi(
+        title="DATAVEX ERP Gateway API",
+        version="1.0.0",
+        description="Core Business Logic & Microservice Aggregation Gateway for DATAVEX ERP. Aggregates IAM, CRM, Billing, and Inventory domains.",
+        routes=app.routes,
+    )
+    openapi_schema["components"] = openapi_schema.get("components", {})
+    openapi_schema["components"]["securitySchemes"] = {
+        "BearerAuth": {
+            "type": "http",
+            "scheme": "bearer",
+            "bearerFormat": "JWT",
+            "description": "Enter JWT Bearer token issued by Core IAM SSO",
+        }
+    }
+    openapi_schema["security"] = [{"BearerAuth": []}]
+    app.openapi_schema = openapi_schema
+    return app.openapi_schema
+
+app.openapi = custom_openapi
 
 # Security middleware
 app.add_middleware(SecurityHeadersMiddleware)
@@ -76,10 +103,10 @@ app.include_router(inventory_router)
 app.include_router(settings_router)
 
 
-@app.get("/health")
+@app.get("/health", tags=["system"])
 async def health_check():
     return {"status": "healthy"}
 
-@app.get("/")
+@app.get("/", tags=["system"])
 async def root():
     return {"message": "DATAVEX ERP API Running", "status": "healthy"}
