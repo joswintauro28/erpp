@@ -44,7 +44,7 @@ async function refreshAccessToken(): Promise<string | null> {
 }
 
 function getToken(): string | null {
-  return accessToken;
+  return getAccessToken();
 }
 
 async function request<T>(

@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 
 class SearchRequest(BaseModel):
     city: Optional[str] = None
@@ -11,6 +11,13 @@ class PublicContact(BaseModel):
     email: Optional[str] = ""
     phone: Optional[str] = ""
     address: Optional[str] = ""
+    linkedin: Optional[str] = ""
+
+class KeyDecisionMaker(BaseModel):
+    name: Optional[str] = ""
+    title: Optional[str] = ""
+    email: Optional[str] = ""
+    phone: Optional[str] = ""
     linkedin: Optional[str] = ""
 
 class CompanyDetail(BaseModel):
@@ -26,7 +33,7 @@ class CompanyDetail(BaseModel):
     detected_technologies: List[str] = []
     business_pain_points: List[str] = []
     recommended_ai_solutions: List[str] = []
-    key_decision_makers: List[str] = []
+    key_decision_makers: List[KeyDecisionMaker] = []
     public_contact: PublicContact
     latitude: Optional[float] = None
     longitude: Optional[float] = None

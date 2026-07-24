@@ -18,7 +18,12 @@ from dotenv import load_dotenv
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("AI_Discovery_Scraper")
 
-load_dotenv(dotenv_path=os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))), ".env"), override=True)
+# Try loading from multiple .env locations (CWD, project root, Docker env-file)
+_env_loaded = load_dotenv(override=False)
+if not _env_loaded:
+    _env_loaded = load_dotenv(dotenv_path=os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))), ".env"), override=False)
+if not _env_loaded:
+    _env_loaded = load_dotenv(dotenv_path=".env", override=False)
 
 # Initialize Gemini client
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")

@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-const BACKEND_URL = process.env.BACKEND_API_URL || "http://127.0.0.1:8000";
-const IAM_URL = process.env.IAM_API_URL || "http://127.0.0.1:8002";
+const BACKEND_URL = process.env.BACKEND_API_URL || "http://localhost:8000";
+const IAM_URL = process.env.IAM_API_URL || "http://localhost:8002";
 
 const CRM_PATHS = [
   "customers", "contacts", "documents", "lead-discovery", "ai-assistant",

@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-const IAM_URL = process.env.IAM_API_URL || "http://127.0.0.1:8002";
-const INVENTORY_URL = process.env.INVENTORY_API_URL || "http://127.0.0.1:8004";
+const IAM_URL = process.env.IAM_API_URL || "http://localhost:8002";
+const INVENTORY_URL = process.env.INVENTORY_API_URL || "http://localhost:8004";
 
 export function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;

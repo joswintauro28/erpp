@@ -159,37 +159,34 @@ async def scrape_url_endpoint(request: ScrapeUrlRequest, db: AsyncSession = Depe
         }
     except Exception as e:
         err_str = str(e)
-        is_quota_error = "quota" in err_str.lower() or "rate" in err_str.lower() or "exhausted" in err_str.lower()
-        if is_quota_error:
-            scraper.logger.warning(f"LLM quota error for {url}, returning basic scraped data as fallback: {e}")
-            hostname = urlparse(url).hostname or url
-            company_name_guess = hostname.replace("www.", "").split(".")[0].title()
-            return {
-                "company_name": company_name_guess,
-                "website": url,
-                "industry": "Unknown",
-                "location": contacts.get("address") or "Unknown",
-                "estimated_employees": "Unknown",
-                "estimated_revenue": "Unknown",
-                "company_overview": (
-                    "AI summary unavailable \u2014 API quota exhausted. "
-                    "Basic contact information was extracted directly from the website."
-                ),
-                "industry_details": "Scraped from direct website input (no AI analysis).",
-                "ai_readiness_score": 0,
-                "detected_technologies": [],
-                "business_pain_points": [],
-                "recommended_ai_solutions": [],
-                "key_decision_makers": [],
-                "public_contact": {
-                    "email": contacts.get("email") or "Unknown",
-                    "phone": contacts.get("phone") or "Unknown",
-                    "address": contacts.get("address") or "Unknown",
-                    "linkedin": contacts.get("linkedin") or "Unknown"
-                },
-                "quota_warning": "AI quota exhausted. Analysis is unavailable until the quota resets (usually within 24 hours)."
-            }
-        raise HTTPException(status_code=500, detail=f"Failed to generate AI summary: {err_str}")
+        scraper.logger.warning(f"LLM error for {url}, returning basic scraped data as fallback: {e}")
+        hostname = urlparse(url).hostname or url
+        company_name_guess = hostname.replace("www.", "").split(".")[0].title()
+        is_ai_unavailable = "api key" in err_str.lower() or "no llm" in err_str.lower() or "quota" in err_str.lower() or "rate" in err_str.lower() or "exhausted" in err_str.lower()
+        return {
+            "company_name": company_name_guess,
+            "website": url,
+            "industry": "Unknown",
+            "location": contacts.get("address") or "Unknown",
+            "estimated_employees": "Unknown",
+            "estimated_revenue": "Unknown",
+            "company_overview": (
+                "AI summary unavailable \u2014 " + ("API quota exhausted." if is_ai_unavailable else "LLM service not configured.")
+            ),
+            "industry_details": "Scraped from direct website input (no AI analysis).",
+            "ai_readiness_score": 0,
+            "detected_technologies": [],
+            "business_pain_points": [],
+            "recommended_ai_solutions": [],
+            "key_decision_makers": [],
+            "public_contact": {
+                "email": contacts.get("email") or "Unknown",
+                "phone": contacts.get("phone") or "Unknown",
+                "address": contacts.get("address") or "Unknown",
+                "linkedin": contacts.get("linkedin") or "Unknown"
+            },
+            "quota_warning": None if not is_ai_unavailable else "AI quota exhausted. Analysis is unavailable until the quota resets (usually within 24 hours)."
+        }
 
 
 @router.post("/import")

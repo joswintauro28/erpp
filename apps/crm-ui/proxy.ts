@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-const IAM_URL = process.env.IAM_API_URL || "http://127.0.0.1:8002";
-const CRM_URL = process.env.CRM_API_URL || "http://127.0.0.1:8001";
+const IAM_URL = process.env.IAM_API_URL || "http://localhost:8002";
+const CRM_URL = process.env.CRM_API_URL || "http://localhost:8001";
 
 export function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;

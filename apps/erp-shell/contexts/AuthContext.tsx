@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
-import { api, setAccessToken } from "@datavex/auth-middleware";
+import { api, getAccessToken, setAccessToken } from "@datavex/auth-middleware";
 import type { User } from "@datavex/auth-middleware";
 import type { AuthState } from "@/types/auth";
 
@@ -13,6 +13,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const refreshAndRestore = async () => {
+      const activeToken = getAccessToken();
+
+      if (activeToken) {
+        try {
+          const u = await api.get<User>("/auth/users/me");
+          setUser(u);
+          setLoading(false);
+          return;
+        } catch {
+          // Token expired or invalid; attempt refresh below
+        }
+      }
+
       try {
         const res = await fetch("/api/auth/refresh", {
           method: "POST",
