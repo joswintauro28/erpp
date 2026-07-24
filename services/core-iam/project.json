@@ -5,8 +5,9 @@
   "sourceRoot": "services/core-iam",
   "targets": {
     "dev": {
-      "command": "bun run start:dev",
+      "executor": "nx:run-commands",
       "options": {
+        "command": "bun run start:dev",
         "cwd": "services/core-iam"
       }
     },
