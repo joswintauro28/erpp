@@ -1,16 +1,16 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Plus, Download, Search, Filter } from "lucide-react";
+import { Plus, Download, Search, Filter, RotateCw } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Spinner } from "@/components/ui/spinner";
 import { exportToCSV } from "@/utils/exportCsv";
 import RequirementTable from "./RequirementTable";
 import { api } from "@/services/api";
 import GenericCreateModal from "@/components/GenericCreateModal";
 import GenericDetailsModal from "@/components/GenericDetailsModal";
-import RequirementsLoading from "./loading";
 
 export default function RequirementsPage() {
   const [data, setData] = useState({ summary: { total_requirements: 0, open: 0, overdue_at_risk: 0, owners: 0 }, requirements: [] });
@@ -38,7 +38,7 @@ export default function RequirementsPage() {
     }
   };
 
-  if (loading) return <RequirementsLoading />;
+  if (loading) return <div className="space-y-10 lg:space-y-12"><div className="flex h-full items-center justify-center py-20"><Spinner /></div></div>;
 
   const items = data?.requirements || [];
   const filtered = search
@@ -46,12 +46,13 @@ export default function RequirementsPage() {
     : items;
 
   return (
-    <div className="space-y-8">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="font-heading text-xl font-semibold tracking-tight text-[var(--shell-foreground)]">Requirements</h1>
-          <p className="mt-0.5 text-sm text-[var(--shell-muted)]">Track client requirements and approvals</p>
-        </div>
+    <div className="space-y-10 lg:space-y-12">
+      <div className="flex items-center justify-end gap-3">
+        <Button variant="outline" size="sm" onClick={fetchData}>
+          <RotateCw className={"h-4 w-4" + (loading ? " animate-spin" : "")} /> Refresh
+        </Button>
+        <Button variant="outline" size="sm" onClick={() => exportToCSV(items, "requirements")}><Download className="h-4 w-4" /> Export</Button>
+        <Button size="sm" onClick={() => setIsModalOpen(true)}><Plus className="h-4 w-4" /> New Requirement</Button>
       </div>
 
       <div>
@@ -79,10 +80,6 @@ export default function RequirementsPage() {
         <div className="mb-5 flex items-center gap-2">
           <h2 className="font-heading text-xs font-light uppercase tracking-[0.12em] text-[var(--shell-muted)]">RECORDS</h2>
           <div className="h-px flex-1 bg-[var(--shell-border)]" />
-        </div>
-        <div className="flex items-center justify-end gap-3 mb-4">
-          <Button variant="outline" size="sm" onClick={() => exportToCSV(items, "requirements")}><Download className="h-4 w-4" /> Export</Button>
-          <Button size="sm" onClick={() => setIsModalOpen(true)}><Plus className="h-4 w-4" /> New Requirement</Button>
         </div>
         <Card className="hover:shadow-engineered transition-shadow duration-200 border-[var(--shell-border)] bg-[var(--shell-surface)]">
           <div className="flex items-center gap-3 border-b border-[var(--shell-border)] p-4">

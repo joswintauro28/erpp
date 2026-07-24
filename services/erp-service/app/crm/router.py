@@ -200,9 +200,6 @@ async def list_entities(
     token = _get_token(payload)
     data = await crm_client.get_entity_list(entity_type, token)
 
-    if entity_type == "leads":
-        return _maybe_map_leads(data)
-
     return data
 
 
@@ -216,8 +213,6 @@ async def get_entity(
         raise HTTPException(status_code=404, detail=f"Unknown entity type: {entity_type}")
     token = _get_token(payload)
     data = await crm_client.get_entity_detail(entity_type, id_str, token)
-    if entity_type == "leads":
-        return _maybe_map_lead(data)
     return data
 
 
@@ -230,12 +225,7 @@ async def create_entity(
     if entity_type not in VALID_ENTITIES:
         raise HTTPException(status_code=404, detail=f"Unknown entity type: {entity_type}")
     token = _get_token(payload)
-
-    mapped_body = _reverse_map_lead(body) if entity_type == "leads" else body
-    data = await crm_client.create_entity(entity_type, token, mapped_body)
-
-    if entity_type == "leads":
-        return _map_lead(data)
+    data = await crm_client.create_entity(entity_type, token, body)
     return data
 
 
@@ -249,12 +239,7 @@ async def update_entity(
     if entity_type not in VALID_ENTITIES:
         raise HTTPException(status_code=404, detail=f"Unknown entity type: {entity_type}")
     token = _get_token(payload)
-
-    mapped_body = _reverse_map_lead(body) if entity_type == "leads" else body
-    data = await crm_client.update_entity(entity_type, id_str, token, mapped_body)
-
-    if entity_type == "leads":
-        return _map_lead(data)
+    data = await crm_client.update_entity(entity_type, id_str, token, body)
     return data
 
 

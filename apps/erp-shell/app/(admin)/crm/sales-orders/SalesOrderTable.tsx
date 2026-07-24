@@ -60,9 +60,9 @@ export default function SalesOrderTable({ salesOrders, onView, onEdit, onDelete 
             <TableCell><Badge variant={badgeVariant(item.status)}>{item.status}</Badge></TableCell>
             <TableCell>{item.owner}</TableCell>
             <TableCell>
-              <div className="flex gap-2">
-                <Button size="icon-sm" className="text-[var(--shell-muted)] hover:text-[var(--shell-foreground)]" onClick={() => onEdit(item)} title="Edit"><Edit2 size={14} /></Button>
-                <Button size="icon-sm" className="text-[var(--shell-muted)] hover:text-destructive" onClick={() => onDelete(item)} title="Delete"><Trash2 size={14} /></Button>
+              <div className="flex gap-2 text-[var(--shell-muted)]">
+                <Button size="icon-sm" className="hover:text-[var(--shell-foreground)] cursor-pointer" onClick={() => onEdit(item)}><Edit2 size={14} /></Button>
+                <Button size="icon-sm" className="hover:text-red-500 cursor-pointer" onClick={() => onDelete(item)}><Trash2 size={14} /></Button>
               </div>
             </TableCell>
           </TableRow>
