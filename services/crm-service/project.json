@@ -5,8 +5,9 @@
   "sourceRoot": "services/crm-service",
   "targets": {
     "dev": {
-      "command": ".venv/bin/uvicorn app.main:app --port 8001 --reload",
+      "executor": "nx:run-commands",
       "options": {
+        "command": ".venv/bin/uvicorn app.main:app --port 8001 --reload",
         "cwd": "services/crm-service"
       }
     },
