@@ -280,3 +280,30 @@ async def reopen_period(token: str, period_id: int) -> dict:
 
 async def get_periods_status(token: str) -> dict:
     return await _get("/periods/status", token)
+
+
+# ─── COGS & Profitability Reports ────────────────────────────
+
+async def get_cogs_summary(token: str, params: dict | None = None) -> dict:
+    return await _get("/reports/cogs/summary", token, params)
+
+
+async def get_cogs_invoices(token: str, params: dict | None = None) -> dict:
+    return await _get("/reports/cogs/invoices", token, params)
+
+
+async def get_cogs_products(token: str, params: dict | None = None) -> dict:
+    return await _get("/reports/cogs/products", token, params)
+
+
+async def get_cogs_ledger(token: str) -> dict:
+    return await _get("/reports/cogs/ledger", token)
+
+
+async def get_cogs_invoice_drilldown(token: str, invoice_id: int) -> dict:
+    return await _get(f"/reports/cogs/invoice/{invoice_id}", token)
+
+
+async def get_cogs_dlq(token: str) -> dict:
+    return await _get("/reports/cogs/dlq", token)
+
