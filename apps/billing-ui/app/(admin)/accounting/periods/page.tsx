@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AlertTriangle, Loader2, Lock, Unlock, Calendar } from "lucide-react";
 import { api } from "@/services/api";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 
 export default function PeriodsPage() {
   const [periods, setPeriods] = useState<any[]>([]);
@@ -14,6 +16,8 @@ export default function PeriodsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [actionLoading, setActionLoading] = useState<number | null>(null);
+  const [reopenId, setReopenId] = useState<number | null>(null);
+  const [reopenReason, setReopenReason] = useState("");
 
   const load = useCallback(async () => {
     try {
@@ -41,9 +45,16 @@ export default function PeriodsPage() {
   };
 
   const handleReopen = async (id: number) => {
-    setActionLoading(id);
+    setReopenId(id);
+    setReopenReason("");
+  };
+
+  const handleReopenConfirm = async () => {
+    if (reopenId === null) return;
+    setActionLoading(reopenId);
     try {
-      await api.post(`/periods/${id}/reopen`, {});
+      await api.post(`/periods/${reopenId}/reopen-request`, { reason: reopenReason || "Reopening period" });
+      setReopenId(null);
       load();
     } catch { /* handled */ } finally { setActionLoading(null); }
   };
@@ -81,7 +92,7 @@ export default function PeriodsPage() {
           <Card>
             <CardContent className="pt-6">
               <p className="text-xs text-muted-foreground">Last Closed</p>
-              <p className="font-heading text-lg font-semibold text-foreground mt-1">{status.last_closed_period ?? "None"}</p>
+              <p className="font-heading text-lg font-semibold text-foreground mt-1">{status.last_closed_period?.label ?? status.last_closed_period ?? "None"}</p>
             </CardContent>
           </Card>
           <Card>
@@ -167,6 +178,34 @@ export default function PeriodsPage() {
           </Table>
         </CardContent>
       </Card>
+      <Dialog open={reopenId !== null} onOpenChange={(open) => { if (!open) setReopenId(null); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Reopen Fiscal Period</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <p className="text-xs text-muted-foreground">Provide a reason for reopening this period.</p>
+            <Textarea
+              placeholder="Enter reason for reopening..."
+              className="text-xs min-h-[80px]"
+              value={reopenReason}
+              onChange={(e) => setReopenReason(e.target.value)}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" size="sm" className="text-xs" onClick={() => setReopenId(null)}>Cancel</Button>
+            <Button
+              size="sm"
+              className="text-xs"
+              onClick={handleReopenConfirm}
+              disabled={actionLoading === reopenId}
+            >
+              {actionLoading === reopenId ? <Loader2 className="h-3 w-3 animate-spin" /> : null}
+              Submit Reopen Request
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
