@@ -49,11 +49,11 @@ All flows below are currently approximated via synchronous REST calls. A central
 
 ## 4. Reports & Financial Closing
 
-- [ ] **Actual P&L Calculation (F6)** — Current reports use hardcoded percentages. Needs real period-based aggregation from invoices, expenses, and ledger entries
-- [ ] **Cash Flow Statement** — Missing from reports entirely. Needs to be computed from operating/investing/financing activities
-- [ ] **Bank Reconciliation (F4)** — CSV/XLSX statement import with auto-matching by reference ID, amount, and date
-- [ ] **Month-End Close Process (F5)** — Ledger locking, cut-off dates, close checklist with sign-off workflow
-- [ ] **Revenue Recognition Schedule (F2)** — Deferred revenue tracking for subscription/prepaid invoices, accrual vs cash basis
+- [x] **Actual P&L Calculation (F6)** — Current reports use hardcoded percentages. Needs real period-based aggregation from invoices, expenses, and ledger entries
+- [x] **Cash Flow Statement** — Missing from reports entirely. Needs to be computed from operating/investing/financing activities
+- [x] **Bank Reconciliation (F4)** — CSV/XLSX statement import with auto-matching by reference ID, amount, and date
+- [x] **Month-End Close Process (F5)** — Ledger locking, cut-off dates, close checklist with sign-off workflow
+- [x] **Revenue Recognition Schedule (F2)** — Deferred revenue tracking for subscription/prepaid invoices, accrual vs cash basis
 - [x] **COGS Tracking (F1)** — Pull product cost price from inventory-service on invoice creation to compute per-invoice COGS
 
 - [x] **AR Aging Report** — Bucketed balance-due report (Current / 30 / 60 / 90+ days overdue)
@@ -63,9 +63,9 @@ All flows below are currently approximated via synchronous REST calls. A central
 ## 5. Double-Entry Accounting
 
 - [ ] **Auto-Post Ledger on Payment (F3)** — When a payment is recorded, auto-create LedgerEntry rows (DR Cash/Bank, CR Accounts Receivable)
-- [ ] **Auto-Post Ledger on Invoice Creation** — DR Accounts Receivable, CR Revenue
-- [ ] **Auto-Post Ledger on Expense** — DR Expense account, CR Cash/Bank
-- [ ] **Auto-Post Ledger on Credit/Debit Notes** — Reverse or adjust prior ledger entries
+- [x] **Auto-Post Ledger on Invoice Creation** — DR Accounts Receivable, CR Revenue
+- [x] **Auto-Post Ledger on Expense** — DR Expense account, CR Cash/Bank
+- [x] **Auto-Post Ledger on Credit/Debit Notes** — Reverse or adjust prior ledger entries
 
 ---
 
