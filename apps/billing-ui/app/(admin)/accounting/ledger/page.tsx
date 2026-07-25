@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { BookOpen, AlertTriangle, Plus, Loader2, Search } from "lucide-react";
+import { BookOpen, AlertTriangle, Plus, Loader2, Search, Pencil } from "lucide-react";
 import { api } from "@/services/api";
 import { money } from "@/utils/format";
 import type { LedgerEntryView, AccountEntry } from "@/types/billing";
@@ -22,6 +22,8 @@ export default function LedgerPage() {
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
   const [journalOpen, setJournalOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [editId, setEditId] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
 
   const [formAccountId, setFormAccountId] = useState("");
@@ -59,6 +61,35 @@ export default function LedgerPage() {
         entry_date: formDate || undefined,
       });
       setJournalOpen(false);
+      setFormAccountId(""); setFormDebit(""); setFormCredit(""); setFormDesc(""); setFormDate("");
+      load();
+    } catch { /* handled */ } finally { setSaving(false); }
+  };
+
+  const handleEditClick = (entry: LedgerEntryView) => {
+    setEditId(entry.id);
+    setFormAccountId(String(entry.account_code));
+    setFormDebit(String(entry.debit > 0 ? entry.debit : ""));
+    setFormCredit(String(entry.credit > 0 ? entry.credit : ""));
+    setFormDesc(entry.description);
+    setFormDate(entry.entry_date);
+    setEditOpen(true);
+  };
+
+  const handleUpdateEntry = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (editId === null) return;
+    setSaving(true);
+    try {
+      await api.put(`/ledger/${editId}`, {
+        account_id: Number(formAccountId),
+        debit: Number(formDebit) || 0,
+        credit: Number(formCredit) || 0,
+        description: formDesc || "Updated journal entry",
+        entry_date: formDate || undefined,
+      });
+      setEditOpen(false);
+      setEditId(null);
       setFormAccountId(""); setFormDebit(""); setFormCredit(""); setFormDesc(""); setFormDate("");
       load();
     } catch { /* handled */ } finally { setSaving(false); }
@@ -117,6 +148,7 @@ export default function LedgerPage() {
                 <TableHead className="text-right">Debit</TableHead>
                 <TableHead className="text-right">Credit</TableHead>
                 <TableHead>Reference</TableHead>
+                <TableHead className="text-right">Action</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -137,6 +169,11 @@ export default function LedgerPage() {
                   <TableCell className="text-right font-mono text-xs text-destructive">{e.debit > 0 ? money(e.debit) : "-"}</TableCell>
                   <TableCell className="text-right font-mono text-xs text-emerald-600">{e.credit > 0 ? money(e.credit) : "-"}</TableCell>
                   <TableCell className="text-xs text-muted-foreground">{e.reference_type ? `${e.reference_type}#${e.reference_id}` : "-"}</TableCell>
+                  <TableCell className="text-right">
+                    <Button variant="ghost" size="icon-sm" onClick={() => handleEditClick(e)} title="Edit">
+                      <Pencil className="h-3.5 w-3.5" />
+                    </Button>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -182,6 +219,50 @@ export default function LedgerPage() {
               <Button type="submit" disabled={saving || !formAccountId || (!formDebit && !formCredit)}>
                 {saving && <Loader2 className="mr-1 h-4 w-4 animate-spin" />}
                 Create Entry
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Edit Journal Entry</DialogTitle></DialogHeader>
+          <form className="space-y-5" onSubmit={handleUpdateEntry}>
+            <div className="space-y-2">
+              <Label htmlFor="jl-edit-account">Account</Label>
+              <Select value={formAccountId} onValueChange={(v) => v !== null && setFormAccountId(v)}>
+                <SelectTrigger id="jl-edit-account"><SelectValue placeholder="Select account" /></SelectTrigger>
+                <SelectContent>
+                  {accounts.map((a) => (
+                    <SelectItem key={a.id} value={String(a.id)}>{a.code} — {a.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="jl-edit-debit">Debit (₹)</Label>
+                <Input id="jl-edit-debit" type="number" min={0} step={0.01} placeholder="0.00" value={formDebit} onChange={(e) => setFormDebit(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="jl-edit-credit">Credit (₹)</Label>
+                <Input id="jl-edit-credit" type="number" min={0} step={0.01} placeholder="0.00" value={formCredit} onChange={(e) => setFormCredit(e.target.value)} />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="jl-edit-desc">Description</Label>
+              <Textarea id="jl-edit-desc" rows={2} placeholder="Journal entry description" value={formDesc} onChange={(e) => setFormDesc(e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="jl-edit-date">Date</Label>
+              <Input id="jl-edit-date" type="date" value={formDate} onChange={(e) => setFormDate(e.target.value)} />
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setEditOpen(false)}>Cancel</Button>
+              <Button type="submit" disabled={saving || !formAccountId || (!formDebit && !formCredit)}>
+                {saving && <Loader2 className="mr-1 h-4 w-4 animate-spin" />}
+                Update Entry
               </Button>
             </DialogFooter>
           </form>
