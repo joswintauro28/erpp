@@ -38,21 +38,31 @@ echo ""
 
 # Step 1: Seed core-iam
 echo "[1/4] Seeding core-iam (SSO & Permissions)..."
-docker exec datavex-core-iam bun prisma/seed.ts
+docker cp "$DIR/../../services/core-iam/prisma/seed.ts" datavex-core-iam:/app/services/core-iam/prisma/seed.ts
 if [ $? -eq 0 ]; then
-    echo "  OK - core-iam seeded successfully!"
+    docker exec datavex-core-iam bun prisma/seed.ts
+    if [ $? -eq 0 ]; then
+        echo "  OK - core-iam seeded successfully!"
+    else
+        echo "  FAIL - core-iam seeding failed." >&2
+    fi
 else
-    echo "  FAIL - core-iam seeding failed." >&2
+    echo "  FAIL - Failed to copy core-iam seed.ts into container." >&2
 fi
 echo ""
 
 # Step 2: Seed billing-service
 echo "[2/4] Seeding billing-service (Invoices, Payments, Ledgers)..."
-docker exec datavex-billing-service bun prisma/seed.ts
+docker cp "$DIR/../../services/billing-service/prisma/seed.ts" datavex-billing-service:/app/services/billing-service/prisma/seed.ts
 if [ $? -eq 0 ]; then
-    echo "  OK - billing-service seeded successfully!"
+    docker exec datavex-billing-service bun prisma/seed.ts
+    if [ $? -eq 0 ]; then
+        echo "  OK - billing-service seeded successfully!"
+    else
+        echo "  FAIL - billing-service seeding failed." >&2
+    fi
 else
-    echo "  FAIL - billing-service seeding failed." >&2
+    echo "  FAIL - Failed to copy billing-service seed.ts into container." >&2
 fi
 echo ""
 
