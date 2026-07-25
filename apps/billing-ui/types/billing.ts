@@ -45,6 +45,8 @@ export interface InvoiceDetailView {
   notes: string;
   items: InvoiceItemView[];
   payments: ApiPayment[];
+  creditNotes?: CreditNote[];
+  debitNotes?: DebitNote[];
 }
 
 export interface InvoiceItemView {
@@ -156,6 +158,7 @@ export interface CreditNote {
   date: string;
   amount: number;
   status: string;
+  reason?: string;
 }
 
 export interface DebitNote {
@@ -167,6 +170,7 @@ export interface DebitNote {
   date: string;
   amount: number;
   status: string;
+  reason?: string;
 }
 
 export interface BillingPayment {
