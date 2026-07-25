@@ -17,11 +17,13 @@ import { Permissions } from "../auth/permissions.decorator";
 import { CurrentUser } from "../auth/current-user.decorator";
 import { AccountingService } from "./accounting.service";
 import { AgingQueryDto } from "./dto/aging-query.dto";
+import { CashFlowQueryDto } from "./dto/cash-flow-query.dto";
 import type { JwtPayload } from "../auth/auth.guard";
 import type { Response } from "express";
 
 import { CogsReportsService } from "./cogs-reports.service";
 import { CogsAccountingService } from "./cogs-accounting.service";
+import { FinancialReportingService } from "./financial-reporting.service";
 
 @Controller()
 @UseGuards(AuthGuard, PermissionsGuard)
@@ -30,6 +32,7 @@ export class AccountingController {
     private readonly accountingService: AccountingService,
     private readonly cogsReportsService: CogsReportsService,
     private readonly cogsAccountingService: CogsAccountingService,
+    private readonly financialReportingService: FinancialReportingService,
   ) {}
 
 
@@ -55,6 +58,15 @@ export class AccountingController {
   @Permissions("invoices.view")
   async getReports(@CurrentUser() user: JwtPayload) {
     return this.accountingService.getReports(user.organization_id);
+  }
+
+  @Get("reports/cash-flow")
+  @Permissions("invoices.view")
+  async getCashFlowStatement(
+    @Query() query: CashFlowQueryDto,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return this.accountingService.getCashFlowStatement(user.organization_id, query);
   }
 
   @Get("aging/summary")
@@ -131,6 +143,16 @@ export class AccountingController {
     return this.accountingService.createLedgerEntry(user.organization_id, body);
   }
 
+  @Put("ledger/:id")
+  @Permissions("invoices.edit")
+  async updateLedgerEntry(
+    @Param("id", ParseIntPipe) id: number,
+    @Body() body: any,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return this.accountingService.updateLedgerEntry(id, user.organization_id, body);
+  }
+
   @Get("ledger/customer/:clientId")
   @Permissions("invoices.view")
   async getCustomerLedger(
@@ -166,6 +188,16 @@ export class AccountingController {
     @CurrentUser() user: JwtPayload,
   ) {
     return this.accountingService.createExpense(user.organization_id, body);
+  }
+
+  @Put("expenses/:id")
+  @Permissions("invoices.edit")
+  async updateExpense(
+    @Param("id", ParseIntPipe) id: number,
+    @Body() body: any,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return this.accountingService.updateExpense(id, user.organization_id, body);
   }
 
   @Delete("expenses/:id")
@@ -282,6 +314,70 @@ export class AccountingController {
     @CurrentUser() user: JwtPayload,
   ) {
     return this.cogsAccountingService.verifyPostingIntegrity(user.organization_id, id);
+  }
+
+  @Get("reports/profit-loss")
+  @Permissions("invoices.view")
+  async getProfitLoss(
+    @Query("startDate") startDate: string,
+    @Query("endDate") endDate: string,
+    @Query("currency") currency: string,
+    @Query("dimensions") dimensionsJson: string,
+    @Query("comparisonType") comparisonType: any,
+    @Query("templateId") templateIdStr: string,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    const start = startDate ? new Date(startDate) : new Date(new Date().getFullYear(), 0, 1);
+    const end = endDate ? new Date(endDate) : new Date();
+    const dimensions = dimensionsJson ? JSON.parse(dimensionsJson) : undefined;
+    const templateId = templateIdStr ? parseInt(templateIdStr, 10) : undefined;
+
+    return this.financialReportingService.getProfitAndLoss(user.organization_id, {
+      startDate: start,
+      endDate: end,
+      reportingCurrency: currency,
+      dimensions,
+      comparisonType,
+      templateId,
+    });
+  }
+
+  @Post("reports/profit-loss/snapshot")
+  @Permissions("invoices.create")
+  async createSnapshot(
+    @Body() body: any,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    const start = body.start_date ? new Date(body.start_date) : new Date(new Date().getFullYear(), 0, 1);
+    const end = body.end_date ? new Date(body.end_date) : new Date();
+    return this.financialReportingService.generateSnapshot(user.organization_id, body.period_id, {
+      startDate: start,
+      endDate: end,
+      dimensions: body.dimensions,
+    });
+  }
+
+  @Post("reports/profit-loss/version")
+  @Permissions("invoices.create")
+  async saveReportVersion(
+    @Body() body: any,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    const start = body.start_date ? new Date(body.start_date) : new Date(new Date().getFullYear(), 0, 1);
+    const end = body.end_date ? new Date(body.end_date) : new Date();
+    return this.financialReportingService.saveReportVersion(
+      user.organization_id,
+      body.name || "Profit and Loss Report",
+      body.report_type || "ProfitAndLoss",
+      {
+        startDate: start,
+        endDate: end,
+        dimensions: body.dimensions,
+        reportingCurrency: body.currency,
+        status: body.status,
+      },
+      user.sub ? parseInt(user.sub, 10) : 1,
+    );
   }
 }
 
