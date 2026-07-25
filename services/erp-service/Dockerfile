@@ -1,4 +1,4 @@
-FROM python:3.13-slim AS builder
+FROM python:3.12-slim AS builder
 WORKDIR /app
 RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
@@ -8,7 +8,7 @@ RUN --mount=type=cache,target=/root/.cache/pip \
     pip install --upgrade pip && \
     pip install -r requirements.txt
 
-FROM python:3.13-slim AS runner
+FROM python:3.12-slim AS runner
 WORKDIR /app/services/erp-service
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
@@ -29,9 +29,6 @@ RUN chown -R appuser:appgroup /app/services/erp-service
 USER appuser
 EXPOSE 8000
 
-HEALTHCHECK --interval=15s --timeout=5s --retries=3 \
-    CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/')" || exit 1
-
-CMD ["sh", "-c", "alembic upgrade head && exec uvicorn app.main:app --host 0.0.0.0 --port 8000"]
+CMD alembic upgrade head && exec uvicorn app.main:app --host 0.0.0.0 --port 8000
 
 
