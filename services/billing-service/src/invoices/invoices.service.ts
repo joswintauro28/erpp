@@ -11,6 +11,7 @@ import { CreateInvoiceDto } from "./dto/create-invoice.dto";
 import { UpdateInvoiceDto } from "./dto/update-invoice.dto";
 import { EventBusService } from "../event-bus/event-bus.service";
 import { Events } from "../event-bus/event-types";
+import { PostingEngineService } from "../accounting/posting-engine.service";
 
 @Injectable()
 export class InvoicesService {
@@ -19,7 +20,9 @@ export class InvoicesService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly eventBus: EventBusService,
+    private readonly postingEngine: PostingEngineService,
   ) {}
+
 
   private toNumber(value: any): number {
     return value != null ? Number(value) : 0;
@@ -57,6 +60,18 @@ export class InvoicesService {
         amount: this.toNumber(p.amount),
         refundedAmount: this.toNumber(p.refundedAmount),
       })) ?? [],
+      creditNotes: invoice.creditNotes?.map((cn: any) => ({
+        ...cn,
+        amount: this.toNumber(cn.amount),
+        note_number: cn.creditNoteNumber ?? `CN-${String(cn.id).padStart(4, "0")}`,
+        date: cn.issueDate ? cn.issueDate.toISOString().split("T")[0] : cn.createdAt.toISOString().split("T")[0],
+      })) ?? [],
+      debitNotes: invoice.debitNotes?.map((dn: any) => ({
+        ...dn,
+        amount: this.toNumber(dn.amount),
+        note_number: dn.debitNoteNumber ?? `DN-${String(dn.id).padStart(4, "0")}`,
+        date: dn.issueDate ? dn.issueDate.toISOString().split("T")[0] : dn.createdAt.toISOString().split("T")[0],
+      })) ?? [],
     };
   }
 
@@ -89,6 +104,12 @@ export class InvoicesService {
       include: {
         items: true,
         payments: {
+          orderBy: { createdAt: "desc" },
+        },
+        creditNotes: {
+          orderBy: { createdAt: "desc" },
+        },
+        debitNotes: {
           orderBy: { createdAt: "desc" },
         },
       },
@@ -406,6 +427,16 @@ export class InvoicesService {
         await this.writeSentLedgerEntries(tx, organizationId, updated);
       }
 
+      if (status === InvoiceStatus.void) {
+        const journal = await tx.journal.findFirst({
+          where: { organizationId, sourceType: "Invoice", sourceId: id, status: "POSTED" },
+        });
+        if (journal) {
+          await this.postingEngine.reverseJournal(organizationId, journal.id, `Invoice transitioned to ${status}`, "system", tx);
+        }
+      }
+
+
       const result = this.flattenInvoice(updated);
 
       this.eventBus.emit(Events.InvoiceStatusChanged, {
@@ -437,49 +468,76 @@ export class InvoicesService {
     organizationId: number,
     invoice: any,
   ) {
-    const accounts = await tx.account.findMany({
-      where: { organizationId, code: { in: ["1002", "4001"] } },
-      select: { code: true, id: true },
+    const config = await tx.orgAccountingConfig.findUnique({
+      where: { organizationId },
     });
-    const arId = accounts.find((a: any) => a.code === "1002")?.id;
-    const revenueId = accounts.find((a: any) => a.code === "4001")?.id;
+    const useDeferred = config?.recognitionPolicy && config.recognitionPolicy !== "IMMEDIATE";
+    const revenueRole = useDeferred ? "ROLE_DEFERRED_REVENUE" : "ROLE_SALES_REVENUE";
 
-    if (!arId || !revenueId) {
-      this.logger.warn(
-        `Cannot write ledger entries for invoice #${invoice.id}: missing AR (1002) or Revenue (4001) account`,
-      );
-      return;
+    const lines = [];
+    const total = Number(invoice.total);
+    const subtotal = Number(invoice.subtotal);
+    const discount = Number(invoice.discount);
+    const taxTotal = Number(invoice.taxTotal);
+
+    // Debit Accounts Receivable
+    lines.push({
+      role: "ROLE_ACCOUNTS_RECEIVABLE",
+      debit: total,
+      credit: 0,
+    });
+
+    // Credit Revenue/Deferred Revenue/Freight per item
+    if (invoice.items && invoice.items.length > 0) {
+      for (const item of invoice.items) {
+        const itemAmount = Number(item.amount);
+        const isFreight = item.description?.toLowerCase().includes("freight") || item.description?.toLowerCase().includes("shipping");
+        const role = isFreight ? "ROLE_FREIGHT_REVENUE" : revenueRole;
+
+        lines.push({
+          role,
+          debit: 0,
+          credit: itemAmount,
+        });
+      }
+    } else {
+      lines.push({
+        role: revenueRole,
+        debit: 0,
+        credit: subtotal,
+      });
     }
 
-    const total = Number(invoice.total);
-    const entryDate = invoice.issueDate ?? new Date();
-    const desc = `Invoice ${invoice.invoiceNumber ?? `#${invoice.id}`} — Revenue recognized`;
+    // Discount
+    if (discount > 0) {
+      lines.push({
+        role: "ROLE_DISCOUNT_ALLOWED",
+        debit: discount,
+        credit: 0,
+      });
+    }
 
-    await tx.ledgerEntry.createMany({
-      data: [
-        {
-          organizationId,
-          accountId: arId,
-          entryDate,
-          description: desc,
-          debit: new Prisma.Decimal(total),
-          credit: 0,
-          referenceType: "Invoice",
-          referenceId: invoice.id,
-        },
-        {
-          organizationId,
-          accountId: revenueId,
-          entryDate,
-          description: desc,
-          debit: 0,
-          credit: new Prisma.Decimal(total),
-          referenceType: "Invoice",
-          referenceId: invoice.id,
-        },
-      ],
-    });
+    // Tax
+    if (taxTotal > 0) {
+      lines.push({
+        role: "ROLE_TAX_PAYABLE",
+        debit: 0,
+        credit: taxTotal,
+      });
+    }
+
+    await this.postingEngine.postJournal({
+      organizationId,
+      postingDate: invoice.issueDate || new Date(),
+      templateType: "INVOICE",
+      sourceType: "Invoice",
+      sourceId: invoice.id,
+      currency: "USD",
+      createdBy: "system",
+      lines,
+    }, tx);
   }
+
 
   async delete(id: number, organizationId: number) {
     const invoice = await this.prisma.invoice.findFirst({
