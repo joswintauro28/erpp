@@ -4,13 +4,16 @@ import { Prisma } from "@prisma/client";
 import { CreateCreditNoteDto } from "./dto/create-credit-note.dto";
 import { EventBusService } from "../event-bus/event-bus.service";
 import { Events } from "../event-bus/event-types";
+import { PostingEngineService } from "../accounting/posting-engine.service";
 
 @Injectable()
 export class CreditNotesService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly eventBus: EventBusService,
+    private readonly postingEngine: PostingEngineService,
   ) {}
+
 
   private flatten(note: any) {
     return {
@@ -22,6 +25,7 @@ export class CreditNotesService {
       date: note.issueDate?.toISOString().split("T")[0] ?? note.createdAt.toISOString().split("T")[0],
       amount: Number(note.amount),
       status: note.status,
+      reason: note.reason,
     };
   }
 
@@ -69,59 +73,68 @@ export class CreditNotesService {
 
       const creditedAmount = Number(totalCredits._sum.amount ?? 0);
       const invoiceTotal = Number(invoice.total);
+      const paid = Number(invoice.paidAmount);
+
+      const newBalanceDue = Math.max(0, invoiceTotal - paid - creditedAmount);
+      let newStatus = invoice.status;
 
       if (creditedAmount >= invoiceTotal) {
-        await tx.invoice.update({
-          where: { id: dto.invoiceId },
-          data: { status: "void" },
-        });
-      } else {
-        const paid = Number(invoice.paidAmount);
-        const balanceDue = invoiceTotal - paid - creditedAmount;
-        await tx.invoice.update({
-          where: { id: dto.invoiceId },
-          data: {
-            balanceDue: new Prisma.Decimal(Math.max(0, balanceDue)),
-          },
-        });
+        newStatus = "void";
+      } else if (newBalanceDue === 0) {
+        newStatus = "paid";
+      } else if (paid > 0 || creditedAmount > 0) {
+        newStatus = "partially_paid";
       }
 
-      const accounts = await tx.account.findMany({
-        where: { organizationId, code: { in: ["1002", "4001"] } },
-        select: { code: true, id: true },
+      await tx.invoice.update({
+        where: { id: dto.invoiceId },
+        data: {
+          balanceDue: new Prisma.Decimal(newBalanceDue),
+          status: newStatus,
+        },
       });
-      const arId = accounts.find((a: any) => a.code === "1002")?.id;
-      const revenueId = accounts.find((a: any) => a.code === "4001")?.id;
 
-      if (arId && revenueId) {
-        const amount = Number(dto.amount);
-        const entryDate = new Date();
-        const desc = `Credit Note #${creditNote.creditNoteNumber ?? creditNote.id} for Invoice ${invoice.invoiceNumber ?? `#${dto.invoiceId}`} — ${dto.reason ?? "Credit applied"}`;
-        await tx.ledgerEntry.createMany({
-          data: [
-            {
-              organizationId,
-              accountId: revenueId,
-              entryDate,
-              description: desc,
-              debit: new Prisma.Decimal(amount),
-              credit: 0,
-              referenceType: "CreditNote",
-              referenceId: creditNote.id,
-            },
-            {
-              organizationId,
-              accountId: arId,
-              entryDate,
-              description: desc,
-              debit: 0,
-              credit: new Prisma.Decimal(amount),
-              referenceType: "CreditNote",
-              referenceId: creditNote.id,
-            },
-          ],
-        });
-      }
+      const config = await tx.orgAccountingConfig.findUnique({
+        where: { organizationId },
+      });
+      const useDeferred = config?.recognitionPolicy && config.recognitionPolicy !== "IMMEDIATE";
+      const revenueRole = useDeferred ? "ROLE_DEFERRED_REVENUE" : "ROLE_SALES_REVENUE";
+
+      const totalVal = Number(invoice.total);
+      const taxVal = Number(invoice.taxTotal);
+      const amountVal = Number(dto.amount);
+
+      // Compute proportional tax vs revenue component for proper reversing splits
+      const taxPortion = totalVal > 0 ? (amountVal * taxVal) / totalVal : 0;
+      const revenuePortion = amountVal - taxPortion;
+
+      await this.postingEngine.postJournal({
+        organizationId,
+        postingDate: new Date(),
+        templateType: "CREDIT_NOTE",
+        sourceType: "CreditNote",
+        sourceId: creditNote.id,
+        currency: "USD",
+        createdBy: "system",
+        lines: [
+          {
+            role: revenueRole,
+            debit: revenuePortion,
+            credit: 0,
+          },
+          {
+            role: "ROLE_TAX_PAYABLE",
+            debit: taxPortion,
+            credit: 0,
+          },
+          {
+            role: "ROLE_ACCOUNTS_RECEIVABLE",
+            debit: 0,
+            credit: amountVal,
+          },
+        ],
+      }, tx);
+
 
       this.eventBus.emit(Events.CreditNoteIssued, {
         organizationId,
@@ -136,10 +149,58 @@ export class CreditNotesService {
   }
 
   async remove(id: number, organizationId: number) {
-    const note = await this.prisma.creditNote.findFirst({
-      where: { id, organizationId },
+    return this.prisma.$transaction(async (tx) => {
+      const note = await tx.creditNote.findFirst({
+        where: { id, organizationId },
+      });
+      if (!note) throw new NotFoundException("Credit note not found");
+
+      if (note.invoiceId) {
+        const invoice = await tx.invoice.findUnique({
+          where: { id: note.invoiceId },
+        });
+        if (invoice) {
+          const invoiceTotal = Number(invoice.total);
+          const paid = Number(invoice.paidAmount);
+          
+          // Recompute total credits excluding this deleted note
+          const otherCredits = await tx.creditNote.aggregate({
+            where: {
+              invoiceId: note.invoiceId,
+              id: { not: id },
+            },
+            _sum: { amount: true },
+          });
+          const otherCreditedAmount = Number(otherCredits._sum.amount ?? 0);
+
+          // Update balanceDue
+          const newBalanceDue = Math.max(0, invoiceTotal - paid - otherCreditedAmount);
+          
+          // Restore status if it was void
+          let newStatus = invoice.status;
+          if (invoice.status === "void") {
+            if (paid >= invoiceTotal - otherCreditedAmount) {
+              newStatus = "paid";
+            } else if (paid > 0 || otherCreditedAmount > 0) {
+              newStatus = "partially_paid";
+            } else {
+              newStatus = invoice.issueDate ? "sent" : "draft";
+            }
+          } else if (newBalanceDue > 0 && invoice.status === "paid") {
+            newStatus = paid > 0 || otherCreditedAmount > 0 ? "partially_paid" : (invoice.issueDate ? "sent" : "draft");
+          }
+
+          await tx.invoice.update({
+            where: { id: note.invoiceId },
+            data: {
+              balanceDue: new Prisma.Decimal(newBalanceDue),
+              status: newStatus,
+            },
+          });
+        }
+      }
+
+      await tx.creditNote.delete({ where: { id } });
     });
-    if (!note) throw new NotFoundException("Credit note not found");
-    await this.prisma.creditNote.delete({ where: { id } });
   }
 }
