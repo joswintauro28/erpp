@@ -15,6 +15,7 @@ import { BankReconciliationModule } from "./bank-reconciliation/bank-reconciliat
 import { MonthEndCloseModule } from "./month-end-close/month-end-close.module";
 import { InternalModule } from "./internal/internal.module";
 import { EventBusModule } from "./event-bus/event-bus.module";
+import { RevenueModule } from "./revenue/revenue.module";
 import { AppController } from "./app.controller";
 
 @Module({
@@ -35,6 +36,7 @@ import { AppController } from "./app.controller";
     MonthEndCloseModule,
     InternalModule,
     EventBusModule,
+    RevenueModule,
   ],
   controllers: [AppController],
 })
