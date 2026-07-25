@@ -27,6 +27,7 @@ const SYSTEM_ROLES: Record<string, string[]> = {
   'Organization Owner': PERMISSION_CODES,
   'Accountant': [
     'invoices.view', 'invoices.create', 'invoices.edit', 'invoices.delete',
+    'quotations.view', 'quotations.create', 'quotations.edit', 'quotations.delete',
     'payments.view', 'payments.create', 'payments.edit', 'payments.delete',
     'expenses.view', 'expenses.create', 'expenses.edit',
     'accounting.view', 'accounting.create', 'accounting.edit', 'accounting.delete',
@@ -36,7 +37,7 @@ const SYSTEM_ROLES: Record<string, string[]> = {
   ],
   'Sales Executive': [
     'clients.view', 'clients.create', 'clients.edit',
-    'quotations.view', 'quotations.create', 'quotations.edit',
+    'quotations.view',
     'crm.view', 'crm.edit',
     'dashboard.view',
   ],
@@ -51,6 +52,7 @@ const SYSTEM_ROLES: Record<string, string[]> = {
     'reports.view', 'reports.export',
     'audit_logs.view',
     'invoices.view',
+    'quotations.view',
     'payments.view',
     'accounting.view',
     'dashboard.view',
@@ -78,6 +80,9 @@ async function main() {
     permissionMap.set(code, perm.id);
   }
   console.log(`  Created ${PERMISSION_CODES.length} permissions`);
+
+  console.log('  Cleaning existing role permission mappings...');
+  await prisma.rolePermission.deleteMany({});
 
   const roleMap = new Map<string, number>();
   for (const [roleName, permissions] of Object.entries(SYSTEM_ROLES)) {
