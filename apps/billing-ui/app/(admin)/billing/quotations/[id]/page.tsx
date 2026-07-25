@@ -152,7 +152,7 @@ export default function QuotationDetail() {
   return (
     <div className="space-y-6 max-w-6xl mx-auto px-4 sm:px-6">
       {/* Header Actions */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-[--shell-border] pb-5">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-[--shell-border] pb-5 print:hidden">
         <div className="flex items-center gap-4">
           <Button variant="outline" size="icon" className="rounded-full border-[--shell-border] hover:bg-[--shell-surface-alt]" aria-label="Back to quotations" title="Back to quotations" onClick={() => router.push("/billing/quotations")}>
             <ArrowLeft className="h-4 w-4" />
@@ -182,7 +182,7 @@ export default function QuotationDetail() {
       </div>
 
       {quotation.converted_invoice_id && (
-        <div className="flex items-center gap-3.5 rounded-xl border border-emerald-500/20 bg-gradient-to-r from-emerald-500/5 to-transparent px-5 py-4.5 shadow-sm animate-kpi">
+        <div className="flex items-center gap-3.5 rounded-xl border border-emerald-500/20 bg-gradient-to-r from-emerald-500/5 to-transparent px-5 py-4.5 shadow-sm animate-kpi print:hidden">
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600">
             <FileCheck className="h-5 w-5" />
           </div>
@@ -334,7 +334,7 @@ export default function QuotationDetail() {
 
           {/* Process Workflow Actions */}
           {actions.length > 0 && (
-            <Card className="border-[--shell-border] shadow-engineered bg-gradient-to-br from-[--shell-bg] to-transparent">
+            <Card className="border-[--shell-border] shadow-engineered bg-gradient-to-br from-[--shell-bg] to-transparent print:hidden">
               <CardContent className="p-6 space-y-4">
                 <h4 className="text-xs font-bold uppercase tracking-wider text-[--shell-foreground]">Manage Process Flow</h4>
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -370,7 +370,7 @@ export default function QuotationDetail() {
 
           {/* Conversion Wizard */}
           {quotation.status === "accepted" && !quotation.converted_invoice_id && (
-            <Card className="border-emerald-500/20 shadow-md bg-gradient-to-r from-emerald-500/5 to-transparent">
+            <Card className="border-emerald-500/20 shadow-md bg-gradient-to-r from-emerald-500/5 to-transparent print:hidden">
               <CardContent className="p-6 flex flex-col sm:flex-row items-center gap-4 justify-between">
                 <div className="flex items-start gap-3.5">
                   <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 shrink-0">
