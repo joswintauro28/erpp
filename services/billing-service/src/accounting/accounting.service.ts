@@ -1,15 +1,21 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, Logger } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 import { Prisma } from "@prisma/client";
 import { EventBusService } from "../event-bus/event-bus.service";
 import { Events } from "../event-bus/event-types";
+import { CashFlowQueryDto, CashFlowReportingMode } from "./dto/cash-flow-query.dto";
+import { PostingEngineService } from "./posting-engine.service";
 
 @Injectable()
 export class AccountingService {
+  private readonly logger = new Logger(AccountingService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly eventBus: EventBusService,
+    private readonly postingEngine: PostingEngineService,
   ) {}
+
 
   async getAccounts(organizationId: number) {
     const accounts = await this.prisma.account.findMany({
@@ -21,10 +27,13 @@ export class AccountingService {
         id: a.id,
         code: a.code,
         name: a.name,
-        type: a.type === "Revenue" ? "Income" : a.type,
+        type: a.type,
+        sub_type: a.subType,
         group: a.subType ?? "General",
+        description: a.description,
         opening_balance: 0,
         current_balance: Number(a.balance),
+        balance: Number(a.balance),
         is_active: a.isActive,
       })),
     };
@@ -35,7 +44,7 @@ export class AccountingService {
       where: { organizationId },
       orderBy: { date: "desc" },
       include: {
-        account: { select: { name: true } },
+        account: { select: { name: true, code: true } },
       },
     });
     return {
@@ -46,8 +55,11 @@ export class AccountingService {
         description: e.description ?? "",
         amount: Number(e.amount),
         status: e.status as "paid" | "pending" | "void",
+        account_name: e.account.name,
+        account_code: e.account.code,
         paid_to: e.account.name,
         payment_method: e.paymentMethod ?? "",
+        reference: e.reference ?? "",
         bill_number: e.reference ?? "",
         notes: "",
       })),
@@ -69,11 +81,15 @@ export class AccountingService {
         runningBalance += Number(e.debit) - Number(e.credit);
         return {
           id: e.id,
+          entry_date: e.entryDate.toISOString().split("T")[0],
           date: e.entryDate.toISOString().split("T")[0],
+          account_code: e.accountId,
           account_id: e.accountId,
           account_name: e.account.name,
           description: e.description,
+          reference_type: e.referenceType ?? "Journal",
           voucher_type: e.referenceType ?? "Journal",
+          reference_id: e.referenceId ?? null,
           voucher_number: e.referenceId ? `#${e.referenceId}` : "",
           debit: Number(e.debit),
           credit: Number(e.credit),
@@ -259,11 +275,13 @@ export class AccountingService {
         : null;
     if (!account) return { error: "Account not found" };
 
+    const amountNum = Number(body.amount ?? 0);
+
     const expense = await this.prisma.expense.create({
       data: {
         organizationId,
         accountId: account.id,
-        amount: new Prisma.Decimal(body.amount ?? 0),
+        amount: new Prisma.Decimal(amountNum),
         category: body.category ?? null,
         description: body.description ?? null,
         date: body.date ? new Date(body.date) : new Date(),
@@ -273,50 +291,95 @@ export class AccountingService {
       },
     });
 
-    await this.prisma.account.update({
-      where: { id: account.id },
-      data: { balance: { increment: new Prisma.Decimal(body.amount ?? 0) } },
-    });
+    // Auto-Post Journal Entry using Posting Engine
+    try {
+      let creditRole = "ROLE_CASH";
+      const method = (body.payment_method ?? body.paymentMethod ?? "").toLowerCase();
+      const status = (body.status ?? "").toLowerCase();
 
-    const cashBankAccount = await this.prisma.account.findFirst({
-      where: { organizationId, code: "1001" },
-    });
-    if (cashBankAccount && account.id !== cashBankAccount.id) {
-      await this.prisma.ledgerEntry.createMany({
-        data: [
+      if (method.includes("bank") || method.includes("wire") || method.includes("transfer") || method.includes("card") || method.includes("credit")) {
+        creditRole = "ROLE_BANK";
+      } else if (status === "outstanding" || status === "payable" || method.includes("reimburse")) {
+        creditRole = "ROLE_ACCOUNTS_PAYABLE";
+      }
+
+      const dimensions: Record<string, any> = {};
+      if (body.costCenter) dimensions.cost_center = body.costCenter;
+      if (body.project) dimensions.project = body.project;
+      if (body.department) dimensions.department = body.department;
+      if (body.branch) dimensions.branch = body.branch;
+
+      await this.postingEngine.postJournal({
+        organizationId,
+        postingDate: expense.date,
+        templateType: "EXPENSE",
+        sourceType: "Expense",
+        sourceId: expense.id,
+        currency: "USD",
+        createdBy: "system",
+        lines: [
           {
-            organizationId,
-            accountId: account.id,
-            entryDate: expense.date,
-            description: `Expense: ${body.description ?? "Expense recorded"}`,
-            debit: new Prisma.Decimal(body.amount ?? 0),
+            role: `ACCOUNT_ID:${account.id}`,
+            debit: amountNum,
             credit: 0,
-            referenceType: "Expense",
-            referenceId: expense.id,
+            dimensions,
           },
           {
-            organizationId,
-            accountId: cashBankAccount.id,
-            entryDate: expense.date,
-            description: `Expense: ${body.description ?? "Expense recorded"}`,
+            role: creditRole,
             debit: 0,
-            credit: new Prisma.Decimal(body.amount ?? 0),
-            referenceType: "Expense",
-            referenceId: expense.id,
+            credit: amountNum,
+            dimensions,
           },
         ],
       });
+    } catch (postError: any) {
+      this.logger.error(`Automatic general ledger posting failed for Expense ${expense.id}: ${postError.message}`);
     }
 
     this.eventBus.emit(Events.ExpenseCreated, {
       organizationId,
       expenseId: expense.id,
-      amount: Number(body.amount ?? 0),
+      amount: amountNum,
       category: body.category ?? "General",
       timestamp: new Date(),
     });
 
     return { id: expense.id, amount: Number(expense.amount), message: "Expense recorded" };
+  }
+
+
+  async updateExpense(id: number, organizationId: number, body: any) {
+    const expense = await this.prisma.expense.findFirst({ where: { id, organizationId } });
+    if (!expense) throw new Error("Expense not found");
+
+    const oldAmount = Number(expense.amount);
+    const newAmount = body.amount !== undefined ? Number(body.amount) : oldAmount;
+    const account = body.account_id
+      ? await this.prisma.account.findFirst({ where: { id: Number(body.account_id), organizationId } })
+      : null;
+
+    const data: any = {};
+    if (account) data.accountId = account.id;
+    if (body.amount !== undefined) data.amount = new Prisma.Decimal(newAmount);
+    if (body.category !== undefined) data.category = body.category;
+    if (body.description !== undefined) data.description = body.description;
+    if (body.date !== undefined) data.date = new Date(body.date);
+    if (body.payment_method !== undefined) data.paymentMethod = body.payment_method;
+    if (body.paymentMethod !== undefined) data.paymentMethod = body.paymentMethod;
+    if (body.reference !== undefined) data.reference = body.reference;
+    if (body.status !== undefined) data.status = body.status;
+
+    const updated = await this.prisma.expense.update({ where: { id }, data });
+
+    const diff = newAmount - oldAmount;
+    if (diff !== 0) {
+      await this.prisma.account.update({
+        where: { id: expense.accountId },
+        data: { balance: { increment: new Prisma.Decimal(diff) } },
+      });
+    }
+
+    return { id: updated.id, amount: Number(updated.amount), message: "Expense updated" };
   }
 
   async deleteExpense(id: number, organizationId: number) {
@@ -399,6 +462,42 @@ export class AccountingService {
     });
 
     return { id: entry.id, message: "Journal entry created" };
+  }
+
+  async updateLedgerEntry(id: number, organizationId: number, body: any) {
+    const entry = await this.prisma.ledgerEntry.findFirst({ where: { id, organizationId } });
+    if (!entry) throw new Error("Ledger entry not found");
+
+    const oldDebit = Number(entry.debit);
+    const oldCredit = Number(entry.credit);
+    const newDebit = body.debit !== undefined ? Number(body.debit) : oldDebit;
+    const newCredit = body.credit !== undefined ? Number(body.credit) : oldCredit;
+
+    const data: any = {};
+    if (body.account_id !== undefined) {
+      const account = await this.prisma.account.findFirst({ where: { id: Number(body.account_id), organizationId } });
+      if (!account) throw new Error("Account not found");
+      data.accountId = account.id;
+    }
+    if (body.debit !== undefined) data.debit = new Prisma.Decimal(newDebit);
+    if (body.credit !== undefined) data.credit = new Prisma.Decimal(newCredit);
+    if (body.description !== undefined) data.description = body.description;
+    if (body.entry_date !== undefined) data.entryDate = new Date(body.entry_date);
+    if (body.reference_type !== undefined) data.referenceType = body.reference_type;
+
+    const updated = await this.prisma.ledgerEntry.update({ where: { id }, data });
+
+    const oldNet = oldDebit - oldCredit;
+    const newNet = newDebit - newCredit;
+    const diff = newNet - oldNet;
+    if (diff !== 0) {
+      await this.prisma.account.update({
+        where: { id: entry.accountId },
+        data: { balance: { increment: new Prisma.Decimal(diff) } },
+      });
+    }
+
+    return { id: updated.id, message: "Journal entry updated" };
   }
 
   async getCustomerLedger(organizationId: number, clientId: number) {
@@ -545,7 +644,7 @@ export class AccountingService {
       where: {
         organizationId,
         invoiceId: null,
-        status: "completed",
+        status: { in: ["cleared", "completed"] },
       },
       select: { amount: true },
     });
@@ -753,7 +852,7 @@ export class AccountingService {
     const invoices = await this.prisma.invoice.findMany({
       where: whereCondition,
       include: {
-        payments: { where: { status: "completed" }, select: { amount: true } },
+        payments: { where: { status: { in: ["cleared", "completed"] } }, select: { amount: true } },
         creditNotes: { where: { status: "issued" }, select: { amount: true } },
         debitNotes: { where: { status: "issued" }, select: { amount: true } },
       },
@@ -859,7 +958,7 @@ export class AccountingService {
       where: {
         organizationId,
         invoiceId: null,
-        status: "completed",
+        status: { in: ["cleared", "completed"] },
       },
       select: { amount: true },
     });
@@ -1138,4 +1237,415 @@ export class AccountingService {
       };
     });
   }
+
+  async getCashFlowStatement(organizationId: number, query: CashFlowQueryDto) {
+    const start = query.startDate ? new Date(query.startDate) : new Date(new Date().getFullYear(), 0, 1);
+    const end = query.endDate ? new Date(query.endDate) : new Date();
+    const mode = query.reportingMode || CashFlowReportingMode.DIRECT;
+
+    // 1. Identify cash/bank accounts
+    const accounts = await this.prisma.account.findMany({
+      where: { organizationId },
+    });
+
+    const cashAccounts = accounts.filter(
+      (a) =>
+        a.code === "1001" ||
+        (a.type === "Asset" && (
+          a.name.toLowerCase().includes("cash") ||
+          a.name.toLowerCase().includes("bank")
+        ))
+    );
+    const cashAccountIds = cashAccounts.map((a) => a.id);
+    const cashAccountIdsSet = new Set(cashAccountIds);
+
+    if (cashAccounts.length === 0) {
+      return {
+        reportingPeriod: { startDate: start, endDate: end },
+        reportingMode: mode,
+        openingBalance: 0,
+        operatingActivities: { title: "Operating Activities", netCash: 0, items: [] },
+        investingActivities: { title: "Investing Activities", netCash: 0, items: [] },
+        financingActivities: { title: "Financing Activities", netCash: 0, items: [] },
+        netIncreaseDecrease: 0,
+        closingCashBalance: 0,
+        reconciliation: { glClosingCashBalance: 0, bankStatementEndingBalance: 0, difference: 0, reconcilingItems: [] },
+        transactions: [],
+      };
+    }
+
+    // 2. Compute opening cash balance
+    // Get all ledger entries for cash accounts after start date
+    const ledgerEntriesAfterStart = await this.prisma.ledgerEntry.findMany({
+      where: {
+        organizationId,
+        accountId: { in: cashAccountIds },
+        entryDate: { gte: start },
+      },
+    });
+
+    const currentCashBalance = cashAccounts.reduce((sum, acc) => sum + Number(acc.balance), 0);
+    const totalDebitsAfterStart = ledgerEntriesAfterStart.reduce((sum, entry) => sum + Number(entry.debit), 0);
+    const totalCreditsAfterStart = ledgerEntriesAfterStart.reduce((sum, entry) => sum + Number(entry.credit), 0);
+    const openingBalance = currentCashBalance - totalDebitsAfterStart + totalCreditsAfterStart;
+
+    // 3. Retrieve all ledger entries in the period
+    const allPeriodLedgerEntries = await this.prisma.ledgerEntry.findMany({
+      where: {
+        organizationId,
+        entryDate: { gte: start, lte: end },
+      },
+      include: {
+        account: true,
+      },
+    });
+
+    // 4. Group by transaction
+    // Use referenceType + referenceId if available, otherwise date + description
+    const txGroups = new Map<string, any[]>();
+    for (const entry of allPeriodLedgerEntries) {
+      const key = (entry.referenceType && entry.referenceId)
+        ? `${entry.referenceType}_${entry.referenceId}`
+        : `${entry.entryDate.getTime()}_${entry.description}`;
+      if (!txGroups.has(key)) {
+        txGroups.set(key, []);
+      }
+      txGroups.get(key)!.push(entry);
+    }
+
+    // 5. Filter for cash-touching transactions and classify
+    const cashTransactionsList: any[] = [];
+    let opNet = 0;
+    let invNet = 0;
+    let finNet = 0;
+
+    // Direct operating categories
+    let customerReceipts = 0;
+    let supplierPayments = 0;
+    let employeePayments = 0;
+    let operatingExpPayments = 0;
+    let otherOpPayments = 0;
+
+    const investingItemsMap = new Map<string, number>();
+    const financingItemsMap = new Map<string, number>();
+
+    const isInvestingAccount = (account: any) => {
+      const name = account.name.toLowerCase();
+      const subType = (account.subType || "").toLowerCase();
+      return account.type === "Asset" && (
+        subType.includes("fixed") ||
+        subType.includes("investment") ||
+        name.includes("equipment") ||
+        name.includes("hardware") ||
+        name.includes("property") ||
+        name.includes("plant") ||
+        name.includes("vehicle") ||
+        name.includes("land") ||
+        name.includes("building") ||
+        name.includes("investment")
+      );
+    };
+
+    const isFinancingAccount = (account: any) => {
+      const name = account.name.toLowerCase();
+      const subType = (account.subType || "").toLowerCase();
+      return account.type === "Equity" || (
+        account.type === "Liability" && (
+          subType.includes("debt") ||
+          subType.includes("loan") ||
+          subType.includes("capital") ||
+          name.includes("loan") ||
+          name.includes("borrowing") ||
+          name.includes("debt") ||
+          name.includes("share capital") ||
+          name.includes("dividend") ||
+          name.includes("equity")
+        )
+      );
+    };
+
+    for (const group of txGroups.values()) {
+      const cashEntries = group.filter((e) => cashAccountIdsSet.has(e.accountId));
+      if (cashEntries.length === 0) continue; // Exclude non-cash journal entry!
+
+      const nonCashEntries = group.filter((e) => !cashAccountIdsSet.has(e.accountId));
+      const netCashChange = cashEntries.reduce((sum, e) => sum + Number(e.debit) - Number(e.credit), 0);
+      if (netCashChange === 0) continue; // Net 0 cash flow impact
+
+      // Primary entry details for drilldown
+      const repEntry = cashEntries[0];
+
+      // Classify based on non-cash entries
+      let txClassification: "operating" | "investing" | "financing" = "operating";
+      let counterAccountInfo = { id: 0, code: "Unclassified", name: "Unclassified" };
+
+      if (nonCashEntries.length > 0) {
+        let opPart = 0;
+        let invPart = 0;
+        let finPart = 0;
+
+        for (const nc of nonCashEntries) {
+          const partAmount = Number(nc.credit) - Number(nc.debit); // Positive represents cash inflow, negative outflow
+          if (isInvestingAccount(nc.account)) {
+            invPart += partAmount;
+            investingItemsMap.set(nc.account.name, (investingItemsMap.get(nc.account.name) || 0) + partAmount);
+          } else if (isFinancingAccount(nc.account)) {
+            finPart += partAmount;
+            financingItemsMap.set(nc.account.name, (financingItemsMap.get(nc.account.name) || 0) + partAmount);
+          } else {
+            opPart += partAmount;
+            // Direct Operating Classification
+            const code = nc.account.code;
+            if (code === "1002" || nc.account.type === "Revenue") {
+              customerReceipts += partAmount;
+            } else if (code === "2001" || code === "1003") {
+              supplierPayments += partAmount;
+            } else if (code === "5001") {
+              employeePayments += partAmount;
+            } else if (nc.account.type === "Expense") {
+              operatingExpPayments += partAmount;
+            } else {
+              otherOpPayments += partAmount;
+            }
+          }
+        }
+
+        opNet += opPart;
+        invNet += invPart;
+        finNet += finPart;
+
+        const maxPart = Math.max(Math.abs(opPart), Math.abs(invPart), Math.abs(finPart));
+        if (maxPart === Math.abs(invPart)) {
+          txClassification = "investing";
+        } else if (maxPart === Math.abs(finPart)) {
+          txClassification = "financing";
+        } else {
+          txClassification = "operating";
+        }
+
+        const dominantNc = nonCashEntries.sort((a, b) => Math.abs(Number(b.credit) - Number(b.debit)) - Math.abs(Number(a.credit) - Number(a.debit)))[0];
+        if (dominantNc) {
+          counterAccountInfo = {
+            id: dominantNc.account.id,
+            code: dominantNc.account.code,
+            name: dominantNc.account.name,
+          };
+        }
+      } else {
+        if (repEntry.referenceType === "Expense") {
+          operatingExpPayments += netCashChange;
+          opNet += netCashChange;
+          txClassification = "operating";
+        } else if (repEntry.referenceType === "Payment") {
+          customerReceipts += netCashChange;
+          opNet += netCashChange;
+          txClassification = "operating";
+        } else {
+          otherOpPayments += netCashChange;
+          opNet += netCashChange;
+          txClassification = "operating";
+        }
+      }
+
+      cashTransactionsList.push({
+        id: repEntry.id,
+        date: repEntry.entryDate,
+        description: repEntry.description,
+        amount: netCashChange,
+        activity: txClassification,
+        type: netCashChange > 0 ? "inflow" : "outflow",
+        counterAccount: counterAccountInfo,
+        referenceType: repEntry.referenceType,
+        referenceId: repEntry.referenceId,
+      });
+    }
+
+    // 6. Operating Activities - Indirect Method
+    const accrualRevenue = allPeriodLedgerEntries
+      .filter((e) => e.account.type === "Revenue")
+      .reduce((sum, e) => sum + Number(e.credit) - Number(e.debit), 0);
+    const accrualExpense = allPeriodLedgerEntries
+      .filter((e) => e.account.type === "Expense")
+      .reduce((sum, e) => sum + Number(e.debit) - Number(e.credit), 0);
+    const netIncome = accrualRevenue - accrualExpense;
+
+    const nonCashExpensesList = allPeriodLedgerEntries.filter((e) => {
+      if (e.account.type !== "Expense") return false;
+      const key = (e.referenceType && e.referenceId)
+        ? `${e.referenceType}_${e.referenceId}`
+        : `${e.entryDate.getTime()}_${e.description}`;
+      const group = txGroups.get(key) || [];
+      return !group.some((ge) => cashAccountIdsSet.has(ge.accountId));
+    });
+    const nonCashExpenses = nonCashExpensesList.reduce((sum, e) => sum + Number(e.debit) - Number(e.credit), 0);
+
+    const arAccounts = accounts.filter((a) => a.code === "1002");
+    let arChange = 0;
+    if (arAccounts.length > 0) {
+      const arIds = arAccounts.map((a) => a.id);
+      const arEntriesAfterStart = await this.prisma.ledgerEntry.findMany({
+        where: { organizationId, accountId: { in: arIds }, entryDate: { gte: start } },
+      });
+      const currentAr = arAccounts.reduce((sum, acc) => sum + Number(acc.balance), 0);
+      const arDebitsAfterStart = arEntriesAfterStart.reduce((sum, e) => sum + Number(e.debit), 0);
+      const arCreditsAfterStart = arEntriesAfterStart.reduce((sum, e) => sum + Number(e.credit), 0);
+      const arOpening = currentAr - arDebitsAfterStart + arCreditsAfterStart;
+
+      const arEntriesInPeriod = allPeriodLedgerEntries.filter((e) => arIds.includes(e.accountId));
+      const arDebitsPeriod = arEntriesInPeriod.reduce((sum, e) => sum + Number(e.debit), 0);
+      const arCreditsPeriod = arEntriesInPeriod.reduce((sum, e) => sum + Number(e.credit), 0);
+      const arClosing = arOpening + arDebitsPeriod - arCreditsPeriod;
+      arChange = arOpening - arClosing;
+    }
+
+    const invAccounts = accounts.filter((a) => a.code === "1003");
+    let invChange = 0;
+    if (invAccounts.length > 0) {
+      const invIds = invAccounts.map((a) => a.id);
+      const invEntriesAfterStart = await this.prisma.ledgerEntry.findMany({
+        where: { organizationId, accountId: { in: invIds }, entryDate: { gte: start } },
+      });
+      const currentInv = invAccounts.reduce((sum, acc) => sum + Number(acc.balance), 0);
+      const invDebitsAfterStart = invEntriesAfterStart.reduce((sum, e) => sum + Number(e.debit), 0);
+      const invCreditsAfterStart = invEntriesAfterStart.reduce((sum, e) => sum + Number(e.credit), 0);
+      const invOpening = currentInv - invDebitsAfterStart + invCreditsAfterStart;
+
+      const invEntriesInPeriod = allPeriodLedgerEntries.filter((e) => invIds.includes(e.accountId));
+      const invDebitsPeriod = invEntriesInPeriod.reduce((sum, e) => sum + Number(e.debit), 0);
+      const invCreditsPeriod = invEntriesInPeriod.reduce((sum, e) => sum + Number(e.credit), 0);
+      const invClosing = invOpening + invDebitsPeriod - invCreditsPeriod;
+      invChange = invOpening - invClosing;
+    }
+
+    const apAccounts = accounts.filter((a) => a.code === "2001");
+    let apChange = 0;
+    if (apAccounts.length > 0) {
+      const apIds = apAccounts.map((a) => a.id);
+      const apEntriesAfterStart = await this.prisma.ledgerEntry.findMany({
+        where: { organizationId, accountId: { in: apIds }, entryDate: { gte: start } },
+      });
+      const currentAp = apAccounts.reduce((sum, acc) => sum + Number(acc.balance), 0);
+      const apDebitsAfterStart = apEntriesAfterStart.reduce((sum, e) => sum + Number(e.debit), 0);
+      const apCreditsAfterStart = apEntriesAfterStart.reduce((sum, e) => sum + Number(e.credit), 0);
+      const apOpening = currentAp - apCreditsAfterStart + apDebitsAfterStart;
+
+      const apEntriesInPeriod = allPeriodLedgerEntries.filter((e) => apIds.includes(e.accountId));
+      const apDebitsPeriod = apEntriesInPeriod.reduce((sum, e) => sum + Number(e.debit), 0);
+      const apCreditsPeriod = apEntriesInPeriod.reduce((sum, e) => sum + Number(e.credit), 0);
+      const apClosing = apOpening + apCreditsPeriod - apDebitsPeriod;
+      apChange = apClosing - apOpening;
+    }
+
+    let operatingItems: any[] = [];
+    if (mode === CashFlowReportingMode.DIRECT) {
+      operatingItems = [
+        { label: "Cash Receipts from Customers", amount: customerReceipts },
+        { label: "Cash Paid to Suppliers / Vendors", amount: supplierPayments },
+        { label: "Cash Paid to Employees", amount: employeePayments },
+        { label: "Cash Paid for Operating Expenses", amount: operatingExpPayments },
+        { label: "Other Operating Cash Flows", amount: otherOpPayments },
+      ];
+    } else {
+      operatingItems = [
+        { label: "Net Income (Accrual)", amount: netIncome },
+        { label: "Adjustments for Non-Cash Expenses", amount: nonCashExpenses },
+        { label: "Decrease (Increase) in Accounts Receivable", amount: arChange },
+        { label: "Decrease (Increase) in Inventory", amount: invChange },
+        { label: "Increase (Decrease) in Accounts Payable", amount: apChange },
+      ];
+    }
+
+    const investingItems: any[] = [];
+    for (const [label, amount] of investingItemsMap.entries()) {
+      investingItems.push({ label: `Purchase/Sale of ${label}`, amount });
+    }
+    if (investingItems.length === 0) {
+      investingItems.push({ label: "Purchase/Sale of Fixed Assets", amount: 0 });
+    }
+
+    const financingItems: any[] = [];
+    for (const [label, amount] of financingItemsMap.entries()) {
+      financingItems.push({ label: `Proceeds/Repayment of ${label}`, amount });
+    }
+    if (financingItems.length === 0) {
+      financingItems.push({ label: "Proceeds/Repayment of Loans & Capital", amount: 0 });
+    }
+
+    // 7. Bank Reconciliation
+    const unmatchedLedgerEntries = await this.prisma.ledgerEntry.findMany({
+      where: {
+        accountId: { in: cashAccountIds },
+        entryDate: { gte: start, lte: end },
+        bankMatches: { none: {} },
+      },
+    });
+
+    const depositsInTransit = unmatchedLedgerEntries
+      .filter((e) => Number(e.debit) > 0)
+      .reduce((sum, e) => sum + Number(e.debit), 0);
+
+    const outstandingPayments = unmatchedLedgerEntries
+      .filter((e) => Number(e.credit) > 0)
+      .reduce((sum, e) => sum + Number(e.credit), 0);
+
+    const unmatchedBankTransactions = await this.prisma.bankTransaction.findMany({
+      where: {
+        organizationId,
+        transactionDate: { gte: start, lte: end },
+        classification: "Unmatched",
+      },
+    });
+
+    const unrecordedBankMovements = unmatchedBankTransactions.reduce((sum, t) => sum + Number(t.credit) - Number(t.debit), 0);
+
+    const latestBankTx = await this.prisma.bankTransaction.findFirst({
+      where: {
+        organizationId,
+        transactionDate: { gte: start, lte: end },
+      },
+      orderBy: { transactionDate: "desc" },
+    });
+
+    const closingCashBalance = openingBalance + opNet + invNet + finNet;
+    const bankStatementEndingBalance = latestBankTx ? Number(latestBankTx.balance) : closingCashBalance;
+
+    const difference = closingCashBalance - bankStatementEndingBalance;
+
+    const reconciliation = {
+      glClosingCashBalance: closingCashBalance,
+      bankStatementEndingBalance,
+      difference,
+      reconcilingItems: [
+        { type: "deposits_in_transit", label: "Deposits in Transit (GL Unmatched Inflows)", amount: depositsInTransit },
+        { type: "outstanding_payments", label: "Outstanding Payments (GL Unmatched Outflows)", amount: outstandingPayments },
+        { type: "unrecorded_movements", label: "Unrecorded Bank Movements (Bank Unmatched)", amount: unrecordedBankMovements },
+      ],
+    };
+
+    return {
+      reportingPeriod: { startDate: start, endDate: end },
+      reportingMode: mode,
+      openingBalance,
+      operatingActivities: {
+        title: "Operating Activities",
+        netCash: opNet,
+        items: operatingItems,
+      },
+      investingActivities: {
+        title: "Investing Activities",
+        netCash: invNet,
+        items: investingItems,
+      },
+      financingActivities: {
+        title: "Financing Activities",
+        netCash: finNet,
+        items: financingItems,
+      },
+      netIncreaseDecrease: opNet + invNet + finNet,
+      closingCashBalance,
+      reconciliation,
+      transactions: cashTransactionsList.sort((a, b) => b.date.getTime() - a.date.getTime()),
+    };
+  }
 }
+
