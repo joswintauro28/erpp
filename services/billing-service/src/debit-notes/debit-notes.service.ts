@@ -4,13 +4,16 @@ import { Prisma } from "@prisma/client";
 import { CreateDebitNoteDto } from "./dto/create-debit-note.dto";
 import { EventBusService } from "../event-bus/event-bus.service";
 import { Events } from "../event-bus/event-types";
+import { PostingEngineService } from "../accounting/posting-engine.service";
 
 @Injectable()
 export class DebitNotesService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly eventBus: EventBusService,
+    private readonly postingEngine: PostingEngineService,
   ) {}
+
 
   private flatten(note: any) {
     return {
@@ -22,6 +25,7 @@ export class DebitNotesService {
       date: note.issueDate?.toISOString().split("T")[0] ?? note.createdAt.toISOString().split("T")[0],
       amount: Number(note.amount),
       status: note.status,
+      reason: note.reason,
     };
   }
 
@@ -51,6 +55,7 @@ export class DebitNotesService {
           invoiceId: dto.invoiceId,
           amount: new Prisma.Decimal(dto.amount),
           reason: dto.reason,
+          debitNoteNumber: dto.debitNoteNumber ? String(dto.debitNoteNumber) : undefined,
           status: "issued",
           issueDate: new Date(),
         },
@@ -63,50 +68,66 @@ export class DebitNotesService {
 
       const totalD = Number(invoice.total) + Number(dto.amount);
       const balanceDue = Number(invoice.balanceDue) + Number(dto.amount);
+
+      let newStatus = invoice.status;
+      if (balanceDue === 0) {
+        newStatus = "paid";
+      } else if (invoice.status === "paid") {
+        newStatus = "partially_paid";
+      } else if (invoice.status === "void") {
+        newStatus = Number(invoice.paidAmount) > 0 ? "partially_paid" : (invoice.issueDate ? "sent" : "draft");
+      }
+
       await tx.invoice.update({
         where: { id: dto.invoiceId },
         data: {
           total: new Prisma.Decimal(totalD),
           balanceDue: new Prisma.Decimal(balanceDue),
+          status: newStatus,
         },
       });
 
-      const accounts = await tx.account.findMany({
-        where: { organizationId, code: { in: ["1002", "4001"] } },
-        select: { code: true, id: true },
+      const config = await tx.orgAccountingConfig.findUnique({
+        where: { organizationId },
       });
-      const arId = accounts.find((a: any) => a.code === "1002")?.id;
-      const revenueId = accounts.find((a: any) => a.code === "4001")?.id;
+      const useDeferred = config?.recognitionPolicy && config.recognitionPolicy !== "IMMEDIATE";
+      const revenueRole = useDeferred ? "ROLE_DEFERRED_REVENUE" : "ROLE_SALES_REVENUE";
 
-      if (arId && revenueId) {
-        const amount = Number(dto.amount);
-        const entryDate = new Date();
-        const desc = `Debit Note #${debitNote.debitNoteNumber ?? debitNote.id} for Invoice ${invoice.invoiceNumber ?? `#${dto.invoiceId}`} — ${dto.reason ?? "Debit applied"}`;
-        await tx.ledgerEntry.createMany({
-          data: [
-            {
-              organizationId,
-              accountId: arId,
-              entryDate,
-              description: desc,
-              debit: new Prisma.Decimal(amount),
-              credit: 0,
-              referenceType: "DebitNote",
-              referenceId: debitNote.id,
-            },
-            {
-              organizationId,
-              accountId: revenueId,
-              entryDate,
-              description: desc,
-              debit: 0,
-              credit: new Prisma.Decimal(amount),
-              referenceType: "DebitNote",
-              referenceId: debitNote.id,
-            },
-          ],
-        });
-      }
+      const totalVal = Number(invoice.total);
+      const taxVal = Number(invoice.taxTotal);
+      const amountVal = Number(dto.amount);
+
+      // Compute proportional tax vs revenue component for proper reversing splits
+      const taxPortion = totalVal > 0 ? (amountVal * taxVal) / totalVal : 0;
+      const revenuePortion = amountVal - taxPortion;
+
+      await this.postingEngine.postJournal({
+        organizationId,
+        postingDate: new Date(),
+        templateType: "DEBIT_NOTE",
+        sourceType: "DebitNote",
+        sourceId: debitNote.id,
+        currency: "USD",
+        createdBy: "system",
+        lines: [
+          {
+            role: "ROLE_ACCOUNTS_RECEIVABLE",
+            debit: amountVal,
+            credit: 0,
+          },
+          {
+            role: revenueRole,
+            debit: 0,
+            credit: revenuePortion,
+          },
+          {
+            role: "ROLE_TAX_PAYABLE",
+            debit: 0,
+            credit: taxPortion,
+          },
+        ],
+      }, tx);
+
 
       this.eventBus.emit(Events.DebitNoteIssued, {
         organizationId,
@@ -134,11 +155,20 @@ export class DebitNotesService {
         if (invoice) {
           const totalR = Number(invoice.total) - Number(note.amount);
           const balanceDueR = Number(invoice.balanceDue) - Number(note.amount);
+
+          let newStatus = invoice.status;
+          if (balanceDueR <= 0) {
+            newStatus = "paid";
+          } else if (invoice.status === "paid") {
+            newStatus = "partially_paid";
+          }
+
           await tx.invoice.update({
             where: { id: note.invoiceId },
             data: {
               total: new Prisma.Decimal(totalR),
               balanceDue: new Prisma.Decimal(Math.max(0, balanceDueR)),
+              status: newStatus,
             },
           });
         }
