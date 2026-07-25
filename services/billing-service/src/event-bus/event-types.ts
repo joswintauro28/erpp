@@ -9,6 +9,8 @@ export const Events = {
   DebitNoteIssued: "debit-note.issued",
   ExpenseCreated: "expense.created",
   QuotationConverted: "quotation.converted",
+  RevenueRecognized: "revenue.recognized",
+  RevenueReversed: "revenue.reversed",
 } as const;
 
 export type EventName = (typeof Events)[keyof typeof Events];
@@ -83,6 +85,22 @@ export interface QuotationConvertedEvent extends BaseEvent {
   total: number;
 }
 
+export interface RevenueRecognizedEvent extends BaseEvent {
+  contractId: number;
+  contractNumber: string;
+  performanceObligationId: number;
+  scheduleItemId: number;
+  amount: number;
+  recognitionMethod: string;
+}
+
+export interface RevenueReversedEvent extends BaseEvent {
+  contractId: number;
+  scheduleItemId: number;
+  amount: number;
+  reason: string;
+}
+
 export type EventPayload =
   | InvoiceCreatedEvent
   | InvoiceUpdatedEvent
@@ -93,4 +111,6 @@ export type EventPayload =
   | CreditNoteIssuedEvent
   | DebitNoteIssuedEvent
   | ExpenseCreatedEvent
-  | QuotationConvertedEvent;
+  | QuotationConvertedEvent
+  | RevenueRecognizedEvent
+  | RevenueReversedEvent;
