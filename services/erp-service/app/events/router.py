@@ -1,6 +1,7 @@
-from fastapi import APIRouter, HTTPException, Request
-from loguru import logger
+import logging
+from fastapi import APIRouter, Request
 
+logger = logging.getLogger("app.events")
 router = APIRouter(prefix="/api/events/billing", tags=["events"])
 
 @router.post("/invoice-created")

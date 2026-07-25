@@ -1,6 +1,6 @@
 // Comprehensive billing seed — 22 invoices (incl. 3 vendor bills), 18+ payments, 10 quotes, 5 recurring.
 declare const process: any;
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, Prisma } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
@@ -51,6 +51,7 @@ interface PayDef {
 
 async function main() {
   console.log("Cleaning up existing billing database records...");
+  await prisma.reconciliationAuditLog.deleteMany().catch(() => {});
   await prisma.bankTransaction.deleteMany().catch(() => {});
   await prisma.payment.deleteMany().catch(() => {});
   await prisma.invoiceItem.deleteMany().catch(() => {});
@@ -62,7 +63,12 @@ async function main() {
   await prisma.invoice.deleteMany().catch(() => {});
   await prisma.ledgerEntry.deleteMany().catch(() => {});
   await prisma.expense.deleteMany().catch(() => {});
+  await prisma.accountMapping.deleteMany().catch(() => {});
   await prisma.account.deleteMany().catch(() => {});
+  await prisma.closeSignOff.deleteMany().catch(() => {});
+  await prisma.closeAuditLog.deleteMany().catch(() => {});
+  await prisma.fiscalPeriod.deleteMany().catch(() => {});
+  await prisma.reconciliationToleranceRule.deleteMany().catch(() => {});
 
   console.log("Seeding billing database with 22 invoices (19 receivable + 3 vendor bills)...");
 

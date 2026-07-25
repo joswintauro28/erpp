@@ -30,7 +30,14 @@ COPY --chown=appuser:appgroup services/crm-service/main.py .
 COPY --chown=appuser:appgroup services/crm-service/alembic ./alembic
 COPY --chown=appuser:appgroup services/crm-service/alembic.ini .
 
+# Install system dependencies for Chromium as root
+RUN playwright install-deps chromium
+
 USER appuser
+
+# Install Chromium browser binaries in appuser's home directory
+RUN playwright install chromium
+
 EXPOSE 8001
 
 HEALTHCHECK --interval=15s --timeout=3s --start-period=60s --retries=3 \
