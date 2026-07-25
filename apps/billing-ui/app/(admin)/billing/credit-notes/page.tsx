@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect, useCallback } from "react";
-import { FileText, Plus, Loader2, Trash2, Receipt } from "lucide-react";
+import { FileText, Plus, Loader2, Trash2, Receipt, AlertTriangle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -14,17 +14,20 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { SearchInput } from "@/components/shared/search-input";
 import { EmptyState } from "@/components/shared/empty-state";
 import { api } from "@/services/api";
+import { useToast } from "@/contexts/ToastContext";
 import { money, noteStatusVariant as statusVariant } from "@/utils/format";
 import type { CreditNote } from "@/types/billing";
 import CreditNotesLoading from "./loading";
 
 export default function CreditNotes() {
+  const { toast } = useToast();
   const [notes, setNotes] = useState<CreditNote[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState<number | null>(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
 
   const [invoices, setInvoices] = useState<{ id: number; number: string; client: string; total: number; balance: number }[]>([]);
 
@@ -71,22 +74,29 @@ export default function CreditNotes() {
     try {
       const inv = invoices.find((i) => i.number === formInvoice);
       await api.post("/invoices/credit-notes", {
-        invoice_id: inv?.id,
+        invoiceId: inv?.id,
         amount: Number(formAmount),
         reason: formReason || undefined,
       });
       setCreateOpen(false);
       setFormInvoice(""); setFormAmount(""); setFormReason("");
+      toast.success("Credit note created successfully");
       load();
-    } catch { /* handled */ } finally { setSaving(false); }
+    } catch {
+      toast.error("Failed to create credit note. Please try again.");
+    } finally { setSaving(false); }
   };
 
   const handleDelete = async (id: number) => {
     setDeleting(id);
+    setDeleteConfirmId(null);
     try {
       await api.delete(`/invoices/credit-notes/${id}`);
+      toast.success("Credit note deleted");
       load();
-    } catch { /* handled */ } finally { setDeleting(null); }
+    } catch {
+      toast.error("Failed to delete credit note.");
+    } finally { setDeleting(null); }
   };
 
   if (loading) return <CreditNotesLoading />;
@@ -99,6 +109,25 @@ export default function CreditNotes() {
           <p className="mt-0.5 text-sm text-[--shell-muted]">Manage credit notes issued against invoices</p>
         </div>
         <Button aria-label="Create Credit Note" onClick={() => setCreateOpen(true)}><Plus className="h-4 w-4" /> Create Credit Note</Button>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <Card><CardContent className="flex items-center gap-3 px-4 py-3">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-[--chart-1]/10"><FileText className="h-4 w-4 text-[--chart-1]" /></div>
+          <div className="min-w-0"><p className="font-heading text-base font-semibold leading-tight">{notes.length}</p><p className="text-[11px] font-medium text-[--shell-muted] leading-tight mt-0.5">Total Notes</p></div>
+        </CardContent></Card>
+        <Card><CardContent className="flex items-center gap-3 px-4 py-3">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-[--chart-2]/10"><Receipt className="h-4 w-4 text-[--chart-2]" /></div>
+          <div className="min-w-0"><p className="font-heading text-base font-semibold leading-tight">{money(notes.reduce((sum, n) => sum + n.amount, 0))}</p><p className="text-[11px] font-medium text-[--shell-muted] leading-tight mt-0.5">Total Amount</p></div>
+        </CardContent></Card>
+        <Card><CardContent className="flex items-center gap-3 px-4 py-3">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-[--shell-success]/10"><FileText className="h-4 w-4 text-[--shell-success]" /></div>
+          <div className="min-w-0"><p className="font-heading text-base font-semibold leading-tight">{notes.filter(n => n.status === "issued").length}</p><p className="text-[11px] font-medium text-[--shell-muted] leading-tight mt-0.5">Issued Notes</p></div>
+        </CardContent></Card>
+        <Card><CardContent className="flex items-center gap-3 px-4 py-3">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-[--chart-4]/10"><Receipt className="h-4 w-4 text-[--chart-4]" /></div>
+          <div className="min-w-0"><p className="font-heading text-base font-semibold leading-tight">{money(notes.filter(n => n.status === "issued").reduce((sum, n) => sum + n.amount, 0))}</p><p className="text-[11px] font-medium text-[--shell-muted] leading-tight mt-0.5">Issued Amount</p></div>
+        </CardContent></Card>
       </div>
 
       <SearchInput value={search} onChange={setSearch} placeholder="Search credit notes..." className="max-w-xs" />
@@ -131,7 +160,7 @@ export default function CreditNotes() {
                     <TableCell className="text-xs text-[--shell-muted]">{n.date}</TableCell>
                     <TableCell>
                       <div className="flex justify-end">
-                        <Button variant="ghost" size="icon-sm" onClick={() => handleDelete(n.id)} disabled={deleting === n.id}>
+                        <Button variant="ghost" size="icon-sm" onClick={() => setDeleteConfirmId(n.id)} disabled={deleting === n.id}>
                           {deleting === n.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Trash2 className="h-3 w-3 text-[--shell-danger]" />}
                         </Button>
                       </div>
@@ -196,6 +225,30 @@ export default function CreditNotes() {
               </Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation */}
+      <Dialog open={deleteConfirmId !== null} onOpenChange={(open) => { if (!open) setDeleteConfirmId(null); }}>
+        <DialogContent>
+          <DialogHeader>
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-red-100 text-red-600">
+                <AlertTriangle className="h-5 w-5" />
+              </div>
+              <DialogTitle>Delete Credit Note</DialogTitle>
+            </div>
+          </DialogHeader>
+          <p className="text-sm text-[--shell-muted] pt-1">
+            Are you sure you want to delete this credit note? This action cannot be undone.
+          </p>
+          <DialogFooter className="mt-4">
+            <Button variant="outline" onClick={() => setDeleteConfirmId(null)}>Cancel</Button>
+            <Button variant="destructive" onClick={() => deleteConfirmId !== null && handleDelete(deleteConfirmId)} disabled={deleting !== null}>
+              {deleting !== null ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Trash2 className="mr-2 h-4 w-4" />}
+              Delete
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
