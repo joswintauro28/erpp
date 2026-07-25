@@ -1,4 +1,4 @@
-FROM python:3.13-slim AS builder
+FROM python:3.12-slim AS builder
 WORKDIR /app
 
 ENV PIP_DISABLE_PIP_VERSION_CHECK=1 \
@@ -13,7 +13,7 @@ COPY services/inventory-service/requirements.txt .
 RUN --mount=type=cache,target=/root/.cache/pip \
     pip install --prefer-binary -r requirements.txt
 
-FROM python:3.13-slim AS runner
+FROM python:3.12-slim AS runner
 WORKDIR /app/services/inventory-service
 
 ENV PYTHONDONTWRITEBYTECODE=1 \

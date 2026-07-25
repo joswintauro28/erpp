@@ -125,6 +125,7 @@ export interface ApiInvoice {
   gst_treatment: string; place_of_supply: string | null;
   subtotal: number; cgst: number; sgst: number; igst: number;
   tax_total: number; notes: string | null;
+  discount: number; discount_type: string | null;
   items: ApiItem[]; payments: ApiPayment[];
 }
 
@@ -144,6 +145,7 @@ export interface InvoiceDetailView {
   gst_treatment: string; place_of_supply: string;
   cgst: number; sgst: number; igst: number;
   taxable_value: number; notes: string;
+  discount: number; discount_type: string | null;
   items: InvoiceItemView[]; payments: ApiPayment[];
 }
 

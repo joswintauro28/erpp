@@ -6,10 +6,15 @@ import {
 import { PrismaService } from "../prisma/prisma.service";
 import { QuotationStatus } from "@prisma/client";
 import { CreateQuotationDto } from "./dto/create-quotation.dto";
+import { EventBusService } from "../event-bus/event-bus.service";
+import { Events } from "../event-bus/event-types";
 
 @Injectable()
 export class QuotationsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly eventBus: EventBusService,
+  ) {}
 
   private flatten(q: any) {
     return {
@@ -197,6 +202,15 @@ export class QuotationsService {
           status: "accepted",
           convertedInvoiceId: invoice.id,
         },
+      });
+
+      this.eventBus.emit(Events.QuotationConverted, {
+        organizationId,
+        quotationId: id,
+        invoiceId: invoice.id,
+        clientName: quotation.clientName,
+        total: Number(quotation.total),
+        timestamp: new Date(),
       });
 
       return invoice;

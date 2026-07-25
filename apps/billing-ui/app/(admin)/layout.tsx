@@ -5,6 +5,7 @@ import { Loader2 } from "lucide-react";
 import Sidebar from "@/components/Sidebar";
 import Header from "@/components/Header";
 import { useAuth } from "@/contexts/AuthContext";
+import { ToastProvider } from "@/contexts/ToastContext";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, loading } = useAuth();
@@ -32,14 +33,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   return (
-    <div className="flex h-screen w-full overflow-hidden">
-      <Sidebar collapsed={sidebarCollapsed} />
-      <div className="flex flex-1 flex-col overflow-hidden">
-        <Header collapsed={sidebarCollapsed} onToggleSidebar={toggleSidebar} />
-        <main className="flex-1 overflow-y-auto bg-[var(--shell-bg)] p-6 lg:p-8">
-          {children}
-        </main>
+    <ToastProvider>
+      <div className="flex h-screen w-full overflow-hidden">
+        <Sidebar collapsed={sidebarCollapsed} />
+        <div className="flex flex-1 flex-col overflow-hidden">
+          <Header collapsed={sidebarCollapsed} onToggleSidebar={toggleSidebar} />
+          <main className="flex-1 overflow-y-auto bg-[--shell-bg] p-6 lg:p-8">
+            {children}
+          </main>
+        </div>
       </div>
-    </div>
+    </ToastProvider>
   );
 }

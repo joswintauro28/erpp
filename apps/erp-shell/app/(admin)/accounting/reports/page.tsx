@@ -13,18 +13,35 @@ import type { FinancialReport, BalanceSheetItem } from "@/types/accounting";
 import ReportsLoading from "./loading";
 
 export default function Reports() {
-  const [activeTab, setActiveTab] = useState<"pl" | "balance" | "tax">("pl");
+  const [activeTab, setActiveTab] = useState<"pl" | "balance" | "tax" | "cogs">("pl");
   const [plData, setPlData] = useState<FinancialReport[]>([]);
   const [bsData, setBsData] = useState<BalanceSheetItem[]>([]);
+  const [cogsData, setCogsData] = useState<{ summary: any; invoices: any[]; products: any[] } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
     async function fetchData() {
       try {
-        const d = await api.get<{ pl: FinancialReport[]; balance_sheet: BalanceSheetItem[] }>("/reports");
-        setPlData(d.pl);
-        setBsData(d.balance_sheet);
+        const [d, cSummary, cInvoices, cProducts] = await Promise.all([
+          api.get<{ pl: FinancialReport[]; balance_sheet: BalanceSheetItem[] }>("/reports").catch(() => null),
+          api.get<any>("/reports/cogs/summary").catch(() => null),
+          api.get<any>("/reports/cogs/invoices").catch(() => null),
+          api.get<any>("/reports/cogs/products").catch(() => null),
+        ]);
+
+        if (d) {
+          setPlData(d.pl || []);
+          setBsData(d.balance_sheet || []);
+        }
+
+        if (cSummary || cInvoices || cProducts) {
+          setCogsData({
+            summary: cSummary,
+            invoices: cInvoices?.invoices || [],
+            products: cProducts?.products || [],
+          });
+        }
       } catch {
         setError("Failed to load financial reports");
       } finally {
@@ -33,6 +50,7 @@ export default function Reports() {
     }
     fetchData();
   }, []);
+
 
   const currentPL = plData.length > 0 ? plData[plData.length - 1] : { month: "", revenue: 0, cost_of_goods: 0, gross_profit: 0, operating_expenses: 0, net_profit: 0 };
   const prevPL = plData.length > 1 ? plData[plData.length - 2] : { revenue: 0, net_profit: 0 };
@@ -70,8 +88,8 @@ export default function Reports() {
         </div>
       )}
 
-      <div className="flex gap-1 border-b border-[var(--shell-border)]">
-        {(["pl", "balance", "tax"] as const).map((tab) => (
+      <div className="flex gap-1 border-b border-[--shell-border]">
+        {(["pl", "balance", "tax", "cogs"] as const).map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -81,10 +99,11 @@ export default function Reports() {
                 : "border-transparent text-[var(--shell-muted)] hover:text-[var(--shell-foreground)]"
             }`}
           >
-            {tab === "pl" ? "Profit & Loss" : tab === "balance" ? "Balance Sheet" : "Tax Summary"}
+            {tab === "pl" ? "Profit & Loss" : tab === "balance" ? "Balance Sheet" : tab === "tax" ? "Tax Summary" : "COGS & Profitability"}
           </button>
         ))}
       </div>
+
 
       {activeTab === "pl" && (
         <div className="space-y-4">
@@ -293,6 +312,136 @@ export default function Reports() {
           </Card>
         </div>
       )}
+
+      {activeTab === "cogs" && (
+        <div className="space-y-6">
+          <div className="grid grid-cols-4 gap-3">
+            <Card>
+              <CardHeader className="p-4 pb-1">
+                <CardTitle className="text-xs text-[--shell-muted]">Total COGS</CardTitle>
+              </CardHeader>
+              <CardContent className="p-4 pt-1">
+                <p className="font-heading text-lg font-bold text-[--shell-foreground]">{money(cogsData?.summary?.total_cogs || 0)}</p>
+                <p className="text-[11px] text-[--shell-muted] mt-0.5">Cost of items sold</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="p-4 pb-1">
+                <CardTitle className="text-xs text-[--shell-muted]">Gross Profit</CardTitle>
+              </CardHeader>
+              <CardContent className="p-4 pt-1">
+                <p className="font-heading text-lg font-bold text-emerald-600">{money(cogsData?.summary?.gross_profit || 0)}</p>
+                <p className="text-[11px] text-emerald-600 mt-0.5">{cogsData?.summary?.gross_margin_pct || 0}% Margin</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="p-4 pb-1">
+                <CardTitle className="text-xs text-[--shell-muted]">Operating Margin</CardTitle>
+              </CardHeader>
+              <CardContent className="p-4 pt-1">
+                <p className="font-heading text-lg font-bold text-sky-600">{cogsData?.summary?.operating_margin_pct || 0}%</p>
+                <p className="text-[11px] text-[--shell-muted] mt-0.5">Net of operating expenses</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="p-4 pb-1">
+                <CardTitle className="text-xs text-[--shell-muted]">Inventory Turnover</CardTitle>
+              </CardHeader>
+              <CardContent className="p-4 pt-1">
+                <p className="font-heading text-lg font-bold text-purple-600">{cogsData?.summary?.inventory_turnover || 0}x</p>
+                <p className="text-[11px] text-[--shell-muted] mt-0.5">Turnover ratio</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          <Card>
+            <CardHeader className="p-4 pb-2">
+              <CardTitle className="text-sm font-semibold">Invoice-Level COGS Breakdown</CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 pt-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Invoice #</TableHead>
+                    <TableHead>Client</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead className="text-right">Revenue</TableHead>
+                    <TableHead className="text-right">COGS</TableHead>
+                    <TableHead className="text-right">Gross Profit</TableHead>
+                    <TableHead className="text-right">Margin %</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {cogsData?.invoices?.length ? (
+                    cogsData.invoices.map((inv: any) => (
+                      <TableRow key={inv.invoice_id}>
+                        <TableCell className="font-mono text-xs font-semibold">{inv.invoice_number}</TableCell>
+                        <TableCell className="text-xs">{inv.client_name}</TableCell>
+                        <TableCell className="text-xs text-[--shell-muted]">{inv.issue_date}</TableCell>
+                        <TableCell className="text-right font-mono text-xs">{money(inv.revenue)}</TableCell>
+                        <TableCell className="text-right font-mono text-xs text-destructive">{money(inv.cogs)}</TableCell>
+                        <TableCell className="text-right font-mono text-xs font-bold text-emerald-600">{money(inv.gross_profit)}</TableCell>
+                        <TableCell className="text-right font-mono text-xs font-bold">{inv.margin_pct}%</TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center py-4 text-xs text-[--shell-muted]">
+                        No COGS invoice records found
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="p-4 pb-2">
+              <CardTitle className="text-sm font-semibold">Product-Level Profitability</CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 pt-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Product Name</TableHead>
+                    <TableHead className="text-right">Qty Sold</TableHead>
+                    <TableHead className="text-right">Avg Unit Cost</TableHead>
+                    <TableHead className="text-right">Avg Selling Price</TableHead>
+                    <TableHead className="text-right">Total Revenue</TableHead>
+                    <TableHead className="text-right">Total COGS</TableHead>
+                    <TableHead className="text-right">Gross Profit</TableHead>
+                    <TableHead className="text-right">Margin %</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {cogsData?.products?.length ? (
+                    cogsData.products.map((prod: any, idx: number) => (
+                      <TableRow key={idx}>
+                        <TableCell className="text-xs font-medium">{prod.product_name}</TableCell>
+                        <TableCell className="text-right font-mono text-xs">{prod.total_quantity_sold}</TableCell>
+                        <TableCell className="text-right font-mono text-xs text-destructive">{money(prod.avg_unit_cost)}</TableCell>
+                        <TableCell className="text-right font-mono text-xs">{money(prod.avg_selling_price)}</TableCell>
+                        <TableCell className="text-right font-mono text-xs">{money(prod.total_revenue)}</TableCell>
+                        <TableCell className="text-right font-mono text-xs text-destructive">{money(prod.total_cogs)}</TableCell>
+                        <TableCell className="text-right font-mono text-xs font-bold text-emerald-600">{money(prod.gross_profit)}</TableCell>
+                        <TableCell className="text-right font-mono text-xs font-bold">{prod.margin_pct}%</TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={8} className="text-center py-4 text-xs text-[--shell-muted]">
+                        No product COGS records found
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }
+

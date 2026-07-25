@@ -45,18 +45,20 @@ export interface InvoiceDetailView {
   notes: string;
   items: InvoiceItemView[];
   payments: ApiPayment[];
+  creditNotes?: CreditNote[];
+  debitNotes?: DebitNote[];
 }
 
 export interface InvoiceItemView {
-  product: string;
+  product_id: number | null;
   description: string;
   quantity: number;
   unit_price: number;
-  gst_percent: number;
+  gst_rate: number;
   cgst: number;
   sgst: number;
   igst: number;
-  total: number;
+  amount: number;
 }
 
 export interface ApiPayment {
@@ -95,12 +97,12 @@ export interface ApiInvoice {
 
 export interface ApiItem {
   id: number;
-  product: string;
+  product_id: number | null;
   description: string;
   quantity: number;
   unit_price: number;
-  gst_percent: number;
-  total: number;
+  gst_rate: number;
+  amount: number;
   cgst: number;
   sgst: number;
   igst: number;
@@ -156,6 +158,7 @@ export interface CreditNote {
   date: string;
   amount: number;
   status: string;
+  reason?: string;
 }
 
 export interface DebitNote {
@@ -167,6 +170,7 @@ export interface DebitNote {
   date: string;
   amount: number;
   status: string;
+  reason?: string;
 }
 
 export interface BillingPayment {

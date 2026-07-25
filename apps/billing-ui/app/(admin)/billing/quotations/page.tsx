@@ -18,6 +18,7 @@ import { SearchInput } from "@/components/shared/search-input";
 import { EmptyState } from "@/components/shared/empty-state";
 import { api } from "@/services/api";
 import { money, formatDate, quotationStatusVariant as statusVariant } from "@/utils/format";
+import { useAuth } from "@/contexts/AuthContext";
 import type { Quotation } from "@/types/billing";
 import QuotationsLoading from "./loading";
 
@@ -25,6 +26,12 @@ const statusOptions = ["draft", "sent", "accepted", "rejected", "expired"];
 
 export default function Quotations() {
   const router = useRouter();
+  const { user } = useAuth();
+  const permissions = user?.permissions ?? [];
+  const canCreate = permissions.includes("quotations.create");
+  const canEdit = permissions.includes("quotations.edit");
+  const canDelete = permissions.includes("quotations.delete");
+
   const [quotations, setQuotations] = useState<Quotation[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -91,7 +98,7 @@ export default function Quotations() {
           <h1 className="font-heading text-xl font-semibold tracking-tight text-[var(--shell-foreground)]">Quotations</h1>
           <p className="mt-0.5 text-sm text-[var(--shell-muted)]">Create and manage client quotations</p>
         </div>
-        <Button aria-label="Create Quotation" onClick={() => router.push("/billing/quotations/new")}><Plus className="h-4 w-4" /> New Quotation</Button>
+        {canCreate && <Button aria-label="Create Quotation" onClick={() => router.push("/billing/quotations/new")}><Plus className="h-4 w-4" /> New Quotation</Button>}
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
@@ -145,7 +152,7 @@ export default function Quotations() {
                         >
                           <Eye className="h-3.5 w-3.5" />
                         </Button>
-                        {qt.status === "draft" && (
+                        {canEdit && qt.status === "draft" && (
                           <Button
                             variant="ghost" size="icon-sm"
                             onClick={() => handleStatusChange(qt.id, "sent")}
@@ -156,7 +163,7 @@ export default function Quotations() {
                             {actionLoading === qt.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
                           </Button>
                         )}
-                        {qt.status === "sent" && (
+                        {canEdit && qt.status === "sent" && (
                           <Button
                             variant="ghost" size="icon-sm"
                             onClick={() => handleStatusChange(qt.id, "rejected")}
@@ -167,7 +174,7 @@ export default function Quotations() {
                             {actionLoading === qt.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Ban className="h-3.5 w-3.5" />}
                           </Button>
                         )}
-                        {qt.status === "accepted" && !qt.converted_invoice_id && (
+                        {canEdit && qt.status === "accepted" && !qt.converted_invoice_id && (
                           <Button
                             variant="ghost" size="icon-sm"
                             onClick={() => handleConvert(qt.id)}
@@ -178,7 +185,7 @@ export default function Quotations() {
                             {actionLoading === qt.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Receipt className="h-3.5 w-3.5" />}
                           </Button>
                         )}
-                        {qt.status === "draft" && (
+                        {canDelete && qt.status === "draft" && (
                           <Button
                             variant="ghost" size="icon-sm"
                             onClick={() => setDeleteConfirm(qt.id)}

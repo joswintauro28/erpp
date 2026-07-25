@@ -11,4 +11,8 @@ export class CreateDebitNoteDto {
   @IsOptional()
   @IsString()
   reason?: string;
+
+  @IsOptional()
+  @IsString()
+  debitNoteNumber?: string;
 }

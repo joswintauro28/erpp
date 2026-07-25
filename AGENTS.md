@@ -311,9 +311,14 @@ All backend services share the same JWT secret (`JWT_SECRET`) to validate tokens
 
 ### Run Development Servers
 
+> **⚠️ Known Issue:** `bun nx run-many --target=dev` starts **all 9 services in parallel** (4 Next.js + 5 backends), which can overwhelm system resources and cause Turbopack to hang ("Compiling / ..." forever). Use the selective commands below instead.
+
 | Command | Description |
 |---------|-------------|
-| `bun nx run-many --target=dev` | Run all services (frontends + backends) |
+| `npm run dev:core` | **Recommended** — erp-shell + all backends (no extra workstations) |
+| `npm run dev:shell` | erp-shell frontend only (port 3000) |
+| `npm run dev:backend` | All backend services only (no frontends) |
+| `npm run dev` | Run all services (may cause compilation hangs) |
 | `bun nx serve erp-shell` | Frontend shell only (port 3000) |
 | `bun nx serve billing-ui` | Billing workstation only (port 3002) |
 | `bun nx run crm-service:dev` | FastAPI CRM (port 8001) |

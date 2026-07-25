@@ -1,1 +1,35 @@
 @import "@datavex/ui-theme/globals.css";
+
+@media print {
+  /* Hide the sidebar and top header */
+  aside,
+  header {
+    display: none !important;
+  }
+
+  /* Reset main layout grid and margins to allow proper printing */
+  div.flex.h-screen.w-full.overflow-hidden {
+    display: block !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+  
+  div.flex.flex-1.flex-col.overflow-hidden {
+    display: block !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  main {
+    padding: 0 !important;
+    background: white !important;
+    overflow: visible !important;
+  }
+  
+  /* Reset background-colors for cards on print */
+  .bg-\[--shell-bg\] {
+    background-color: #f8fafc !important; /* light grey for bill block */
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}

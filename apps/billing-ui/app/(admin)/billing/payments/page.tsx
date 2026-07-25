@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { CreditCard, Plus, Ban, Loader2, Receipt, DollarSign, Building2 } from "lucide-react";
+import { CreditCard, Plus, Ban, Loader2, Receipt, DollarSign, Building2, AlertTriangle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -18,21 +18,25 @@ import { SearchInput } from "@/components/shared/search-input";
 import { LoadingSpinner } from "@/components/shared/loading-spinner";
 import { EmptyState } from "@/components/shared/empty-state";
 import { api } from "@/services/api";
+import { useToast } from "@/contexts/ToastContext";
 import { money } from "@/utils/format";
 import type { BillingPayment } from "@/types/billing";
 import PaymentsLoading from "./loading";
 
 export default function Payments() {
+  const { toast } = useToast();
   const [payments, setPayments] = useState<BillingPayment[]>([]);
-  const [metrics, setMetrics] = useState<{ dailyTotal: number; monthlyTotal: number; outstandingTotal: number; totalRefunds: number; failedTransactions: number } | null>(null);
+  const [metrics, setMetrics] = useState<{ today: number; this_month: number; outstanding: number; refunds: number; failed: number } | null>(null);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [recordOpen, setRecordOpen] = useState(false);
   const [refunding, setRefunding] = useState<number | null>(null);
+  const [refundConfirmId, setRefundConfirmId] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
   const [formInvoice, setFormInvoice] = useState("");
   const [formAmount, setFormAmount] = useState("");
-  const [formMethod, setFormMethod] = useState("Bank Transfer");
+  const [formMethod, setFormMethod] = useState("Bank_Transfer");
+  const [formDate, setFormDate] = useState(new Date().toISOString().split("T")[0]);
   const [formRef, setFormRef] = useState("");
   const [formNotes, setFormNotes] = useState("");
   const [invoices, setInvoices] = useState<{ id: number; number: string; client: string; balance: number }[]>([]);
@@ -46,7 +50,7 @@ export default function Payments() {
     setLoading(true);
     Promise.all([
       api.get<BillingPayment[]>("/payments"),
-      api.get<{ dailyTotal: number; monthlyTotal: number; outstandingTotal: number; totalRefunds: number; failedTransactions: number }>("/payments/metrics"),
+      api.get<{ today: number; this_month: number; outstanding: number; refunds: number; failed: number }>("/payments/metrics"),
       api.get<any[]>("/invoices?status=sent,partially_paid,overdue").catch(() => []),
     ])
       .then(([p, m, invs]) => {
@@ -79,22 +83,25 @@ export default function Payments() {
   const handleRecordPayment = async (e: React.FormEvent) => {
     e.preventDefault();
     const selected = invoices.find((i) => i.number === formInvoice);
-    if (!formAmount || !formInvoice) return;
+    if (!formAmount || !formInvoice || !selected) return;
     setSaving(true);
     try {
       await api.post("/payments", {
-        invoice_id: selected?.id ?? formInvoice,
+        invoiceId: selected.id,
         amount: Number(formAmount),
-        method: formMethod,
-        reference: formRef || undefined,
+        paymentMethod: formMethod,
+        paymentDate: formDate || undefined,
+        referenceId: formRef || undefined,
         notes: formNotes || undefined,
       });
       setRecordOpen(false);
-      setFormInvoice(""); setFormAmount(""); setFormMethod("Bank Transfer");
+      setFormInvoice(""); setFormAmount(""); setFormMethod("Bank_Transfer");
+      setFormDate(new Date().toISOString().split("T")[0]);
       setFormRef(""); setFormNotes("");
+      toast.success("Payment recorded successfully");
       loadData();
     } catch {
-      // handled by api interceptor
+      toast.error("Failed to record payment. Please try again.");
     } finally {
       setSaving(false);
     }
@@ -102,11 +109,13 @@ export default function Payments() {
 
   const handleRefund = async (id: number) => {
     setRefunding(id);
+    setRefundConfirmId(null);
     try {
       await api.post(`/payments/${id}/refund`);
+      toast.success("Refund issued successfully");
       loadData();
     } catch {
-      // handled by api interceptor
+      toast.error("Failed to issue refund. Please try again.");
     } finally {
       setRefunding(null);
     }
@@ -127,24 +136,24 @@ export default function Payments() {
       {metrics && (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-5">
           <Card><CardContent className="pt-6">
-            <p className="text-xs text-[var(--shell-muted)]">Today</p>
-            <p className="font-heading text-lg font-semibold text-[var(--shell-foreground)]">{money(metrics.dailyTotal)}</p>
+            <p className="text-xs text-[--shell-muted]">Today</p>
+            <p className="font-heading text-lg font-semibold text-[--shell-foreground]">{money(metrics.today)}</p>
           </CardContent></Card>
           <Card><CardContent className="pt-6">
-            <p className="text-xs text-[var(--shell-muted)]">This Month</p>
-            <p className="font-heading text-lg font-semibold text-[var(--shell-foreground)]">{money(metrics.monthlyTotal)}</p>
+            <p className="text-xs text-[--shell-muted]">This Month</p>
+            <p className="font-heading text-lg font-semibold text-[--shell-foreground]">{money(metrics.this_month)}</p>
           </CardContent></Card>
           <Card><CardContent className="pt-6">
-            <p className="text-xs text-[var(--shell-muted)]">Outstanding</p>
-            <p className="font-heading text-lg font-semibold text-[var(--shell-danger)]">{money(metrics.outstandingTotal)}</p>
+            <p className="text-xs text-[--shell-muted]">Outstanding</p>
+            <p className="font-heading text-lg font-semibold text-[--shell-danger]">{money(metrics.outstanding)}</p>
           </CardContent></Card>
           <Card><CardContent className="pt-6">
-            <p className="text-xs text-[var(--shell-muted)]">Refunds</p>
-            <p className="font-heading text-lg font-semibold text-[var(--shell-danger)]">{money(metrics.totalRefunds)}</p>
+            <p className="text-xs text-[--shell-muted]">Refunds</p>
+            <p className="font-heading text-lg font-semibold text-[--shell-danger]">{money(metrics.refunds)}</p>
           </CardContent></Card>
           <Card><CardContent className="pt-6">
-            <p className="text-xs text-[var(--shell-muted)]">Failed</p>
-            <p className="font-heading text-lg font-semibold text-[var(--shell-danger)]">{metrics.failedTransactions}</p>
+            <p className="text-xs text-[--shell-muted]">Failed</p>
+            <p className="font-heading text-lg font-semibold text-[--shell-danger]">{metrics.failed}</p>
           </CardContent></Card>
         </div>
       )}
@@ -186,7 +195,7 @@ export default function Payments() {
                       <div className="flex justify-end">
                         <Button
                           variant="ghost" size="icon-sm"
-                          onClick={() => handleRefund(p.id)}
+                          onClick={() => setRefundConfirmId(p.id)}
                           disabled={refunding === p.id}
                           title="Refund"
                         >
@@ -237,12 +246,20 @@ export default function Payments() {
 
             <div className="rounded-lg border border-[var(--shell-border)] bg-[var(--shell-surface)] p-4">
               <div className="mb-3 flex items-center gap-2">
-                <DollarSign className="h-3.5 w-3.5 text-[var(--shell-accent)]" />
-                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--shell-foreground)]">Payment Amount</span>
+                <DollarSign className="h-3.5 w-3.5 text-[--shell-accent]" />
+                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[--shell-foreground]">Payment Details</span>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="bi-pay-amount">Amount (₹)</Label>
-                <Input id="bi-pay-amount" type="number" min={0} step={0.01} placeholder="0.00" required value={formAmount} onChange={(e) => setFormAmount(e.target.value)} />
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="bi-pay-amount">Amount (₹)</Label>
+                    <Input id="bi-pay-amount" type="number" min={0} step={0.01} placeholder="0.00" required value={formAmount} onChange={(e) => setFormAmount(e.target.value)} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="bi-pay-date">Payment Date</Label>
+                    <Input id="bi-pay-date" type="date" value={formDate} onChange={(e) => setFormDate(e.target.value)} />
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -257,9 +274,9 @@ export default function Payments() {
                   <Select value={formMethod} onValueChange={(v) => v !== null && setFormMethod(v)}>
                     <SelectTrigger id="bi-pay-method"><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Bank Transfer">Bank Transfer</SelectItem>
+                      <SelectItem value="Bank_Transfer">Bank Transfer</SelectItem>
                       <SelectItem value="UPI">UPI</SelectItem>
-                      <SelectItem value="Credit Card">Credit Card</SelectItem>
+                      <SelectItem value="Credit_Card">Credit Card</SelectItem>
                       <SelectItem value="Cheque">Cheque</SelectItem>
                       <SelectItem value="Cash">Cash</SelectItem>
                     </SelectContent>
@@ -284,6 +301,34 @@ export default function Payments() {
               </Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Refund Confirmation Dialog */}
+      <Dialog open={refundConfirmId !== null} onOpenChange={(open) => { if (!open) setRefundConfirmId(null); }}>
+        <DialogContent>
+          <DialogHeader>
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-amber-100 text-amber-600">
+                <AlertTriangle className="h-5 w-5" />
+              </div>
+              <DialogTitle>Confirm Refund</DialogTitle>
+            </div>
+          </DialogHeader>
+          <p className="text-sm text-[--shell-muted] pt-1">
+            Are you sure you want to issue a refund for this payment? This action will reverse the payment and update the invoice balance accordingly.
+          </p>
+          <DialogFooter className="mt-4">
+            <Button variant="outline" onClick={() => setRefundConfirmId(null)}>Cancel</Button>
+            <Button
+              className="bg-amber-600 hover:bg-amber-700 text-white"
+              onClick={() => refundConfirmId !== null && handleRefund(refundConfirmId)}
+              disabled={refunding !== null}
+            >
+              {refunding !== null ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Ban className="mr-2 h-4 w-4" />}
+              Issue Refund
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

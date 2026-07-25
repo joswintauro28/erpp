@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Search, FileText, Eye, Download, Receipt, CreditCard, DollarSign, BadgePercent, Loader2, X, Calculator, Building2, CalendarDays, FileSpreadsheet } from "lucide-react";
+import { Plus, Search, FileText, Eye, Pencil, Download, Receipt, CreditCard, DollarSign, BadgePercent, Loader2, X, Calculator, Building2, CalendarDays, FileSpreadsheet } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -304,6 +304,11 @@ export default function Invoices() {
                       <TableCell className="text-xs text-muted-foreground">{inv.due_date}</TableCell>
                       <TableCell>
                         <div className="flex items-center justify-end gap-1">
+                          {inv.status === "draft" && (
+                            <Button variant="ghost" size="icon-sm" onClick={() => router.push(`/billing/invoices/${inv.id}`)} title="Edit Invoice">
+                              <Pencil className="h-3.5 w-3.5" />
+                            </Button>
+                          )}
                           <Button variant="ghost" size="icon-sm" onClick={() => router.push(`/billing/invoices/${inv.id}`)}>
                             <Eye className="h-3.5 w-3.5" />
                           </Button>

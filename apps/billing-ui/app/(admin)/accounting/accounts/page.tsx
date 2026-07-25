@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { LoadingSpinner } from "@/components/shared/loading-spinner";
-import { Receipt, AlertTriangle, Plus, Loader2 } from "lucide-react";
+import { Receipt, AlertTriangle, Plus, Loader2, Search } from "lucide-react";
 import { api } from "@/services/api";
 import { money } from "@/utils/format";
 import type { AccountEntry } from "@/types/billing";
@@ -23,6 +23,7 @@ export default function AccountsPage() {
   const [accounts, setAccounts] = useState<AccountEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [search, setSearch] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -57,6 +58,15 @@ export default function AccountsPage() {
 
   if (loading) return <ChartOfAccountsLoading />;
 
+  const q = search.toLowerCase();
+  const filtered = q
+    ? accounts.filter((a) =>
+        a.code.toLowerCase().includes(q) ||
+        a.name.toLowerCase().includes(q) ||
+        a.type.toLowerCase().includes(q) ||
+        (a.sub_type ?? "").toLowerCase().includes(q))
+    : accounts;
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -74,10 +84,20 @@ export default function AccountsPage() {
         </div>
       )}
 
+      <div className="relative max-w-xs">
+        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          placeholder="Search accounts..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="pl-9"
+        />
+      </div>
+
       <Card>
         <CardHeader>
           <CardTitle>Accounts</CardTitle>
-          <CardDescription>All chart of accounts</CardDescription>
+          <CardDescription>{filtered.length} of {accounts.length} accounts</CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
@@ -92,16 +112,16 @@ export default function AccountsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {accounts.length === 0 ? (
+              {filtered.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
                     <div className="flex flex-col items-center gap-2">
                       <Receipt className="h-8 w-8 text-muted-foreground/50" />
-                      <p>No accounts yet</p>
+                      <p>{accounts.length === 0 ? "No accounts yet" : "No accounts match your search"}</p>
                     </div>
                   </TableCell>
                 </TableRow>
-              ) : accounts.map((a) => (
+              ) : filtered.map((a) => (
                 <TableRow key={a.id}>
                   <TableCell className="font-mono text-xs">{a.code}</TableCell>
                   <TableCell className="font-medium">{a.name}</TableCell>

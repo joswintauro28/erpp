@@ -8,6 +8,10 @@
   ],
   "scripts": {
     "dev": "nx run-many --target=dev",
+    "dev:core": "nx run-many --target=dev --projects=erp-shell,billing-ui,crm-shell,inventory-ui,core-iam,billing-service,erp-service,crm-service,inventory-service",
+    "dev:backend": "nx run-many --target=dev --projects=core-iam,billing-service,erp-service,crm-service,inventory-service",
+    "dev:shell": "nx run erp-shell:dev",
+    "kill:dev": "fuser -k 3000/tcp 3001/tcp 3002/tcp 3004/tcp 8000/tcp 8001/tcp 8002/tcp 8003/tcp 8004/tcp 2>/dev/null; echo 'All dev ports freed'",
     "build": "nx run-many --target=build",
     "test": "nx run-many --target=test",
     "lint": "nx run-many --target=lint"

@@ -13,6 +13,10 @@ import {
   Receipt,
   ScrollText,
   BarChart3,
+  Banknote,
+  Calendar,
+  Clock,
+  Bell,
   ChevronRight,
   LogOut,
 } from "lucide-react";
@@ -55,6 +59,10 @@ const navItems: NavItem[] = [
       { name: "Expenses", href: "/accounting/expenses", icon: ScrollText },
       { name: "Ledger", href: "/accounting/ledger", icon: BookOpen },
       { name: "Reports", href: "/accounting/reports", icon: BarChart3 },
+      { name: "Reconciliation", href: "/accounting/reconciliation", icon: Banknote },
+      { name: "Periods", href: "/accounting/periods", icon: Calendar },
+      { name: "Aging", href: "/accounting/aging", icon: Clock },
+      { name: "Dunning", href: "/accounting/dunning", icon: Bell },
     ],
   },
 ];

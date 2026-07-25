@@ -15,7 +15,7 @@ COPY services/core-iam/package.json services/core-iam/
 COPY services/billing-service/package.json services/billing-service/
 COPY packages/auth-middleware/package.json packages/auth-middleware/
 COPY packages/ui-theme/package.json packages/ui-theme/
-RUN --mount=type=cache,target=/root/.cache/bun \
+RUN --mount=type=cache,target=/root/.cache/bun,sharing=shared \
     bun install --frozen-lockfile --ignore-scripts
 
 FROM base AS builder

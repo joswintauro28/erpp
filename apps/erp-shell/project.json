@@ -5,8 +5,9 @@
   "sourceRoot": "apps/erp-shell",
   "targets": {
     "dev": {
-      "command": "bun run dev",
+      "executor": "nx:run-commands",
       "options": {
+        "command": "bun next dev --port 3000",
         "cwd": "apps/erp-shell"
       }
     },

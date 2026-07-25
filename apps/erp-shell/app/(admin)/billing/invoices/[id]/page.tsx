@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import {
   ArrowLeft, FileText, Download, Receipt, DollarSign, BadgePercent,
   Building2, Globe, Mail, Calendar, Clock, MapPin,
-  Plus, Loader2,
+  Plus, Loader2, Pencil, Trash2,
 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
@@ -16,6 +16,9 @@ import { Label } from "@/components/ui/label";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+} from "@/components/ui/dialog";
 import { MultiStepDialog } from "@/components/multi-step-dialog";
 import { money } from "@/utils/format";
 import { api } from "@/services/api";
@@ -39,13 +42,28 @@ export default function InvoiceDetail() {
   const [recurringOpen, setRecurringOpen] = useState(false);
   const [recStep, setRecStep] = useState(0);
 
-  useEffect(() => {
+  // Edit draft invoice state
+  const [editOpen, setEditOpen] = useState(false);
+  const [editSaving, setEditSaving] = useState(false);
+  const [editClientId, setEditClientId] = useState("");
+  const [clients, setClients] = useState<{ id: number; name: string }[]>([]);
+  const [editGstTreatment, setEditGstTreatment] = useState("intrastate");
+  const [editDiscount, setEditDiscount] = useState("0");
+  const [editDiscountType, setEditDiscountType] = useState("fixed");
+  const [editNotes, setEditNotes] = useState("");
+  const [editItems, setEditItems] = useState([
+    { description: "", quantity: 1, unitPrice: 0, gstRate: 18 },
+  ]);
+
+  const loadInvoice = () => {
+    setLoading(true);
     Promise.all([
       api.get<ApiInvoice>(`/invoices/${id}`),
       api.get<{ id: number; name: string }[]>("/clients"),
     ])
-      .then(([data, clients]) => {
-        const clientMap = new Map(clients.map((c) => [c.id, c.name]));
+      .then(([data, clientList]) => {
+        setClients(clientList);
+        const clientMap = new Map(clientList.map((c) => [c.id, c.name]));
         const halfGst = (rate: number, amount: number) => {
           if (rate === 0) return { cgst: 0, sgst: 0, igst: 0 };
           const gstAmount = amount - amount / (1 + rate / 100);
@@ -66,16 +84,22 @@ export default function InvoiceDetail() {
           place_of_supply: data.place_of_supply ?? "",
           cgst: data.cgst, sgst: data.sgst, igst: data.igst,
           taxable_value: data.subtotal, notes: data.notes ?? "",
-          items: data.items.map((item) => {
-            const gst = halfGst(item.gst_rate, item.amount);
+          discount: data.discount,
+          discount_type: data.discount_type,
+        items: data.items.map((item) => {
+            const qty = Number(item.quantity);
+            const price = Number(item.unit_price);
+            const rate = Number(item.gst_rate);
+            const amt = Number(item.amount);
+            const gst = halfGst(rate, amt);
             return {
               product: item.description,
               description: item.description,
-              quantity: item.quantity,
-              unit_price: item.unit_price,
-              gst_percent: item.gst_rate,
+              quantity: qty,
+              unit_price: price,
+              gst_percent: rate,
               ...gst,
-              total: item.amount,
+              total: amt,
             };
           }),
           payments: data.payments,
@@ -83,7 +107,56 @@ export default function InvoiceDetail() {
       })
       .catch(() => setInvoice(null))
       .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    loadInvoice();
   }, [id]);
+
+  const openEditModal = () => {
+    if (!invoice) return;
+    setEditClientId(String(invoice.client_id || ""));
+    setEditGstTreatment(invoice.gst_treatment || "intrastate");
+    setEditDiscount(String(invoice.discount || 0));
+    setEditDiscountType(invoice.discount_type || "fixed");
+    setEditNotes(invoice.notes || "");
+    setEditItems(
+      invoice.items && invoice.items.length > 0
+        ? invoice.items.map((i: any) => ({
+            description: i.description || i.product || "",
+            quantity: Number(i.quantity) || 1,
+            unitPrice: Number(i.unit_price) || 0,
+            gstRate: Number(i.gst_percent) ?? 18,
+          }))
+        : [{ description: "", quantity: 1, unitPrice: 0, gstRate: 18 }]
+    );
+    setEditOpen(true);
+  };
+
+  const handleEditInvoice = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setEditSaving(true);
+    try {
+      const discount = Number(editDiscount) || 0;
+      await api.put(`/invoices/${id}`, {
+        client_id: Number(editClientId),
+        gst_treatment: editGstTreatment,
+        discount,
+        discount_type: discount > 0 ? editDiscountType : undefined,
+        notes: editNotes || undefined,
+        items: editItems.map((item) => ({
+          description: item.description,
+          quantity: Number(item.quantity) || 0,
+          unit_price: Number(item.unitPrice) || 0,
+          gst_rate: Number(item.gstRate) || 0,
+        })),
+      });
+      setEditOpen(false);
+      loadInvoice();
+    } catch { /* handled */ } finally {
+      setEditSaving(false);
+    }
+  };
 
   if (loading) {
     return <InvoiceDetailLoading />;
@@ -98,6 +171,18 @@ export default function InvoiceDetail() {
       </div>
     );
   }
+
+  // Computed edit dialog totals
+  const editSubtotal = editItems.reduce((s, i) => s + Number(i.quantity) * Number(i.unitPrice), 0);
+  const editDiscountAmt = editDiscountType === "percentage"
+    ? editSubtotal * (Number(editDiscount) / 100)
+    : Number(editDiscount) || 0;
+  const editTaxable = Math.max(0, editSubtotal - editDiscountAmt);
+  const editTaxTotal = editItems.reduce((s, i) => {
+    const base = Number(i.quantity) * Number(i.unitPrice);
+    return s + base * (Number(i.gstRate) / 100);
+  }, 0);
+  const editTotal = editTaxable + editTaxTotal;
 
   return (
     <div className="space-y-6">
@@ -115,6 +200,11 @@ export default function InvoiceDetail() {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          {invoice.status === "draft" && (
+            <Button variant="outline" size="sm" onClick={openEditModal}>
+              <Pencil className="h-3.5 w-3.5 mr-1" /> Edit Invoice
+            </Button>
+          )}
           <Button variant="outline" size="sm" onClick={() => setRecurringOpen(true)}>
             <Plus className="h-3.5 w-3.5" /> Make Recurring
           </Button>
@@ -381,6 +471,215 @@ export default function InvoiceDetail() {
           </div>
         )}
       </MultiStepDialog>
+
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent className="sm:max-w-4xl w-full">
+          <DialogHeader>
+            <DialogTitle>Edit Draft Invoice</DialogTitle>
+          </DialogHeader>
+          <form className="space-y-5" onSubmit={handleEditInvoice}>
+            <div className="rounded-lg border border-[--shell-border] bg-[--shell-surface] p-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-client">Client</Label>
+                  <Select value={editClientId} onValueChange={(v) => v && setEditClientId(v)}>
+                    <SelectTrigger id="edit-client">
+                      <SelectValue placeholder="Select client" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {clients.map((c) => (
+                        <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-gst">GST Treatment</Label>
+                  <Select value={editGstTreatment} onValueChange={(v) => v && setEditGstTreatment(v)}>
+                    <SelectTrigger id="edit-gst"><SelectValue /></SelectTrigger>
+                    <SelectContent align="start">
+                      <SelectItem value="intrastate">Intrastate (CGST + SGST)</SelectItem>
+                      <SelectItem value="interstate">Interstate (IGST)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 mt-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-discount">Discount</Label>
+                  <Input
+                    id="edit-discount"
+                    type="number"
+                    min={0}
+                    value={editDiscount}
+                    onChange={(e) => setEditDiscount(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-discount-type">Discount Type</Label>
+                  <Select value={editDiscountType} onValueChange={(v) => v && setEditDiscountType(v)}>
+                    <SelectTrigger id="edit-discount-type"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="fixed">Fixed (₹)</SelectItem>
+                      <SelectItem value="percentage">Percentage (%)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="space-y-2 mt-4">
+                <Label htmlFor="edit-notes">Notes</Label>
+                <Input
+                  id="edit-notes"
+                  value={editNotes}
+                  onChange={(e) => setEditNotes(e.target.value)}
+                  placeholder="Optional notes or payment instructions..."
+                />
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Label className="text-xs font-semibold uppercase tracking-wider text-[--shell-muted]">Line Items</Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setEditItems([...editItems, { description: "", quantity: 1, unitPrice: 0, gstRate: 18 }])}
+                >
+                  <Plus className="mr-1 h-3.5 w-3.5" /> Add Item
+                </Button>
+              </div>
+
+              {/* Column headers */}
+              <div className="grid gap-2 px-3 text-[11px] font-semibold uppercase tracking-wider text-[--shell-muted]" style={{ gridTemplateColumns: "1fr 80px 112px 96px 100px 32px" }}>
+                <span>Description</span>
+                <span className="text-center">Qty</span>
+                <span className="text-center">Rate (₹)</span>
+                <span className="text-center">GST %</span>
+                <span className="text-right">Amount</span>
+                <span />
+              </div>
+
+              {editItems.map((item, idx) => {
+                const lineAmt = Number(item.quantity) * Number(item.unitPrice);
+                return (
+                  <div key={idx} className="grid items-center gap-2 rounded-md border border-[--shell-border] bg-[--shell-surface] p-2" style={{ gridTemplateColumns: "1fr 80px 112px 96px 100px 32px" }}>
+                    <Input
+                      placeholder="Description"
+                      className="w-full"
+                      value={item.description}
+                      onChange={(e) => {
+                        const updated = [...editItems];
+                        updated[idx] = { ...updated[idx], description: e.target.value };
+                        setEditItems(updated);
+                      }}
+                      required
+                    />
+                    <Input
+                      type="number"
+                      min={1}
+                      placeholder="Qty"
+                      className="text-center"
+                      value={item.quantity}
+                      onChange={(e) => {
+                        const updated = [...editItems];
+                        updated[idx] = { ...updated[idx], quantity: Number(e.target.value) };
+                        setEditItems(updated);
+                      }}
+                      required
+                    />
+                    <Input
+                      type="number"
+                      min={0}
+                      step={0.01}
+                      placeholder="Rate"
+                      className="text-center"
+                      value={item.unitPrice}
+                      onChange={(e) => {
+                        const updated = [...editItems];
+                        updated[idx] = { ...updated[idx], unitPrice: Number(e.target.value) };
+                        setEditItems(updated);
+                      }}
+                      required
+                    />
+                    <Select
+                      value={String(item.gstRate)}
+                      onValueChange={(v) => {
+                        if (!v) return;
+                        const updated = [...editItems];
+                        updated[idx] = { ...updated[idx], gstRate: Number(v) };
+                        setEditItems(updated);
+                      }}
+                    >
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent align="start" sideOffset={4}>
+                        <SelectItem value="0">0%</SelectItem>
+                        <SelectItem value="5">5%</SelectItem>
+                        <SelectItem value="12">12%</SelectItem>
+                        <SelectItem value="18">18%</SelectItem>
+                        <SelectItem value="28">28%</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <div className="text-right font-mono text-sm font-medium text-[--shell-foreground] pr-1">
+                      {money(lineAmt)}
+                    </div>
+                    {editItems.length > 1 ? (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="text-destructive shrink-0 h-7 w-7"
+                        onClick={() => setEditItems(editItems.filter((_, i) => i !== idx))}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    ) : <span />}
+                  </div>
+                );
+              })}
+
+              {/* Totals summary */}
+              <div className="rounded-lg border border-[--shell-border] bg-[--shell-surface] p-3 space-y-1.5">
+                <div className="flex justify-between text-sm text-[--shell-muted]">
+                  <span>Subtotal</span>
+                  <span className="font-mono font-medium text-[--shell-foreground]">{money(editSubtotal)}</span>
+                </div>
+                {Number(editDiscount) > 0 && (
+                  <div className="flex justify-between text-sm text-[--shell-muted]">
+                    <span>Discount {editDiscountType === "percentage" ? `(${editDiscount}%)` : ""}</span>
+                    <span className="font-mono text-destructive">-{money(editDiscountAmt)}</span>
+                  </div>
+                )}
+                {Number(editDiscount) > 0 && (
+                  <div className="flex justify-between text-sm text-[--shell-muted]">
+                    <span>Taxable Amount</span>
+                    <span className="font-mono font-medium text-[--shell-foreground]">{money(editTaxable)}</span>
+                  </div>
+                )}
+                <div className="flex justify-between text-sm text-[--shell-muted]">
+                  <span>GST ({editGstTreatment === "intrastate" ? "CGST + SGST" : "IGST"})</span>
+                  <span className="font-mono font-medium text-[--shell-foreground]">{money(editTaxTotal)}</span>
+                </div>
+                <hr className="border-[--shell-border]" />
+                <div className="flex justify-between font-heading text-base font-semibold text-[--shell-foreground]">
+                  <span>Total</span>
+                  <span className="font-mono">{money(editTotal)}</span>
+                </div>
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setEditOpen(false)}>Cancel</Button>
+              <Button type="submit" disabled={editSaving}>
+                {editSaving && <Loader2 className="mr-1 h-4 w-4 animate-spin" />}
+                Save Changes
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

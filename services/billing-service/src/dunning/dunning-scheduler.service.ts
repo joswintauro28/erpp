@@ -22,6 +22,7 @@ export class DunningSchedulerService {
       },
       select: {
         id: true,
+        organizationId: true,
         invoiceNumber: true,
         clientName: true,
         dueDate: true,
@@ -62,7 +63,7 @@ export class DunningSchedulerService {
         if (newLevel > currentLevel) {
           await this.prisma.dunningRecord.create({
             data: {
-              organizationId: inv.id,
+              organizationId: inv.organizationId,
               invoiceId: inv.id,
               level: newLevel,
               daysOverdue,

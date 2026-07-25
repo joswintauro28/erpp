@@ -18,6 +18,7 @@ import {
 import { LoadingSpinner } from "@/components/shared/loading-spinner";
 import { api } from "@/services/api";
 import { money, formatDate, quotationStatusVariant as statusVariant } from "@/utils/format";
+import { useAuth } from "@/contexts/AuthContext";
 import type { QuotationDetailView } from "@/types/billing";
 
 const STATUS_FLOW = [
@@ -94,6 +95,11 @@ export default function QuotationDetail() {
     }
   };
 
+  const { user } = useAuth();
+  const permissions = user?.permissions ?? [];
+  const canEdit = permissions.includes("quotations.edit");
+  const canDelete = permissions.includes("quotations.delete");
+
   // Live calculations for details view
   const financialSummary = useMemo(() => {
     if (!quotation) return { subtotal: 0, totalGst: 0, grandTotal: 0, taxGroups: [] };
@@ -147,18 +153,23 @@ export default function QuotationDetail() {
   }
 
   const statusIdx = STATUS_FLOW.findIndex((s) => s.key === quotation.status);
-  const actions = STATUS_ACTIONS[quotation.status] ?? [];
+  const allActions = STATUS_ACTIONS[quotation.status] ?? [];
+  const actions = allActions.filter((a) => {
+    if (a.action === "delete") return canDelete;
+    if (a.action === "edit" || ["sent","accepted","rejected"].includes(a.action)) return canEdit;
+    return true;
+  });
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto px-4 sm:px-6">
       {/* Header Actions */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-[var(--shell-border)] pb-5">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-[--shell-border] pb-5 print:hidden">
         <div className="flex items-center gap-4">
-          <Button variant="outline" size="icon" className="rounded-full border-[var(--shell-border)] hover:bg-[var(--shell-surface-alt)]" aria-label="Back to quotations" title="Back to quotations" onClick={() => router.back()}>
+          <Button variant="outline" size="icon" className="rounded-full border-[--shell-border] hover:bg-[--shell-surface-alt]" aria-label="Back to quotations" title="Back to quotations" onClick={() => router.push("/billing/quotations")}>
             <ArrowLeft className="h-4 w-4" />
           </Button>
-          {quotation.status === "draft" && (
-            <Button variant="outline" size="icon" className="rounded-full border-[var(--shell-border)] hover:bg-[var(--shell-surface-alt)]" aria-label="Edit quotation" title="Edit quotation" onClick={() => router.push(`/billing/quotations/${quotation.id}/edit`)}>
+          {canEdit && quotation.status === "draft" && (
+            <Button variant="outline" size="icon" className="rounded-full border-[--shell-border] hover:bg-[--shell-surface-alt]" aria-label="Edit quotation" title="Edit quotation" onClick={() => router.push(`/billing/quotations/${quotation.id}/edit`)}>
               <Pencil className="h-4 w-4" />
             </Button>
           )}
@@ -182,7 +193,7 @@ export default function QuotationDetail() {
       </div>
 
       {quotation.converted_invoice_id && (
-        <div className="flex items-center gap-3.5 rounded-xl border border-emerald-500/20 bg-gradient-to-r from-emerald-500/5 to-transparent px-5 py-4.5 shadow-sm animate-kpi">
+        <div className="flex items-center gap-3.5 rounded-xl border border-emerald-500/20 bg-gradient-to-r from-emerald-500/5 to-transparent px-5 py-4.5 shadow-sm animate-kpi print:hidden">
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600">
             <FileCheck className="h-5 w-5" />
           </div>
@@ -334,7 +345,7 @@ export default function QuotationDetail() {
 
           {/* Process Workflow Actions */}
           {actions.length > 0 && (
-            <Card className="border-[var(--shell-border)] shadow-engineered bg-gradient-to-br from-[var(--shell-bg)] to-transparent">
+            <Card className="border-[--shell-border] shadow-engineered bg-gradient-to-br from-[--shell-bg] to-transparent print:hidden">
               <CardContent className="p-6 space-y-4">
                 <h4 className="text-xs font-bold uppercase tracking-wider text-[var(--shell-foreground)]">Manage Process Flow</h4>
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -369,8 +380,8 @@ export default function QuotationDetail() {
           )}
 
           {/* Conversion Wizard */}
-          {quotation.status === "accepted" && !quotation.converted_invoice_id && (
-            <Card className="border-emerald-500/20 shadow-md bg-gradient-to-r from-emerald-500/5 to-transparent">
+          {canEdit && quotation.status === "accepted" && !quotation.converted_invoice_id && (
+            <Card className="border-emerald-500/20 shadow-md bg-gradient-to-r from-emerald-500/5 to-transparent print:hidden">
               <CardContent className="p-6 flex flex-col sm:flex-row items-center gap-4 justify-between">
                 <div className="flex items-start gap-3.5">
                   <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 shrink-0">
@@ -481,8 +492,8 @@ export default function QuotationDetail() {
       </div>
 
       {/* Delete Dialog */}
-      <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
-        <DialogContent className="border-[var(--shell-border)] bg-white">
+      {canDelete && <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <DialogContent className="border-[--shell-border] bg-white">
           <DialogHeader>
             <div className="flex items-center gap-3">
               <div className="flex h-9 w-9 items-center justify-center rounded-full bg-red-100 text-red-600">
@@ -503,7 +514,7 @@ export default function QuotationDetail() {
             </Button>
           </DialogFooter>
         </DialogContent>
-      </Dialog>
+      </Dialog>}
     </div>
   );
 }
