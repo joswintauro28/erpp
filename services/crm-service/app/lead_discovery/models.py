@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, JSON
+from sqlalchemy import Column, Integer, String, JSON, Float
 from app.database import Base
 
 class PinnedLead(Base):
@@ -17,3 +17,6 @@ class PinnedLead(Base):
     recommended_ai_solutions = Column(JSON, nullable=True)
     key_decision_makers = Column(JSON, nullable=True)
     public_contact = Column(JSON, nullable=True)
+    industry_details = Column(String, nullable=True)
+    latitude = Column(Float, nullable=True)
+    longitude = Column(Float, nullable=True)

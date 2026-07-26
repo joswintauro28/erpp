@@ -28,6 +28,8 @@ async def list_quotations(token_payload: dict = Depends(get_current_token_payloa
     token = _get_token(token_payload)
     try:
         items = await quotations_list(token)
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Billing service error: {str(e)}")
 
@@ -52,6 +54,8 @@ async def get_quotation(id: int, token_payload: dict = Depends(get_current_token
     token = _get_token(token_payload)
     try:
         return await quotations_get(token, id)
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Billing service error: {str(e)}")
 
@@ -61,6 +65,8 @@ async def create_quotation(payload: dict, token_payload: dict = Depends(get_curr
     token = _get_token(token_payload)
     try:
         return await quotations_create(token, payload)
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Billing service error: {str(e)}")
 
@@ -70,6 +76,8 @@ async def update_quotation(id: int, payload: dict, token_payload: dict = Depends
     token = _get_token(token_payload)
     try:
         return await quotations_update(token, id, payload)
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Billing service error: {str(e)}")
 
@@ -81,8 +89,13 @@ async def update_quotation_status(
     token_payload: dict = Depends(get_current_token_payload),
 ):
     token = _get_token(token_payload)
+    billing_status = status.lower()
+    if billing_status == "converted":
+        billing_status = "accepted"
     try:
-        return await quotations_update_status(token, id, status)
+        return await quotations_update_status(token, id, billing_status)
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Billing service error: {str(e)}")
 
@@ -92,6 +105,8 @@ async def delete_quotation(id: int, token_payload: dict = Depends(get_current_to
     token = _get_token(token_payload)
     try:
         await quotations_delete(token, id)
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Billing service error: {str(e)}")
 
@@ -101,5 +116,7 @@ async def convert_quotation_to_invoice(id: int, token_payload: dict = Depends(ge
     token = _get_token(token_payload)
     try:
         return await quotations_convert_to_invoice(token, id)
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Billing service error: {str(e)}")

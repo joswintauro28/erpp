@@ -13,7 +13,6 @@ This backend service manages the product catalog, warehouses, stock levels, supp
 - **Auth Pattern:** Claims-based JWT validation using the shared `JWT_SECRET` (no DB lookup for authentication).
 - **Data Isolation:** All models contain an `owner_id` field to partition data per organization.
 - **Models:** Product, Warehouse, Stock, StockMovement, Supplier, PurchaseOrder (with PurchaseOrderItem), SerialNumber.
-- **Interactive OpenAPI Documentation:** Exposes Swagger UI (`http://localhost:8004/docs`), ReDoc (`http://localhost:8004/redoc`), and OpenAPI spec (`http://localhost:8004/openapi.json`) with Bearer JWT authorization.
 
 ## 3. Key Modules
 - **Products:** SKU, pricing, tax rates, batch/serial flags.

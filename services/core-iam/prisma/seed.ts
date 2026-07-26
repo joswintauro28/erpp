@@ -37,7 +37,7 @@ const SYSTEM_ROLES: Record<string, string[]> = {
   ],
   'Sales Executive': [
     'clients.view', 'clients.create', 'clients.edit',
-    'quotations.view',
+    'quotations.view', 'quotations.create', 'quotations.edit', 'quotations.delete',
     'crm.view', 'crm.edit',
     'dashboard.view',
   ],

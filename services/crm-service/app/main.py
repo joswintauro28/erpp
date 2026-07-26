@@ -197,10 +197,23 @@ async def create_entity(entity_type: str, payload: dict, db: AsyncSession = Depe
     max_id = (count_result.scalar() or 0) + 1001
     id_str = f"{prefix}-{max_id}"
 
-    payload["id_str"] = id_str
-    payload.pop("id", None)
+    from sqlalchemy.inspection import inspect
+    from sqlalchemy import String
+    mapper = inspect(model_class)
+    
+    filtered_payload = {}
+    for k, v in payload.items():
+        if k in mapper.columns:
+            col_type = mapper.columns[k].type
+            if isinstance(col_type, String) and v is not None:
+                filtered_payload[k] = str(v)
+            else:
+                filtered_payload[k] = v
 
-    db_obj = model_class(**payload)
+    filtered_payload["id_str"] = id_str
+    filtered_payload.pop("id", None)
+
+    db_obj = model_class(**filtered_payload)
     db.add(db_obj)
     await db.commit()
     await db.refresh(db_obj)
@@ -219,9 +232,17 @@ async def update_entity(entity_type: str, id_str: str, payload: dict, db: AsyncS
     if not db_obj:
         raise HTTPException(status_code=404, detail="Record not found")
 
+    from sqlalchemy.inspection import inspect
+    from sqlalchemy import String
+    mapper = inspect(model_class)
+
     for key, value in payload.items():
-        if key not in ["id", "id_str"]:
-            setattr(db_obj, key, value)
+        if key in mapper.columns and key not in ["id", "id_str"]:
+            col_type = mapper.columns[key].type
+            if isinstance(col_type, String) and value is not None:
+                setattr(db_obj, key, str(value))
+            else:
+                setattr(db_obj, key, value)
 
     await db.commit()
     await db.refresh(db_obj)

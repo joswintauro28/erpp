@@ -11,7 +11,14 @@ export function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const path = pathname.slice("/api".length);
+  let path = pathname.slice("/api".length);
+
+  if (path.startsWith("/v1")) {
+    path = path.slice(3);
+  }
+  if (path.startsWith("/crm")) {
+    path = path.slice(4);
+  }
 
   let url: URL;
   if (path.startsWith("/auth/")) {

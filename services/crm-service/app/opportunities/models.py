@@ -13,3 +13,4 @@ class Opportunity(Base):
     close_date = Column(String)
     stage = Column(String)
     owner = Column(String)
+    updated_at = Column(String, nullable=True)

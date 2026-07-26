@@ -1,39 +1,63 @@
 import os
 import httpx
+from fastapi import HTTPException
 
 CRM_SERVICE_URL = os.environ.get("CRM_SERVICE_URL", "http://localhost:8001")
 
 
+def _handle_error(e: Exception):
+    if isinstance(e, httpx.HTTPError):
+        status_code = e.response.status_code if e.response else 502
+        try:
+            detail = e.response.json().get("detail", "CRM Service Error")
+        except Exception:
+            detail = e.response.text if e.response else "CRM Service Unavailable"
+        raise HTTPException(status_code=status_code, detail=detail)
+    raise HTTPException(status_code=502, detail=f"CRM Service Unavailable: {str(e)}")
+
+
 async def _get(path: str, token: str, params: dict | None = None) -> dict | list:
     headers = {"Authorization": f"Bearer {token}"}
-    async with httpx.AsyncClient(timeout=30.0) as client:
-        resp = await client.get(f"{CRM_SERVICE_URL}/api{path}", headers=headers, params=params)
-        resp.raise_for_status()
-        return resp.json()
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            resp = await client.get(f"{CRM_SERVICE_URL}/api{path}", headers=headers, params=params)
+            resp.raise_for_status()
+            return resp.json()
+    except Exception as e:
+        _handle_error(e)
 
 
 async def _post(path: str, token: str, body: dict) -> dict:
     headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
-    async with httpx.AsyncClient(timeout=30.0) as client:
-        resp = await client.post(f"{CRM_SERVICE_URL}/api{path}", headers=headers, json=body)
-        resp.raise_for_status()
-        return resp.json()
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            resp = await client.post(f"{CRM_SERVICE_URL}/api{path}", headers=headers, json=body)
+            resp.raise_for_status()
+            return resp.json()
+    except Exception as e:
+        _handle_error(e)
 
 
 async def _put(path: str, token: str, body: dict) -> dict:
     headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
-    async with httpx.AsyncClient(timeout=30.0) as client:
-        resp = await client.put(f"{CRM_SERVICE_URL}/api{path}", headers=headers, json=body)
-        resp.raise_for_status()
-        return resp.json()
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            resp = await client.put(f"{CRM_SERVICE_URL}/api{path}", headers=headers, json=body)
+            resp.raise_for_status()
+            return resp.json()
+    except Exception as e:
+        _handle_error(e)
 
 
 async def _delete(path: str, token: str) -> dict:
     headers = {"Authorization": f"Bearer {token}"}
-    async with httpx.AsyncClient(timeout=30.0) as client:
-        resp = await client.delete(f"{CRM_SERVICE_URL}/api{path}", headers=headers)
-        resp.raise_for_status()
-        return resp.json() if resp.content else {"status": "success"}
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            resp = await client.delete(f"{CRM_SERVICE_URL}/api{path}", headers=headers)
+            resp.raise_for_status()
+            return resp.json() if resp.content else {"status": "success"}
+    except Exception as e:
+        _handle_error(e)
 
 
 # ─── Generic Entity CRUD ──────────────────────────────────────────────

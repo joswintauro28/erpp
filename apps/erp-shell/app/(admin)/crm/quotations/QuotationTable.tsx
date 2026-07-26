@@ -1,6 +1,6 @@
 "use client";
 
-import { Edit2, Trash2, CheckCircle } from "lucide-react";
+import { Edit2, Trash2, ShoppingCart } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
@@ -63,9 +63,9 @@ export default function QuotationTable({ quotations, onView, onEdit, onDelete, o
             <TableCell>{quote.owner}</TableCell>
             <TableCell>
               <div className="flex gap-2 text-[var(--shell-muted)] items-center">
-                {quote.status !== "Accepted" && quote.status !== "Converted" && (
-                  <Button className="hover:text-[var(--shell-success)] cursor-pointer" title="Finalize & Send to Sales" onClick={() => onFinalize(quote)}>
-                    <CheckCircle size={14} />
+                {quote.status !== "Converted" && (
+                  <Button className="hover:text-[var(--shell-success)] cursor-pointer" title="Convert to Sales Order" onClick={() => onFinalize(quote)}>
+                    <ShoppingCart size={14} />
                   </Button>
                 )}
                 <Button size="icon-sm" className="hover:text-[var(--shell-foreground)] cursor-pointer" onClick={() => onEdit(quote)} title="Edit"><Edit2 size={14} /></Button>

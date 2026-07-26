@@ -95,7 +95,7 @@ function QuoteRow({ quote, onDelete, onPreview, onConverted, onEdit }: QuoteRowP
         status: "Pending",
         owner: saleData.rep,
       });
-      await api.put(`/quotations/${quote.id_str}`, { status: "Converted" });
+      await api.put(`/quotations/${quote.id}/status?status=Converted`);
       setSaleSuccess(true);
       setShowSaleForm(false);
       if (onConverted) onConverted();
@@ -336,7 +336,7 @@ export default function OpportunityDetailModal({ record, isOpen, onClose, onSucc
         file_data: quoteFile ? quoteFile.base64 : (isEdit ? editQuote.file_data : null),
         file_name: quoteFile ? quoteFile.name : (isEdit ? editQuote.file_name : null),
       };
-      if (isEdit) await api.put(`/quotations/${editQuote.id_str}`, body);
+      if (isEdit) await api.put(`/quotations/${editQuote.id}`, body);
       else await api.post("/quotations", body);
       setShowQuoteForm(false); setEditQuote(null);
       setQuoteData({ quote_no: "", value: "", valid_until: "", status: "Draft", owner: "" });
@@ -354,7 +354,7 @@ export default function OpportunityDetailModal({ record, isOpen, onClose, onSucc
 
   const handleDeleteQuote = async (q: any) => {
     if (!window.confirm("Delete this quotation?")) return;
-    try { await api.delete(`/quotations/${q.id_str}`); fetchQuotations(); } catch { /* silent */ }
+    try { await api.delete(`/quotations/${q.id}`); fetchQuotations(); } catch { /* silent */ }
   };
 
   const detailRows = [

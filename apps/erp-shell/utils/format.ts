@@ -1,5 +1,5 @@
 import type { Lead, Client } from "@/types/crm";
-export { money, lakhFormat, invoiceStatusVariant, quotationStatusVariant } from "@/lib/utils";
+export { money, lakhFormat, invoiceStatusVariant, quotationStatusVariant, formatDate, noteStatusVariant } from "@/lib/utils";
 
 export function searchBilling<T extends { client_name: string; invoice_number?: string }>(
   items: T[], query: string

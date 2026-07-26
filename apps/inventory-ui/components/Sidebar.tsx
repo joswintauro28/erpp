@@ -45,6 +45,7 @@ const navItems: NavItem[] = [
     name: "Inventory Management",
     icon: Package,
     children: [
+      { name: "Order Fulfillment", href: "/inventory/fulfillment", icon: ClipboardList },
       { name: "Product Master", href: "/inventory/products", icon: Boxes },
       { name: "Stock Levels", href: "/inventory/stock", icon: Warehouse },
       { name: "Stock Movements", href: "/inventory/stock/movements", icon: ArrowRightLeft },
@@ -76,7 +77,7 @@ function isGroup(item: NavItem): item is NavGroup {
 
 function isActive(href: string, pathname: string): boolean {
   if (href === "/dashboard") return pathname === "/dashboard" || pathname === "/";
-  return pathname.startsWith(href);
+  return pathname === href;
 }
 
 function groupActive(group: NavGroup, pathname: string): boolean {

@@ -103,7 +103,7 @@ const GenericFormModal: React.FC<GenericFormModalProps> = ({ entityType, entityN
     fetchFields();
   }, [isOpen, entityType, editRecord]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     if (name === 'name' && ['contacts', 'admins'].includes(entityType) && !/^[a-zA-Z\s]*$/.test(value)) {
       return;
@@ -277,7 +277,24 @@ const GenericFormModal: React.FC<GenericFormModalProps> = ({ entityType, entityN
                     <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">
                       {entityType === 'opportunities' && field.name === 'name' ? 'Deal' : (entityType === 'requirements' && field.name === 'name') ? 'Requirements' : field.label}
                     </Label>
-                                       {((entityType === 'opportunities' && field.name === 'close_date') || (entityType === 'quotations' && field.name === 'valid_until') || (entityType === 'sales-orders' && field.name === 'eta') || (entityType === 'sales' && (field.name === 'issued_date' || field.name === 'due_date'))) ? (
+                                       {field.options && field.options.length > 0 ? (
+                      <select
+                        name={field.name}
+                        value={formData[field.name] || ''}
+                        onChange={handleChange}
+                        className="h-9 w-full rounded-md border border-[var(--shell-border)] bg-[var(--shell-bg)] px-3 text-xs text-[var(--shell-foreground)]"
+                        required
+                      >
+                        <option value="" disabled>Select {field.label}...</option>
+                        {field.options.map((opt: any) => {
+                          const val = typeof opt === 'object' ? opt.value : opt;
+                          const lbl = typeof opt === 'object' ? opt.label : opt;
+                          return (
+                            <option key={val} value={val}>{lbl}</option>
+                          );
+                        })}
+                      </select>
+                    ) : ((entityType === 'opportunities' && field.name === 'close_date') || (entityType === 'quotations' && field.name === 'valid_until') || (entityType === 'sales-orders' && field.name === 'eta') || (entityType === 'sales' && (field.name === 'issued_date' || field.name === 'due_date'))) ? (
                       <input
                         type="date"
                         name={field.name}

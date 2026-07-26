@@ -33,21 +33,3 @@ class Product(Base):
         sa.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc),
         onupdate=lambda: datetime.now(timezone.utc),
     )
-
-
-class OutboxRecord(Base):
-    __tablename__ = "outbox_records"
-
-    id: Mapped[int] = mapped_column(sa.Integer, primary_key=True)
-    organization_id: Mapped[int] = mapped_column(sa.Integer, nullable=False, index=True)
-    event_type: Mapped[str] = mapped_column(sa.String(100), nullable=False)
-    idempotency_key: Mapped[str] = mapped_column(sa.String(255), unique=True, nullable=False, index=True)
-    payload: Mapped[str] = mapped_column(sa.Text, nullable=False)
-    status: Mapped[str] = mapped_column(sa.String(20), default="pending", index=True)
-    created_at: Mapped[datetime] = mapped_column(
-        sa.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
-    )
-    published_at: Mapped[datetime | None] = mapped_column(
-        sa.DateTime(timezone=True), nullable=True
-    )
-

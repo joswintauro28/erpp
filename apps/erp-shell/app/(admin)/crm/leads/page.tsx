@@ -24,7 +24,7 @@ export default function LeadsPage() {
 
   const fetchData = useCallback(async () => {
     try {
-      const result = await api.get<any>("/leads");
+      const result = await api.get<any>("/crm/leads");
       setData(result);
     } catch {} finally {
       setLoading(false);
@@ -36,7 +36,7 @@ export default function LeadsPage() {
   const handleDelete = async (lead: any) => {
     if (!window.confirm("Are you sure you want to delete this lead?")) return;
     try {
-      await api.delete("/leads/" + lead.id_str);
+      await api.delete("/crm/leads/" + lead.id_str);
       fetchData();
     } catch {}
   };

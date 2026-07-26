@@ -4,7 +4,8 @@ from pydantic import BaseModel
 
 
 class PurchaseOrderItemCreate(BaseModel):
-    product_id: int
+    product_id: int | None = None
+    product_name: str | None = None
     quantity: int
     unit_price: float
 

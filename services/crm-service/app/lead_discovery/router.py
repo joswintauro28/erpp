@@ -51,6 +51,20 @@ async def search_companies(request: schemas.SearchRequest, db: AsyncSession = De
                 linkedin=public_contact_data.get("linkedin") or ""
             )
 
+            kdm_raw = c_data.get("key_decision_makers") or []
+            kdm_normalized = []
+            for item in kdm_raw:
+                if isinstance(item, dict):
+                    kdm_normalized.append(item)
+                elif isinstance(item, str):
+                    kdm_normalized.append({
+                        "name": item,
+                        "title": "Unknown",
+                        "email": "",
+                        "phone": "",
+                        "linkedin": ""
+                    })
+
             comp_detail = schemas.CompanyDetail(
                 company_name=c_data.get("company_name"),
                 industry=industry or c_data.get("industry") or "Unknown",
@@ -63,7 +77,7 @@ async def search_companies(request: schemas.SearchRequest, db: AsyncSession = De
                 detected_technologies=c_data.get("detected_technologies") or [],
                 business_pain_points=c_data.get("business_pain_points") or [],
                 recommended_ai_solutions=c_data.get("recommended_ai_solutions") or [],
-                key_decision_makers=c_data.get("key_decision_makers") or [],
+                key_decision_makers=kdm_normalized,
                 public_contact=contact,
                 latitude=None,
                 longitude=None

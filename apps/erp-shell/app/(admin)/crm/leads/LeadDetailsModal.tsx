@@ -33,7 +33,7 @@ export default function LeadDetailsModal({ lead, isOpen, onClose, onSuccess }: L
   const loadAIInsights = async () => {
     setLoadingInsights(true);
     try {
-      const data = await api.get<any>(`/lead-discovery/pinned/${encodeURIComponent(lead.company)}`);
+      const data = await api.get<any>(`/crm/lead-discovery/pinned/${encodeURIComponent(lead.company)}`);
       setPinnedDetail(data);
     } catch {
       /* silent */
@@ -66,7 +66,7 @@ export default function LeadDetailsModal({ lead, isOpen, onClose, onSuccess }: L
     setSubmitting(true);
     setError("");
     try {
-      await api.post("/opportunities", {
+      await api.post("/crm/opportunities", {
         name: lead.name,
         account: lead.company,
         value: lead.est_value,
@@ -76,7 +76,7 @@ export default function LeadDetailsModal({ lead, isOpen, onClose, onSuccess }: L
         owner: lead.owner,
       });
 
-      await api.put(`/leads/${lead.id_str}`, { status: "Converted" });
+      await api.put(`/crm/leads/${lead.id_str}`, { status: "Converted" });
 
       if (onSuccess) onSuccess();
       onClose();

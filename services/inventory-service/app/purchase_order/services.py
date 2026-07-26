@@ -43,7 +43,38 @@ class PurchaseOrderService:
         return po
 
     async def create_purchase_order(self, organization_id: int, order_number: str, items: list[dict], **data) -> PurchaseOrder:
-        subtotal = sum(item["quantity"] * item["unit_price"] for item in items)
+        from app.product.models import Product
+        
+        resolved_items = []
+        for item in items:
+            pid = item.get("product_id")
+            if not pid:
+                pname = item.get("product_name") or "Purchased Product Item"
+                prod_stmt = sa.select(Product).where(Product.name == pname, Product.organization_id == organization_id)
+                prod_res = await self.db.execute(prod_stmt)
+                product = prod_res.scalar_one_or_none()
+                if not product:
+                    import random
+                    product = Product(
+                        organization_id=organization_id,
+                        name=pname,
+                        sku=f"SKU-{random.randint(1000, 9999)}",
+                        price=float(item["unit_price"]) * 1.4,
+                        cost_price=float(item["unit_price"]),
+                        track_inventory=True,
+                        is_active=True
+                    )
+                    self.db.add(product)
+                    await self.db.flush()
+                pid = product.id
+
+            resolved_items.append({
+                "product_id": pid,
+                "quantity": item["quantity"],
+                "unit_price": item["unit_price"]
+            })
+
+        subtotal = sum(item["quantity"] * item["unit_price"] for item in resolved_items)
         po = await self.repo.create(
             organization_id=organization_id,
             order_number=order_number,
@@ -51,7 +82,7 @@ class PurchaseOrderService:
             total=subtotal,
             **data,
         )
-        for item in items:
+        for item in resolved_items:
             await self.item_repo.create(
                 purchase_order_id=po.id,
                 product_id=item["product_id"],
@@ -69,12 +100,68 @@ class PurchaseOrderService:
         po = await self.get_purchase_order(po_id, organization_id)
         if not po:
             return None
+        
+        old_status = po.status
         po.status = status
         now = datetime.now(timezone.utc)
         if status == "ordered" and not po.ordered_at:
             po.ordered_at = now
         elif status == "received" and not po.received_at:
             po.received_at = now
+            
+            # Automatically update stock levels and log IN movement
+            from app.stock.models import Stock, StockMovement
+            items_stmt = sa.select(PurchaseOrderItem).where(PurchaseOrderItem.purchase_order_id == po_id)
+            items_res = await self.db.execute(items_stmt)
+            po_items = list(items_res.scalars().all())
+
+            for item in po_items:
+                stock_stmt = sa.select(Stock).where(
+                    Stock.organization_id == organization_id,
+                    Stock.product_id == item.product_id,
+                    Stock.warehouse_id == po.warehouse_id
+                )
+                stock_res = await self.db.execute(stock_stmt)
+                stock_rec = stock_res.scalar_one_or_none()
+
+                if stock_rec:
+                    stock_rec.quantity += item.quantity
+                else:
+                    stock_rec = Stock(
+                        organization_id=organization_id,
+                        product_id=item.product_id,
+                        warehouse_id=po.warehouse_id,
+                        quantity=item.quantity
+                    )
+                    self.db.add(stock_rec)
+
+                # Log stock movement IN
+                movement = StockMovement(
+                    organization_id=organization_id,
+                    product_id=item.product_id,
+                    warehouse_id=po.warehouse_id,
+                    type="in",
+                    quantity=item.quantity,
+                    reference_type="PURCHASE_RECEIPT",
+                    reference_id=po.id,
+                    notes=f"Goods received from Purchase Order {po.order_number}"
+                )
+                self.db.add(movement)
+
+            # Auto-check associated fulfillments
+            from app.fulfillment.models import SalesOrderFulfillment
+            from app.fulfillment.services import FulfillmentService
+            ful_stmt = sa.select(SalesOrderFulfillment).where(
+                SalesOrderFulfillment.purchase_order_id == po_id,
+                SalesOrderFulfillment.organization_id == organization_id
+            )
+            ful_res = await self.db.execute(ful_stmt)
+            fulfillments = list(ful_res.scalars().all())
+            
+            ful_service = FulfillmentService(self.db)
+            for f in fulfillments:
+                await ful_service.check_stock(organization_id, f.id)
+
         await self.db.flush()
         return po
 

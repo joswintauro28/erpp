@@ -15,7 +15,7 @@ async def get_current_token_payload(
         payload = decode_access_token(token)
         payload["_raw_token"] = token
         return payload
-    except JWTError:
+    except Exception:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired access token",

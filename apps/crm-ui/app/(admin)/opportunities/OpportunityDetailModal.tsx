@@ -112,7 +112,7 @@ function QuoteRow({ quote, onDelete, onPreview, onConverted, onEdit }: QuoteRowP
         owner: saleData.rep,
       });
 
-      await api.put(`/quotations/${quote.id_str}`, { status: "Converted" });
+      await api.put(`/quotations/${quote.id}/status?status=Converted`);
 
       setSaleSuccess(true);
       setShowSaleForm(false);
@@ -407,7 +407,7 @@ export default function OpportunityDetailModal({ record, isOpen, onClose, onSucc
         file_name: quoteFile ? quoteFile.name : (isEdit ? editQuote.file_name : null),
       };
       if (isEdit) {
-        await api.put(`/quotations/${editQuote.id_str}`, body);
+        await api.put(`/quotations/${editQuote.id}`, body);
       } else {
         await api.post("/quotations", body);
       }
@@ -438,7 +438,7 @@ export default function OpportunityDetailModal({ record, isOpen, onClose, onSucc
   const handleDeleteQuote = async (q: any) => {
     if (!window.confirm("Delete this quotation?")) return;
     try {
-      await api.delete(`/quotations/${q.id_str}`);
+      await api.delete(`/quotations/${q.id}`);
       fetchQuotations();
     } catch {
       /* silent */

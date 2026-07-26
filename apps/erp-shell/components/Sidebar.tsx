@@ -31,6 +31,8 @@ import {
   LogOut,
   Target,
   Search,
+  Calendar,
+  Bell,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getAccessToken } from "@datavex/auth-middleware";
@@ -154,6 +156,15 @@ const navItems: NavItem[] = [
           { name: "Chart of Accounts", href: "/accounting/accounts", icon: SlidersHorizontal },
           { name: "General Ledger", href: "/accounting/ledger", icon: BookOpen },
           { name: "Expenses", href: "/accounting/expenses", icon: Receipt },
+        ],
+      },
+      {
+        name: "Operations",
+        children: [
+          { name: "Bank Reconciliation", href: "/accounting/reconciliation", icon: Repeat },
+          { name: "AR Aging", href: "/accounting/aging", icon: BarChart2 },
+          { name: "Dunning & Collections", href: "/accounting/dunning", icon: Bell },
+          { name: "Fiscal Periods", href: "/accounting/periods", icon: Calendar },
         ],
       },
       {

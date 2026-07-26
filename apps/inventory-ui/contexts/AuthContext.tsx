@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
-import { api, getAccessToken, setAccessToken } from "@datavex/auth-middleware";
+import { api, setAccessToken } from "@datavex/auth-middleware";
 import type { User } from "@datavex/auth-middleware";
 
 interface AuthState {
@@ -40,19 +40,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         window.history.replaceState({}, "", window.location.pathname);
       }
 
-      const activeToken = getAccessToken();
-
-      if (activeToken) {
-        try {
-          const u = await api.get<User>("/auth/users/me");
-          setUser(u);
-          setLoading(false);
-          return;
-        } catch {
-          // Token expired or invalid; fallback to refresh token attempt below
-        }
-      }
-
       try {
         const res = await fetch("/api/auth/refresh", {
           method: "POST",
@@ -63,18 +50,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setAccessToken(data.access_token);
           const u = await api.get<User>("/auth/users/me");
           setUser(u);
-          setLoading(false);
+        } else if (tokenParam) {
+          const u = await api.get<User>("/auth/users/me");
+          setUser(u);
+        } else {
+          window.location.href = getLoginUrl();
           return;
         }
       } catch {
-        // Refresh failed
+        if (tokenParam) {
+          try {
+            const u = await api.get<User>("/auth/users/me");
+            setUser(u);
+          } catch {
+            // Token verification also failed
+          }
+        }
+        if (!tokenParam) {
+          window.location.href = getLoginUrl();
+          return;
+        }
       }
 
-      setAccessToken(null);
-      setUser(null);
-      window.location.href = getLoginUrl();
+      setLoading(false);
     };
-
     init();
   }, []);
 

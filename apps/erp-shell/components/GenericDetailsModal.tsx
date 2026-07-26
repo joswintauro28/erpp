@@ -309,7 +309,7 @@ const GenericDetailsModal: React.FC<GenericDetailsModalProps> = ({ record, entit
       await api.post('/sales-orders', salesOrderPayload);
 
       if (isQuotation) {
-        await api.delete(`/quotations/${record.id_str}`);
+        await api.put(`/quotations/${record.id}/status?status=Converted`);
       } else if (isOpportunity) {
         await api.delete(`/opportunities/${record.id_str}`);
       }
@@ -1005,33 +1005,13 @@ const GenericDetailsModal: React.FC<GenericDetailsModalProps> = ({ record, entit
                   <ArrowRight className="size-3.5" />
                 </Button>
               )}
-              {isQuotation && record.status !== 'Accepted' && record.status !== 'Converted' && (
-                <Button
-                  onClick={async () => {
-                    if (window.confirm("Are you sure you want to finalize this quotation? This will approve it and generate a Sales Order.")) {
-                      try {
-                        await api.put(`/quotations/${record.id_str}`, { ...record, status: 'Accepted' });
-                        if (onSuccess) onSuccess();
-                        onClose();
-                      } catch (err) {
-                        alert(err instanceof Error ? err.message : "Failed to finalize quotation.");
-                      }
-                    }
-                  }}
-                  className="flex items-center gap-1.5 mr-2 bg-green-600 hover:bg-green-700"
-                >
-                  <ShoppingCart className="size-3.5" />
-                  Finalize & Send to Sales
-                  <ArrowRight className="size-3.5" />
-                </Button>
-              )}
-              {isQuotation && (
+              {isQuotation && record.status !== 'Converted' && (
                 <Button
                   onClick={() => setShowSalesOrderForm(true)}
                   className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700"
                 >
                   <PackageOpen className="size-3.5" />
-                  Add to Sales Orders
+                  Convert to Sales Order
                   <ArrowRight className="size-3.5" />
                 </Button>
               )}

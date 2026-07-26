@@ -10,6 +10,9 @@ class StockOut(BaseModel):
     warehouse_id: int
     quantity: int
     reserved_quantity: int
+    product_name: str | None = None
+    sku: str | None = None
+    warehouse_name: str | None = None
     created_at: datetime
     updated_at: datetime
 
@@ -36,6 +39,9 @@ class StockMovementOut(BaseModel):
     reference_type: str | None
     reference_id: int | None
     notes: str | None
+    product_name: str | None = None
+    sku: str | None = None
+    warehouse_name: str | None = None
     created_at: datetime
 
     model_config = {"from_attributes": True}

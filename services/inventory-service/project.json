@@ -5,20 +5,19 @@
   "sourceRoot": "services/inventory-service",
   "targets": {
     "dev": {
-      "executor": "nx:run-commands",
+      "command": ".venv\\Scripts\\uvicorn app.main:app --reload --port 8004",
       "options": {
-        "command": ".venv/bin/uvicorn app.main:app --reload --port 8004",
         "cwd": "services/inventory-service"
       }
     },
     "migrate": {
-      "command": ".venv/bin/alembic upgrade head",
+      "command": ".venv\\Scripts\\alembic upgrade head",
       "options": {
         "cwd": "services/inventory-service"
       }
     },
     "seed": {
-      "command": ".venv/bin/python scripts/seed.py",
+      "command": ".venv\\Scripts\\python scripts/seed.py",
       "options": {
         "cwd": "services/inventory-service"
       }
