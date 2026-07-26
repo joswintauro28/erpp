@@ -6,7 +6,7 @@ This document is the official, comprehensive setup guide for the **DATAVEX ERP**
 
 ## 1. Cloning & Repository Initialization
 
-Run the following commands to pull the latest development branch:
+### Option A — Full Clone (includes full git history for all branches)
 
 ```bash
 # Clone the repository
@@ -18,6 +18,16 @@ git checkout dev
 git pull origin dev
 ```
 
+### Option B — Single-Branch Shallow Clone (faster, smaller download)
+
+For a quicker checkout that only pulls the `dev` branch with truncated history:
+
+```bash
+# Clone only the dev branch with depth 1 (latest commit, no full history)
+git clone https://github.com/joswintauro28/ERP.git --branch dev --single-branch --depth 1
+cd ERP
+```
+
 ---
 
 ## 2. Path A: Recommended Docker Compose Sandbox (Fastest)
@@ -25,43 +35,61 @@ git pull origin dev
 Running via Docker Compose isolates all PostgreSQL database schemas, routes traffic through Nginx, and compiles Next.js standalone targets automatically.
 
 ### Step 1: Pre-requisites
-Ensure you have **Docker Desktop** (Windows/macOS) or **Docker Engine** (Linux) running.
+Ensure you have **Docker Desktop** (Windows/macOS) or **Docker Engine** (Linux) running, and that ports **80** (nginx), **5432** (PostgreSQL), and **3000-3004**, **8000-8004** (services) are available — stop any local dev servers or other containers using them.
 
-### Step 2: Configure Hosts Subdomains (Optional but Recommended)
+### Step 2: Prepare Environment File
+The Docker stack requires a `.env.docker` file in `infrastructure/local/`. Copy the example if it doesn't exist:
+
+```bash
+# All platforms
+cp infrastructure/local/.env.docker.example infrastructure/local/.env.docker
+```
+
+Review and adjust values (JWT secret, DB credentials, API keys) as needed.
+
+### Step 3: Configure Hosts Subdomains (Optional but Recommended)
 Run the hosts configuration utility to map local DNS subdomains (`app.erp.local`, `crm.erp.local`, etc.) to your loopback interface.
 
-* **Windows (Run PowerShell as Administrator):**
+* **Windows (PowerShell — must be run as Administrator):**
   ```powershell
   .\infrastructure\local\setup-hosts.ps1
   ```
-* **Linux / macOS (Run Bash with Sudo):**
+* **Linux / macOS (Bash with Sudo):**
   ```bash
   sudo ./infrastructure/local/setup-hosts.sh
   ```
 *Note: If you skip DNS mapping, the redirect controllers fallback to standard localhost ports (`localhost:3000`, `localhost:3002`, etc.) automatically.*
 
-### Step 3: Spin Up the Stack
-Use the docker helper script to build and launch all 11 services in the background:
+### Step 4: One-Time Environment Setup (Optional)
+A convenience script combines Step 2, Step 3, and Dockerfile verification into a single run:
+
+* **Windows (PowerShell as Administrator):**
+  ```powershell
+  .\infrastructure\local\setup-docker.ps1
+  ```
+* **Linux / macOS (Bash with Sudo):**
+  ```bash
+  sudo ./infrastructure/local/setup-docker.sh
+  ```
+
+### Step 5: Spin Up the Stack
+Use the docker helper script to build and launch all 11 services:
 
 * **Windows (PowerShell):**
   ```powershell
-  # Compile and build Next.js standalone layers
+  # Build all images (no-cache) and start containers in background
   .\infrastructure\local\docker-build.ps1 rebuild
-
-  # Start the background containers
-  .\infrastructure\local\docker-build.ps1 start
   ```
 * **Linux / macOS (Bash):**
   ```bash
-  # Compile and build Next.js standalone layers
+  # Build all images (no-cache) and start containers in background
   ./infrastructure/local/docker-build.sh rebuild
-
-  # Start the background containers
-  ./infrastructure/local/docker-build.sh start
   ```
 
-### Step 4: Seed Container Databases
-Execute the docker database seeder to populate all PostgreSQL instances inside the active containers:
+> The `rebuild` command compiles all images with `--no-cache` and immediately starts the stack. If you only need to start existing containers without rebuilding, use `.\infrastructure\local\docker-build.ps1 up`.
+
+### Step 6: Seed Container Databases
+After all containers report healthy, execute the database seeder to populate all PostgreSQL instances:
 
 * **Windows (PowerShell):**
   ```powershell
@@ -72,8 +100,9 @@ Execute the docker database seeder to populate all PostgreSQL instances inside t
   ./infrastructure/local/seed-docker.sh
   ```
 
-### Step 5: Verify Container Health
+### Step 7: Verify Container Health
 Verify that all containers are healthy and running:
+
 ```bash
 # Windows
 .\infrastructure\local\docker-build.ps1 ps
@@ -81,6 +110,17 @@ Verify that all containers are healthy and running:
 # Linux / macOS
 ./infrastructure/local/docker-build.sh ps
 ```
+
+All 11 containers should show a running status. If any show "unhealthy", wait a moment and re-run `docker-build.ps1 ps` — some services (especially frontends with Turbopack) may need extra startup time.
+
+### Step 8: Verify Login
+Open `http://app.erp.local` (or `http://localhost:3000` if hosts not configured) and log in with the seeded admin credentials:
+
+| Email | Password |
+|-------|----------|
+| `admin@datavex.com` | `Admin@123!` |
+
+Other test accounts are listed in the [Seeded Users Reference](#4-reference-seeded-users-reference) section below.
 
 ---
 
