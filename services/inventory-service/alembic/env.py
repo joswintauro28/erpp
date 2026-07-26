@@ -21,6 +21,7 @@ from app.stock.models import Stock, StockMovement
 from app.supplier.models import Supplier
 from app.purchase_order.models import PurchaseOrder, PurchaseOrderItem
 from app.serial_number.models import SerialNumber
+from app.fulfillment.models import SalesOrderFulfillment, FulfillmentItem
 
 config = context.config
 

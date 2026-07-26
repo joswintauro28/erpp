@@ -33,6 +33,8 @@ import {
   Search,
   Calendar,
   Bell,
+  ArrowRightLeft,
+  ClipboardCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getAccessToken } from "@datavex/auth-middleware";
@@ -111,9 +113,16 @@ const navItems: NavItem[] = [
         name: "Stock & Warehouses",
         children: [
           { name: "Stock Levels", href: "/inventory/stock", icon: Warehouse },
+          { name: "Stock Movements", href: "/inventory/stock/movements", icon: ArrowRightLeft },
           { name: "Stock Adjustments", href: "/inventory/stock/adjustments", icon: SlidersHorizontal },
           { name: "Inventory Valuation", href: "#", icon: BarChart2, soon: true },
           { name: "Warehouses", href: "/inventory/warehouses", icon: Warehouse },
+        ],
+      },
+      {
+        name: "Fulfillment",
+        children: [
+          { name: "Order Fulfillment", href: "/inventory/fulfillment", icon: ClipboardCheck },
         ],
       },
       {

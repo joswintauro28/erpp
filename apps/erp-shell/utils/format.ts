@@ -1,6 +1,11 @@
 import type { Lead, Client } from "@/types/crm";
 export { money, lakhFormat, invoiceStatusVariant, quotationStatusVariant, formatDate, noteStatusVariant } from "@/lib/utils";
 
+export const number = (v: number | null | undefined): string => {
+  if (v === null || v === undefined || isNaN(v)) return "0";
+  return v.toLocaleString("en-IN");
+};
+
 export function searchBilling<T extends { client_name: string; invoice_number?: string }>(
   items: T[], query: string
 ): T[] {

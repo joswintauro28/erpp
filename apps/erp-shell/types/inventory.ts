@@ -103,3 +103,44 @@ export interface ApiSerialNumber {
   created_at: string;
   updated_at: string;
 }
+
+export interface ApiStockLevel {
+  id: number;
+  product_id: number;
+  warehouse_id: number;
+  quantity: number;
+  reserved_quantity: number;
+  product_name?: string;
+  sku?: string;
+  warehouse_name?: string;
+}
+
+export interface ApiFulfillmentItem {
+  id: number;
+  fulfillment_id: number;
+  product_id: number;
+  product_name: string;
+  sku: string | null;
+  ordered_quantity: number;
+  reserved_quantity: number;
+  picked_quantity: number;
+  packed_quantity: number;
+  unit_price: number;
+}
+
+export interface ApiFulfillment {
+  id: number;
+  organization_id: number;
+  sales_order_code: string;
+  customer_name: string;
+  warehouse_id: number | null;
+  status: string;
+  shipping_carrier: string | null;
+  tracking_number: string | null;
+  dispatched_at: string | null;
+  purchase_order_id: number | null;
+  invoice_id: number | null;
+  created_at: string;
+  updated_at: string;
+  items: ApiFulfillmentItem[];
+}

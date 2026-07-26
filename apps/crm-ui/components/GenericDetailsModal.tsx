@@ -257,20 +257,26 @@ const GenericDetailsModal: React.FC<GenericDetailsModalProps> = ({ record, entit
 
     try {
       const quoteNo = quotationData.quote_no || `QT-${Date.now().toString().slice(-6)}`;
-      const symbol = quotationCurrency === 'INR' ? '\u20b9' : '$';
-      const quoteValue = symbol + quotationData.value;
+      const rawValue = quotationData.value.replace(/[₹$,\s]/g, '');
+      const numericValue = parseFloat(rawValue) || 0;
 
-      const quotationPayload = {
-        id_str: `QT-${Date.now().toString().slice(-6)}`,
-        quote_no: quoteNo,
-        account: record.account || '',
-        value: quoteValue,
-        valid_until: quotationData.valid_until,
-        status: quotationData.status,
-        owner: quotationData.owner
+      const payload = {
+        clientName: record.account || '',
+        clientId: 0,
+        quotationNumber: quoteNo,
+        validUntil: quotationData.valid_until || undefined,
+        notes: `Converted from requirement: ${record.name || ''}`,
+        items: [
+          {
+            description: record.name || 'Requirement conversion',
+            quantity: 1,
+            unitPrice: numericValue,
+            gstRate: 18,
+          },
+        ],
       };
 
-      await api.post('/quotations', quotationPayload);
+      await api.post('/quotations', payload);
 
       if (isRequirement) {
         await api.delete(`/requirements/${record.id_str}`);

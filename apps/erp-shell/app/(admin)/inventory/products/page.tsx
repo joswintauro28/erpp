@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect } from "react";
 import {
   Search, Package, Plus, Pencil, PackageCheck, Layers,
-  Barcode, Tag,
+  Barcode, Tag, Trash2, AlertTriangle,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -13,6 +13,7 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { money } from "@/utils/format";
 import { api } from "@/services/api";
 import type { ApiProduct } from "@/types/inventory";
@@ -31,6 +32,14 @@ export default function Products() {
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
   const [loading, setLoading] = useState(true);
+  const [isAddOpen, setIsAddOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<ApiProduct | null>(null);
+  const [productToDelete, setProductToDelete] = useState<ApiProduct | null>(null);
+  const [formName, setFormName] = useState("");
+  const [formSku, setFormSku] = useState("");
+  const [formCategory, setFormCategory] = useState("Electronics & Machinery");
+  const [formPrice, setFormPrice] = useState("15000");
+  const [formCostPrice, setFormCostPrice] = useState("10000");
 
   useEffect(() => {
     api.get<ApiProduct[]>("/products")
@@ -59,6 +68,48 @@ export default function Products() {
     return res;
   }, [apiProducts, search, categoryFilter]);
 
+  const fetchProducts = () => {
+    api.get<ApiProduct[]>("/products")
+      .then(setApiProducts)
+      .catch(() => setApiProducts([]));
+  };
+
+  const handleCreateProduct = async () => {
+    if (!formName) return;
+    try {
+      await api.post("/products", {
+        name: formName,
+        sku: formSku || `SKU-${Math.floor(1000 + Math.random() * 9000)}`,
+        category: formCategory,
+        price: Number(formPrice),
+        cost_price: Number(formCostPrice),
+        track_inventory: true,
+        is_active: true,
+      });
+      setIsAddOpen(false);
+      setFormName(""); setFormSku(""); setFormCategory("Electronics & Machinery"); setFormPrice("15000"); setFormCostPrice("10000");
+      fetchProducts();
+    } catch (err) { console.error(err); }
+  };
+
+  const handleUpdateProduct = async () => {
+    if (!editingProduct) return;
+    try {
+      await api.put(`/products/${editingProduct.id}`, {
+        name: formName, sku: formSku, category: formCategory,
+        price: Number(formPrice), cost_price: Number(formCostPrice),
+        track_inventory: editingProduct.track_inventory, is_active: editingProduct.is_active,
+      });
+      setEditingProduct(null); fetchProducts();
+    } catch (err) { console.error(err); }
+  };
+
+  const handleDeleteProduct = async () => {
+    if (!productToDelete) return;
+    try { await api.delete(`/products/${productToDelete.id}`); setProductToDelete(null); fetchProducts(); }
+    catch { alert("Failed to delete product."); }
+  };
+
   const activeCount = apiProducts.filter((p) => p.is_active).length;
   const trackedCount = apiProducts.filter((p) => p.track_inventory).length;
   const serialTrackedCount = apiProducts.filter((p) => p.uses_serial_tracking).length;
@@ -82,7 +133,7 @@ export default function Products() {
             Manage inventory products and pricing
           </p>
         </div>
-        <Button size="sm" className="bg-[var(--shell-brand)] hover:bg-[var(--shell-brand)]/90 text-white">
+        <Button size="sm" onClick={() => setIsAddOpen(true)} className="bg-[var(--shell-brand)] hover:bg-[var(--shell-brand)]/90 text-white">
           <Plus className="mr-1.5 h-3.5 w-3.5" />
           Add Product
         </Button>
@@ -187,7 +238,7 @@ export default function Products() {
                     : "Try adjusting your search or category filter."}
                 </p>
                 {apiProducts.length === 0 && (
-                  <Button size="sm" className="mt-2 bg-[var(--shell-brand)] hover:bg-[var(--shell-brand)]/90 text-white">
+                  <Button size="sm" onClick={() => setIsAddOpen(true)} className="mt-2 bg-[var(--shell-brand)] hover:bg-[var(--shell-brand)]/90 text-white">
                     <Plus className="mr-1 h-4 w-4" /> Add Product
                   </Button>
                 )}
@@ -253,8 +304,20 @@ export default function Products() {
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center justify-end gap-1">
-                          <Button variant="ghost" size="icon-sm" className="hover:bg-[var(--shell-surface-alt)]">
+                          <Button variant="ghost" size="icon-sm" className="hover:bg-[var(--shell-surface-alt)]"
+                            onClick={() => {
+                              setEditingProduct(p);
+                              setFormName(p.name);
+                              setFormSku(p.sku || "");
+                              setFormCategory(p.category || "General");
+                              setFormPrice(String(p.price));
+                              setFormCostPrice(String(p.cost_price));
+                            }}>
                             <Pencil className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button variant="ghost" size="icon-sm" className="hover:bg-[var(--shell-surface-alt)]"
+                            onClick={() => setProductToDelete(p)}>
+                            <Trash2 className="h-3.5 w-3.5 text-[var(--shell-muted)] hover:text-destructive" />
                           </Button>
                         </div>
                       </TableCell>
@@ -266,6 +329,114 @@ export default function Products() {
           </CardContent>
         </Card>
       </section>
+
+      {/* Add Product Modal */}
+      <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add New Product</DialogTitle>
+            <DialogDescription>Create a product record for stock tracking.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 my-2 text-xs">
+            <div>
+              <label className="font-medium block mb-1">Product Name</label>
+              <input type="text" value={formName} onChange={(e) => setFormName(e.target.value)} placeholder="e.g. Industrial Hydraulic Pump"
+                className="w-full p-2 border border-border rounded bg-background" />
+            </div>
+            <div>
+              <label className="font-medium block mb-1">SKU Code</label>
+              <input type="text" value={formSku} onChange={(e) => setFormSku(e.target.value)} placeholder="e.g. HYD-PUMP-900"
+                className="w-full p-2 border border-border rounded bg-background" />
+            </div>
+            <div>
+              <label className="font-medium block mb-1">Category</label>
+              <input type="text" value={formCategory} onChange={(e) => setFormCategory(e.target.value)}
+                className="w-full p-2 border border-border rounded bg-background" />
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="font-medium block mb-1">Selling Price (₹)</label>
+                <input type="text" value={formPrice} onChange={(e) => setFormPrice(e.target.value)}
+                  className="w-full p-2 border border-border rounded bg-background" />
+              </div>
+              <div>
+                <label className="font-medium block mb-1">Cost Price (₹)</label>
+                <input type="text" value={formCostPrice} onChange={(e) => setFormCostPrice(e.target.value)}
+                  className="w-full p-2 border border-border rounded bg-background" />
+              </div>
+            </div>
+          </div>
+          <div className="flex justify-end gap-2 mt-4">
+            <Button variant="outline" size="sm" onClick={() => setIsAddOpen(false)}>Cancel</Button>
+            <Button size="sm" onClick={handleCreateProduct} className="bg-[var(--shell-brand)] text-white">Save Product</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Product Modal */}
+      <Dialog open={!!editingProduct} onOpenChange={(open) => !open && setEditingProduct(null)}>
+        {editingProduct && (
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Edit Product</DialogTitle>
+              <DialogDescription>Modify product catalog details.</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-3 my-2 text-xs">
+              <div>
+                <label className="font-medium block mb-1">Product Name</label>
+                <input type="text" value={formName} onChange={(e) => setFormName(e.target.value)}
+                  className="w-full p-2 border border-border rounded bg-background" />
+              </div>
+              <div>
+                <label className="font-medium block mb-1">SKU Code</label>
+                <input type="text" value={formSku} onChange={(e) => setFormSku(e.target.value)}
+                  className="w-full p-2 border border-border rounded bg-background" />
+              </div>
+              <div>
+                <label className="font-medium block mb-1">Category</label>
+                <input type="text" value={formCategory} onChange={(e) => setFormCategory(e.target.value)}
+                  className="w-full p-2 border border-border rounded bg-background" />
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="font-medium block mb-1">Selling Price (₹)</label>
+                  <input type="text" value={formPrice} onChange={(e) => setFormPrice(e.target.value)}
+                    className="w-full p-2 border border-border rounded bg-background" />
+                </div>
+                <div>
+                  <label className="font-medium block mb-1">Cost Price (₹)</label>
+                  <input type="text" value={formCostPrice} onChange={(e) => setFormCostPrice(e.target.value)}
+                    className="w-full p-2 border border-border rounded bg-background" />
+                </div>
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 mt-4">
+              <Button variant="outline" size="sm" onClick={() => setEditingProduct(null)}>Cancel</Button>
+              <Button size="sm" onClick={handleUpdateProduct} className="bg-[var(--shell-brand)] text-white">Save Changes</Button>
+            </div>
+          </DialogContent>
+        )}
+      </Dialog>
+
+      {/* Delete Product Modal */}
+      <Dialog open={!!productToDelete} onOpenChange={(open) => !open && setProductToDelete(null)}>
+        {productToDelete && (
+          <DialogContent className="max-w-sm">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-destructive">
+                <AlertTriangle className="h-5 w-5" /> Delete Product
+              </DialogTitle>
+              <DialogDescription>
+                Delete <strong>{productToDelete.name}</strong>? This is permanent.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex justify-end gap-2 mt-4">
+              <Button variant="outline" size="sm" onClick={() => setProductToDelete(null)}>Cancel</Button>
+              <Button size="sm" variant="destructive" onClick={handleDeleteProduct}>Confirm Delete</Button>
+            </div>
+          </DialogContent>
+        )}
+      </Dialog>
     </div>
   );
 }

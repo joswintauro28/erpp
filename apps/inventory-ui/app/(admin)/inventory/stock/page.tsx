@@ -378,11 +378,11 @@ export default function StockPage() {
                         return (
                           <div key={po.id} className="p-3 border border-border rounded-lg bg-card space-y-1 hover:shadow-sm transition-all">
                             <div className="flex justify-between items-center">
-                              <span className="font-bold text-foreground">PO #{po.po_number}</span>
+                              <span className="font-bold text-foreground">PO #{po.order_number}</span>
                               <Badge className="text-[10px] scale-90 bg-blue-50 text-blue-700 border-blue-200" variant="outline">{po.status}</Badge>
                             </div>
                             <div className="text-muted-foreground text-[11px]">
-                              Supplier: <span className="font-semibold text-foreground">{po.supplier_name || "N/A"}</span>
+                              Supplier ID: <span className="font-semibold text-foreground">{po.supplier_id || "N/A"}</span>
                             </div>
                             <div className="flex justify-between items-center text-[11px] pt-1">
                               <span className="text-blue-600 font-medium">Qty: {itemDetail?.quantity || 0}</span>

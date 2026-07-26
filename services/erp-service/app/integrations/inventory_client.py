@@ -187,3 +187,55 @@ async def update_serial_number(token: str, serial_id: int, body: dict) -> dict:
 
 async def delete_serial_number(token: str, serial_id: int) -> None:
     await _delete(f"/serial-numbers/{serial_id}", token)
+
+
+# ─── Fulfillment ──────────────────────────────────────────────
+
+async def get_fulfillment_orders(token: str, status: str | None = None) -> list[dict]:
+    params = {"status": status} if status else None
+    data = await _get("/fulfillment/orders", token, params)
+    return data if isinstance(data, list) else []
+
+
+async def get_fulfillment_order(token: str, fulfillment_id: int) -> dict:
+    return await _get(f"/fulfillment/orders/{fulfillment_id}", token)
+
+
+async def create_fulfillment_order(token: str, body: dict) -> dict:
+    return await _post("/fulfillment/orders", token, body)
+
+
+async def check_fulfillment_stock(token: str, fulfillment_id: int) -> dict:
+    return await _post(f"/fulfillment/orders/{fulfillment_id}/check-stock", token, {})
+
+
+async def reserve_fulfillment_stock(token: str, fulfillment_id: int) -> dict:
+    return await _post(f"/fulfillment/orders/{fulfillment_id}/reserve", token, {})
+
+
+async def pick_fulfillment_items(token: str, fulfillment_id: int) -> dict:
+    return await _post(f"/fulfillment/orders/{fulfillment_id}/pick-list", token, {})
+
+
+async def pack_fulfillment_items(token: str, fulfillment_id: int) -> dict:
+    return await _post(f"/fulfillment/orders/{fulfillment_id}/pack", token, {})
+
+
+async def dispatch_fulfillment_order(token: str, fulfillment_id: int, body: dict) -> dict:
+    return await _post(f"/fulfillment/orders/{fulfillment_id}/dispatch", token, body)
+
+
+async def step_back_fulfillment_order(token: str, fulfillment_id: int) -> dict:
+    return await _post(f"/fulfillment/orders/{fulfillment_id}/step-back", token, {})
+
+
+async def trigger_po_for_fulfillment_shortage(token: str, fulfillment_id: int) -> dict:
+    return await _post(f"/fulfillment/orders/{fulfillment_id}/create-po-shortage", token, {})
+
+
+async def generate_invoice_for_fulfillment(token: str, fulfillment_id: int) -> dict:
+    return await _post(f"/fulfillment/orders/{fulfillment_id}/generate-invoice", token, {})
+
+
+async def delete_fulfillment_order(token: str, fulfillment_id: int) -> None:
+    await _delete(f"/fulfillment/orders/{fulfillment_id}", token)

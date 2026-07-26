@@ -10,6 +10,12 @@ from app.integrations.inventory_client import (
     update_purchase_order_status, delete_purchase_order,
     get_serial_numbers, get_serial_number, create_serial_number,
     update_serial_number, delete_serial_number,
+    get_fulfillment_orders, get_fulfillment_order, create_fulfillment_order,
+    check_fulfillment_stock, reserve_fulfillment_stock,
+    pick_fulfillment_items, pack_fulfillment_items,
+    dispatch_fulfillment_order, step_back_fulfillment_order,
+    trigger_po_for_fulfillment_shortage, generate_invoice_for_fulfillment,
+    delete_fulfillment_order,
 )
 
 router = APIRouter(tags=["inventory"])
@@ -244,3 +250,114 @@ async def delete_serial_number_by_id(
 ):
     token = payload.get("_raw_token", "")
     await delete_serial_number(token, serial_id)
+
+
+# ─── Fulfillment ──────────────────────────────────────────────
+
+@router.get("/fulfillment/orders", response_model=list[dict])
+async def list_fulfillment_orders(
+    status: str | None = None,
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await get_fulfillment_orders(token, status)
+
+
+@router.post("/fulfillment/orders", response_model=dict, status_code=201)
+async def create_new_fulfillment_order(
+    body: dict,
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await create_fulfillment_order(token, body)
+
+
+@router.get("/fulfillment/orders/{fulfillment_id}", response_model=dict)
+async def get_fulfillment_order_by_id(
+    fulfillment_id: int,
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await get_fulfillment_order(token, fulfillment_id)
+
+
+@router.post("/fulfillment/orders/{fulfillment_id}/check-stock", response_model=dict)
+async def check_fulfillment_stock_endpoint(
+    fulfillment_id: int,
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await check_fulfillment_stock(token, fulfillment_id)
+
+
+@router.post("/fulfillment/orders/{fulfillment_id}/reserve", response_model=dict)
+async def reserve_fulfillment_stock_endpoint(
+    fulfillment_id: int,
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await reserve_fulfillment_stock(token, fulfillment_id)
+
+
+@router.post("/fulfillment/orders/{fulfillment_id}/pick-list", response_model=dict)
+async def pick_fulfillment_items_endpoint(
+    fulfillment_id: int,
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await pick_fulfillment_items(token, fulfillment_id)
+
+
+@router.post("/fulfillment/orders/{fulfillment_id}/pack", response_model=dict)
+async def pack_fulfillment_items_endpoint(
+    fulfillment_id: int,
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await pack_fulfillment_items(token, fulfillment_id)
+
+
+@router.post("/fulfillment/orders/{fulfillment_id}/dispatch", response_model=dict)
+async def dispatch_fulfillment_order_endpoint(
+    fulfillment_id: int,
+    body: dict,
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await dispatch_fulfillment_order(token, fulfillment_id, body)
+
+
+@router.post("/fulfillment/orders/{fulfillment_id}/step-back", response_model=dict)
+async def step_back_fulfillment_order_endpoint(
+    fulfillment_id: int,
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await step_back_fulfillment_order(token, fulfillment_id)
+
+
+@router.post("/fulfillment/orders/{fulfillment_id}/create-po-shortage", response_model=dict)
+async def trigger_po_for_fulfillment_shortage_endpoint(
+    fulfillment_id: int,
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await trigger_po_for_fulfillment_shortage(token, fulfillment_id)
+
+
+@router.post("/fulfillment/orders/{fulfillment_id}/generate-invoice", response_model=dict)
+async def generate_invoice_for_fulfillment_endpoint(
+    fulfillment_id: int,
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await generate_invoice_for_fulfillment(token, fulfillment_id)
+
+
+@router.delete("/fulfillment/orders/{fulfillment_id}", status_code=204)
+async def delete_fulfillment_order_by_id(
+    fulfillment_id: int,
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    await delete_fulfillment_order(token, fulfillment_id)
