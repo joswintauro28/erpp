@@ -198,15 +198,32 @@ async def create_entity(entity_type: str, payload: dict, db: AsyncSession = Depe
     id_str = f"{prefix}-{max_id}"
 
     from sqlalchemy.inspection import inspect
-    from sqlalchemy import String
+    from sqlalchemy import String, Integer, Float, Boolean
     mapper = inspect(model_class)
     
     filtered_payload = {}
     for k, v in payload.items():
         if k in mapper.columns:
             col_type = mapper.columns[k].type
-            if isinstance(col_type, String) and v is not None:
+            if v is None:
+                filtered_payload[k] = None
+            elif isinstance(col_type, String):
                 filtered_payload[k] = str(v)
+            elif isinstance(col_type, Integer):
+                try:
+                    filtered_payload[k] = int(v) if v != "" else None
+                except (ValueError, TypeError):
+                    filtered_payload[k] = v
+            elif isinstance(col_type, Float):
+                try:
+                    filtered_payload[k] = float(v) if v != "" else None
+                except (ValueError, TypeError):
+                    filtered_payload[k] = v
+            elif isinstance(col_type, Boolean):
+                if isinstance(v, str):
+                    filtered_payload[k] = v.lower() in ("true", "1", "yes")
+                else:
+                    filtered_payload[k] = bool(v)
             else:
                 filtered_payload[k] = v
 
@@ -233,14 +250,31 @@ async def update_entity(entity_type: str, id_str: str, payload: dict, db: AsyncS
         raise HTTPException(status_code=404, detail="Record not found")
 
     from sqlalchemy.inspection import inspect
-    from sqlalchemy import String
+    from sqlalchemy import String, Integer, Float, Boolean
     mapper = inspect(model_class)
 
     for key, value in payload.items():
         if key in mapper.columns and key not in ["id", "id_str"]:
             col_type = mapper.columns[key].type
-            if isinstance(col_type, String) and value is not None:
+            if value is None:
+                setattr(db_obj, key, None)
+            elif isinstance(col_type, String):
                 setattr(db_obj, key, str(value))
+            elif isinstance(col_type, Integer):
+                try:
+                    setattr(db_obj, key, int(value) if value != "" else None)
+                except (ValueError, TypeError):
+                    setattr(db_obj, key, value)
+            elif isinstance(col_type, Float):
+                try:
+                    setattr(db_obj, key, float(value) if value != "" else None)
+                except (ValueError, TypeError):
+                    setattr(db_obj, key, value)
+            elif isinstance(col_type, Boolean):
+                if isinstance(value, str):
+                    setattr(db_obj, key, value.lower() in ("true", "1", "yes"))
+                else:
+                    setattr(db_obj, key, bool(value))
             else:
                 setattr(db_obj, key, value)
 

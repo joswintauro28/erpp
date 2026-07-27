@@ -48,6 +48,7 @@ RUN --mount=type=cache,target=/root/.cache/bun,sharing=shared \
     bun install --production --frozen-lockfile --ignore-scripts
 
 FROM node:24-alpine AS runner
+COPY --from=oven/bun:1.2-alpine /usr/local/bin/bun /usr/local/bin/bun
 WORKDIR /app/services/core-iam
 ENV NODE_ENV=production \
     PORT=8002

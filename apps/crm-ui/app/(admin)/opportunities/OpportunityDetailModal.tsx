@@ -408,8 +408,14 @@ export default function OpportunityDetailModal({ record, isOpen, onClose, onSucc
       };
       if (isEdit) {
         await api.put(`/quotations/${editQuote.id}`, body);
+        if (quoteData.status !== editQuote.status) {
+          await api.put(`/quotations/${editQuote.id}/status?status=${quoteData.status}`);
+        }
       } else {
-        await api.post("/quotations", body);
+        const res = await api.post<any>("/quotations", body);
+        if (quoteData.status && quoteData.status.toLowerCase() !== "draft") {
+          await api.put(`/quotations/${res.id}/status?status=${quoteData.status}`);
+        }
       }
       setShowQuoteForm(false);
       setEditQuote(null);
@@ -440,8 +446,8 @@ export default function OpportunityDetailModal({ record, isOpen, onClose, onSucc
     try {
       await api.delete(`/quotations/${q.id}`);
       fetchQuotations();
-    } catch {
-      /* silent */
+    } catch (err: any) {
+      alert(err?.response?.data?.detail || err?.message || "Failed to delete quotation.");
     }
   };
 
@@ -641,7 +647,18 @@ export default function OpportunityDetailModal({ record, isOpen, onClose, onSucc
                         </div>
                         <div>
                           <label className="block text-[10px] font-semibold uppercase text-[var(--shell-muted)] mb-1">Status</label>
-                          <input type="text" placeholder="e.g. Draft, Sent, Accepted" value={quoteData.status} onChange={(e) => setQuoteData((p) => ({ ...p, status: e.target.value }))} className="h-8 w-full rounded-md border border-[var(--shell-border)] bg-[var(--shell-surface)] px-2.5 text-xs" required />
+                          <select
+                            value={quoteData.status}
+                            onChange={(e) => setQuoteData((p) => ({ ...p, status: e.target.value }))}
+                            className="h-8 w-full rounded-md border border-[var(--shell-border)] bg-[var(--shell-surface)] px-2 text-xs text-[var(--shell-foreground)] focus:outline-none focus:ring-1 focus:ring-[var(--shell-brand)]"
+                            required
+                          >
+                            <option value="Draft">Draft</option>
+                            <option value="Sent">Sent</option>
+                            <option value="Accepted">Accepted</option>
+                            <option value="Rejected">Rejected</option>
+                            <option value="Expired">Expired</option>
+                          </select>
                         </div>
                       </div>
                       <div>

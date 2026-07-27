@@ -1,4 +1,4 @@
-# DATAVEX ERP — Docker Database Seeding Utility
+# DATAVEX ERP â€” Docker Database Seeding Utility
 # Runs database seeding scripts inside active Docker containers.
 
 param(
@@ -57,7 +57,7 @@ function Invoke-Step {
     if ($PassThru) { [PSCustomObject]@{ Service = $Label; Ok = $ok; Elapsed = $elapsed } }
 }
 
-# ── Services definitions ──────────────────────────────────────────────
+# â”€â”€ Services definitions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 $services = @(
     @{ Name = 'core-iam';          Container = 'datavex-core-iam';
        Label = 'core-iam (SSO & Permissions)' },
@@ -69,7 +69,7 @@ $services = @(
        Label = 'inventory-service (Products, Warehouses, Stock)' }
 )
 
-# ── Help / bootstrap ──────────────────────────────────────────────────
+# â”€â”€ Help / bootstrap â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 if ($Skip -contains '*') { Write-Host "All services skipped via -Skip '*'. Nothing to do."; return }
 
 $script:ordinal   = 0
@@ -79,14 +79,14 @@ $script:failCount    = 0
 $script:results   = @()
 
 # ── Header ────────────────────────────────────────────────────────────
-Write-Host "╔══════════════════════════════════════════════╗" -ForegroundColor Cyan
-Write-Host "║   DATAVEX ERP — Docker Database Seeding      ║" -ForegroundColor Cyan
-Write-Host "╚══════════════════════════════════════════════╝" -ForegroundColor Cyan
+Write-Host "+----------------------------------------------+" -ForegroundColor Cyan
+Write-Host "|   DATAVEX ERP - Docker Database Seeding      |" -ForegroundColor Cyan
+Write-Host "+----------------------------------------------+" -ForegroundColor Cyan
 if ($Skip.Count) { Write-Host "Skipping: $($Skip -join ', ')" -ForegroundColor DarkYellow }
 $totalTimer = [System.Diagnostics.Stopwatch]::StartNew()
 Write-Host ""
 
-# ── Container health pre-check ────────────────────────────────────────
+# â”€â”€ Container health pre-check â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 Write-Host "Checking active Docker containers..." -ForegroundColor Yellow
 $involved = $services | Where-Object { -not (Test-ShouldSkip $_.Name) }
 $missing = @()
@@ -105,20 +105,20 @@ if ($missing.Count) {
 Write-Host "  All containers are healthy! Proceeding with seed..." -ForegroundColor Green
 Write-Host ""
 
-# ── Seeding steps ─────────────────────────────────────────────────────
-# Step 1: core-iam (compile seed.ts on host, run seed.js with node inside container)
+# â”€â”€ Seeding steps â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# Step 1: core-iam (compile seed.ts on host with bun, copy .js to container, run with node)
 $script:ordinal++
 if (-not (Test-ShouldSkip 'core-iam')) {
     Invoke-Step -Label $services[0].Label -Container $services[0].Container -ScriptBlock {
         $seedDir = Resolve-Path "$PSScriptRoot\..\..\services\core-iam"
         Push-Location $seedDir
         try {
-            bunx tsc prisma/seed.ts --module commonjs --target es2022 2>&1
+            bun build prisma/seed.ts --outfile prisma/seed.js --target node --format cjs --external "@prisma/client-iam" --external "bcryptjs" 2>&1
             if ($LASTEXITCODE -and $LASTEXITCODE -ne 0) { throw "compilation failed (exit $LASTEXITCODE)" }
             docker exec datavex-core-iam sh -c "npx prisma db push --accept-data-loss --skip-generate 2>&1"
             if ($LASTEXITCODE -and $LASTEXITCODE -ne 0) { throw "prisma db push failed (exit $LASTEXITCODE)" }
-            docker cp prisma/seed.js datavex-core-iam:/app/services/core-iam/prisma/seed.js
-            if ($LASTEXITCODE -and $LASTEXITCODE -ne 0) { throw "docker cp failed" }
+            docker cp prisma/seed.js datavex-core-iam:/app/services/core-iam/prisma/seed.js 2>&1
+            if ($LASTEXITCODE -and $LASTEXITCODE -ne 0) { throw "docker cp failed (exit $LASTEXITCODE)" }
             docker exec datavex-core-iam node prisma/seed.js 2>&1
             if ($LASTEXITCODE -and $LASTEXITCODE -ne 0) { throw "seed script failed (exit $LASTEXITCODE)" }
         } finally {
@@ -128,19 +128,19 @@ if (-not (Test-ShouldSkip 'core-iam')) {
     }
 } else { $script:ordinal--; $script:total-- }
 
-# Step 2: billing-service (compile seed.ts on host, run seed.js with node inside container)
+# Step 2: billing-service (compile seed.ts on host with bun, copy .js to container, run with node)
 $script:ordinal++
 if (-not (Test-ShouldSkip 'billing-service')) {
     Invoke-Step -Label $services[1].Label -Container $services[1].Container -ScriptBlock {
         $seedDir = Resolve-Path "$PSScriptRoot\..\..\services\billing-service"
         Push-Location $seedDir
         try {
-            bunx tsc prisma/seed.ts --module commonjs --target es2022 2>&1
+            bun build prisma/seed.ts --outfile prisma/seed.js --target node --format cjs --external "@prisma/client" --external "xlsx" 2>&1
             if ($LASTEXITCODE -and $LASTEXITCODE -ne 0) { throw "compilation failed (exit $LASTEXITCODE)" }
             docker exec datavex-billing-service sh -c "npx prisma db push --accept-data-loss --skip-generate 2>&1"
             if ($LASTEXITCODE -and $LASTEXITCODE -ne 0) { throw "prisma db push failed (exit $LASTEXITCODE)" }
-            docker cp prisma/seed.js datavex-billing-service:/app/services/billing-service/prisma/seed.js
-            if ($LASTEXITCODE -and $LASTEXITCODE -ne 0) { throw "docker cp failed" }
+            docker cp prisma/seed.js datavex-billing-service:/app/services/billing-service/prisma/seed.js 2>&1
+            if ($LASTEXITCODE -and $LASTEXITCODE -ne 0) { throw "docker cp failed (exit $LASTEXITCODE)" }
             docker exec datavex-billing-service node prisma/seed.js 2>&1
             if ($LASTEXITCODE -and $LASTEXITCODE -ne 0) { throw "seed script failed (exit $LASTEXITCODE)" }
         } finally {
@@ -177,13 +177,13 @@ $total = $totalTimer.Elapsed
 $totalStr = "$($total.Minutes)m $($total.Seconds)s"
 
 # ── Summary ───────────────────────────────────────────────────────────
-Write-Host "╔══════════════════════════════════════════════╗" -ForegroundColor Cyan
-Write-Host "║   Seeding Complete!                          ║" -ForegroundColor Cyan
-Write-Host "╠══════════════════════════════════════════════╣" -ForegroundColor Cyan
-Write-Host "║  Succeeded: $($script:successCount) / $($script:successCount + $script:failCount)   Total: $totalStr   " -ForegroundColor Cyan
+Write-Host "+----------------------------------------------+" -ForegroundColor Cyan
+Write-Host "|   Seeding Complete!                          |" -ForegroundColor Cyan
+Write-Host "+----------------------------------------------+" -ForegroundColor Cyan
+Write-Host "|  Succeeded: $($script:successCount) / $($script:successCount + $script:failCount)   Total: $totalStr   " -ForegroundColor Cyan
 if ($script:failCount -gt 0) {
-    Write-Host "║  FAILURES: $($script:failCount) service(s) failed!" -ForegroundColor Red
+    Write-Host "|  FAILURES: $($script:failCount) service(s) failed!" -ForegroundColor Red
 }
-Write-Host "╚══════════════════════════════════════════════╝" -ForegroundColor Cyan
+Write-Host "+----------------------------------------------+" -ForegroundColor Cyan
 
 if ($script:failCount -gt 0) { exit 1 }

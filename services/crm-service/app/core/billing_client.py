@@ -96,7 +96,12 @@ async def quotations_delete(token: str, id: int):
                 headers={"Authorization": f"Bearer {token}"},
             )
             resp.raise_for_status()
-            return resp.json() if resp.status_code != 204 else None
+            if resp.status_code == 204 or not resp.text.strip():
+                return None
+            try:
+                return resp.json()
+            except Exception:
+                return None
     except Exception as e:
         _handle_billing_error(e)
 

@@ -96,8 +96,12 @@ export default function LeadsPage() {
             <Button variant="outline" size="sm" onClick={() => exportToCSV(filtered, "leads")}>
               <Download size={14} className="mr-1.5" /> Export
             </Button>
-            <Button variant="secondary" size="sm" onClick={() => router.push("/lead-discovery")}>
-              <Sparkles size={14} className="mr-1.5" /> Discover Leads
+            <Button
+              onClick={() => router.push("/lead-discovery")}
+              className="bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-slate-950 font-semibold border border-amber-400 shadow-[0_0_12px_rgba(245,158,11,0.25)] hover:shadow-[0_0_18px_rgba(245,158,11,0.5)] transition-all duration-300"
+              size="sm"
+            >
+              <Sparkles size={14} className="mr-1.5 fill-amber-950/20 text-slate-950" /> Discover Leads
             </Button>
             <Button size="sm" onClick={() => setIsModalOpen(true)}>
               <Plus size={14} className="mr-1.5" /> New Lead

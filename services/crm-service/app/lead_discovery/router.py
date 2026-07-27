@@ -150,6 +150,20 @@ async def scrape_url_endpoint(request: ScrapeUrlRequest, db: AsyncSession = Depe
 
         data = json.loads(clean_json)
 
+        kdm_raw = data.get("key_decision_makers") or []
+        kdm_normalized = []
+        for item in kdm_raw:
+            if isinstance(item, dict):
+                kdm_normalized.append(item)
+            elif isinstance(item, str):
+                kdm_normalized.append({
+                    "name": item,
+                    "title": "Unknown",
+                    "email": "",
+                    "phone": "",
+                    "linkedin": ""
+                })
+
         return {
             "company_name": data.get("company_name", "Unknown"),
             "website": data.get("website", url),
@@ -163,7 +177,7 @@ async def scrape_url_endpoint(request: ScrapeUrlRequest, db: AsyncSession = Depe
             "detected_technologies": data.get("detected_technologies", []),
             "business_pain_points": data.get("business_pain_points", []),
             "recommended_ai_solutions": data.get("recommended_ai_solutions", []),
-            "key_decision_makers": data.get("key_decision_makers", []),
+            "key_decision_makers": kdm_normalized,
             "public_contact": {
                 "email": (data.get("contact_info") or {}).get("email") or contacts.get("email") or "Unknown",
                 "phone": (data.get("contact_info") or {}).get("phone") or contacts.get("phone") or "Unknown",
@@ -215,8 +229,8 @@ async def import_leads(request: schemas.ImportLeadsRequest, db: AsyncSession = D
                     est_value = int(nums[0]) * 1000000 if 'M' in rev_str or 'Cr' in rev_str else int(nums[0])
 
             contact_name = c_data.company_name
-            if c_data.key_decision_makers and len(c_data.key_decision_makers) > 0:
-                contact_name = c_data.key_decision_makers[0]
+            if c_data.key_decision_makers and len(c_data.key_decision_makers) > 0 and c_data.key_decision_makers[0].name:
+                contact_name = c_data.key_decision_makers[0].name
 
             new_lead = models.Lead(
                 id_str=f"LD-{random.randint(1000, 9999)}",
@@ -247,7 +261,7 @@ async def import_leads(request: schemas.ImportLeadsRequest, db: AsyncSession = D
                     detected_technologies=c_data.detected_technologies,
                     business_pain_points=c_data.business_pain_points,
                     recommended_ai_solutions=c_data.recommended_ai_solutions,
-                    key_decision_makers=c_data.key_decision_makers,
+                    key_decision_makers=[kdm.model_dump() for kdm in c_data.key_decision_makers],
                     public_contact=c_data.public_contact.model_dump()
                 )
                 db.add(pin_obj)
@@ -316,7 +330,7 @@ async def pin_lead(company: schemas.CompanyDetail, db: AsyncSession = Depends(ge
         detected_technologies=company.detected_technologies,
         business_pain_points=company.business_pain_points,
         recommended_ai_solutions=company.recommended_ai_solutions,
-        key_decision_makers=company.key_decision_makers,
+        key_decision_makers=[kdm.model_dump() for kdm in company.key_decision_makers],
         public_contact=contact_dict
     )
     db.add(db_obj)

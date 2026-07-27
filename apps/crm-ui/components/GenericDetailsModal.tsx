@@ -913,7 +913,7 @@ const GenericDetailsModal: React.FC<GenericDetailsModalProps> = ({ record, entit
                 />
               </div>
               <div>
-                <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Upload Invoice *</Label>
+                <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Upload Invoice (optional)</Label>
                 <input
                   type="file"
                   accept="application/pdf,image/*"
@@ -925,7 +925,6 @@ const GenericDetailsModal: React.FC<GenericDetailsModalProps> = ({ record, entit
                     reader.readAsDataURL(file);
                   }}
                   className="w-full rounded-md border border-[var(--shell-border)] bg-[var(--shell-bg)] px-2 py-1.5 text-xs text-[var(--shell-foreground)] file:mr-2 file:rounded file:border-0 file:bg-primary file:px-2 file:py-0.5 file:text-xs file:font-medium file:text-primary-foreground"
-                  required
                 />
                 {invoiceFile && (
                   <div className="mt-1 text-xs text-green-600">
@@ -936,7 +935,7 @@ const GenericDetailsModal: React.FC<GenericDetailsModalProps> = ({ record, entit
               <div className="flex justify-end gap-2">
                 <Button type="button" variant="outline" onClick={() => setShowInvoiceForm(false)}>Cancel</Button>
                 <Button type="submit" className="bg-emerald-500 hover:bg-emerald-600" disabled={invoiceSubmitting}>
-                  {invoiceSubmitting ? 'Saving...' : 'Confirm & Mark Done'}
+                  {invoiceSubmitting ? 'Checking...' : 'Checking stock availability'}
                 </Button>
               </div>
             </form>
@@ -1002,7 +1001,7 @@ const GenericDetailsModal: React.FC<GenericDetailsModalProps> = ({ record, entit
                           className="flex items-center gap-1.5 bg-emerald-500 hover:bg-emerald-600"
                         >
                           <CheckCircle className="size-3.5" />
-                          Mark as Done & Upload Invoice
+                          Done & check stock
                         </Button>
                       )}
                     </>
