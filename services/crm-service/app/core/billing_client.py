@@ -117,3 +117,25 @@ async def quotations_convert_to_invoice(token: str, id: int):
             return resp.json()
     except Exception as e:
         _handle_billing_error(e)
+
+
+async def credit_check(token: str, *, client_id=None, client_name=None, amount: float = 0.0, credit_limit=None):
+    try:
+        params = {}
+        if client_id:
+            params["clientId"] = client_id
+        if client_name:
+            params["clientName"] = client_name
+        params["amount"] = amount
+        if credit_limit:
+            params["creditLimit"] = credit_limit
+        async with await _get_client() as client:
+            resp = await client.get(
+                f"{BILLING_BASE}/invoices/credit-check",
+                params=params,
+                headers={"Authorization": f"Bearer {token}"},
+            )
+            resp.raise_for_status()
+            return resp.json()
+    except Exception as e:
+        _handle_billing_error(e)

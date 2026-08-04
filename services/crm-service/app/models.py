@@ -9,6 +9,7 @@ from app.leads.models import Lead
 from app.opportunities.models import Opportunity
 from app.requirements.models import Requirement
 from app.sales_orders.models import SalesOrder
+from app.sales.models import Sale
 from app.reports.models import Report
 from app.ai_assistant.models import AIAssistantLog
 from app.lead_discovery.models import PinnedLead

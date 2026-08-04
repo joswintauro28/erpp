@@ -37,6 +37,18 @@ class FulfillmentDispatchAction(BaseModel):
     tracking_number: str
 
 
+class ShippingLabelOut(BaseModel):
+    fulfillment_id: int
+    sales_order_code: str
+    customer_name: str
+    shipping_carrier: str | None = None
+    tracking_number: str | None = None
+    barcode_text: str
+    items: list[dict]
+    generated_at: str
+    url: str
+
+
 class StockCheckResultItem(BaseModel):
     product_id: int
     product_name: str

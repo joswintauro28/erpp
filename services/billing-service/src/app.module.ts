@@ -17,10 +17,12 @@ import { InternalModule } from "./internal/internal.module";
 import { EventBusModule } from "./event-bus/event-bus.module";
 import { RevenueModule } from "./revenue/revenue.module";
 import { AppController } from "./app.controller";
+import { RmqModule } from "./common/rmq.module";
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    RmqModule,
     PrismaModule,
     AuthModule,
     QuotationsModule,

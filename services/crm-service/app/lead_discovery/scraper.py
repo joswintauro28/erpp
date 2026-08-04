@@ -9,6 +9,25 @@ import math
 import requests
 from typing import List, Dict, Any, Optional, Callable
 from urllib.parse import urlparse, parse_qs, unquote, urljoin
+# Monkeypatch scrapling's header generator to relax browser version requirements before importing
+import scrapling.engines.toolbelt.fingerprints
+from browserforge.headers import Browser, HeaderGenerator
+
+def custom_generate_headers(browser_mode = False):
+    os_name = scrapling.engines.toolbelt.fingerprints.get_os_name()
+    browsers = [Browser(name="chrome", min_version=110, max_version=125)]
+    if not browser_mode:
+        os_name = ("windows", "macos", "linux")
+        browsers.extend(
+            [
+                Browser(name="firefox", min_version=110),
+                Browser(name="edge", min_version=110),
+            ]
+        )
+    return HeaderGenerator(browser=browsers, os=os_name, device="desktop").generate()
+
+scrapling.engines.toolbelt.fingerprints.generate_headers = custom_generate_headers
+
 from scrapling import Fetcher
 from scrapling.fetchers import DynamicFetcher
 import google.generativeai as genai

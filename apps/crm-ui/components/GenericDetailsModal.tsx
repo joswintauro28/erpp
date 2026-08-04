@@ -335,14 +335,26 @@ const GenericDetailsModal: React.FC<GenericDetailsModalProps> = ({ record, entit
     setInvoiceError('');
 
     try {
+      const check = await api.post<any>(`/sales-orders/${record.id_str}/check-stock`);
+
       const payload = {
         ...record,
-        status: invoiceStatus,
+        status: check.available ? invoiceStatus : 'Stock Hold',
         file_data: invoiceFile ? invoiceFile.base64 : record.file_data,
         file_name: invoiceFile ? invoiceFile.name : record.file_name
       };
 
       await api.put(`/sales-orders/${record.id_str}`, payload);
+
+      if (check.available) {
+        alert('Stock available — order confirmed.');
+      } else {
+        const shortItems = (check.items || [])
+          .filter(i => !i.is_available)
+          .map(i => `- ${i.product_name || i.sku || i.product_id} (needed ${i.requested_quantity}, available ${i.available_quantity})`)
+          .join('\n');
+        alert(`Insufficient stock — order placed on Stock Hold. Inventory accounts have been notified.\n\nShort items:\n${shortItems}`);
+      }
 
       if (onSuccess) onSuccess();
       onClose();
@@ -935,7 +947,7 @@ const GenericDetailsModal: React.FC<GenericDetailsModalProps> = ({ record, entit
               <div className="flex justify-end gap-2">
                 <Button type="button" variant="outline" onClick={() => setShowInvoiceForm(false)}>Cancel</Button>
                 <Button type="submit" className="bg-emerald-500 hover:bg-emerald-600" disabled={invoiceSubmitting}>
-                  {invoiceSubmitting ? 'Checking...' : 'Checking stock availability'}
+                  {invoiceSubmitting ? 'Checking stock...' : 'Check stock & confirm'}
                 </Button>
               </div>
             </form>

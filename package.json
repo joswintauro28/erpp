@@ -14,7 +14,9 @@
     "kill:dev": "fuser -k 3000/tcp 3001/tcp 3002/tcp 3004/tcp 8000/tcp 8001/tcp 8002/tcp 8003/tcp 8004/tcp 2>/dev/null; echo 'All dev ports freed'",
     "build": "nx run-many --target=build",
     "test": "nx run-many --target=test",
-    "lint": "nx run-many --target=lint"
+    "lint": "nx run-many --target=lint",
+    "db:seed": "python scripts/seed_all_dbs.py",
+    "db:seed:docker": "python scripts/seed_all_dbs.py --docker"
   },
   "devDependencies": {
     "nx": "^18.3.0"

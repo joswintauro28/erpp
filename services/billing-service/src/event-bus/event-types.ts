@@ -35,6 +35,7 @@ export interface InvoiceUpdatedEvent extends BaseEvent {
 export interface InvoicePaidEvent extends BaseEvent {
   invoiceId: number;
   invoiceNumber: string;
+  clientName: string;
   paymentId: number;
   amount: number;
 }

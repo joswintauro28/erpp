@@ -104,6 +104,16 @@ async def trigger_po_for_fulfillment_shortage(
     return await service.trigger_po_for_shortage(org_id, fulfillment_id)
 
 
+@router.post("/orders/{fulfillment_id}/shipping-label")
+async def generate_fulfillment_shipping_label(
+    fulfillment_id: int,
+    db: AsyncSession = Depends(get_db),
+    org_id: int = Depends(get_current_org_id),
+):
+    service = FulfillmentService(db)
+    return await service.generate_shipping_label(org_id, fulfillment_id)
+
+
 @router.post("/orders/{fulfillment_id}/generate-invoice", response_model=FulfillmentOut)
 async def generate_invoice_for_fulfillment(
     fulfillment_id: int,

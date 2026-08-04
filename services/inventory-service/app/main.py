@@ -29,7 +29,18 @@ from app.fulfillment.router import router as fulfillment_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    import asyncio
+    from app.core.amqp import connect_amqp, disconnect_amqp
+    from app.core.worker import run_worker
+    await connect_amqp()
+    worker_task = asyncio.create_task(run_worker())
     yield
+    worker_task.cancel()
+    try:
+        await worker_task
+    except asyncio.CancelledError:
+        pass
+    await disconnect_amqp()
     await engine.dispose()
 
 

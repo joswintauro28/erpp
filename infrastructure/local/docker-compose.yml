@@ -31,6 +31,26 @@ services:
       retries: 5
       start_period: 10s
 
+  # ─── RabbitMQ Message Broker ──────────────────────────────
+  rabbitmq:
+    image: rabbitmq:3.12-management-alpine
+    container_name: datavex-rabbitmq
+    restart: unless-stopped
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_running"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
+    networks:
+      - erp-network
+
   # ─── Core IAM (NestJS + Prisma) — Port 8002 ──────────────
   core-iam:
     build:
@@ -41,6 +61,7 @@ services:
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-root}@postgres:5432/erp_iam
       JWT_SECRET: ${JWT_SECRET:-development-jwt-secret-key-123}
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
       COOKIE_DOMAIN: ${COOKIE_DOMAIN:-erp.local}
       PORT: "8002"
       CORS_ORIGINS: http://app.erp.local,http://crm.erp.local,http://billing.erp.local,http://inventory.erp.local
@@ -68,11 +89,14 @@ services:
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-root}@postgres:5432/erp_billing
       JWT_SECRET: ${JWT_SECRET:-development-jwt-secret-key-123}
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
       PORT: "8003"
       CORS_ORIGINS: http://app.erp.local,http://billing.erp.local
     ports:
       - "8003:8003"
     depends_on:
+      rabbitmq:
+        condition: service_healthy
       postgres:
         condition: service_healthy
     healthcheck:
@@ -94,6 +118,7 @@ services:
     environment:
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-root}@postgres:5432/erp_db
       JWT_SECRET: ${JWT_SECRET:-development-jwt-secret-key-123}
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
       PORT: "8000"
       FRONTEND_URL: ${SHELL_APP_URL:-http://app.erp.local}
       BILLING_SERVICE_URL: http://billing-service:8003/api
@@ -103,6 +128,8 @@ services:
     ports:
       - "8000:8000"
     depends_on:
+      rabbitmq:
+        condition: service_healthy
       postgres:
         condition: service_healthy
     networks:
@@ -118,6 +145,7 @@ services:
     environment:
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-root}@postgres:5432/erp_crm
       JWT_SECRET: ${JWT_SECRET:-development-jwt-secret-key-123}
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
       PORT: "8001"
       GROQ_API_KEY: ${GROQ_API_KEY:-}
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
@@ -126,6 +154,8 @@ services:
     ports:
       - "8001:8001"
     depends_on:
+      rabbitmq:
+        condition: service_healthy
       postgres:
         condition: service_healthy
     networks:
@@ -141,12 +171,15 @@ services:
     environment:
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-root}@postgres:5432/erp_inventory
       JWT_SECRET: ${JWT_SECRET:-development-jwt-secret-key-123}
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
       PORT: "8004"
       FRONTEND_URL: ${INVENTORY_APP_URL:-http://inventory.erp.local}
       CORS_ORIGINS: http://inventory.erp.local,http://app.erp.local
     ports:
       - "8004:8004"
     depends_on:
+      rabbitmq:
+        condition: service_healthy
       postgres:
         condition: service_healthy
     networks:

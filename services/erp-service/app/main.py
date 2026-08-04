@@ -24,7 +24,18 @@ from app.events.router import router as events_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    import asyncio
+    from app.events.notifications_consumer import run_notifications_worker
+    from app.events.cogs_consumer import run_cogs_worker
+    notif_task = asyncio.create_task(run_notifications_worker())
+    cogs_task = asyncio.create_task(run_cogs_worker())
     yield
+    notif_task.cancel()
+    cogs_task.cancel()
+    try:
+        await asyncio.gather(notif_task, cogs_task, return_exceptions=True)
+    except asyncio.CancelledError:
+        pass
 
 
 app = FastAPI(

@@ -36,6 +36,23 @@ export class InvoicesController {
     return this.invoicesService.findAll(user.organization_id, type, status);
   }
 
+  @Get("credit-check")
+  @Permissions("invoices.view")
+  async creditCheck(
+    @CurrentUser() user: JwtPayload,
+    @Query("clientId") clientId?: string,
+    @Query("clientName") clientName?: string,
+    @Query("amount") amount?: string,
+    @Query("creditLimit") creditLimit?: string,
+  ) {
+    return this.invoicesService.creditCheck(user.organization_id, {
+      clientId: clientId ? Number(clientId) : undefined,
+      clientName,
+      amount: amount ? Number(amount) : 0,
+      creditLimit: creditLimit ? Number(creditLimit) : undefined,
+    });
+  }
+
   @Get(":id")
   @Permissions("invoices.view")
   async findOne(

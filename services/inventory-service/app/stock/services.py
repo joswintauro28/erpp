@@ -151,3 +151,75 @@ class StockService:
         stmt = sa.select(sa.func.count()).select_from(Stock).where(Stock.organization_id == organization_id, Stock.quantity <= 10)
         result = await self.db.execute(stmt)
         return result.scalar() or 0
+
+    async def check_atp(self, organization_id: int, product_id: int, warehouse_id: int | None = None) -> int:
+        stmt = sa.select(Stock).where(
+            Stock.organization_id == organization_id,
+            Stock.product_id == product_id,
+        )
+        if warehouse_id:
+            stmt = stmt.where(Stock.warehouse_id == warehouse_id)
+        result = await self.db.execute(stmt)
+        stocks = result.scalars().all()
+        
+        total_qty = sum(s.quantity for s in stocks)
+        total_res = sum(s.reserved_quantity for s in stocks)
+        atp = total_qty - total_res
+        return max(0, atp)
+
+    async def check_availability(self, organization_id: int, items: list[dict], warehouse_id: int | None = None) -> dict:
+        results = []
+        overall = True
+
+        for item in items:
+            product = None
+            if item.get("product_id"):
+                prod_stmt = sa.select(Product).where(
+                    Product.id == item["product_id"], Product.organization_id == organization_id
+                )
+                prod_res = await self.db.execute(prod_stmt)
+                product = prod_res.scalar_one_or_none()
+            if not product and item.get("sku"):
+                prod_stmt = sa.select(Product).where(
+                    Product.sku == item["sku"], Product.organization_id == organization_id
+                )
+                prod_res = await self.db.execute(prod_stmt)
+                product = prod_res.scalar_one_or_none()
+            if not product and item.get("product_name"):
+                prod_stmt = sa.select(Product).where(
+                    Product.name == item["product_name"], Product.organization_id == organization_id
+                )
+                prod_res = await self.db.execute(prod_stmt)
+                product = prod_res.scalar_one_or_none()
+
+            requested = int(item.get("quantity") or 1)
+            if not product:
+                results.append({
+                    "product_id": item.get("product_id") or 0,
+                    "product_name": item.get("product_name"),
+                    "sku": item.get("sku"),
+                    "requested_quantity": requested,
+                    "available_quantity": 0,
+                    "is_available": False,
+                })
+                overall = False
+                continue
+
+            available = await self.check_atp(organization_id, product.id, warehouse_id)
+            is_avail = available >= requested
+            if not is_avail:
+                overall = False
+            results.append({
+                "product_id": product.id,
+                "product_name": product.name,
+                "sku": product.sku,
+                "requested_quantity": requested,
+                "available_quantity": available,
+                "is_available": is_avail,
+            })
+
+        return {
+            "overall_available": overall,
+            "warehouse_id": warehouse_id,
+            "items": results,
+        }

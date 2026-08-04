@@ -164,6 +164,7 @@ if ! should_skip "crm-service"; then
     run_step "crm-service (Leads, Customers, Pipelines)" \
         sh -c "
             docker cp '$DIR/../../services/crm-service/scripts' datavex-crm-service:/app/services/crm-service/ && \
+            docker exec -e PYTHONPATH=. datavex-crm-service /opt/venv/bin/alembic upgrade head && \
             docker exec -e PYTHONPATH=. datavex-crm-service /opt/venv/bin/python /app/services/crm-service/scripts/seed.py
         "
 fi
@@ -173,6 +174,7 @@ if ! should_skip "inventory-service"; then
     run_step "inventory-service (Products, Warehouses, Stock)" \
         sh -c "
             docker cp '$DIR/../../services/inventory-service/scripts' datavex-inventory-service:/app/services/inventory-service/ && \
+            docker exec -e PYTHONPATH=. datavex-inventory-service /opt/venv/bin/alembic upgrade head && \
             docker exec -e PYTHONPATH=. datavex-inventory-service /opt/venv/bin/python /app/services/inventory-service/scripts/seed.py
         "
 fi

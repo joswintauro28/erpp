@@ -1,0 +1,142 @@
+import { Controller, Logger } from "@nestjs/common";
+import { EventPattern, Payload } from "@nestjs/microservices";
+import { InvoicesService } from "./invoices.service";
+import { GstTreatment } from "@prisma/client";
+import { CogsAccountingService } from "../accounting/cogs-accounting.service";
+
+@Controller()
+export class InvoicesConsumerController {
+  private readonly logger = new Logger(InvoicesConsumerController.name);
+
+  constructor(
+    private readonly invoicesService: InvoicesService,
+    private readonly cogsAccountingService: CogsAccountingService,
+  ) {}
+
+  @EventPattern("inventory.shipment.dispatched")
+  async handleShipmentDispatched(@Payload() data: any) {
+    this.logger.log(`Received inventory.shipment.dispatched event: ${JSON.stringify(data)}`);
+    try {
+      const organizationId = Number(data.organization_id || 1);
+      
+      // Parse items
+      const items = (data.items || []).map((item: any) => ({
+        productId: Number(item.product_id || 999),
+        description: item.product_name || "Dispatched Product",
+        quantity: Number(item.quantity || 1),
+        unitPrice: Number(item.unit_price || 0),
+        costPrice: Number(item.cost_price || 0),
+        gstRate: Number(item.gst_rate || 0),
+      }));
+
+      if (items.length === 0) {
+        items.push({
+          productId: 999,
+          description: "Default Dispatched Shipment Line Item",
+          quantity: 1,
+          unitPrice: 0,
+          costPrice: 0,
+          gstRate: 0,
+        });
+      }
+
+      // Generate invoice
+      const dto = {
+        type: "receivable" as const,
+        clientId: Number(data.client_id || 999),
+        clientName: data.customer_name || "Dispatched Customer",
+        invoiceNumber: `INV-DISP-${Date.now()}`,
+        issueDate: new Date().toISOString().split("T")[0],
+        dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+        items,
+        discount: 0,
+        gstTreatment: GstTreatment.intrastate,
+        placeOfSupply: "State",
+      };
+
+      const result = await this.invoicesService.create(organizationId, dto);
+      this.logger.log(`Auto-generated Invoice ID ${result.id} for shipment dispatch`);
+
+      // Recognize COGS expense in the general ledger for the dispatched goods
+      try {
+        const cogsItems = (data.items || []).map((item: any) => ({
+          product_id: Number(item.product_id || 999),
+          sku: item.sku,
+          product_name: item.product_name || "Dispatched Product",
+          quantity: Number(item.quantity || 1),
+          unit_cost: Number(item.cost_price || 0),
+          total_cost: Number(item.quantity || 1) * Number(item.cost_price || 0),
+          currency: "INR",
+          costing_method: "fifo",
+          cost_calculation_timestamp: new Date().toISOString(),
+          cost_version: "1.0",
+          inventory_movement_reference: data.tracking_number || `SHIP-${result.id}`,
+        }));
+        await this.cogsAccountingService.processShipmentDispatched(
+          organizationId,
+          `shipment-dispatched-${data.tracking_number || result.id}-${result.id}`,
+          {
+            shipmentReference: data.tracking_number || `SHIP-${result.id}`,
+            invoiceId: result.id,
+            warehouseId: data.warehouse_id ? Number(data.warehouse_id) : undefined,
+            items: cogsItems,
+            performedBy: "rabbitmq-consumer",
+          },
+        );
+        this.logger.log(`COGS posting recorded for shipment ${data.tracking_number}`);
+      } catch (err) {
+        this.logger.error(`Failed to record COGS posting: ${(err as any).message}`, (err as any).stack);
+      }
+    } catch (err) {
+      this.logger.error(`Failed to handle shipment dispatch event: ${(err as any).message}`, (err as any).stack);
+    }
+  }
+
+  @EventPattern("inventory.po.created")
+  async handlePoCreated(@Payload() data: any) {
+    this.logger.log(`Received inventory.po.created event: ${JSON.stringify(data)}`);
+    try {
+      const organizationId = Number(data.organization_id || 1);
+
+      // Parse items
+      const items = (data.items || []).map((item: any) => ({
+        productId: Number(item.product_id || 999),
+        description: item.product_name || `Purchase Order Item`,
+        quantity: Number(item.quantity || 1),
+        unitPrice: Number(item.unit_price || 0),
+        costPrice: Number(item.unit_price || 0),
+        gstRate: Number(item.gst_rate || 0),
+      }));
+
+      if (items.length === 0) {
+        items.push({
+          productId: 999,
+          description: `Purchase Order ${data.order_number || ""}`,
+          quantity: 1,
+          unitPrice: Number(data.total || 0),
+          costPrice: Number(data.total || 0),
+          gstRate: 0,
+        });
+      }
+
+      // Generate accounts payable invoice
+      const dto = {
+        type: "payable" as const,
+        vendorId: Number(data.supplier_id || 999),
+        vendorName: data.supplier_name || "Default Supplier",
+        invoiceNumber: `AP-PO-${data.order_number || Date.now()}`,
+        issueDate: new Date().toISOString().split("T")[0],
+        dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+        items,
+        discount: 0,
+        gstTreatment: GstTreatment.intrastate,
+        placeOfSupply: "State",
+      };
+
+      const result = await this.invoicesService.create(organizationId, dto);
+      this.logger.log(`Auto-created Accounts Payable entry ID ${result.invoiceId} for PO creation`);
+    } catch (err) {
+      this.logger.error(`Failed to handle PO created event: ${(err as any).message}`, (err as any).stack);
+    }
+  }
+}

@@ -52,3 +52,29 @@ class StockAdjustment(BaseModel):
     warehouse_id: int
     new_quantity: int
     notes: str | None = None
+
+
+class StockCheckRequestItem(BaseModel):
+    product_id: int | None = None
+    sku: str | None = None
+    quantity: int = 1
+
+
+class StockCheckRequest(BaseModel):
+    warehouse_id: int | None = None
+    items: list[StockCheckRequestItem]
+
+
+class StockCheckItemResult(BaseModel):
+    product_id: int
+    product_name: str | None = None
+    sku: str | None = None
+    requested_quantity: int
+    available_quantity: int
+    is_available: bool
+
+
+class StockCheckResponse(BaseModel):
+    overall_available: bool
+    warehouse_id: int | None
+    items: list[StockCheckItemResult]

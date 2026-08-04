@@ -82,6 +82,15 @@ async def delete_entity(entity_type: str, id_str: str, token: str) -> dict:
     return await _delete(f"/{entity_type}/{id_str}", token)
 
 
+async def update_quotation_status(id: int, status: str, token: str) -> dict:
+    from urllib.parse import quote
+    return await _put(f"/quotations/{id}/status?status={quote(status)}", token, {})
+
+
+async def check_sales_order_stock(id_str: str, token: str) -> dict:
+    return await _post(f"/sales-orders/{id_str}/check-stock", token, {})
+
+
 # ─── Response Helpers ──────────────────────────────────────────────────
 
 def extract_list(data: dict | list | None, key: str) -> list:

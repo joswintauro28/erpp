@@ -1,4 +1,4 @@
-import { Injectable, Logger } from "@nestjs/common";
+import { Inject, Injectable, Logger } from "@nestjs/common";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import {
   Events,
@@ -16,13 +16,16 @@ import {
 export class EventBusService {
   private readonly logger = new Logger(EventBusService.name);
 
-  constructor(private readonly emitter: EventEmitter2) {}
+  constructor(
+    private readonly emitter: EventEmitter2,
+    @Inject("AMQP_CHANNEL") private readonly channel: any,
+  ) {}
 
   emit(event: EventName, payload: EventPayload): void {
     this.logger.debug(`Event: ${event}`, { id: (payload as any).id ?? (payload as any).invoiceId });
     this.emitter.emit(event, payload);
-    this.forwardToServices(event, payload).catch((err) =>
-      this.logger.error(`Event forward failed for ${event}: ${err.message}`),
+    this.publishToRmq(event, payload).catch((err) =>
+      this.logger.error(`Event RabbitMQ publish failed for ${event}: ${err.message}`),
     );
   }
 
@@ -30,38 +33,50 @@ export class EventBusService {
     this.emitter.on(event, handler);
   }
 
-  private async forwardToServices(event: EventName, payload: EventPayload): Promise<void> {
-    const orgId = payload.organizationId;
-    const base = (payload as any).total ?? (payload as any).amount ?? 0;
-    const body = { event, organization_id: orgId, payload, timestamp: payload.timestamp };
+  private async publishToRmq(event: EventName, payload: EventPayload): Promise<void> {
+    const routingKey = this.getRoutingKey(event, payload);
+    if (!routingKey) {
+      this.logger.debug(`No routing key mapped for event: ${event}`);
+      return;
+    }
 
-    const targets = this.getForwardTargets(event, payload);
-    await Promise.allSettled(
-      targets.map((url) =>
-        fetch(url, {
-          method: "POST",
-          headers: { "Content-Type": "application/json", "X-Event-Forward": "billing-service" },
-          body: JSON.stringify(body),
-        }).catch((err) => this.logger.warn(`Forward to ${url} failed: ${err.message}`)),
-      ),
-    );
+    const body = {
+      event,
+      organization_id: payload.organizationId,
+      payload,
+      timestamp: payload.timestamp,
+    };
+
+    const messageBuffer = Buffer.from(JSON.stringify(body));
+    this.channel.publish("erp_events", routingKey, messageBuffer, { persistent: true });
+    this.logger.log(`Published event ${event} to erp_events exchange with routing key ${routingKey}`);
   }
 
-  private getForwardTargets(event: EventName, _payload: EventPayload): string[] {
+  private getRoutingKey(event: EventName, payload: EventPayload): string | null {
     switch (event) {
       case Events.InvoiceCreated:
-        return ["http://localhost:8000/api/events/billing/invoice-created"];
+        return "billing.invoice.created";
       case Events.InvoicePaid:
-        return ["http://localhost:8001/api/events/billing/invoice-paid"];
+        return "billing.invoice.paid";
       case Events.PaymentRecorded:
-        return ["http://localhost:8000/api/events/billing/payment-recorded"];
+        return "billing.payment.recorded";
       case Events.CreditNoteIssued:
+        return "billing.credit_note.issued";
       case Events.DebitNoteIssued:
-        return ["http://localhost:8000/api/events/billing/note-issued"];
+        return "billing.debit_note.issued";
       case Events.ExpenseCreated:
-        return ["http://localhost:8000/api/events/billing/expense-created"];
+        return "billing.expense.created";
+      case Events.InvoiceStatusChanged:
+        const statusPayload = payload as any;
+        if (statusPayload.toStatus === "sent") {
+          return "billing.invoice.sent";
+        }
+        if (statusPayload.toStatus === "overdue") {
+          return "billing.invoice.overdue";
+        }
+        return null;
       default:
-        return [];
+        return null;
     }
   }
 }

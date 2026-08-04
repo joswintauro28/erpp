@@ -118,6 +118,38 @@ export class InvoicesService {
     return this.flattenInvoice(invoice);
   }
 
+  async creditCheck(
+    organizationId: number,
+    options: { clientId?: number; clientName?: string; amount?: number; creditLimit?: number },
+  ): Promise<any> {
+    const amount = Number(options.amount ?? 0);
+    const creditLimit = Number(options.creditLimit ?? 100000);
+    const where: any = {
+      organizationId,
+      type: "receivable",
+      status: { in: ["sent", "overdue", "partially_paid"] },
+    };
+    if (options.clientId) where.clientId = Number(options.clientId);
+    if (options.clientName) where.clientName = { contains: options.clientName, mode: "insensitive" };
+
+    const invoices = await this.prisma.invoice.findMany({
+      where,
+      select: { id: true, invoiceNumber: true, balanceDue: true },
+    });
+    const outstanding = invoices.reduce((sum, inv) => sum + Number(inv.balanceDue), 0);
+    const approved = outstanding + amount <= creditLimit;
+
+    return {
+      client_id: options.clientId,
+      client_name: options.clientName,
+      outstanding,
+      credit_limit: creditLimit,
+      requested_amount: amount,
+      available_credit: Math.max(0, creditLimit - outstanding),
+      approved,
+    };
+  }
+
   async create(organizationId: number, dto: CreateInvoiceDto): Promise<any> {
     this.logger.log(`Creating new invoice for client: ${dto.clientName} under org: ${organizationId}`);
     const gstTreatment = dto.gstTreatment ?? GstTreatment.intrastate;
@@ -453,6 +485,7 @@ export class InvoicesService {
           organizationId,
           invoiceId: id,
           invoiceNumber: result.invoiceNumber ?? `INV-${id}`,
+          clientName: result.clientName ?? "Unknown",
           paymentId: 0,
           amount: result.paidAmount,
           timestamp: new Date(),

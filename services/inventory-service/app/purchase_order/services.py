@@ -94,6 +94,70 @@ class PurchaseOrderService:
         items_stmt = sa.select(PurchaseOrderItem).where(PurchaseOrderItem.purchase_order_id == po.id)
         items_result = await self.db.execute(items_stmt)
         po.items = list(items_result.scalars().all())
+
+        # Publish RabbitMQ event
+        from app.core.amqp import get_exchange
+        import aio_pika
+        import json
+        from datetime import datetime, timezone
+        
+        exchange = await get_exchange()
+        if exchange:
+            try:
+                from app.supplier.models import Supplier
+                from app.product.models import Product
+
+                supplier_name = None
+                if po.supplier_id:
+                    sup_stmt = sa.select(Supplier).where(
+                        Supplier.id == po.supplier_id,
+                        Supplier.organization_id == organization_id,
+                    )
+                    sup_res = await self.db.execute(sup_stmt)
+                    supplier = sup_res.scalar_one_or_none()
+                    supplier_name = supplier.name if supplier else None
+
+                items_payload = []
+                for item in po.items:
+                    product_name = None
+                    gst_rate = 0.0
+                    prod_stmt = sa.select(Product).where(
+                        Product.id == item.product_id,
+                        Product.organization_id == organization_id,
+                    )
+                    prod_res = await self.db.execute(prod_stmt)
+                    product = prod_res.scalar_one_or_none()
+                    if product:
+                        product_name = product.name
+                        gst_rate = float(product.tax_rate or 0.0)
+                    items_payload.append({
+                        "product_id": item.product_id,
+                        "product_name": product_name or f"Product {item.product_id}",
+                        "quantity": item.quantity,
+                        "unit_price": float(item.unit_price or 0.0),
+                        "gst_rate": gst_rate,
+                    })
+
+                event_data = {
+                    "event": "inventory.po.created",
+                    "organization_id": organization_id,
+                    "po_id": po.id,
+                    "order_number": po.order_number,
+                    "supplier_id": po.supplier_id,
+                    "supplier_name": supplier_name,
+                    "subtotal": float(po.subtotal or 0.0),
+                    "total": float(po.total or 0.0),
+                    "items": items_payload,
+                    "timestamp": datetime.now(timezone.utc).isoformat()
+                }
+                message = aio_pika.Message(
+                    body=json.dumps(event_data).encode(),
+                    delivery_mode=aio_pika.DeliveryMode.PERSISTENT
+                )
+                await exchange.publish(message, routing_key="inventory.po.created")
+            except Exception:
+                pass
+
         return po
 
     async def update_purchase_order_status(self, po_id: int, organization_id: int, status: str) -> PurchaseOrder | None:

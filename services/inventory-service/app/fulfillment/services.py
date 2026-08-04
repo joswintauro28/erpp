@@ -217,6 +217,45 @@ class FulfillmentService:
 
         await self.db.commit()
         await self.db.refresh(order)
+
+        # Publish RabbitMQ event
+        from app.core.amqp import get_exchange
+        import aio_pika
+        import json
+        
+        exchange = await get_exchange()
+        if exchange:
+            try:
+                items_payload = []
+                for item in order.items:
+                    items_payload.append({
+                        "product_id": item.product_id,
+                        "product_name": item.product_name,
+                        "sku": item.sku,
+                        "quantity": item.ordered_quantity,
+                        "unit_price": float(item.unit_price or 0.0),
+                        "cost_price": float(item.unit_price or 0.0) * 0.7
+                    })
+                
+                event_data = {
+                    "event": "inventory.shipment.dispatched",
+                    "organization_id": org_id,
+                    "sales_order_code": order.sales_order_code,
+                    "customer_name": order.customer_name,
+                    "warehouse_id": order.warehouse_id,
+                    "shipping_carrier": order.shipping_carrier,
+                    "tracking_number": order.tracking_number,
+                    "items": items_payload,
+                    "timestamp": datetime.now(timezone.utc).isoformat()
+                }
+                message = aio_pika.Message(
+                    body=json.dumps(event_data).encode(),
+                    delivery_mode=aio_pika.DeliveryMode.PERSISTENT
+                )
+                await exchange.publish(message, routing_key="inventory.shipment.dispatched")
+            except Exception:
+                pass
+
         return order
 
     async def trigger_po_for_shortage(self, org_id: int, fulfillment_id: int) -> SalesOrderFulfillment:
@@ -337,6 +376,34 @@ class FulfillmentService:
         await self.db.commit()
         await self.db.refresh(order)
         return order
+
+    async def generate_shipping_label(self, org_id: int, fulfillment_id: int) -> dict:
+        order = await self.get_fulfillment(org_id, fulfillment_id)
+
+        carrier = order.shipping_carrier or "UNASSIGNED"
+        tracking = order.tracking_number or f"SHIP-{order.id:06d}"
+        barcode_text = f"{carrier}|{tracking}|{order.sales_order_code}"
+
+        items_payload = []
+        for item in order.items:
+            items_payload.append({
+                "product_id": item.product_id,
+                "product_name": item.product_name,
+                "sku": item.sku,
+                "quantity": item.ordered_quantity,
+            })
+
+        return {
+            "fulfillment_id": order.id,
+            "sales_order_code": order.sales_order_code,
+            "customer_name": order.customer_name,
+            "shipping_carrier": order.shipping_carrier,
+            "tracking_number": order.tracking_number,
+            "barcode_text": barcode_text,
+            "items": items_payload,
+            "generated_at": datetime.now(timezone.utc).isoformat(),
+            "url": f"/fulfillment/orders/{order.id}/shipping-label",
+        }
 
     async def delete_fulfillment(self, org_id: int, fulfillment_id: int) -> bool:
         order = await self.get_fulfillment(org_id, fulfillment_id)

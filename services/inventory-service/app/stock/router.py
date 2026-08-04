@@ -2,10 +2,31 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.deps import get_db, get_current_org_id
-from app.stock.schemas import StockOut, StockMovementCreate, StockMovementOut, StockAdjustment
+from app.stock.schemas import (
+    StockOut,
+    StockMovementCreate,
+    StockMovementOut,
+    StockAdjustment,
+    StockCheckRequest,
+    StockCheckResponse,
+)
 from app.stock.services import StockService
 
 router = APIRouter(prefix="/stock", tags=["stock"])
+
+
+@router.post("/check", response_model=StockCheckResponse)
+async def check_stock_availability(
+    req: StockCheckRequest,
+    db: AsyncSession = Depends(get_db),
+    org_id: int = Depends(get_current_org_id),
+):
+    service = StockService(db)
+    return await service.check_availability(
+        org_id,
+        [item.model_dump() for item in req.items],
+        warehouse_id=req.warehouse_id,
+    )
 
 
 @router.get("", response_model=list[StockOut])

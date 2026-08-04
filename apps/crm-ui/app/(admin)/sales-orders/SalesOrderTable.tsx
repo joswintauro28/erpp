@@ -12,6 +12,8 @@ const badgeVariant = (status: string) => {
     case "Invoiced": return "outline";
     case "Cancelled": return "destructive";
     case "Paid": return "default";
+    case "Hold": return "secondary";
+    case "Stock Hold": return "outline";
     default: return "default";
   }
 };

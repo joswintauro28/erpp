@@ -38,6 +38,9 @@ USER appuser
 # Install Chromium browser binaries in appuser's home directory
 RUN playwright install chromium
 
+# Download browserforge headers and fingerprints database
+RUN python -m browserforge update
+
 EXPOSE 8001
 
 HEALTHCHECK --interval=15s --timeout=3s --start-period=60s --retries=3 \

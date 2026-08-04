@@ -1,12 +1,17 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { Cron, CronExpression } from "@nestjs/schedule";
 import { PrismaService } from "../prisma/prisma.service";
+import { EventBusService } from "../event-bus/event-bus.service";
+import { Events } from "../event-bus/event-types";
 
 @Injectable()
 export class DunningSchedulerService {
   private readonly logger = new Logger(DunningSchedulerService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly eventBus: EventBusService,
+  ) {}
 
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
   async processDunning() {
@@ -80,6 +85,15 @@ export class DunningSchedulerService {
           await this.prisma.invoice.update({
             where: { id: inv.id },
             data: { status: "overdue" },
+          });
+
+          this.eventBus.emit(Events.InvoiceStatusChanged, {
+            organizationId: inv.organizationId,
+            invoiceId: inv.id,
+            invoiceNumber: inv.invoiceNumber ?? `INV-${inv.id}`,
+            fromStatus: inv.status,
+            toStatus: "overdue",
+            timestamp: new Date(),
           });
         }
       } catch (err) {

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 
 from app.core.deps import get_current_token_payload
 from app.integrations import crm_client
@@ -241,6 +241,25 @@ async def update_entity(
     token = _get_token(payload)
     data = await crm_client.update_entity(entity_type, id_str, token, body)
     return data
+
+
+@router.put("/quotations/{id}/status")
+async def update_quotation_status(
+    id: int,
+    status: str = Query(...),
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = _get_token(payload)
+    return await crm_client.update_quotation_status(id, status, token)
+
+
+@router.post("/sales-orders/{id_str}/check-stock")
+async def check_sales_order_stock(
+    id_str: str,
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = _get_token(payload)
+    return await crm_client.check_sales_order_stock(id_str, token)
 
 
 @router.delete("/{entity_type}/{id_str}")

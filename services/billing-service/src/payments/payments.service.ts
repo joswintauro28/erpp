@@ -161,6 +161,7 @@ export class PaymentsService {
             organizationId,
             invoiceId: payment.invoiceId,
             invoiceNumber: invoice.invoiceNumber ?? `INV-${payment.invoiceId}`,
+            clientName: invoice.clientName ?? "Unknown",
             paymentId: id,
             amount: Number(payment.amount),
             timestamp: new Date(),

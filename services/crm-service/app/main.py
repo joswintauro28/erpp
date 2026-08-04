@@ -27,9 +27,20 @@ from app.quotations.router import router as quotations_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    import asyncio
     async with database.engine.begin() as conn:
         await conn.run_sync(database.Base.metadata.create_all)
+    from app.core.amqp import connect_amqp, disconnect_amqp
+    from app.core.worker import run_crm_worker
+    await connect_amqp()
+    worker_task = asyncio.create_task(run_crm_worker())
     yield
+    worker_task.cancel()
+    try:
+        await worker_task
+    except asyncio.CancelledError:
+        pass
+    await disconnect_amqp()
 
 
 from fastapi.openapi.utils import get_openapi
@@ -109,6 +120,7 @@ ENTITY_MODEL_MAP = {
 
     "requirements": models.Requirement,
     "sales-orders": models.SalesOrder,
+    "sales": models.Sale,
 
     "reports": models.Report,
     "ai-assistant": models.AIAssistantLog
@@ -123,6 +135,7 @@ PREFIX_MAP = {
 
     models.Requirement: "RE",
     models.SalesOrder: "SO",
+    models.Sale: "SA",
 
     models.Report: "RP",
     models.AIAssistantLog: "AI"
@@ -162,7 +175,9 @@ async def get_entity_fields(entity_type: str, token_payload: dict = Depends(get_
             elif entity_type == "opportunities":
                 options = ["Discovery", "Proposal", "Negotiation", "Won", "Lost"]
             elif entity_type == "sales-orders":
-                options = ["Pending", "Confirmed", "Invoiced", "Paid", "Cancelled"]
+                options = ["Pending", "Confirmed", "Approved", "Invoiced", "Paid", "Cancelled", "Hold", "Stock Hold"]
+            elif entity_type == "sales":
+                options = ["Pending", "Paid", "Invoiced", "Delivered", "Cancelled"]
         elif name == "tier" and entity_type == "customers":
             options = ["Platinum", "Gold", "Silver"]
         elif name == "type" and entity_type == "contacts":

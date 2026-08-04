@@ -156,6 +156,8 @@ if (-not (Test-ShouldSkip 'crm-service')) {
     Invoke-Step -Label $services[2].Label -Container $services[2].Container -ScriptBlock {
         docker cp "$PSScriptRoot\..\..\services\crm-service\scripts" datavex-crm-service:/app/services/crm-service/ 2>&1
         if ($LASTEXITCODE -and $LASTEXITCODE -ne 0) { throw "docker cp failed" }
+        docker exec -e PYTHONPATH=. datavex-crm-service /opt/venv/bin/alembic upgrade head 2>&1
+        if ($LASTEXITCODE -and $LASTEXITCODE -ne 0) { throw "alembic upgrade head failed (exit $LASTEXITCODE)" }
         docker exec -e PYTHONPATH=. datavex-crm-service /opt/venv/bin/python /app/services/crm-service/scripts/seed.py 2>&1
         if ($LASTEXITCODE -and $LASTEXITCODE -ne 0) { throw "seed script failed (exit $LASTEXITCODE)" }
     }
@@ -167,6 +169,8 @@ if (-not (Test-ShouldSkip 'inventory-service')) {
     Invoke-Step -Label $services[3].Label -Container $services[3].Container -ScriptBlock {
         docker cp "$PSScriptRoot\..\..\services\inventory-service\scripts" datavex-inventory-service:/app/services/inventory-service/ 2>&1
         if ($LASTEXITCODE -and $LASTEXITCODE -ne 0) { throw "docker cp failed" }
+        docker exec -e PYTHONPATH=. datavex-inventory-service /opt/venv/bin/alembic upgrade head 2>&1
+        if ($LASTEXITCODE -and $LASTEXITCODE -ne 0) { throw "alembic upgrade head failed (exit $LASTEXITCODE)" }
         docker exec -e PYTHONPATH=. datavex-inventory-service /opt/venv/bin/python /app/services/inventory-service/scripts/seed.py 2>&1
         if ($LASTEXITCODE -and $LASTEXITCODE -ne 0) { throw "seed script failed (exit $LASTEXITCODE)" }
     }

@@ -178,6 +178,34 @@ async def update_quotation_status(
         billing_status = "accepted"
     try:
         data = await quotations_update_status(token, id, billing_status)
+        
+        if billing_status == "sent":
+            from app.core.amqp import get_exchange
+            import aio_pika
+            import json
+            exchange = await get_exchange()
+            if exchange:
+                try:
+                    event_data = {
+                        "event": "crm.quotation.sent",
+                        "organization_id": token_payload.get("organization_id", 1),
+                        "quotationNumber": data.get("quotationNumber") or f"QT-{id}",
+                        "clientName": data.get("clientName") or data.get("client_name") or "Client",
+                        "total": data.get("total"),
+                        "timestamp": datetime.utcnow().isoformat()
+                    }
+                    
+                    message = aio_pika.Message(
+                        body=json.dumps(event_data).encode(),
+                        delivery_mode=aio_pika.DeliveryMode.PERSISTENT
+                    )
+                    await exchange.publish(
+                        message,
+                        routing_key="crm.quotation.sent"
+                    )
+                except Exception as e:
+                    pass
+
         return _build_quotation_out(data)
     except HTTPException:
         raise
@@ -205,5 +233,62 @@ async def convert_quotation_to_invoice(id: int, token_payload: dict = Depends(ge
         raise
     except Exception as e:
         raise HTTPException(status_code=HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Billing service error: {str(e)}")
+
+
+@router.post("/{id}/convert-to-sales-order", response_model=dict)
+async def convert_quotation_to_sales_order(
+    id: int,
+    db: AsyncSession = Depends(get_db),
+    token_payload: dict = Depends(get_current_token_payload),
+):
+    token = _get_token(token_payload)
+    try:
+        quote = await quotations_get(token, id)
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Billing service error: {str(e)}")
+
+    if quote is None:
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail="Quotation not found")
+
+    from app.sales_orders.models import SalesOrder
+    from uuid import uuid4
+
+    value = quote.get("total") or quote.get("amount") or 0
+    account = quote.get("client_name") or quote.get("clientName") or "Unknown Client"
+    quote_no = quote.get("quotationNumber") or f"QT-{id}"
+
+    so = SalesOrder(
+        id_str=str(uuid4()),
+        so_no=f"SO-{datetime.now().strftime('%Y%m%d')}-{id}",
+        account=account,
+        from_quote=quote_no,
+        value=str(value),
+        eta="",
+        date_ordered=datetime.now().strftime("%Y-%m-%d"),
+        status="Confirmed",
+        owner=token_payload.get("user_id", "Unassigned"),
+    )
+    db.add(so)
+    await db.commit()
+    await db.refresh(so)
+
+    try:
+        await quotations_update_status(token, id, "accepted")
+    except Exception:
+        pass
+
+    return {
+        "id": so.id,
+        "id_str": so.id_str,
+        "so_no": so.so_no,
+        "account": so.account,
+        "from_quote": so.from_quote,
+        "value": so.value,
+        "status": so.status,
+        "date_ordered": so.date_ordered,
+    }
+
 
 

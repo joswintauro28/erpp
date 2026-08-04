@@ -21,9 +21,9 @@ const CUSTOMER_IDS: Record<string, number> = {
 };
 
 const VENDOR_IDS: Record<string, number> = {
-  "Tata Steel Limited": 1, "UltraTech Cement Ltd": 2,
-  "Philips India Ltd": 3, "Asian Paints Limited": 4,
-  "Finolex Pipes Ltd": 5, "Legrand India Pvt Ltd": 6,
+  "Siemens India Limited": 1, "Schneider Electric India": 2,
+  "Philips India Ltd": 3, "Omron Automation Pvt Ltd": 4,
+  "Honeywell Automation India": 5, "Legrand India Pvt Ltd": 6,
   "Bosch Power Tools India": 7, "Havells India Limited": 8,
 };
 
@@ -261,36 +261,36 @@ async function main() {
       ]},
 
     // ── VENDOR BILLS (3 — payable) ──
-    // 21 - Tata Steel vendor bill (draft)
+    // 21 - Siemens India Limited vendor bill (draft)
     { organizationId: 1, type: "payable",
-      vendorId: vid("Tata Steel Limited"), vendorName: "Tata Steel Limited",
+      vendorId: vid("Siemens India Limited"), vendorName: "Siemens India Limited",
       invoiceNumber: "BILL-2026-001",
       status: "draft", issueDate: ago(5), dueDate: later(25),
       gstTreatment: "interstate", placeOfSupply: "Maharashtra",
       subtotal: 425000, discount: 0, cgst: 0, sgst: 0, igst: 76500, taxTotal: 76500, total: 501500, paidAmount: 0, balanceDue: 501500,
       items: [
-        { productId: null, description: "Steel Rod 12mm TATA Tiscon (300 units)", quantity: 300, unitPrice: 1250, gstRate: 18, amount: 375000 },
-        { productId: null, description: "TMT Steel Bar 16mm JSW (50 units)", quantity: 50, unitPrice: 1000, gstRate: 18, amount: 50000 },
+        { productId: null, description: "PLC CPU Module — Siemens S7-1200 (300 units)", quantity: 300, unitPrice: 1250, gstRate: 18, amount: 375000 },
+        { productId: null, description: "Distributed I/O Interface — Siemens ET200 (50 units)", quantity: 50, unitPrice: 1000, gstRate: 18, amount: 50000 },
       ]},
-    // 22 - UltraTech Cement vendor bill (partially paid)
+    // 22 - Schneider Electric India vendor bill (partially paid)
     { organizationId: 1, type: "payable",
-      vendorId: vid("UltraTech Cement Ltd"), vendorName: "UltraTech Cement Ltd",
+      vendorId: vid("Schneider Electric India"), vendorName: "Schneider Electric India",
       invoiceNumber: "BILL-2026-002",
       status: "partially_paid", issueDate: ago(20), dueDate: later(10),
       gstTreatment: "intrastate", placeOfSupply: "Karnataka",
       subtotal: 180000, discount: 0, cgst: 8100, sgst: 8100, igst: 0, taxTotal: 16200, total: 196200, paidAmount: 100000, balanceDue: 96200,
       items: [
-        { productId: null, description: "Cement 50kg Bag UltraTech (400 bags)", quantity: 400, unitPrice: 450, gstRate: 5, amount: 180000 },
+        { productId: null, description: "Industrial Controller X200 — Schneider Modicon (400 units)", quantity: 400, unitPrice: 450, gstRate: 5, amount: 180000 },
       ]},
-    // 23 - Asian Paints vendor bill (sent)
+    // 23 - Omron Automation Pvt Ltd vendor bill (sent)
     { organizationId: 1, type: "payable",
-      vendorId: vid("Asian Paints Limited"), vendorName: "Asian Paints Limited",
+      vendorId: vid("Omron Automation Pvt Ltd"), vendorName: "Omron Automation Pvt Ltd",
       invoiceNumber: "BILL-2026-003",
       status: "sent", issueDate: ago(8), dueDate: later(22),
       gstTreatment: "intrastate", placeOfSupply: "Karnataka",
       subtotal: 168000, discount: 8000, discountType: "fixed", cgst: 14400, sgst: 14400, igst: 0, taxTotal: 28800, total: 188800, paidAmount: 0, balanceDue: 188800,
       items: [
-        { productId: null, description: "Paint Bucket 20L Asian Paints Royale (60 buckets)", quantity: 60, unitPrice: 2800, gstRate: 18, amount: 168000 },
+        { productId: null, description: "Photoelectric Sensor — Omron E3Z (60 units)", quantity: 60, unitPrice: 2800, gstRate: 18, amount: 168000 },
       ]},
   ];
 
@@ -648,8 +648,8 @@ async function main() {
     { accountId: cashAccountId, entryDate: ago(12), description: "Bank Transfer — July salary", debit: 0, credit: 150000, refType: "Expense", refId: 5 },
     { accountId: cashAccountId, entryDate: ago(5), description: "Bank Transfer — August office rent", debit: 0, credit: 30000, refType: "Expense", refId: 7 },
     // Vendor bill payments
-    { accountId: cashAccountId, entryDate: ago(10), description: "NEFT — UltraTech Cement payment BILL-2026-002", debit: 0, credit: 100000, refType: "Payment", refId: 9 },
-    { accountId: apAccountId, entryDate: ago(10), description: "Reversal of AP — UltraTech Cement BILL-2026-002", debit: 100000, credit: 0, refType: "Payment", refId: 9 },
+    { accountId: cashAccountId, entryDate: ago(10), description: "NEFT — Schneider Electric India payment BILL-2026-002", debit: 0, credit: 100000, refType: "Payment", refId: 9 },
+    { accountId: apAccountId, entryDate: ago(10), description: "Reversal of AP — Schneider Electric India BILL-2026-002", debit: 100000, credit: 0, refType: "Payment", refId: 9 },
   ];
 
   for (const ce of cashEntries) {
