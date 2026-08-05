@@ -35,6 +35,20 @@ class FulfillmentService:
         return order
 
     async def create_fulfillment(self, org_id: int, data: FulfillmentCreate) -> SalesOrderFulfillment:
+        # Check if a fulfillment for this sales order already exists
+        existing_stmt = select(SalesOrderFulfillment).where(
+            SalesOrderFulfillment.sales_order_code == data.sales_order_code,
+            SalesOrderFulfillment.organization_id == org_id
+        )
+        existing_res = await self.db.execute(existing_stmt)
+        existing_order = existing_res.scalar_one_or_none()
+        if existing_order:
+            import logging
+            logging.getLogger("app.fulfillment").info(
+                f"Fulfillment for Sales Order {data.sales_order_code} already exists. Returning existing record."
+            )
+            return existing_order
+
         order = SalesOrderFulfillment(
             organization_id=org_id,
             sales_order_code=data.sales_order_code,
@@ -157,6 +171,25 @@ class FulfillmentService:
         order.status = "RESERVED"
         await self.db.commit()
         await self.db.refresh(order)
+
+        from app.core.events import publish_event, EVENT_ORDER_RESERVED
+        publish_event(
+            EVENT_ORDER_RESERVED,
+            organization_id=org_id,
+            fulfillment_id=order.id,
+            sales_order_code=order.sales_order_code,
+            customer_name=order.customer_name,
+            warehouse_id=order.warehouse_id,
+            items=[
+                {
+                    "product_id": item.product_id,
+                    "product_name": item.product_name,
+                    "sku": item.sku,
+                    "quantity": item.ordered_quantity,
+                }
+                for item in order.items
+            ],
+        )
         return order
 
     async def pick_items(self, org_id: int, fulfillment_id: int) -> SalesOrderFulfillment:
@@ -218,43 +251,29 @@ class FulfillmentService:
         await self.db.commit()
         await self.db.refresh(order)
 
-        # Publish RabbitMQ event
-        from app.core.amqp import get_exchange
-        import aio_pika
-        import json
-        
-        exchange = await get_exchange()
-        if exchange:
-            try:
-                items_payload = []
-                for item in order.items:
-                    items_payload.append({
-                        "product_id": item.product_id,
-                        "product_name": item.product_name,
-                        "sku": item.sku,
-                        "quantity": item.ordered_quantity,
-                        "unit_price": float(item.unit_price or 0.0),
-                        "cost_price": float(item.unit_price or 0.0) * 0.7
-                    })
-                
-                event_data = {
-                    "event": "inventory.shipment.dispatched",
-                    "organization_id": org_id,
-                    "sales_order_code": order.sales_order_code,
-                    "customer_name": order.customer_name,
-                    "warehouse_id": order.warehouse_id,
-                    "shipping_carrier": order.shipping_carrier,
-                    "tracking_number": order.tracking_number,
-                    "items": items_payload,
-                    "timestamp": datetime.now(timezone.utc).isoformat()
+        # Publish RabbitMQ event (fire-and-forget, non-blocking)
+        from app.core.events import publish_event, EVENT_SHIPMENT_DISPATCHED
+        publish_event(
+            EVENT_SHIPMENT_DISPATCHED,
+            organization_id=org_id,
+            fulfillment_id=order.id,
+            sales_order_code=order.sales_order_code,
+            customer_name=order.customer_name,
+            warehouse_id=order.warehouse_id,
+            shipping_carrier=order.shipping_carrier,
+            tracking_number=order.tracking_number,
+            items=[
+                {
+                    "product_id": item.product_id,
+                    "product_name": item.product_name,
+                    "sku": item.sku,
+                    "quantity": item.ordered_quantity,
+                    "unit_price": float(item.unit_price or 0.0),
+                    "cost_price": float(item.unit_price or 0.0) * 0.7,
                 }
-                message = aio_pika.Message(
-                    body=json.dumps(event_data).encode(),
-                    delivery_mode=aio_pika.DeliveryMode.PERSISTENT
-                )
-                await exchange.publish(message, routing_key="inventory.shipment.dispatched")
-            except Exception:
-                pass
+                for item in order.items
+            ],
+        )
 
         return order
 
@@ -313,7 +332,8 @@ class FulfillmentService:
             supplier_id=supplier.id,
             warehouse_id=warehouse.id,
             order_number=po_number,
-            status="ORDERED",
+            status="SUBMITTED",
+            submitted_at=datetime.now(timezone.utc),
             notes=f"Auto-generated PO for fulfillment shortage on order {order.sales_order_code}"
         )
         self.db.add(po)
@@ -327,6 +347,7 @@ class FulfillmentService:
                 purchase_order_id=po.id,
                 product_id=item.product_id,
                 quantity=item.ordered_quantity,
+                received_quantity=0,
                 unit_price=item.unit_price,
                 subtotal=item_subtotal
             )
@@ -340,6 +361,26 @@ class FulfillmentService:
 
         await self.db.commit()
         await self.db.refresh(order)
+
+        from app.core.events import publish_event, EVENT_PO_CREATED
+        publish_event(
+            EVENT_PO_CREATED,
+            organization_id=org_id,
+            po_id=po.id,
+            order_number=po.order_number,
+            supplier_id=po.supplier_id,
+            subtotal=float(po.subtotal or 0.0),
+            total=float(po.total or 0.0),
+            items=[
+                {
+                    "product_id": item.product_id,
+                    "product_name": item.product_name,
+                    "quantity": item.ordered_quantity,
+                    "unit_price": float(item.unit_price or 0.0),
+                }
+                for item in order.items
+            ],
+        )
         return order
 
     async def generate_invoice_link(self, org_id: int, fulfillment_id: int, raw_token: str | None = None) -> SalesOrderFulfillment:

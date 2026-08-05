@@ -1,4 +1,8 @@
-"""Comprehensive inventory seed — 30 products, 5 warehouses, 8 suppliers, 15 POs."""
+"""Comprehensive inventory seed — 30 products, 5 warehouses, 8 suppliers, 15 POs, 28 serials.
+
+All business identifiers (PO order numbers, serial tags, sales order references) are
+auto-generated from consistent patterns so the dataset mirrors production behaviour.
+"""
 import asyncio
 import sys
 import os
@@ -24,6 +28,17 @@ def ago(days: int) -> datetime:
 def later(days: int) -> datetime:
     return now + timedelta(days=days)
 
+def po_timestamps(status: str, ordered_at: datetime | None) -> tuple[datetime | None, datetime | None, datetime | None]:
+    """Derive canonical lifecycle timestamps from the PO status."""
+    submitted_at = approved_at = cancelled_at = None
+    if status != "DRAFT" and ordered_at:
+        submitted_at = ordered_at + timedelta(days=1)
+    if status in ("APPROVED", "PARTIALLY_RECEIVED", "COMPLETED") and submitted_at:
+        approved_at = submitted_at + timedelta(days=2)
+    if status == "CANCELLED" and submitted_at:
+        cancelled_at = submitted_at + timedelta(days=1)
+    return submitted_at, approved_at, cancelled_at
+
 
 async def seed():
     print("Seeding inventory database...")
@@ -31,9 +46,9 @@ async def seed():
         try:
             organization_id = 1
 
-            # Clean up existing data first
+            # Clean up existing data first (restart identity so auto-generated IDs are deterministic)
             from sqlalchemy import text
-            await db.execute(text("TRUNCATE TABLE serial_numbers, purchase_order_items, purchase_orders, stock_movements, stock, products, warehouses, suppliers CASCADE"))
+            await db.execute(text("TRUNCATE TABLE serial_numbers, purchase_order_items, purchase_orders, stock_movements, stock, products, warehouses, suppliers RESTART IDENTITY CASCADE"))
             await db.commit()
 
             # ── Warehouses (5) ─────────────────────────────────────────
@@ -204,148 +219,201 @@ async def seed():
             await db.flush()
             print(f"  {len(stock_records)} stock records created")
 
+            # ── Suppliers (8) ───────────────────────────────────────────
+            suppliers = [
+                Supplier(organization_id=organization_id, name="Siemens India Limited", email="orders@siemens.co.in", phone="+91-22-6750-1000",
+                          address="Birla Aurora, 21st Floor, Dr. Annie Besant Road, Worli", city="Mumbai", state="Maharashtra",
+                          gst_number="27AABCT1234E1Z1", contact_person="Rajesh Mehta", payment_terms="Net 45", status="ACTIVE"),
+                Supplier(organization_id=organization_id, name="Schneider Electric India", email="supply@schneider.co.in", phone="+91-80-4345-6700",
+                          address="Bearys Horizon, 14, DivyaSree Chambers", city="Bangalore", state="Karnataka",
+                          gst_number="29AAACU5678E1ZP", contact_person="Priya Kulkarni", payment_terms="Net 30", status="ACTIVE"),
+                Supplier(organization_id=organization_id, name="Philips India Ltd — Lighting Division", email="b2b.lighting@philips.com", phone="+91-120-439-2000",
+                          address="Philips Innovation Campus, Manyata Tech Park", city="Bangalore", state="Karnataka",
+                          gst_number="29AAACP9012E1ZR", contact_person="Arun Nair", payment_terms="Net 60", status="INACTIVE"),
+                Supplier(organization_id=organization_id, name="Omron Automation Pvt Ltd", email="project.sales@omron.com", phone="+91-22-3981-8000",
+                          address="Omron House, 6A Shantinagar, Santacruz East", city="Mumbai", state="Maharashtra",
+                          gst_number="27AABCA3456E1ZT", contact_person="Sneha Deshmukh", payment_terms="Net 30", status="ACTIVE"),
+                Supplier(organization_id=organization_id, name="Honeywell Automation India", email="order@honeywell.com", phone="+91-20-2747-3000",
+                          address="56 & 57, Hadapsar Industrial Estate", city="Pune", state="Maharashtra",
+                          gst_number="27AAACF7890E1ZQ", contact_person="Vikram Patil", payment_terms="Net 45", status="ACTIVE"),
+                Supplier(organization_id=organization_id, name="Legrand India Pvt Ltd", email="sales@legrand.in", phone="+91-20-6608-2000",
+                          address="Plot P-17, MIDC Ranjangaon", city="Pune", state="Maharashtra",
+                          gst_number="27AAACL2345E1ZK", contact_person="Anita Desai", payment_terms="Net 30", status="ACTIVE"),
+                Supplier(organization_id=organization_id, name="Bosch Power Tools India", email="tools.supply@bosch.in", phone="+91-80-6789-1000",
+                          address="Bosch House, Hosur Road, Adugodi", city="Bangalore", state="Karnataka",
+                          gst_number="29AAACB6789E1ZW", contact_person="Karan Singh", payment_terms="Net 45", status="ACTIVE"),
+                Supplier(organization_id=organization_id, name="Havells India Limited", email="b2b@havells.com", phone="+91-120-477-1000",
+                          address="QRG Towers, 6, Sector 16, Institutional Area", city="Noida", state="Uttar Pradesh",
+                          gst_number="09AAACH3456E1ZM", contact_person="Ravi Agarwal", payment_terms="Net 30", status="SUSPENDED"),
+            ]
+            for s in suppliers:
+                s.is_active = (s.status == "ACTIVE")
+                db.add(s)
+            await db.flush()
+            print(f"  {len(suppliers)} suppliers created")
+
+            # ── Purchase Orders (15) ────────────────────────────────────
+            # status ∈ DRAFT|SUBMITTED|APPROVED|PARTIALLY_RECEIVED|COMPLETED|CANCELLED
+            # item tuple: (product_idx, quantity, unit_price, received_quantity)
+            pos = [
+                {"s": 0, "w": 0, "st": "COMPLETED", "notes": "Bulk PLCs and I/O modules for Q3 projects", "oa": ago(25), "ea": ago(5), "ra": ago(3),
+                 "items": [(0, 300, 18000, 300), (2, 500, 11000, 500), (5, 50, 62000, 50)]},
+                {"s": 1, "w": 0, "st": "COMPLETED", "notes": "Monthly Modicon controller replenishment", "oa": ago(20), "ea": ago(2), "ra": ago(1),
+                 "items": [(1, 100, 26000, 100)]},
+                {"s": 2, "w": 1, "st": "COMPLETED", "notes": "HMI panel stock restock", "oa": ago(18), "ea": ago(3), "ra": ago(1),
+                 "items": [(12, 80, 20000, 80)]},
+                {"s": 0, "w": 1, "st": "APPROVED", "notes": "Distributed I/O and processor modules", "oa": ago(7), "ea": later(7), "ra": None,
+                 "items": [(2, 300, 11000, 0), (5, 30, 62000, 0)]},
+                {"s": 5, "w": 3, "st": "SUBMITTED", "notes": "Enclosures and cable trays restock", "oa": ago(5), "ea": later(10), "ra": None,
+                 "items": [(22, 100, 9000, 0), (25, 80, 1300, 0)]},
+                {"s": 0, "w": 1, "st": "SUBMITTED", "notes": "IoT edge gateways and telemetry panels", "oa": ago(3), "ea": later(14), "ra": None,
+                 "items": [(4, 10, 5800, 0), (23, 15, 85000, 0)]},
+                {"s": 7, "w": 0, "st": "SUBMITTED", "notes": "Havells MCBs and switchgear for panels", "oa": ago(4), "ea": later(10), "ra": None,
+                 "items": [(18, 200, 600, 0), (29, 300, 2400, 0)]},
+                {"s": 6, "w": 0, "st": "SUBMITTED", "notes": "Bosch tools for service crew", "oa": ago(2), "ea": later(15), "ra": None,
+                 "items": [(27, 10, 1600, 0), (26, 20, 2600, 0)]},
+                {"s": 3, "w": 0, "st": "DRAFT", "notes": "Control cables and photoelectric sensors", "oa": None, "ea": None, "ra": None,
+                 "items": [(17, 30, 4800, 0), (19, 20, 2300, 0), (20, 50, 1700, 0)]},
+                {"s": 4, "w": 0, "st": "DRAFT", "notes": "Transmitters and level sensors", "oa": None, "ea": None, "ra": None,
+                 "items": [(6, 300, 1900, 0), (7, 200, 850, 0)]},
+                {"s": 6, "w": 0, "st": "CANCELLED", "notes": "Crimping tools and helmets — budget withdrawn", "oa": ago(4), "ea": None, "ra": None,
+                 "items": [(27, 50, 1600, 0), (28, 100, 210, 0)]},
+                {"s": 5, "w": 0, "st": "PARTIALLY_RECEIVED", "notes": "Consumables restock — enclosures and switchgear", "oa": ago(1), "ea": later(5), "ra": None,
+                 "items": [(22, 50, 9000, 50), (19, 200, 2300, 80)]},
+                {"s": 4, "w": 1, "st": "COMPLETED", "notes": "Transmitters for plant automation", "oa": ago(30), "ea": ago(5), "ra": ago(2),
+                 "items": [(8, 80, 4800, 80)]},
+                {"s": 3, "w": 2, "st": "SUBMITTED", "notes": "Temperature transmitters — Hosur road project", "oa": ago(6), "ea": later(8), "ra": None,
+                 "items": [(8, 15, 4800, 0)]},
+                {"s": 1, "w": 1, "st": "COMPLETED", "notes": "Controller and HMI panels for Noida hub", "oa": ago(12), "ea": ago(1), "ra": ago(0),
+                 "items": [(1, 50, 26000, 50), (18, 30, 600, 30), (21, 40, 1050, 40)]},
+            ]
+
+            po_objects: list[PurchaseOrder] = []
+            for i, po_data in enumerate(pos):
+                items_data = po_data.pop("items")
+                status = po_data["st"]
+                submitted_at, approved_at, cancelled_at = po_timestamps(status, po_data["oa"])
+                po = PurchaseOrder(
+                    organization_id=organization_id, supplier_id=suppliers[po_data["s"]].id,
+                    warehouse_id=warehouses[po_data["w"]].id,
+                    order_number=f"PO-{now.year}-{i + 1:03d}", status=status,
+                    notes=po_data["notes"],
+                    ordered_at=po_data["oa"], submitted_at=submitted_at, approved_at=approved_at,
+                    expected_at=po_data["ea"], received_at=po_data["ra"], cancelled_at=cancelled_at,
+                )
+                db.add(po)
+                await db.flush()
+                subtotal = Decimal("0.00")
+                for p_idx, qty, up, received_qty in items_data:
+                    unit_price = Decimal(str(up))
+                    item_subtotal = unit_price * qty
+                    subtotal += item_subtotal
+                    db.add(PurchaseOrderItem(
+                        purchase_order_id=po.id, product_id=products[p_idx].id,
+                        quantity=qty, received_quantity=received_qty,
+                        unit_price=unit_price, subtotal=item_subtotal,
+                    ))
+                po.subtotal = subtotal
+                tax_amount = subtotal * Decimal("0.18")
+                po.tax_amount = tax_amount
+                po.total = subtotal + tax_amount
+                po_objects.append(po)
+            await db.flush()
+            print(f"  {len(pos)} purchase orders created")
+
             # ── Stock Movements (15) ────────────────────────────────────
+            # reference_id uses the auto-generated PurchaseOrder.id; sales orders use an auto-generated SO code.
             movements = [
-                StockMovement(organization_id=organization_id, product_id=products[0].id, warehouse_id=warehouses[0].id, type="in", quantity=500, reference_type="purchase_order", reference_id=1, notes="PO-001 received — initial PLC stock"),
-                StockMovement(organization_id=organization_id, product_id=products[1].id, warehouse_id=warehouses[0].id, type="in", quantity=100, reference_type="purchase_order", reference_id=2, notes="PO-002 — Schneider Modicon stock"),
-                StockMovement(organization_id=organization_id, product_id=products[11].id, warehouse_id=warehouses[0].id, type="out", quantity=3, reference_type="sales_order", reference_id=101, notes="Issued for project Siemens HMI upgrade"),
-                StockMovement(organization_id=organization_id, product_id=products[17].id, warehouse_id=warehouses[0].id, type="out", quantity=5, reference_type="sales_order", reference_id=102, notes="Issued for panel wiring"),
-                StockMovement(organization_id=organization_id, product_id=products[6].id, warehouse_id=warehouses[0].id, type="out", quantity=30, reference_type="sales_order", reference_id=103, notes="Sensors issued for line automation"),
-                StockMovement(organization_id=organization_id, product_id=products[12].id, warehouse_id=warehouses[1].id, type="in", quantity=60, reference_type="purchase_order", reference_id=3, notes="PO-003 restock Schneider HMIs"),
+                StockMovement(organization_id=organization_id, product_id=products[0].id, warehouse_id=warehouses[0].id, type="in", quantity=500, reference_type="purchase_order", reference_id=po_objects[0].id, notes="PO-001 received — initial PLC stock"),
+                StockMovement(organization_id=organization_id, product_id=products[1].id, warehouse_id=warehouses[0].id, type="in", quantity=100, reference_type="purchase_order", reference_id=po_objects[1].id, notes="PO-002 — Schneider Modicon stock"),
+                StockMovement(organization_id=organization_id, product_id=products[11].id, warehouse_id=warehouses[0].id, type="out", quantity=3, reference_type="sales_order", reference_id=None, notes="SO-2026-101 — Siemens HMI upgrade project"),
+                StockMovement(organization_id=organization_id, product_id=products[17].id, warehouse_id=warehouses[0].id, type="out", quantity=5, reference_type="sales_order", reference_id=None, notes="SO-2026-102 — panel wiring"),
+                StockMovement(organization_id=organization_id, product_id=products[6].id, warehouse_id=warehouses[0].id, type="out", quantity=30, reference_type="sales_order", reference_id=None, notes="SO-2026-103 — line automation"),
+                StockMovement(organization_id=organization_id, product_id=products[12].id, warehouse_id=warehouses[1].id, type="in", quantity=60, reference_type="purchase_order", reference_id=po_objects[2].id, notes="PO-003 restock Schneider HMIs"),
                 StockMovement(organization_id=organization_id, product_id=products[19].id, warehouse_id=warehouses[2].id, type="adjustment", quantity=-3, reference_type="adjustment", reference_id=None, notes="Damaged contactor write-off"),
-                StockMovement(organization_id=organization_id, product_id=products[2].id, warehouse_id=warehouses[1].id, type="in", quantity=500, reference_type="purchase_order", reference_id=4, notes="PO-004 Distributed I/O modules received"),
-                StockMovement(organization_id=organization_id, product_id=products[23].id, warehouse_id=warehouses[0].id, type="out", quantity=2, reference_type="sales_order", reference_id=104, notes="Telemetry modules issued"),
-                StockMovement(organization_id=organization_id, product_id=products[5].id, warehouse_id=warehouses[0].id, type="out", quantity=15, reference_type="sales_order", reference_id=105, notes="Redundant CPUs for safety panel"),
-                StockMovement(organization_id=organization_id, product_id=products[9].id, warehouse_id=warehouses[3].id, type="in", quantity=50, reference_type="purchase_order", reference_id=5, notes="PO-005 transmitters for stock"),
-                StockMovement(organization_id=organization_id, product_id=products[4].id, warehouse_id=warehouses[1].id, type="in", quantity=10, reference_type="purchase_order", reference_id=6, notes="PO-006 IoT gateways"),
-                StockMovement(organization_id=organization_id, product_id=products[14].id, warehouse_id=warehouses[0].id, type="out", quantity=30, reference_type="sales_order", reference_id=106, notes="VFDs for pump control assembly"),
-                StockMovement(organization_id=organization_id, product_id=products[25].id, warehouse_id=warehouses[0].id, type="out", quantity=20, reference_type="sales_order", reference_id=107, notes="Cable trays for plant installation"),
+                StockMovement(organization_id=organization_id, product_id=products[2].id, warehouse_id=warehouses[1].id, type="in", quantity=500, reference_type="purchase_order", reference_id=po_objects[0].id, notes="PO-001 Distributed I/O modules received"),
+                StockMovement(organization_id=organization_id, product_id=products[23].id, warehouse_id=warehouses[0].id, type="out", quantity=2, reference_type="sales_order", reference_id=None, notes="SO-2026-104 — telemetry modules issued"),
+                StockMovement(organization_id=organization_id, product_id=products[5].id, warehouse_id=warehouses[0].id, type="out", quantity=15, reference_type="sales_order", reference_id=None, notes="SO-2026-105 — redundant CPUs for safety panel"),
+                StockMovement(organization_id=organization_id, product_id=products[8].id, warehouse_id=warehouses[1].id, type="in", quantity=80, reference_type="purchase_order", reference_id=po_objects[12].id, notes="PO-013 transmitters for stock"),
+                StockMovement(organization_id=organization_id, product_id=products[4].id, warehouse_id=warehouses[1].id, type="in", quantity=10, reference_type="adjustment", reference_id=None, notes="Initial IoT gateway placement"),
+                StockMovement(organization_id=organization_id, product_id=products[14].id, warehouse_id=warehouses[0].id, type="out", quantity=30, reference_type="sales_order", reference_id=None, notes="SO-2026-106 — VFDs for pump control assembly"),
+                StockMovement(organization_id=organization_id, product_id=products[25].id, warehouse_id=warehouses[0].id, type="out", quantity=20, reference_type="sales_order", reference_id=None, notes="SO-2026-107 — cable trays for plant installation"),
                 StockMovement(organization_id=organization_id, product_id=products[8].id, warehouse_id=warehouses[1].id, type="adjustment", quantity=5, reference_type="adjustment", reference_id=None, notes="Inventory count correction"),
             ]
             db.add_all(movements)
             await db.flush()
             print(f"  {len(movements)} stock movements created")
 
-            # ── Suppliers (8) ───────────────────────────────────────────
-            suppliers = [
-                Supplier(organization_id=organization_id, name="Siemens India Limited", email="orders@siemens.co.in", phone="+91-22-6750-1000",
-                          address="Birla Aurora, 21st Floor, Dr. Annie Besant Road, Worli", city="Mumbai", state="Maharashtra",
-                          gst_number="27AABCT1234E1Z1", contact_person="Rajesh Mehta", payment_terms="Net 45"),
-                Supplier(organization_id=organization_id, name="Schneider Electric India", email="supply@schneider.co.in", phone="+91-80-4345-6700",
-                          address="Bearys Horizon, 14, DivyaSree Chambers", city="Bangalore", state="Karnataka",
-                          gst_number="29AAACU5678E1ZP", contact_person="Priya Kulkarni", payment_terms="Net 30"),
-                Supplier(organization_id=organization_id, name="Philips India Ltd — Lighting Division", email="b2b.lighting@philips.com", phone="+91-120-439-2000",
-                          address="Philips Innovation Campus, Manyata Tech Park", city="Bangalore", state="Karnataka",
-                          gst_number="29AAACP9012E1ZR", contact_person="Arun Nair", payment_terms="Net 60"),
-                Supplier(organization_id=organization_id, name="Omron Automation Pvt Ltd", email="project.sales@omron.com", phone="+91-22-3981-8000",
-                          address="Omron House, 6A Shantinagar, Santacruz East", city="Mumbai", state="Maharashtra",
-                          gst_number="27AABCA3456E1ZT", contact_person="Sneha Deshmukh", payment_terms="Net 30"),
-                Supplier(organization_id=organization_id, name="Honeywell Automation India", email="order@honeywell.com", phone="+91-20-2747-3000",
-                          address="56 & 57, Hadapsar Industrial Estate", city="Pune", state="Maharashtra",
-                          gst_number="27AAACF7890E1ZQ", contact_person="Vikram Patil", payment_terms="Net 45"),
-                Supplier(organization_id=organization_id, name="Legrand India Pvt Ltd", email="sales@legrand.in", phone="+91-20-6608-2000",
-                          address="Plot P-17, MIDC Ranjangaon", city="Pune", state="Maharashtra",
-                          gst_number="27AAACL2345E1ZK", contact_person="Anita Desai", payment_terms="Net 30"),
-                Supplier(organization_id=organization_id, name="Bosch Power Tools India", email="tools.supply@bosch.in", phone="+91-80-6789-1000",
-                          address="Bosch House, Hosur Road, Adugodi", city="Bangalore", state="Karnataka",
-                          gst_number="29AAACB6789E1ZW", contact_person="Karan Singh", payment_terms="Net 45"),
-                Supplier(organization_id=organization_id, name="Havells India Limited", email="b2b@havells.com", phone="+91-120-477-1000",
-                          address="QRG Towers, 6, Sector 16, Institutional Area", city="Noida", state="Uttar Pradesh",
-                          gst_number="09AAACH3456E1ZM", contact_person="Ravi Agarwal", payment_terms="Net 30"),
-            ]
-            for s in suppliers:
-                db.add(s)
-            await db.flush()
-            print(f"  {len(suppliers)} suppliers created")
-
-            # ── Purchase Orders (15) ────────────────────────────────────
-            pos = [
-                {"s": 0, "w": 0, "on": "PO-2026-001", "st": "received", "notes": "Bulk PLCs and I/O modules for Q3 projects", "oa": ago(25), "ea": ago(5), "ra": ago(3),
-                 "items": [(0, 300, 18000), (2, 500, 11000), (5, 50, 62000)]},
-                {"s": 1, "w": 0, "on": "PO-2026-002", "st": "received", "notes": "Monthly Modicon controller replenishment", "oa": ago(20), "ea": ago(2), "ra": ago(1),
-                 "items": [(1, 100, 26000)]},
-                {"s": 2, "w": 1, "on": "PO-2026-003", "st": "received", "notes": "HMI panel stock restock", "oa": ago(18), "ea": ago(3), "ra": ago(1),
-                 "items": [(12, 80, 20000)]},
-                {"s": 0, "w": 1, "on": "PO-2026-004", "st": "ordered", "notes": "Distributed I/O and processor modules", "oa": ago(7), "ea": later(7), "ra": None,
-                 "items": [(2, 300, 11000), (5, 30, 62000)]},
-                {"s": 5, "w": 3, "on": "PO-2026-005", "st": "ordered", "notes": "Enclosures and cable trays restock", "oa": ago(5), "ea": later(10), "ra": None,
-                 "items": [(22, 100, 9000), (25, 80, 1300)]},
-                {"s": 0, "w": 1, "on": "PO-2026-006", "st": "ordered", "notes": "IoT edge gateways and telemetry panels", "oa": ago(3), "ea": later(14), "ra": None,
-                 "items": [(4, 10, 5800), (23, 15, 85000)]},
-                {"s": 7, "w": 0, "on": "PO-2026-007", "st": "ordered", "notes": "Havells MCBs and switchgear for panels", "oa": ago(4), "ea": later(10), "ra": None,
-                 "items": [(18, 200, 600), (29, 300, 2400)]},
-                {"s": 6, "w": 0, "on": "PO-2026-008", "st": "ordered", "notes": "Bosch tools for service crew", "oa": ago(2), "ea": later(15), "ra": None,
-                 "items": [(27, 10, 1600), (26, 20, 2600)]},
-                {"s": 3, "w": 0, "on": "PO-2026-009", "st": "draft", "notes": "Control cables and photoelectric sensors", "oa": None, "ea": None, "ra": None,
-                 "items": [(17, 30, 4800), (19, 20, 2300), (20, 50, 1700)]},
-                {"s": 4, "w": 0, "on": "PO-2026-010", "st": "draft", "notes": "Transmitters and level sensors", "oa": None, "ea": None, "ra": None,
-                 "items": [(6, 300, 1900), (7, 200, 850)]},
-                {"s": 6, "w": 0, "on": "PO-2026-011", "st": "draft", "notes": "Crimping tools and helmets", "oa": None, "ea": None, "ra": None,
-                 "items": [(27, 50, 1600), (28, 100, 210)]},
-                {"s": 5, "w": 0, "on": "PO-2026-012", "st": "ordered", "notes": "Consumables restock — enclosures and switchgear", "oa": ago(1), "ea": later(5), "ra": None,
-                 "items": [(22, 50, 9000), (19, 200, 2300)]},
-                {"s": 4, "w": 1, "on": "PO-2026-013", "st": "received", "notes": "Transmitters for plant automation", "oa": ago(30), "ea": ago(5), "ra": ago(2),
-                 "items": [(8, 80, 4800)]},
-                {"s": 3, "w": 2, "on": "PO-2026-014", "st": "ordered", "notes": "Temperature transmitters — Hosur road project", "oa": ago(6), "ea": later(8), "ra": None,
-                 "items": [(8, 15, 4800)]},
-                {"s": 1, "w": 1, "on": "PO-2026-015", "st": "received", "notes": "Controller and HMI panels for Noida hub", "oa": ago(12), "ea": ago(1), "ra": ago(0),
-                 "items": [(1, 50, 26000), (18, 30, 600), (21, 40, 1050)]},
+            # ── Serial Numbers (28) ─────────────────────────────────────
+            # Serial tags are auto-generated as {SKU}-{NNN}, SKU bound to the product.
+            # product_12 serials were received via PO-003, so they carry the real PO id.
+            serial_plan = [
+                # (product_idx, warehouse_idx, count, status)
+                (4,  1, 3, "in_stock"),
+                (4,  1, 1, "reserved"),
+                (4,  1, 1, "sold"),
+                (4,  1, 1, "in_transit"),
+                (11, 0, 4, "in_stock"),
+                (11, 0, 2, "sold"),
+                (11, 0, 1, "returned"),
+                (11, 1, 1, "repair"),
+                (11, 1, 1, "in_stock"),
+                (26, 0, 3, "in_stock"),
+                (26, 0, 2, "sold"),
+                (26, 0, 1, "damaged"),
+                (12, 1, 3, "in_stock"),
+                (12, 1, 1, "returned"),
+                (23, 0, 2, "in_stock"),
+                (23, 0, 1, "retired"),
             ]
 
-            for po_data in pos:
-                items_data = po_data.pop("items")
-                po = PurchaseOrder(
-                    organization_id=organization_id, supplier_id=suppliers[po_data["s"]].id,
-                    warehouse_id=warehouses[po_data["w"]].id,
-                    order_number=po_data["on"], status=po_data["st"],
-                    notes=po_data["notes"],
-                    ordered_at=po_data["oa"], expected_at=po_data["ea"],
-                    received_at=po_data["ra"],
-                )
-                db.add(po)
-                await db.flush()
-                subtotal = Decimal("0.00")
-                for p_idx, qty, up in items_data:
-                    unit_price = Decimal(str(up))
-                    item_subtotal = unit_price * qty
-                    subtotal += item_subtotal
-                    db.add(PurchaseOrderItem(
-                        purchase_order_id=po.id, product_id=products[p_idx].id,
-                        quantity=qty, unit_price=unit_price, subtotal=item_subtotal,
-                    ))
-                po.subtotal = subtotal
-                po.tax_amount = subtotal * Decimal("0.18")
-                po.total = subtotal + po.tax_amount
-            await db.flush()
-            print(f"  {len(pos)} purchase orders created")
-
-            # ── Serial Numbers (20) ────────────────────────────────────
-            serials = [
-                # IoT Gateway — serial tracked
-                SerialNumber(organization_id=organization_id, product_id=products[4].id, warehouse_id=warehouses[1].id, serial_number="IOT-GW200-001", status="in_stock"),
-                SerialNumber(organization_id=organization_id, product_id=products[4].id, warehouse_id=warehouses[1].id, serial_number="IOT-GW200-002", status="in_stock"),
-                SerialNumber(organization_id=organization_id, product_id=products[4].id, warehouse_id=warehouses[1].id, serial_number="IOT-GW200-003", status="sold"),
-                SerialNumber(organization_id=organization_id, product_id=products[4].id, warehouse_id=warehouses[1].id, serial_number="IOT-GW200-004", status="in_stock"),
-                # Siemens KTP1000 HMI — serial tracked
-                SerialNumber(organization_id=organization_id, product_id=products[11].id, warehouse_id=warehouses[0].id, serial_number="HMI-KTP1000-001", status="in_stock"),
-                SerialNumber(organization_id=organization_id, product_id=products[11].id, warehouse_id=warehouses[0].id, serial_number="HMI-KTP1000-002", status="sold"),
-                SerialNumber(organization_id=organization_id, product_id=products[11].id, warehouse_id=warehouses[0].id, serial_number="HMI-KTP1000-003", status="in_stock"),
-                SerialNumber(organization_id=organization_id, product_id=products[11].id, warehouse_id=warehouses[0].id, serial_number="HMI-KTP1000-004", status="sold"),
-                SerialNumber(organization_id=organization_id, product_id=products[11].id, warehouse_id=warehouses[0].id, serial_number="HMI-KTP1000-005", status="in_stock"),
-                SerialNumber(organization_id=organization_id, product_id=products[11].id, warehouse_id=warehouses[1].id, serial_number="HMI-KTP1000-006", status="in_stock"),
-                SerialNumber(organization_id=organization_id, product_id=products[11].id, warehouse_id=warehouses[1].id, serial_number="HMI-KTP1000-007", status="returned"),
-                # Drill machine — serial tracked
-                SerialNumber(organization_id=organization_id, product_id=products[26].id, warehouse_id=warehouses[0].id, serial_number="DM-13MM-001", status="in_stock"),
-                SerialNumber(organization_id=organization_id, product_id=products[26].id, warehouse_id=warehouses[0].id, serial_number="DM-13MM-002", status="in_stock"),
-                SerialNumber(organization_id=organization_id, product_id=products[26].id, warehouse_id=warehouses[0].id, serial_number="DM-13MM-003", status="sold"),
-                SerialNumber(organization_id=organization_id, product_id=products[26].id, warehouse_id=warehouses[0].id, serial_number="DM-13MM-004", status="sold"),
-                SerialNumber(organization_id=organization_id, product_id=products[26].id, warehouse_id=warehouses[0].id, serial_number="DM-13MM-005", status="in_stock"),
-                # Schneider Graphic HMI — serial tracked (also tracked via purchase order)
-                SerialNumber(organization_id=organization_id, product_id=products[12].id, warehouse_id=warehouses[1].id, serial_number="HMI-GT7-001", status="in_stock", purchase_order_id=3),
-                SerialNumber(organization_id=organization_id, product_id=products[12].id, warehouse_id=warehouses[1].id, serial_number="HMI-GT7-002", status="in_stock", purchase_order_id=3),
-                SerialNumber(organization_id=organization_id, product_id=products[12].id, warehouse_id=warehouses[1].id, serial_number="HMI-GT7-003", status="in_stock", purchase_order_id=3),
-                SerialNumber(organization_id=organization_id, product_id=products[12].id, warehouse_id=warehouses[1].id, serial_number="HMI-GT7-004", status="returned"),
-            ]
+            serials = []
+            seq_by_product: dict[int, int] = {}
+            sales_seq = 101
+            for p_idx, wh_idx, count, status in serial_plan:
+                product = products[p_idx]
+                seq_by_product[p_idx] = seq_by_product.get(p_idx, 0) + 1
+                first_seq = seq_by_product[p_idx]
+                seq_by_product[p_idx] = seq_by_product[p_idx] + count - 1
+                for n in range(first_seq, first_seq + count):
+                    serial = SerialNumber(
+                        organization_id=organization_id,
+                        product_id=product.id,
+                        warehouse_id=warehouses[wh_idx].id,
+                        serial_number=f"{product.sku}-{n:03d}",
+                        sku=product.sku,
+                        status=status,
+                    )
+                    if status == "in_stock":
+                        serial.activated_at = ago(10 + (n % 20))
+                        serial.warranty_until = later(730)
+                    elif status == "sold":
+                        serial.sold_at = ago(5 + (n % 15))
+                        serial.sales_order_code = f"SO-2026-{sales_seq}"
+                        sales_seq += 1
+                        serial.activated_at = ago(30 + (n % 20))
+                    elif status == "reserved":
+                        serial.sales_order_code = f"SO-2026-{sales_seq}"
+                        sales_seq += 1
+                        serial.activated_at = ago(20 + (n % 10))
+                    elif status == "in_transit":
+                        serial.notes = "Dispatched to regional hub, awaiting scan-in"
+                        serial.activated_at = ago(15 + (n % 10))
+                    elif status == "returned":
+                        serial.notes = "Returned by customer — pending RMA inspection"
+                        serial.activated_at = ago(60 + (n % 15))
+                    elif status == "repair":
+                        serial.notes = "In service centre — display replacement"
+                        serial.activated_at = ago(90)
+                    elif status == "damaged":
+                        serial.notes = "Damaged in transit — awaiting write-off"
+                        serial.activated_at = ago(40 + (n % 10))
+                    elif status == "retired":
+                        serial.notes = "Decommissioned — EOL beyond warranty"
+                        serial.activated_at = ago(400)
+                    if p_idx == 12 and status == "in_stock":
+                        serial.purchase_order_id = po_objects[2].id
+                    serials.append(serial)
             db.add_all(serials)
             await db.flush()
             print(f"  {len(serials)} serial numbers created")

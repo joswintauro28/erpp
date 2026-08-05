@@ -7,6 +7,7 @@ from app.core.database import async_session_factory
 from app.fulfillment.services import FulfillmentService
 from app.fulfillment.schemas import FulfillmentCreate, FulfillmentItemCreate
 from app.stock.services import StockService
+from app.core.events import publish_event, EVENT_STOCK_SHORTAGE
 
 logger = logging.getLogger("app.worker")
 
@@ -44,7 +45,7 @@ async def process_crm_order_approved(message: aio_pika.IncomingMessage):
                 items.append(
                     FulfillmentItemCreate(
                         product_id=item.get("product_id"),
-                        product_name=item.get("product_name"),
+                        product_name=item.get("product_name") or "Product",
                         sku=item.get("sku"),
                         ordered_quantity=item.get("ordered_quantity", 1),
                         unit_price=item.get("unit_price", 0.0)
@@ -60,6 +61,18 @@ async def process_crm_order_approved(message: aio_pika.IncomingMessage):
             
             # Use async_session_factory to perform DB actions
             async with async_session_factory() as db:
+                from sqlalchemy import select
+                from app.fulfillment.models import SalesOrderFulfillment
+
+                existing_stmt = select(SalesOrderFulfillment).where(
+                    SalesOrderFulfillment.organization_id == organization_id,
+                    SalesOrderFulfillment.sales_order_code == sales_order_code,
+                )
+                existing = await db.execute(existing_stmt)
+                if existing.scalar_one_or_none():
+                    logger.info(f"Fulfillment already exists for sales order {sales_order_code}; skipping duplicate ingest")
+                    return
+
                 fulfillment_service = FulfillmentService(db)
                 # Create the draft fulfillment
                 fulfillment = await fulfillment_service.create_fulfillment(organization_id, fulfillment_create)
@@ -80,40 +93,35 @@ async def process_crm_order_approved(message: aio_pika.IncomingMessage):
                 stock_check_result = await fulfillment_service.check_stock(organization_id, fulfillment.id)
                 logger.info(f"Overall stock check result: {stock_check_result}")
 
-                # Publish shortage event back to CRM if stock is insufficient
-                if not getattr(stock_check_result, "overall_available", True):
-                    from app.core.amqp import get_exchange
-                    exchange = await get_exchange()
-                    if exchange:
-                        try:
-                            shortage_items = []
-                            for item in getattr(stock_check_result, "items", []) or []:
-                                shortage_items.append({
-                                    "product_id": item.product_id,
-                                    "product_name": item.product_name,
-                                    "requested_quantity": item.ordered_quantity,
-                                    "available_quantity": item.available_stock,
-                                    "is_available": item.is_available,
-                                })
-                            event_data = {
-                                "event": "inventory.order.shortage",
-                                "organization_id": organization_id,
-                                "sales_order_code": sales_order_code,
-                                "customer_name": customer_name,
-                                "status": "Stock Hold",
-                                "warehouse_id": getattr(stock_check_result, "warehouse_id", None),
-                                "overall_available": False,
-                                "items": shortage_items,
-                                "timestamp": body.get("timestamp"),
-                            }
-                            message = aio_pika.Message(
-                                body=json.dumps(event_data).encode(),
-                                delivery_mode=aio_pika.DeliveryMode.PERSISTENT,
-                            )
-                            await exchange.publish(message, routing_key="inventory.order.shortage")
-                            logger.info(f"Published inventory.order.shortage event for sales order {sales_order_code}")
-                        except Exception as pub_err:
-                            logger.error(f"Failed to publish inventory.order.shortage: {str(pub_err)}", exc_info=True)
+                # Auto-pick: when stock is fully available, reserve immediately.
+                overall_available = getattr(stock_check_result, "overall_available", False)
+                if overall_available and fulfillment.status in ("QUEUED", "SHORTAGE", "PO_CREATED"):
+                    await fulfillment_service.reserve_stock(organization_id, fulfillment.id)
+                    logger.info(f"Auto-reserved stock for sales order {sales_order_code}")
+                elif not overall_available:
+                    fulfillment.status = "SHORTAGE"
+                    await db.commit()
+                    # Publish shortage event back to CRM if stock is insufficient
+                    shortage_items = []
+                    for item in getattr(stock_check_result, "items", []) or []:
+                        shortage_items.append({
+                            "product_id": item.product_id,
+                            "product_name": item.product_name,
+                            "requested_quantity": item.ordered_quantity,
+                            "available_quantity": item.available_stock,
+                            "is_available": item.is_available,
+                        })
+                    publish_event(
+                        EVENT_STOCK_SHORTAGE,
+                        organization_id=organization_id,
+                        sales_order_code=sales_order_code,
+                        customer_name=customer_name,
+                        status="Stock Hold",
+                        warehouse_id=getattr(stock_check_result, "warehouse_id", None),
+                        overall_available=False,
+                        items=shortage_items,
+                    )
+                    logger.info(f"Published inventory.order.shortage event for sales order {sales_order_code}")
                 
         except Exception as e:
             logger.error(f"Error processing crm.order.approved: {str(e)}", exc_info=True)

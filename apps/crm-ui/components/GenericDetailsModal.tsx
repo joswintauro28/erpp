@@ -841,12 +841,21 @@ const GenericDetailsModal: React.FC<GenericDetailsModalProps> = ({ record, entit
                   </div>
                   <div>
                     <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Status *</Label>
-                    <Input
-                      placeholder="e.g. Pending, Confirmed"
+                    <select
                       value={salesOrderData.status}
                       onChange={e => setSalesOrderData(p => ({ ...p, status: e.target.value }))}
+                      className="h-9 w-full rounded-md border border-[var(--shell-border)] bg-[var(--shell-bg)] px-3 text-xs text-[var(--shell-foreground)] focus:outline-none focus:ring-1 focus:ring-[var(--shell-brand)]"
                       required
-                    />
+                    >
+                      <option value="Pending">Pending</option>
+                      <option value="Confirmed">Confirmed</option>
+                      <option value="Approved">Approved</option>
+                      <option value="Invoiced">Invoiced</option>
+                      <option value="Paid">Paid</option>
+                      <option value="Cancelled">Cancelled</option>
+                      <option value="Hold">Hold</option>
+                      <option value="Stock Hold">Stock Hold</option>
+                    </select>
                   </div>
                 </div>
                 <div>
@@ -917,12 +926,21 @@ const GenericDetailsModal: React.FC<GenericDetailsModalProps> = ({ record, entit
             <form onSubmit={handleInvoiceSubmit} className="flex flex-col gap-4">
               <div>
                 <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Status *</Label>
-                <Input
-                  placeholder="e.g. Paid, Delivered"
+                <select
                   value={invoiceStatus}
                   onChange={e => setInvoiceStatus(e.target.value)}
+                  className="h-9 w-full rounded-md border border-[var(--shell-border)] bg-[var(--shell-bg)] px-3 text-xs text-[var(--shell-foreground)] focus:outline-none focus:ring-1 focus:ring-[var(--shell-brand)]"
                   required
-                />
+                >
+                  <option value="Pending">Pending</option>
+                  <option value="Confirmed">Confirmed</option>
+                  <option value="Approved">Approved</option>
+                  <option value="Invoiced">Invoiced</option>
+                  <option value="Paid">Paid</option>
+                  <option value="Cancelled">Cancelled</option>
+                  <option value="Hold">Hold</option>
+                  <option value="Stock Hold">Stock Hold</option>
+                </select>
               </div>
               <div>
                 <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Upload Invoice (optional)</Label>

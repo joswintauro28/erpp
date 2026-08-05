@@ -19,9 +19,13 @@ interface PurchaseOrder {
   total: number;
   notes?: string | null;
   ordered_at?: string | null;
+  submitted_at?: string | null;
+  approved_at?: string | null;
   expected_at?: string | null;
   received_at?: string | null;
+  cancelled_at?: string | null;
   created_at: string;
+  items?: { id: number; product_id: number; quantity: number; received_quantity: number; unit_price: number }[];
 }
 
 interface Supplier {
@@ -54,7 +58,9 @@ export default function PurchaseOrdersPage() {
   const [poNotes, setPoNotes] = useState("Reorder stock for inventory replenishment");
 
   // Edit PO Status Form
-  const [editStatus, setEditStatus] = useState("ordered");
+  const [editStatus, setEditStatus] = useState("DRAFT");
+  const [editReceivedQty, setEditReceivedQty] = useState<number>(0);
+  const [editReceivedProductId, setEditReceivedProductId] = useState<number | null>(null);
 
   const fetchData = async () => {
     setLoading(true);
@@ -110,9 +116,18 @@ export default function PurchaseOrdersPage() {
   const handleUpdateStatus = async () => {
     if (!selectedOrder) return;
     try {
-      await api.put(`/purchase-orders/${selectedOrder.id}/status`, {
-        status: editStatus,
-      });
+      const payload: Record<string, unknown> = { status: editStatus };
+      if (editStatus === "PARTIALLY_RECEIVED" || editStatus === "COMPLETED") {
+        const items =
+          selectedOrder.items && selectedOrder.items.length > 0
+            ? selectedOrder.items
+            : [{ id: 0, product_id: editReceivedProductId ?? 0, quantity: 0, received_quantity: 0, unit_price: 0 }];
+        payload.received_items = items.map((it) => ({
+          product_id: it.product_id,
+          quantity: it.quantity,
+        }));
+      }
+      await api.put(`/purchase-orders/${selectedOrder.id}/status`, payload);
       setSelectedOrder(null);
       fetchData();
     } catch (err) {
@@ -134,17 +149,23 @@ export default function PurchaseOrdersPage() {
   };
 
   const getStatusBadge = (s: string) => {
-    const st = s.toLowerCase();
-    if (st === "ordered" || st === "po_created") {
-      return <Badge className="bg-amber-600 text-white text-[10px]">Ordered / Sent</Badge>;
+    const st = s.toUpperCase();
+    switch (st) {
+      case "DRAFT":
+        return <Badge variant="secondary" className="text-[10px]">Draft</Badge>;
+      case "SUBMITTED":
+        return <Badge className="bg-amber-600 text-white text-[10px]">Submitted</Badge>;
+      case "APPROVED":
+        return <Badge className="bg-blue-600 text-white text-[10px]">Approved</Badge>;
+      case "PARTIALLY_RECEIVED":
+        return <Badge className="bg-violet-600 text-white text-[10px]">Partially Received</Badge>;
+      case "COMPLETED":
+        return <Badge className="bg-emerald-600 text-white text-[10px]">Completed</Badge>;
+      case "CANCELLED":
+        return <Badge variant="destructive" className="text-[10px]">Cancelled</Badge>;
+      default:
+        return <Badge variant="secondary" className="text-[10px]">{st}</Badge>;
     }
-    if (st === "received") {
-      return <Badge className="bg-emerald-600 text-white text-[10px]">Goods Received</Badge>;
-    }
-    if (st === "cancelled") {
-      return <Badge variant="destructive" className="text-[10px]">Cancelled</Badge>;
-    }
-    return <Badge variant="secondary" className="text-[10px]">Draft</Badge>;
   };
 
   return (
@@ -352,10 +373,12 @@ export default function PurchaseOrdersPage() {
                   onChange={(e) => setEditStatus(e.target.value)}
                   className="p-1.5 border border-border rounded bg-background text-xs font-semibold"
                 >
-                  <option value="draft">Draft</option>
-                  <option value="ordered">Ordered & Sent</option>
-                  <option value="received">Goods Received (Stock Added)</option>
-                  <option value="cancelled">Cancelled</option>
+                  <option value="DRAFT">Draft</option>
+                  <option value="SUBMITTED">Submitted to Vendor</option>
+                  <option value="APPROVED">Approved</option>
+                  <option value="PARTIALLY_RECEIVED">Partially Received (Stock Added)</option>
+                  <option value="COMPLETED">Goods Received (Stock Added)</option>
+                  <option value="CANCELLED">Cancelled</option>
                 </select>
                 <Button size="xs" onClick={handleUpdateStatus} className="bg-[#8C1D24] text-white hover:bg-[#70171d]">
                   Save Status
@@ -379,8 +402,8 @@ export default function PurchaseOrdersPage() {
                   </div>
                 </div>
 
-                {/* Milestone 2: Ordered */}
-                {(selectedOrder.status === "ordered" || selectedOrder.status === "received" || selectedOrder.ordered_at) && (
+                {/* Milestone 2: Submitted */}
+                {["SUBMITTED", "APPROVED", "PARTIALLY_RECEIVED", "COMPLETED"].includes(selectedOrder.status) && (
                   <div className="relative">
                     <div className="absolute -left-[21px] mt-0.5 bg-background border border-border rounded-full p-0.5">
                       <Truck className="h-3 w-3 text-amber-600" />
@@ -388,20 +411,39 @@ export default function PurchaseOrdersPage() {
                     <div>
                       <p className="font-semibold text-foreground">Sent to Supplier Vendor</p>
                       <p className="text-[10px] text-muted-foreground">
-                        {selectedOrder.ordered_at ? new Date(selectedOrder.ordered_at).toLocaleString() : "Confirmed"}
+                        {selectedOrder.submitted_at || selectedOrder.ordered_at
+                          ? new Date(selectedOrder.submitted_at || selectedOrder.ordered_at!).toLocaleString()
+                          : "Confirmed"}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Milestone 2b: Approved */}
+                {["APPROVED", "PARTIALLY_RECEIVED", "COMPLETED"].includes(selectedOrder.status) && (
+                  <div className="relative">
+                    <div className="absolute -left-[21px] mt-0.5 bg-background border border-border rounded-full p-0.5">
+                      <CheckCircle2 className="h-3 w-3 text-blue-600" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-foreground">Purchase Order Approved</p>
+                      <p className="text-[10px] text-muted-foreground">
+                        {selectedOrder.approved_at ? new Date(selectedOrder.approved_at).toLocaleString() : "Confirmed"}
                       </p>
                     </div>
                   </div>
                 )}
 
                 {/* Milestone 3: Received */}
-                {selectedOrder.status === "received" && (
+                {["PARTIALLY_RECEIVED", "COMPLETED"].includes(selectedOrder.status) && (
                   <div className="relative">
                     <div className="absolute -left-[21px] mt-0.5 bg-background border border-border rounded-full p-0.5">
                       <CheckCircle2 className="h-3 w-3 text-emerald-600" />
                     </div>
                     <div>
-                      <p className="font-bold text-emerald-600">Goods Received & Stock Incremented</p>
+                      <p className="font-bold text-emerald-600">
+                        {selectedOrder.status === "PARTIALLY_RECEIVED" ? "Partially Received & Stock Updated" : "Goods Received & Stock Incremented"}
+                      </p>
                       <p className="text-[10px] text-muted-foreground">
                         {selectedOrder.received_at ? new Date(selectedOrder.received_at).toLocaleString() : "Updated"}
                       </p>
@@ -410,7 +452,7 @@ export default function PurchaseOrdersPage() {
                 )}
 
                 {/* Milestone 4: Cancelled */}
-                {selectedOrder.status === "cancelled" && (
+                {selectedOrder.status === "CANCELLED" && (
                   <div className="relative">
                     <div className="absolute -left-[21px] mt-0.5 bg-background border border-border rounded-full p-0.5">
                       <AlertTriangle className="h-3 w-3 text-destructive" />

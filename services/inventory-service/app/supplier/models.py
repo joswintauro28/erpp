@@ -20,6 +20,8 @@ class Supplier(Base):
     gst_number: Mapped[str | None] = mapped_column(sa.String(100), nullable=True)
     contact_person: Mapped[str | None] = mapped_column(sa.String(255), nullable=True)
     payment_terms: Mapped[str | None] = mapped_column(sa.String(255), nullable=True)
+    # Lifecycle status: ACTIVE | INACTIVE | SUSPENDED
+    status: Mapped[str] = mapped_column(sa.String(50), default="ACTIVE")
     is_active: Mapped[bool] = mapped_column(sa.Boolean, default=True)
     created_at: Mapped[datetime] = mapped_column(
         sa.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)

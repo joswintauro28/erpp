@@ -48,7 +48,7 @@ async def adjust_stock(
 ):
     service = StockService(db)
     return await service.adjust_stock(
-        org_id, req.product_id, req.warehouse_id, req.new_quantity, req.notes,
+        org_id, req.product.id, req.warehouse.id, req.new_quantity, req.notes,
     )
 
 
@@ -59,7 +59,10 @@ async def record_movement(
     org_id: int = Depends(get_current_org_id),
 ):
     service = StockService(db)
-    return await service.record_movement(org_id, **req.model_dump())
+    data = req.model_dump()
+    data["product_id"] = data.pop("product")["id"]
+    data["warehouse_id"] = data.pop("warehouse")["id"]
+    return await service.record_movement(org_id, **data)
 
 
 @router.get("/movements", response_model=list[StockMovementOut])

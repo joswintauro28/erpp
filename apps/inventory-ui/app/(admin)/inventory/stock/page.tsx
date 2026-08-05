@@ -33,8 +33,21 @@ interface StockItem {
   warehouse_name?: string;
 }
 
+interface Product {
+  id: number;
+  name: string;
+  sku?: string;
+}
+
+interface Warehouse {
+  id: number;
+  name: string;
+}
+
 export default function StockPage() {
   const [stock, setStock] = useState<StockItem[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [isAdjustOpen, setIsAdjustOpen] = useState(false);
@@ -77,9 +90,18 @@ export default function StockPage() {
 
   const fetchStock = () => {
     setLoading(true);
-    api
-      .get<StockItem[]>("/stock")
-      .then(setStock)
+    Promise.all([
+      api.get<StockItem[]>("/stock"),
+      api.get<Product[]>("/products"),
+      api.get<Warehouse[]>("/warehouses"),
+    ])
+      .then(([stockData, productData, warehouseData]) => {
+        setStock(stockData || []);
+        setProducts(productData || []);
+        setWarehouses(warehouseData || []);
+        if (productData && productData.length > 0) setAdjustProductId(productData[0].id);
+        if (warehouseData && warehouseData.length > 0) setAdjustWarehouseId(warehouseData[0].id);
+      })
       .catch(() => {})
       .finally(() => setLoading(false));
   };
@@ -91,8 +113,8 @@ export default function StockPage() {
   const handleAdjustStock = async () => {
     try {
       await api.put("/stock/adjust", {
-        product_id: Number(adjustProductId),
-        warehouse_id: Number(adjustWarehouseId),
+        product: { id: Number(adjustProductId) },
+        warehouse: { id: Number(adjustWarehouseId) },
         new_quantity: Number(adjustQty),
         notes: adjustNotes,
       });
@@ -100,6 +122,7 @@ export default function StockPage() {
       fetchStock();
     } catch (err) {
       console.error(err);
+      alert("Failed to adjust stock. Check backend logs.");
     }
   };
 
@@ -264,22 +287,40 @@ export default function StockPage() {
           </DialogHeader>
           <div className="space-y-3 my-2 text-xs">
             <div>
-              <label className="font-medium block mb-1">Product ID</label>
-              <input
-                type="number"
+              <label className="font-medium block mb-1">Product</label>
+              <select
                 value={adjustProductId}
                 onChange={(e) => setAdjustProductId(Number(e.target.value))}
                 className="w-full p-2 border border-border rounded bg-background"
-              />
+              >
+                {products.length === 0 ? (
+                  <option value={1}>Product #1 (Auto-created)</option>
+                ) : (
+                  products.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name} {p.sku ? `(${p.sku})` : ""}
+                    </option>
+                  ))
+                )}
+              </select>
             </div>
             <div>
-              <label className="font-medium block mb-1">Warehouse ID</label>
-              <input
-                type="number"
+              <label className="font-medium block mb-1">Warehouse</label>
+              <select
                 value={adjustWarehouseId}
                 onChange={(e) => setAdjustWarehouseId(Number(e.target.value))}
                 className="w-full p-2 border border-border rounded bg-background"
-              />
+              >
+                {warehouses.length === 0 ? (
+                  <option value={1}>Warehouse #1 (Auto-created)</option>
+                ) : (
+                  warehouses.map((w) => (
+                    <option key={w.id} value={w.id}>
+                      {w.name}
+                    </option>
+                  ))
+                )}
+              </select>
             </div>
             <div>
               <label className="font-medium block mb-1">New Physical Quantity</label>

@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class SupplierCreate(BaseModel):
@@ -13,6 +13,7 @@ class SupplierCreate(BaseModel):
     gst_number: str | None = None
     contact_person: str | None = None
     payment_terms: str | None = None
+    status: str = Field(default="ACTIVE", pattern="^(ACTIVE|INACTIVE|SUSPENDED)$")
 
 
 class SupplierUpdate(BaseModel):
@@ -26,6 +27,7 @@ class SupplierUpdate(BaseModel):
     contact_person: str | None = None
     payment_terms: str | None = None
     is_active: bool | None = None
+    status: str | None = Field(default=None, pattern="^(ACTIVE|INACTIVE|SUSPENDED)$")
 
 
 class SupplierOut(BaseModel):
@@ -40,6 +42,7 @@ class SupplierOut(BaseModel):
     gst_number: str | None
     contact_person: str | None
     payment_terms: str | None
+    status: str
     is_active: bool
     created_at: datetime
     updated_at: datetime

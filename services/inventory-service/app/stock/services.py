@@ -1,14 +1,16 @@
 import sqlalchemy as sa
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from fastapi import HTTPException
+from fastapi import HTTPException, status
 
 from app.stock.models import Stock, StockMovement
 from app.core.database import BaseRepository
-
+from app.core.events import publish_event, EVENT_STOCK_ADJUSTED
 
 from app.product.models import Product
 from app.warehouse.models import Warehouse
+
+MOVEMENT_TYPES = ("in", "out", "adjustment")
 
 
 class StockRepository(BaseRepository[Stock]):
@@ -26,6 +28,26 @@ class StockService:
         self.db = db
         self.stock_repo = StockRepository(db)
         self.movement_repo = StockMovementRepository(db)
+
+    async def _resolve_product(self, organization_id: int, product_id: int) -> Product:
+        stmt = sa.select(Product).where(
+            Product.id == product_id, Product.organization_id == organization_id
+        )
+        result = await self.db.execute(stmt)
+        product = result.scalar_one_or_none()
+        if not product:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Product {product_id} not found in this organization")
+        return product
+
+    async def _resolve_warehouse(self, organization_id: int, warehouse_id: int) -> Warehouse:
+        stmt = sa.select(Warehouse).where(
+            Warehouse.id == warehouse_id, Warehouse.organization_id == organization_id
+        )
+        result = await self.db.execute(stmt)
+        warehouse = result.scalar_one_or_none()
+        if not warehouse:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Warehouse {warehouse_id} not found in this organization")
+        return warehouse
 
     async def get_stock(self, organization_id: int, product_id: int | None = None, warehouse_id: int | None = None) -> list[dict]:
         stmt = (
@@ -54,6 +76,12 @@ class StockService:
         return [dict(r._mapping) for r in result.all()]
 
     async def adjust_stock(self, organization_id: int, product_id: int, warehouse_id: int, new_quantity: int, notes: str | None = None) -> Stock:
+        await self._resolve_product(organization_id, product_id)
+        await self._resolve_warehouse(organization_id, warehouse_id)
+
+        if new_quantity < 0:
+            raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Physical quantity cannot be negative")
+
         stmt = sa.select(Stock).where(
             Stock.organization_id == organization_id,
             Stock.product_id == product_id,
@@ -63,6 +91,11 @@ class StockService:
         stock = result.scalar_one_or_none()
 
         if stock:
+            if new_quantity < stock.reserved_quantity:
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail=f"Cannot reduce stock below reserved quantity ({stock.reserved_quantity})",
+                )
             old_qty = stock.quantity
             stock.quantity = new_quantity
         else:
@@ -83,6 +116,17 @@ class StockService:
         self.db.add(movement)
         await self.db.flush()
 
+        publish_event(
+            EVENT_STOCK_ADJUSTED,
+            organization_id=organization_id,
+            product_id=product_id,
+            warehouse_id=warehouse_id,
+            previous_quantity=old_qty,
+            new_quantity=new_quantity,
+            delta=new_quantity - old_qty,
+            notes=notes,
+        )
+
         return stock
 
     async def record_movement(self, organization_id: int, **data) -> StockMovement:
@@ -90,6 +134,14 @@ class StockService:
         warehouse_id = data["warehouse_id"]
         quantity = data["quantity"]
         movement_type = data["type"]
+
+        if movement_type not in MOVEMENT_TYPES:
+            raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=f"Invalid movement type '{movement_type}'. Allowed: in, out, adjustment")
+        if quantity <= 0:
+            raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Movement quantity must be positive")
+
+        await self._resolve_product(organization_id, product_id)
+        await self._resolve_warehouse(organization_id, warehouse_id)
 
         stmt = sa.select(Stock).where(
             Stock.organization_id == organization_id,
@@ -103,13 +155,18 @@ class StockService:
             if movement_type == "in":
                 stock.quantity += quantity
             elif movement_type == "out":
+                if stock.quantity - quantity < 0:
+                    raise HTTPException(
+                        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                        detail=f"Cannot record out movement: available stock is {stock.quantity}, requested {quantity}",
+                    )
                 stock.quantity -= quantity
         else:
-            if movement_type == "in":
+            if movement_type in ("in", "adjustment"):
                 stock = Stock(organization_id=organization_id, product_id=product_id, warehouse_id=warehouse_id, quantity=quantity)
                 self.db.add(stock)
             elif movement_type == "out":
-                raise HTTPException(status_code=400, detail="Cannot record out movement: no stock exists")
+                raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Cannot record out movement: no stock exists")
 
         await self.db.flush()
 
@@ -161,7 +218,7 @@ class StockService:
             stmt = stmt.where(Stock.warehouse_id == warehouse_id)
         result = await self.db.execute(stmt)
         stocks = result.scalars().all()
-        
+
         total_qty = sum(s.quantity for s in stocks)
         total_res = sum(s.reserved_quantity for s in stocks)
         atp = total_qty - total_res

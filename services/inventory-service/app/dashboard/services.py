@@ -33,7 +33,7 @@ class InventoryDashboardService:
 
         pending_po_stmt = sa.select(sa.func.count()).select_from(PurchaseOrder).where(
             PurchaseOrder.organization_id == organization_id,
-            PurchaseOrder.status.in_(["draft", "ordered"]),
+            PurchaseOrder.status.in_(["DRAFT", "SUBMITTED", "APPROVED", "PARTIALLY_RECEIVED"]),
         )
         result = await self.db.execute(pending_po_stmt)
         pending_po_count = result.scalar() or 0

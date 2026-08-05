@@ -21,6 +21,7 @@ interface Supplier {
   gst_number?: string | null;
   contact_person?: string | null;
   is_active: boolean;
+  status?: string;
 }
 
 export default function SuppliersPage() {
@@ -41,6 +42,14 @@ export default function SuppliersPage() {
   const [state, setState] = useState("");
   const [contactPerson, setContactPerson] = useState("");
   const [gstNumber, setGstNumber] = useState("");
+  const [status, setStatus] = useState("ACTIVE");
+
+  const getStatusBadge = (s?: string, isActive?: boolean) => {
+    const st = (s || (isActive !== false ? "ACTIVE" : "INACTIVE")).toUpperCase();
+    if (st === "ACTIVE") return <Badge className="bg-emerald-600 text-white text-[10px]">Active Vendor</Badge>;
+    if (st === "SUSPENDED") return <Badge variant="destructive" className="text-[10px]">Suspended</Badge>;
+    return <Badge className="bg-muted text-muted-foreground text-[10px]">Inactive</Badge>;
+  };
 
   const fetchSuppliers = () => {
     setLoading(true);
@@ -84,7 +93,7 @@ export default function SuppliersPage() {
         state,
         contact_person: contactPerson,
         gst_number: gstNumber,
-        is_active: editingSupplier.is_active,
+        status,
       });
       setEditingSupplier(null);
       fetchSuppliers();
@@ -180,9 +189,7 @@ export default function SuppliersPage() {
                       {[s.city, s.state].filter(Boolean).join(", ") || "India"}
                     </TableCell>
                     <TableCell className="text-center">
-                      <Badge className={s.is_active !== false ? "bg-emerald-600 text-white text-[10px]" : "bg-muted text-muted-foreground text-[10px]"}>
-                        {s.is_active !== false ? "Active Vendor" : "Inactive"}
-                      </Badge>
+                      {getStatusBadge(s.status, s.is_active)}
                     </TableCell>
                     <TableCell className="text-center">
                       <div className="flex items-center justify-center gap-1">
@@ -198,6 +205,7 @@ export default function SuppliersPage() {
                             setState(s.state || "");
                             setContactPerson(s.contact_person || "");
                             setGstNumber(s.gst_number || "");
+                            setStatus((s.status || (s.is_active !== false ? "ACTIVE" : "INACTIVE")).toUpperCase());
                           }}
                         >
                           <Edit3 className="h-3.5 w-3.5 text-muted-foreground hover:text-[#8C1D24]" />
@@ -369,6 +377,18 @@ export default function SuppliersPage() {
                     className="w-full p-2 border border-border rounded bg-background"
                   />
                 </div>
+              </div>
+              <div>
+                <label className="font-medium block mb-1">Vendor Status</label>
+                <select
+                  value={status}
+                  onChange={(e) => setStatus(e.target.value)}
+                  className="w-full p-2 border border-border rounded bg-background"
+                >
+                  <option value="ACTIVE">Active Vendor</option>
+                  <option value="INACTIVE">Inactive</option>
+                  <option value="SUSPENDED">Suspended</option>
+                </select>
               </div>
             </div>
             <div className="flex justify-end gap-2 mt-4">

@@ -19,3 +19,8 @@ class NotFoundException(HTTPException):
 class ConflictException(HTTPException):
     def __init__(self, detail: str = "Resource already exists"):
         super().__init__(status_code=status.HTTP_409_CONFLICT, detail=detail)
+
+
+class ValidationException(HTTPException):
+    def __init__(self, detail: str = "Invalid request"):
+        super().__init__(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=detail)

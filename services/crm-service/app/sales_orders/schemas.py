@@ -12,6 +12,7 @@ class SalesOrderBase(BaseModel):
     owner: Optional[str] = None
     file_data: Optional[str] = None
     file_name: Optional[str] = None
+    line_items: Optional[List[dict]] = None
 
 class SalesOrder(SalesOrderBase):
     id: int
