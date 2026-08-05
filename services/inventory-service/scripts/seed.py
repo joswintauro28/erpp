@@ -293,10 +293,11 @@ async def seed():
                 items_data = po_data.pop("items")
                 status = po_data["st"]
                 submitted_at, approved_at, cancelled_at = po_timestamps(status, po_data["oa"])
+                po_month = po_data["oa"].strftime("%Y%m") if po_data["oa"] else now.strftime("%Y%m")
                 po = PurchaseOrder(
                     organization_id=organization_id, supplier_id=suppliers[po_data["s"]].id,
                     warehouse_id=warehouses[po_data["w"]].id,
-                    order_number=f"PO-{now.year}-{i + 1:03d}", status=status,
+                    order_number=f"PO-{po_month}-{i + 1:04d}", status=status,
                     notes=po_data["notes"],
                     ordered_at=po_data["oa"], submitted_at=submitted_at, approved_at=approved_at,
                     expected_at=po_data["ea"], received_at=po_data["ra"], cancelled_at=cancelled_at,
@@ -324,20 +325,20 @@ async def seed():
             # ── Stock Movements (15) ────────────────────────────────────
             # reference_id uses the auto-generated PurchaseOrder.id; sales orders use an auto-generated SO code.
             movements = [
-                StockMovement(organization_id=organization_id, product_id=products[0].id, warehouse_id=warehouses[0].id, type="in", quantity=500, reference_type="purchase_order", reference_id=po_objects[0].id, notes="PO-001 received — initial PLC stock"),
-                StockMovement(organization_id=organization_id, product_id=products[1].id, warehouse_id=warehouses[0].id, type="in", quantity=100, reference_type="purchase_order", reference_id=po_objects[1].id, notes="PO-002 — Schneider Modicon stock"),
-                StockMovement(organization_id=organization_id, product_id=products[11].id, warehouse_id=warehouses[0].id, type="out", quantity=3, reference_type="sales_order", reference_id=None, notes="SO-2026-101 — Siemens HMI upgrade project"),
-                StockMovement(organization_id=organization_id, product_id=products[17].id, warehouse_id=warehouses[0].id, type="out", quantity=5, reference_type="sales_order", reference_id=None, notes="SO-2026-102 — panel wiring"),
-                StockMovement(organization_id=organization_id, product_id=products[6].id, warehouse_id=warehouses[0].id, type="out", quantity=30, reference_type="sales_order", reference_id=None, notes="SO-2026-103 — line automation"),
-                StockMovement(organization_id=organization_id, product_id=products[12].id, warehouse_id=warehouses[1].id, type="in", quantity=60, reference_type="purchase_order", reference_id=po_objects[2].id, notes="PO-003 restock Schneider HMIs"),
+                StockMovement(organization_id=organization_id, product_id=products[0].id, warehouse_id=warehouses[0].id, type="in", quantity=500, reference_type="purchase_order", reference_id=po_objects[0].id, notes="PO-202608-0001 received — initial PLC stock"),
+                StockMovement(organization_id=organization_id, product_id=products[1].id, warehouse_id=warehouses[0].id, type="in", quantity=100, reference_type="purchase_order", reference_id=po_objects[1].id, notes="PO-202608-0002 — Schneider Modicon stock"),
+                StockMovement(organization_id=organization_id, product_id=products[11].id, warehouse_id=warehouses[0].id, type="out", quantity=3, reference_type="sales_order", reference_id=None, notes="SO-202608-0101 — Siemens HMI upgrade project"),
+                StockMovement(organization_id=organization_id, product_id=products[17].id, warehouse_id=warehouses[0].id, type="out", quantity=5, reference_type="sales_order", reference_id=None, notes="SO-202608-0102 — panel wiring"),
+                StockMovement(organization_id=organization_id, product_id=products[6].id, warehouse_id=warehouses[0].id, type="out", quantity=30, reference_type="sales_order", reference_id=None, notes="SO-202608-0103 — line automation"),
+                StockMovement(organization_id=organization_id, product_id=products[12].id, warehouse_id=warehouses[1].id, type="in", quantity=60, reference_type="purchase_order", reference_id=po_objects[2].id, notes="PO-202608-0003 restock Schneider HMIs"),
                 StockMovement(organization_id=organization_id, product_id=products[19].id, warehouse_id=warehouses[2].id, type="adjustment", quantity=-3, reference_type="adjustment", reference_id=None, notes="Damaged contactor write-off"),
-                StockMovement(organization_id=organization_id, product_id=products[2].id, warehouse_id=warehouses[1].id, type="in", quantity=500, reference_type="purchase_order", reference_id=po_objects[0].id, notes="PO-001 Distributed I/O modules received"),
-                StockMovement(organization_id=organization_id, product_id=products[23].id, warehouse_id=warehouses[0].id, type="out", quantity=2, reference_type="sales_order", reference_id=None, notes="SO-2026-104 — telemetry modules issued"),
-                StockMovement(organization_id=organization_id, product_id=products[5].id, warehouse_id=warehouses[0].id, type="out", quantity=15, reference_type="sales_order", reference_id=None, notes="SO-2026-105 — redundant CPUs for safety panel"),
-                StockMovement(organization_id=organization_id, product_id=products[8].id, warehouse_id=warehouses[1].id, type="in", quantity=80, reference_type="purchase_order", reference_id=po_objects[12].id, notes="PO-013 transmitters for stock"),
+                StockMovement(organization_id=organization_id, product_id=products[2].id, warehouse_id=warehouses[1].id, type="in", quantity=500, reference_type="purchase_order", reference_id=po_objects[0].id, notes="PO-202608-0001 Distributed I/O modules received"),
+                StockMovement(organization_id=organization_id, product_id=products[23].id, warehouse_id=warehouses[0].id, type="out", quantity=2, reference_type="sales_order", reference_id=None, notes="SO-202608-0104 — telemetry modules issued"),
+                StockMovement(organization_id=organization_id, product_id=products[5].id, warehouse_id=warehouses[0].id, type="out", quantity=15, reference_type="sales_order", reference_id=None, notes="SO-202608-0105 — redundant CPUs for safety panel"),
+                StockMovement(organization_id=organization_id, product_id=products[8].id, warehouse_id=warehouses[1].id, type="in", quantity=80, reference_type="purchase_order", reference_id=po_objects[12].id, notes="PO-202608-0013 transmitters for stock"),
                 StockMovement(organization_id=organization_id, product_id=products[4].id, warehouse_id=warehouses[1].id, type="in", quantity=10, reference_type="adjustment", reference_id=None, notes="Initial IoT gateway placement"),
-                StockMovement(organization_id=organization_id, product_id=products[14].id, warehouse_id=warehouses[0].id, type="out", quantity=30, reference_type="sales_order", reference_id=None, notes="SO-2026-106 — VFDs for pump control assembly"),
-                StockMovement(organization_id=organization_id, product_id=products[25].id, warehouse_id=warehouses[0].id, type="out", quantity=20, reference_type="sales_order", reference_id=None, notes="SO-2026-107 — cable trays for plant installation"),
+                StockMovement(organization_id=organization_id, product_id=products[14].id, warehouse_id=warehouses[0].id, type="out", quantity=30, reference_type="sales_order", reference_id=None, notes="SO-202608-0106 — VFDs for pump control assembly"),
+                StockMovement(organization_id=organization_id, product_id=products[25].id, warehouse_id=warehouses[0].id, type="out", quantity=20, reference_type="sales_order", reference_id=None, notes="SO-202608-0107 — cable trays for plant installation"),
                 StockMovement(organization_id=organization_id, product_id=products[8].id, warehouse_id=warehouses[1].id, type="adjustment", quantity=5, reference_type="adjustment", reference_id=None, notes="Inventory count correction"),
             ]
             db.add_all(movements)
@@ -345,7 +346,7 @@ async def seed():
             print(f"  {len(movements)} stock movements created")
 
             # ── Serial Numbers (28) ─────────────────────────────────────
-            # Serial tags are auto-generated as {SKU}-{NNN}, SKU bound to the product.
+            # Serial tags are auto-generated as SN-{SKU}-{NNNN}, SKU bound to the product.
             # product_12 serials were received via PO-003, so they carry the real PO id.
             serial_plan = [
                 # (product_idx, warehouse_idx, count, status)
@@ -380,7 +381,7 @@ async def seed():
                         organization_id=organization_id,
                         product_id=product.id,
                         warehouse_id=warehouses[wh_idx].id,
-                        serial_number=f"{product.sku}-{n:03d}",
+                        serial_number=f"SN-{product.sku}-{n:04d}",
                         sku=product.sku,
                         status=status,
                     )
@@ -389,11 +390,11 @@ async def seed():
                         serial.warranty_until = later(730)
                     elif status == "sold":
                         serial.sold_at = ago(5 + (n % 15))
-                        serial.sales_order_code = f"SO-2026-{sales_seq}"
+                        serial.sales_order_code = f"SO-202608-{sales_seq:04d}"
                         sales_seq += 1
                         serial.activated_at = ago(30 + (n % 20))
                     elif status == "reserved":
-                        serial.sales_order_code = f"SO-2026-{sales_seq}"
+                        serial.sales_order_code = f"SO-202608-{sales_seq:04d}"
                         sales_seq += 1
                         serial.activated_at = ago(20 + (n % 10))
                     elif status == "in_transit":

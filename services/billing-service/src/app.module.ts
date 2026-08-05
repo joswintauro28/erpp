@@ -18,12 +18,14 @@ import { EventBusModule } from "./event-bus/event-bus.module";
 import { RevenueModule } from "./revenue/revenue.module";
 import { AppController } from "./app.controller";
 import { RmqModule } from "./common/rmq.module";
+import { DocumentNumberModule } from "./common/document-number.module";
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     RmqModule,
     PrismaModule,
+    DocumentNumberModule,
     AuthModule,
     QuotationsModule,
     CreditNotesModule,

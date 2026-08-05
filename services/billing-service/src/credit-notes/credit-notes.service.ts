@@ -5,6 +5,7 @@ import { CreateCreditNoteDto } from "./dto/create-credit-note.dto";
 import { EventBusService } from "../event-bus/event-bus.service";
 import { Events } from "../event-bus/event-types";
 import { PostingEngineService } from "../accounting/posting-engine.service";
+import { DocumentNumberService } from "../common/document-number.service";
 
 @Injectable()
 export class CreditNotesService {
@@ -12,6 +13,7 @@ export class CreditNotesService {
     private readonly prisma: PrismaService,
     private readonly eventBus: EventBusService,
     private readonly postingEngine: PostingEngineService,
+    private readonly documentNumbers: DocumentNumberService,
   ) {}
 
 
@@ -55,7 +57,7 @@ export class CreditNotesService {
           invoiceId: dto.invoiceId,
           amount: new Prisma.Decimal(dto.amount),
           reason: dto.reason,
-          creditNoteNumber: dto.creditNoteNumber ? String(dto.creditNoteNumber) : undefined,
+          creditNoteNumber: dto.creditNoteNumber ? String(dto.creditNoteNumber) : (await this.documentNumbers.nextCreditNote(organizationId)),
           status: "issued",
           issueDate: new Date(),
         },

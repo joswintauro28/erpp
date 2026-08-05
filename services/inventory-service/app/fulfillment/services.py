@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.fulfillment.models import SalesOrderFulfillment, FulfillmentItem
 from app.fulfillment.schemas import FulfillmentCreate, FulfillmentDispatchAction, StockCheckResult, StockCheckResultItem
+from app.core.idgen import next_document_id
 from app.stock.models import Stock, StockMovement
 from app.purchase_order.models import PurchaseOrder, PurchaseOrderItem
 from app.supplier.models import Supplier
@@ -325,7 +326,7 @@ class FulfillmentService:
             await self.db.flush()
 
         import random
-        po_number = f"PO-{random.randint(10000, 99999)}"
+        po_number = await next_document_id(self.db, PurchaseOrder, "PO", "order_number", org_id)
 
         po = PurchaseOrder(
             organization_id=org_id,
@@ -401,7 +402,6 @@ class FulfillmentService:
                 ]
                 invoice_payload = {
                     "client_name": order.customer_name,
-                    "invoice_number": f"INV-{order.sales_order_code}",
                     "items": items_payload,
                     "notes": f"Generated from fulfilled Sales Order {order.sales_order_code}"
                 }

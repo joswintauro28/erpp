@@ -7,9 +7,11 @@ import {
   Min,
   ValidateNested,
   IsDateString,
+  Matches,
 } from "class-validator";
 import { Type } from "class-transformer";
 import { GstTreatment } from "@prisma/client";
+import { DOCUMENT_ID_RE } from "../../common/document-number.service";
 
 export class CreateQuotationItemDto {
   @IsString()
@@ -37,6 +39,7 @@ export class CreateQuotationDto {
 
   @IsOptional()
   @IsString()
+  @Matches(DOCUMENT_ID_RE, { message: "quotationNumber must match [PREFIX]-YYYYMM-NNNN (e.g. QT-202608-0001)" })
   quotationNumber?: string;
 
   @IsOptional()

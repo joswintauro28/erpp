@@ -12,6 +12,7 @@ import { UpdateInvoiceDto } from "./dto/update-invoice.dto";
 import { EventBusService } from "../event-bus/event-bus.service";
 import { Events } from "../event-bus/event-types";
 import { PostingEngineService } from "../accounting/posting-engine.service";
+import { DocumentNumberService } from "../common/document-number.service";
 
 @Injectable()
 export class InvoicesService {
@@ -21,6 +22,7 @@ export class InvoicesService {
     private readonly prisma: PrismaService,
     private readonly eventBus: EventBusService,
     private readonly postingEngine: PostingEngineService,
+    private readonly documentNumbers: DocumentNumberService,
   ) {}
 
 
@@ -198,7 +200,7 @@ export class InvoicesService {
         clientName: dto.clientName,
         vendorId: dto.vendorId,
         vendorName: dto.vendorName,
-        invoiceNumber: dto.invoiceNumber,
+        invoiceNumber: dto.invoiceNumber ?? (await this.documentNumbers.nextInvoice(organizationId)),
         gstTreatment,
         placeOfSupply: dto.placeOfSupply,
         issueDate: dto.issueDate ? new Date(dto.issueDate) : undefined,
@@ -389,6 +391,7 @@ export class InvoicesService {
         organizationId,
         clientId: dto.clientId,
         clientName: dto.clientName,
+        invoiceNumber: await this.documentNumbers.nextInvoice(organizationId),
         status: "sent",
         issueDate: now,
         dueDate: new Date(now.getTime() + 30 * 86400000),

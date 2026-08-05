@@ -8,6 +8,7 @@ import json
 from app.database import get_db
 from app.customers.models import Customer
 from app.core.deps import get_current_token_payload
+from app.core.idgen import is_valid_document_id
 from app.core.billing_client import (
     quotations_list,
     quotations_get,
@@ -52,23 +53,30 @@ def _build_quotation_out(q: dict) -> QuotationOut:
 
 
 async def _map_crm_payload_to_billing(payload: dict, db: AsyncSession) -> dict:
-    account_name = payload.get("account")
-    client_id = 999
+    account_name = payload.get("account") or payload.get("clientName") or payload.get("client_name")
+    client_id = payload.get("clientId") or 999
     client_name = account_name or "Unknown Client"
-    
-    if account_name:
+
+    if account_name and not payload.get("clientId"):
         result = await db.execute(select(Customer).filter(Customer.account == account_name))
         customer = result.scalars().first()
         if customer:
             client_id = customer.id
             client_name = customer.account
 
+    billing_items = payload.get("items") or []
     try:
         val = float(str(payload.get("value", "0")).replace(",", "").strip())
     except (ValueError, TypeError):
         val = 0.0
+    if not val and billing_items:
+        val = sum(
+            float(item.get("unitPrice") or item.get("unit_price") or 0)
+            * float(item.get("quantity") or 1)
+            for item in billing_items
+        )
 
-    valid_until = payload.get("valid_until")
+    valid_until = payload.get("valid_until") or payload.get("validUntil")
 
     notes_dict = {
         "owner": payload.get('owner', 'Unassigned'),
@@ -81,16 +89,19 @@ async def _map_crm_payload_to_billing(payload: dict, db: AsyncSession) -> dict:
     billing_payload = {
         "clientId": client_id,
         "clientName": client_name,
-        "quotationNumber": payload.get("quote_no") or payload.get("id_str") or f"QT-{int(datetime.now().timestamp())}",
         "quotationDate": datetime.now().strftime("%Y-%m-%d"),
         "notes": notes_json,
-        "items": [{
+        "items": billing_items or [{
             "description": f"Quotation for {client_name}",
             "quantity": 1.0,
             "unitPrice": val,
             "gstRate": 0.0
         }]
     }
+
+    supplied_number = payload.get("quote_no") or payload.get("id_str") or payload.get("quotationNumber")
+    if is_valid_document_id(supplied_number):
+        billing_payload["quotationNumber"] = supplied_number
 
     if valid_until:
         billing_payload["validUntil"] = valid_until
@@ -189,7 +200,7 @@ async def update_quotation_status(
                     event_data = {
                         "event": "crm.quotation.sent",
                         "organization_id": token_payload.get("organization_id", 1),
-                        "quotationNumber": data.get("quotationNumber") or f"QT-{id}",
+                        "quotationNumber": data.get("quote_number") or data.get("quotationNumber") or "",
                         "clientName": data.get("clientName") or data.get("client_name") or "Client",
                         "total": data.get("total"),
                         "timestamp": datetime.utcnow().isoformat()
@@ -253,15 +264,17 @@ async def convert_quotation_to_sales_order(
         raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail="Quotation not found")
 
     from app.sales_orders.models import SalesOrder
-    from uuid import uuid4
+    from app.core.idgen import next_document_id
 
     value = quote.get("total") or quote.get("amount") or 0
     account = quote.get("client_name") or quote.get("clientName") or "Unknown Client"
-    quote_no = quote.get("quotationNumber") or f"QT-{id}"
+    quote_no = quote.get("quote_number") or quote.get("quotationNumber") or ""
+
+    so_id_str = await next_document_id(db, SalesOrder, "SO")
 
     so = SalesOrder(
-        id_str=str(uuid4()),
-        so_no=f"SO-{datetime.now().strftime('%Y%m%d')}-{id}",
+        id_str=so_id_str,
+        so_no=so_id_str,
         account=account,
         from_quote=quote_no,
         value=str(value),

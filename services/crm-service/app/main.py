@@ -3,10 +3,11 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func
+from sqlalchemy import select
 
 from app import models, database
 from app.core.deps import get_current_token_payload
+from app.core.idgen import next_document_id, next_customer_id
 
 # Import feature routers
 from app.dashboard.router import router as dashboard_router
@@ -127,7 +128,7 @@ ENTITY_MODEL_MAP = {
 }
 
 PREFIX_MAP = {
-    models.Customer: "CU",
+    models.Customer: "CUST",
     models.Contact: "CO",
     models.Document: "DO",
     models.Lead: "LD",
@@ -208,9 +209,10 @@ async def create_entity(entity_type: str, payload: dict, db: AsyncSession = Depe
     model_class = ENTITY_MODEL_MAP[entity_type]
     prefix = PREFIX_MAP.get(model_class, "XX")
 
-    count_result = await db.execute(select(func.count(model_class.id)))
-    max_id = (count_result.scalar() or 0) + 1001
-    id_str = f"{prefix}-{max_id}"
+    if prefix == "CUST":
+        id_str = await next_customer_id(db, model_class)
+    else:
+        id_str = await next_document_id(db, model_class, prefix)
 
     from sqlalchemy.inspection import inspect
     from sqlalchemy import String, Integer, Float, Boolean

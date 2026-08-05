@@ -1,11 +1,10 @@
-from datetime import datetime
-
 import sqlalchemy as sa
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.deps import get_db, get_current_org_id, get_current_token_payload
 from app.core.exceptions import NotFoundException
+from app.core.idgen import next_document_id
 from app.core.billing_client import trigger_vendor_bill
 from app.purchase_order.schemas import PurchaseOrderCreate, PurchaseOrderOut, PurchaseOrderUpdate
 from app.purchase_order.services import PurchaseOrderService
@@ -57,7 +56,8 @@ async def create_purchase_order(
     token_payload: dict = Depends(get_current_token_payload),
 ):
     service = PurchaseOrderService(db)
-    order_number = f"PO-{datetime.now().strftime('%Y%m%d%H%M%S')}-{org_id}"
+    from app.purchase_order.models import PurchaseOrder
+    order_number = await next_document_id(db, PurchaseOrder, "PO", "order_number", org_id)
     items = [item.model_dump() for item in req.items]
     po = await service.create_purchase_order(
         org_id, order_number, items, **req.model_dump(exclude={"items"}),

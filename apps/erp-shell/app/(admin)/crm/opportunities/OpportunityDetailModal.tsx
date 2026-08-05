@@ -85,8 +85,6 @@ function QuoteRow({ quote, onDelete, onPreview, onConverted, onEdit }: QuoteRowP
     setSaleError("");
     try {
       await api.post("/sales-orders", {
-        id_str: `SO-${Date.now().toString().slice(-6)}`,
-        so_no: `SO-${Date.now().toString().slice(-6)}`,
         account: quote.account || "",
         from_quote: quote.quote_no || "",
         value: quote.value || "0",
@@ -307,7 +305,6 @@ export default function OpportunityDetailModal({ record, isOpen, onClose, onSucc
     try {
       const isEdit = !!editReq;
       const body = {
-        id_str: isEdit ? editReq.id_str : `RE-${Date.now().toString().slice(-6)}`,
         name: reqData.name || `Requirement for ${record.account}`,
         account: record.account || "",
         category: reqData.category, priority: reqData.priority,
@@ -328,8 +325,7 @@ export default function OpportunityDetailModal({ record, isOpen, onClose, onSucc
     try {
       const isEdit = !!editQuote;
       const body = {
-        id_str: isEdit ? editQuote.id_str : `QT-${Date.now().toString().slice(-6)}`,
-        quote_no: quoteData.quote_no || `QT-${Date.now().toString().slice(-6)}`,
+        quote_no: quoteData.quote_no || "",
         account: record.account || "", value: quoteData.value,
         valid_until: quoteData.valid_until, status: quoteData.status,
         owner: quoteData.owner,

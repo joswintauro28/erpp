@@ -1,4 +1,5 @@
-import { IsNumber, IsOptional, IsString, Min } from "class-validator";
+import { IsNumber, IsOptional, IsString, Min, Matches } from "class-validator";
+import { DOCUMENT_ID_RE } from "../../common/document-number.service";
 
 export class CreateDebitNoteDto {
   @IsNumber()
@@ -14,5 +15,6 @@ export class CreateDebitNoteDto {
 
   @IsOptional()
   @IsString()
+  @Matches(DOCUMENT_ID_RE, { message: "debitNoteNumber must match [PREFIX]-YYYYMM-NNNN (e.g. DN-202608-0001)" })
   debitNoteNumber?: string;
 }

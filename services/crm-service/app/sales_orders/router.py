@@ -3,6 +3,7 @@ from app import database, models
 from app.sales_orders import schemas, crud
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.deps import get_current_token_payload
+from app.core.idgen import next_document_id
 from sqlalchemy import select
 import logging
 import json
@@ -135,11 +136,7 @@ async def create_sales_order(
     db: AsyncSession = Depends(database.get_db),
     token_payload: dict = Depends(get_current_token_payload)
 ):
-    from sqlalchemy import func
-    count_result = await db.execute(select(func.count(models.SalesOrder.id)))
-    max_id = (count_result.scalar() or 0) + 1001
-    id_str = payload.get("id_str") or f"SO-{max_id}"
-
+    id_str = await next_document_id(db, models.SalesOrder, "SO")
     from sqlalchemy.inspection import inspect
     from sqlalchemy import String, Integer, Float, Boolean
     mapper = inspect(models.SalesOrder)
@@ -171,6 +168,8 @@ async def create_sales_order(
                 filtered_payload[k] = v
 
     filtered_payload["id_str"] = id_str
+    if not filtered_payload.get("so_no"):
+        filtered_payload["so_no"] = id_str
     if "line_items" in payload:
         filtered_payload["line_items"] = payload["line_items"]
 

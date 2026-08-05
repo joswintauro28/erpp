@@ -1,5 +1,7 @@
 from datetime import datetime
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+
+from app.core.idgen import SO_CODE_RE
 
 
 class FulfillmentItemCreate(BaseModel):
@@ -26,7 +28,7 @@ class FulfillmentItemOut(BaseModel):
 
 
 class FulfillmentCreate(BaseModel):
-    sales_order_code: str
+    sales_order_code: str = Field(pattern=SO_CODE_RE)
     customer_name: str
     warehouse_id: int | None = None
     items: list[FulfillmentItemCreate]

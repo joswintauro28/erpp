@@ -108,7 +108,7 @@ const GenericDetailsModal: React.FC<GenericDetailsModalProps> = ({ record, entit
       setInvoiceFile(null);
       setInvoiceStatus('Paid');
       setSalesOrderData({
-        so_no: `SO-${record.quote_no?.split('-')[-1] || Date.now().toString().slice(-6)}`,
+        so_no: '',
         eta: record.valid_until || '',
         status: 'Pending',
         owner: record.owner || '',
@@ -192,11 +192,8 @@ const GenericDetailsModal: React.FC<GenericDetailsModalProps> = ({ record, entit
     setSaleError('');
 
     try {
-      const invoiceNo = saleData.invoice_no || `INV-${Date.now().toString().slice(-6)}`;
-
       const salePayload = {
-        id_str: `SALE-${Date.now().toString().slice(-6)}`,
-        invoice_no: invoiceNo,
+        invoice_no: saleData.invoice_no || '',
         account: record.account || '',
         amount: record.value || '0',
         issued_date: saleData.issued_date,
@@ -225,7 +222,6 @@ const GenericDetailsModal: React.FC<GenericDetailsModalProps> = ({ record, entit
 
     try {
       const requirementPayload = {
-        id_str: `RE-${Date.now().toString().slice(-6)}`,
         name: requirementData.name || `Requirement for ${record.account}`,
         account: record.account || '',
         category: requirementData.category,
@@ -256,14 +252,14 @@ const GenericDetailsModal: React.FC<GenericDetailsModalProps> = ({ record, entit
     setQuotationError('');
 
     try {
-      const quoteNo = quotationData.quote_no || `QT-${Date.now().toString().slice(-6)}`;
+      const quoteNo = quotationData.quote_no || '';
       const rawValue = quotationData.value.replace(/[₹$,\s]/g, '');
       const numericValue = parseFloat(rawValue) || 0;
 
       const payload = {
         clientName: record.account || '',
         clientId: 0,
-        quotationNumber: quoteNo,
+        ...(quoteNo ? { quotationNumber: quoteNo } : {}),
         validUntil: quotationData.valid_until || undefined,
         notes: `Converted from requirement: ${record.name || ''}`,
         items: [
@@ -297,11 +293,10 @@ const GenericDetailsModal: React.FC<GenericDetailsModalProps> = ({ record, entit
     setSalesOrderError('');
 
     try {
-      const soNo = salesOrderData.so_no || `SO-${Date.now().toString().slice(-6)}`;
+      const soNo = salesOrderData.so_no || '';
 
       const salesOrderPayload = {
-        id_str: `SO-${Date.now().toString().slice(-6)}`,
-        so_no: soNo,
+        ...(soNo ? { so_no: soNo } : {}),
         account: record.account || '',
         from_quote: record.quote_no || '',
         value: record.value || '0',
@@ -377,7 +372,6 @@ const GenericDetailsModal: React.FC<GenericDetailsModalProps> = ({ record, entit
       let cleanArr = parseInt(String(record.value || '').replace(/[^0-9]/g, '')) || 0;
       if (cleanArr > 2147483647) cleanArr = 2147483647;
       await api.post('/customers', {
-        id_str: `CU-${Date.now().toString().slice(-6)}`,
         account: record.account,
         industry: 'Software',
         tier: 'Silver',

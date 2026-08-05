@@ -9,6 +9,7 @@ from app.product.models import Product
 from app.warehouse.models import Warehouse
 from app.core.database import BaseRepository
 from app.core.events import publish_event, EVENT_SERIAL_UPDATED
+from app.core.idgen import next_serial_tag
 
 # Serial lifecycle transition map.
 SERIAL_STATUS_FLOW: dict[str, set[str]] = {
@@ -145,6 +146,12 @@ class SerialNumberService:
     async def create_serial_number(self, organization_id: int, **data) -> dict:
         product = await self._resolve_product(organization_id, data["product_id"])
         await self._resolve_warehouse(organization_id, data["warehouse_id"])
+
+        # Auto-generate a standardized SN-[SKU]-[NNNN] tag when the client omits one.
+        if not data.get("serial_number"):
+            data["serial_number"] = await next_serial_tag(
+                self.db, SerialNumber, product.sku or "GEN", "serial_number", organization_id
+            )
         await self._assert_unique_serial(organization_id, data["serial_number"])
 
         data["status"] = data.get("status") or "in_stock"
