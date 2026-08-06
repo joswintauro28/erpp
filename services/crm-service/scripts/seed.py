@@ -203,24 +203,82 @@ async def seed():
             await db.flush()
             print(f"  {len(requirements)} requirements created")
 
-            # ── Sales Orders (4) ─────────────────────────────────────────
+            # ── Sales Orders (9) ─────────────────────────────────────────
+            # SO codes (SO-202608-0101..0109), line items, SKUs, quantities, and
+            # prices are bound strictly to the inventory-service seed catalog
+            # (services/inventory-service/scripts/seed.py) and its stock-movement
+            # and serial references.
             sales_orders = [
-                SalesOrder(id_str="SO-202608-0001", so_no="SO-202608-0001",
+                SalesOrder(id_str="SO-202608-0101", so_no="SO-202608-0101",
+                          account="Halcyon Media", from_quote="QT-202608-0003",
+                          value="182000", eta="2026-10-31", date_ordered="2026-07-20",
+                          status="Confirmed", owner="Maya Patel",
+                          line_items=[
+                              {"product_name": "HMI Touch Panel 10-inch — Siemens KTP1000", "sku": "HMI-KTP1000", "quantity": 3, "unit_price": 42000},
+                              {"product_name": "HMI Graphic Terminal 7-inch — Schneider", "sku": "HMI-GT7", "quantity": 2, "unit_price": 28000},
+                          ]),
+                SalesOrder(id_str="SO-202608-0102", so_no="SO-202608-0102",
+                          account="Bristow Textiles", from_quote="QT-202608-0010",
+                          value="42000", eta="2026-08-31", date_ordered="2026-07-22",
+                          status="Confirmed", owner="Maya Patel",
+                          line_items=[
+                              {"product_name": "Industrial Control Cable 2.5mm² (50m Roll)", "sku": "CAB-2.5MM", "quantity": 5, "unit_price": 6200},
+                              {"product_name": "Wire Crimping Tool Set — Bosch", "sku": "WCT-8PC", "quantity": 5, "unit_price": 2200},
+                          ]),
+                SalesOrder(id_str="SO-202608-0103", so_no="SO-202608-0103",
                           account="Meridian Foods", from_quote="QT-202608-0001",
-                          value="240000", eta="2026-10-31", date_ordered="2026-07-20",
-                          status="Confirmed", owner="Maya Patel"),
-                SalesOrder(id_str="SO-202608-0002", so_no="SO-202608-0002",
-                          account="Orbit Health", from_quote="QT-202608-0003",
-                          value="320000", eta="2026-12-15", date_ordered="2026-08-01",
-                          status="Pending", owner="Alex Chen"),
-                SalesOrder(id_str="SO-202608-0003", so_no="SO-202608-0003",
-                          account="Titan Defence Systems", from_quote="",
-                          value="150000", eta="2026-09-30", date_ordered="2026-07-15",
-                          status="Invoiced", owner="Alex Chen"),
-                SalesOrder(id_str="SO-202608-0004", so_no="SO-202608-0004",
-                          account="Meridian Foods", from_quote="",
-                          value="45000", eta="2026-08-15", date_ordered="2026-07-10",
-                          status="Paid", owner="Maya Patel"),
+                          value="132000", eta="2026-10-15", date_ordered="2026-07-18",
+                          status="Invoiced", owner="Maya Patel",
+                          line_items=[
+                              {"product_name": "Photoelectric Sensor — Omron E3Z", "sku": "SEN-E3Z", "quantity": 30, "unit_price": 2800},
+                              {"product_name": "Inductive Proximity Sensor — Omron", "sku": "SEN-PRX12", "quantity": 40, "unit_price": 1200},
+                          ]),
+                SalesOrder(id_str="SO-202608-0104", so_no="SO-202608-0104",
+                          account="Cirrus Aviation", from_quote="QT-202608-0002",
+                          value="300000", eta="2026-11-30", date_ordered="2026-07-25",
+                          status="Confirmed", owner="Maya Patel",
+                          line_items=[
+                              {"product_name": "Aviation-Grade Telemetry Module", "sku": "TEL-AV900", "quantity": 2, "unit_price": 120000},
+                              {"product_name": "Flight Data Recorder Interface", "sku": "FDR-INT10", "quantity": 2, "unit_price": 30000},
+                          ]),
+                SalesOrder(id_str="SO-202608-0105", so_no="SO-202608-0105",
+                          account="Titan Defence Systems", from_quote="QT-202608-0008",
+                          value="1340000", eta="2026-09-30", date_ordered="2026-07-16",
+                          status="Invoiced", owner="Alex Chen",
+                          line_items=[
+                              {"product_name": "Redundant CPU Processor Panel", "sku": "CPU-RED500", "quantity": 15, "unit_price": 85000},
+                              {"product_name": "Power Supply 24V DC 10A — Siemens SITOP", "sku": "PS-24V10A", "quantity": 10, "unit_price": 6500},
+                          ]),
+                SalesOrder(id_str="SO-202608-0106", so_no="SO-202608-0106",
+                          account="Solara Renewable Energy", from_quote="QT-202608-0006",
+                          value="507000", eta="2026-10-31", date_ordered="2026-07-19",
+                          status="Confirmed", owner="Alex Chen",
+                          line_items=[
+                              {"product_name": "Compact VFD Drive 1.5kW — Omron", "sku": "VFD-1.5KW", "quantity": 30, "unit_price": 14500},
+                              {"product_name": "Overload Relay 18-25A — Siemens", "sku": "REL-1825A", "quantity": 30, "unit_price": 2400},
+                          ]),
+                SalesOrder(id_str="SO-202608-0107", so_no="SO-202608-0107",
+                          account="Delta Automotive", from_quote="QT-202608-0009",
+                          value="86000", eta="2026-09-15", date_ordered="2026-07-23",
+                          status="Pending", owner="Maya Patel",
+                          line_items=[
+                              {"product_name": "Perforated Cable Tray 3m — Legrand", "sku": "CT-3M-LEG", "quantity": 20, "unit_price": 1800},
+                              {"product_name": "IP65 Control Panel Enclosure 600x600", "sku": "ENC-IP65", "quantity": 4, "unit_price": 12500},
+                          ]),
+                SalesOrder(id_str="SO-202608-0108", so_no="SO-202608-0108",
+                          account="Nimbus Technologies", from_quote="QT-202608-0005",
+                          value="25500", eta="2026-08-15", date_ordered="2026-07-10",
+                          status="Paid", owner="Maya Patel",
+                          line_items=[
+                              {"product_name": "IoT Gateway Edge Controller", "sku": "IOT-GW200", "quantity": 3, "unit_price": 8500},
+                          ]),
+                SalesOrder(id_str="SO-202608-0109", so_no="SO-202608-0109",
+                          account="Pinnacle Realty Group", from_quote="QT-202608-0007",
+                          value="14000", eta="2026-08-31", date_ordered="2026-07-12",
+                          status="Paid", owner="Maya Patel",
+                          line_items=[
+                              {"product_name": "Drill Machine 13mm — Bosch", "sku": "DM-13MM", "quantity": 4, "unit_price": 3500},
+                          ]),
             ]
             db.add_all(sales_orders)
             await db.flush()

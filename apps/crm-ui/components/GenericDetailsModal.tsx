@@ -298,13 +298,19 @@ const GenericDetailsModal: React.FC<GenericDetailsModalProps> = ({ record, entit
       const salesOrderPayload = {
         ...(soNo ? { so_no: soNo } : {}),
         account: record.account || '',
-        from_quote: record.quote_no || '',
-        value: record.value || '0',
+        from_quote: record.quote_no || record.quote_number || '',
+        value: record.value || String(record.total || '0'),
         eta: salesOrderData.eta,
         status: salesOrderData.status,
         owner: salesOrderData.owner,
         file_data: salesOrderData.file_data || '',
-        file_name: salesOrderData.file_name || ''
+        file_name: salesOrderData.file_name || '',
+        line_items: (record.items || []).map((item: any) => ({
+          product_name: item.description || item.product_name || 'Standard Consulting Package',
+          sku: item.sku || 'SCP-CRM',
+          quantity: Number(item.quantity || 1),
+          unit_price: Number(item.unit_price || item.price || 0.0)
+        }))
       };
 
       await api.post('/sales-orders', salesOrderPayload);

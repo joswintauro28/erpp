@@ -266,7 +266,10 @@ class PurchaseOrderService:
         ful_service = FulfillmentService(self.db)
         for f in fulfillments:
             try:
-                await ful_service.check_stock(organization_id, f.id)
+                result = await ful_service.check_stock(organization_id, f.id)
+                if result.overall_available and f.status in ("QUEUED", "SHORTAGE", "PO_CREATED"):
+                    await ful_service.reserve_stock(organization_id, f.id)
+                    logger.info(f"Auto-reserved fulfillment {f.id} after stock arrived from PO {po.order_number}")
             except Exception:
                 pass
 

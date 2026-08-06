@@ -48,6 +48,49 @@ def _build_so_check_items(so):
     ]
 
 
+async def _publish_crm_order_approved(token_payload: dict, so, stock_result: dict):
+    from app.core.amqp import get_exchange
+    exchange = await get_exchange()
+    if not exchange:
+        return
+    try:
+        product_ids = {}
+        for r in stock_result.get("items") or []:
+            if r.get("sku"):
+                product_ids[r["sku"]] = r.get("product_id")
+            if r.get("product_name"):
+                product_ids[r["product_name"]] = r.get("product_id")
+
+        event_data = {
+            "event": "crm.order.approved",
+            "organization_id": token_payload.get("organization_id", 1),
+            "sales_order_code": so.so_no,
+            "customer_name": so.account,
+            "value": so.value,
+            "status": so.status,
+            "timestamp": datetime.utcnow().isoformat(),
+        }
+        event_data["items"] = [
+            {
+                "product_id": product_ids.get(item.get("sku")) or product_ids.get(item.get("product_name")),
+                "product_name": item["product_name"],
+                "sku": item["sku"],
+                "ordered_quantity": item["quantity"],
+                "unit_price": item["unit_price"],
+            }
+            for item in _build_so_check_items(so)
+        ]
+
+        message = aio_pika.Message(
+            body=json.dumps(event_data).encode(),
+            delivery_mode=aio_pika.DeliveryMode.PERSISTENT
+        )
+        await exchange.publish(message, routing_key="crm.order.approved")
+        logger.info(f"Published crm.order.approved for sales order {so.so_no}")
+    except Exception as e:
+        logger.error(f"Failed to publish crm.order.approved: {str(e)}", exc_info=True)
+
+
 async def _publish_fulfillment_event(token_payload: dict, so, stock_result: dict):
     from app.core.amqp import get_exchange
     exchange = await get_exchange()
@@ -181,49 +224,11 @@ async def create_sales_order(
     new_status = so.status
     approved_statuses = ("Confirmed", "Approved", "Paid", "Invoiced", "Delivered", "Done")
     if new_status in approved_statuses:
-        # Immediate stock check against inventory-service before final approval
+        # Immediate stock check against inventory-service before final approval.
+        # On shortage the SO is placed on Stock Hold but is STILL ingested into inventory
+        # fulfillment (SHORTAGE) so the auto-PO flow can procure the missing items.
         stock_result = await _check_stock_and_hold(token_payload, so, db)
-        if stock_result.get("available", True):
-            product_ids = {}
-            for r in stock_result.get("items") or []:
-                if r.get("sku"):
-                    product_ids[r["sku"]] = r.get("product_id")
-                if r.get("product_name"):
-                    product_ids[r["product_name"]] = r.get("product_id")
-
-            from app.core.amqp import get_exchange
-            exchange = await get_exchange()
-            if exchange:
-                try:
-                    event_data = {
-                        "event": "crm.order.approved",
-                        "organization_id": token_payload.get("organization_id", 1),
-                        "sales_order_code": so.so_no,
-                        "customer_name": so.account,
-                        "value": so.value,
-                        "status": so.status,
-                        "timestamp": datetime.utcnow().isoformat()
-                    }
-                    
-                    event_data["items"] = [
-                        {
-                            "product_id": product_ids.get(item.get("sku")) or product_ids.get(item.get("product_name")),
-                            "product_name": item["product_name"],
-                            "sku": item["sku"],
-                            "ordered_quantity": item["quantity"],
-                            "unit_price": item["unit_price"],
-                        }
-                        for item in _build_so_check_items(so)
-                    ]
-
-                    message = aio_pika.Message(
-                        body=json.dumps(event_data).encode(),
-                        delivery_mode=aio_pika.DeliveryMode.PERSISTENT
-                    )
-                    await exchange.publish(message, routing_key="crm.order.approved")
-                    logger.info(f"Successfully published crm.order.approved event on creation for sales order {so.so_no}")
-                except Exception as e:
-                    logger.error(f"Failed to publish crm.order.approved on creation: {str(e)}", exc_info=True)
+        await _publish_crm_order_approved(token_payload, so, stock_result)
 
     return so
 
@@ -307,54 +312,16 @@ async def update_sales_order(
                 )
                 return so
 
-        # Immediate stock check against inventory-service before final approval
+        # Immediate stock check against inventory-service before final approval.
+        # On shortage the SO is placed on Stock Hold but is STILL ingested into inventory
+        # fulfillment (SHORTAGE) so the auto-PO flow can procure the missing items.
         stock_result = await _check_stock_and_hold(token_payload, so, db)
         if not stock_result.get("available", True):
             logger.info(
-                f"Sales order {so.so_no} placed on Stock Hold — inventory shortage detected."
+                f"Sales order {so.so_no} placed on Stock Hold — inventory shortage detected; "
+                f"ingesting into fulfillment for auto-procurement."
             )
-            return so
-
-        product_ids = {}
-        for r in stock_result.get("items") or []:
-            if r.get("sku"):
-                product_ids[r["sku"]] = r.get("product_id")
-            if r.get("product_name"):
-                product_ids[r["product_name"]] = r.get("product_id")
-
-        from app.core.amqp import get_exchange
-        exchange = await get_exchange()
-        if exchange:
-            try:
-                event_data = {
-                    "event": "crm.order.approved",
-                    "organization_id": token_payload.get("organization_id", 1),
-                    "sales_order_code": so.so_no,
-                    "customer_name": so.account,
-                    "value": so.value,
-                    "status": so.status,
-                    "timestamp": datetime.utcnow().isoformat()
-                }
-                
-                event_data["items"] = [
-                    {
-                        "product_id": product_ids.get(item.get("sku")) or product_ids.get(item.get("product_name")),
-                        "product_name": item["product_name"],
-                        "sku": item["sku"],
-                        "ordered_quantity": item["quantity"],
-                        "unit_price": item["unit_price"],
-                    }
-                    for item in _build_so_check_items(so)
-                ]
-
-                message = aio_pika.Message(
-                    body=json.dumps(event_data).encode(),
-                    delivery_mode=aio_pika.DeliveryMode.PERSISTENT
-                )
-                await exchange.publish(message, routing_key="crm.order.approved")
-                logger.info(f"Successfully published crm.order.approved event for sales order {so.so_no}")
-            except Exception as e:
-                logger.error(f"Failed to publish crm.order.approved: {str(e)}", exc_info=True)
+        await _publish_crm_order_approved(token_payload, so, stock_result)
 
     return so
 
@@ -387,6 +354,8 @@ async def check_sales_order_stock(
         await db.commit()
         await db.refresh(so)
         await _publish_fulfillment_event(token_payload, so, stock_result)
+        # Ingest into inventory fulfillment (SHORTAGE -> auto-PO) so procurement can begin.
+        await _publish_crm_order_approved(token_payload, so, stock_result)
 
     return {
         "available": available,

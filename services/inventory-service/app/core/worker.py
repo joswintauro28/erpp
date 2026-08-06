@@ -122,6 +122,17 @@ async def process_crm_order_approved(message: aio_pika.IncomingMessage):
                         items=shortage_items,
                     )
                     logger.info(f"Published inventory.order.shortage event for sales order {sales_order_code}")
+
+                    # Auto-create a PO so procurement can fulfill the shortage. Once the PO is
+                    # received, stock arrivals auto-reserve this fulfillment.
+                    try:
+                        po_fulfillment = await fulfillment_service.trigger_po_for_shortage(organization_id, fulfillment.id)
+                        logger.info(f"Auto-created PO {po_fulfillment.purchase_order_id} for shortage on sales order {sales_order_code}")
+                    except Exception as po_exc:
+                        logger.error(
+                            f"Failed to auto-create PO for sales order {sales_order_code}: {str(po_exc)}",
+                            exc_info=True,
+                        )
                 
         except Exception as e:
             logger.error(f"Error processing crm.order.approved: {str(e)}", exc_info=True)

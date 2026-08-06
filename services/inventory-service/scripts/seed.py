@@ -370,7 +370,12 @@ async def seed():
 
             serials = []
             seq_by_product: dict[int, int] = {}
-            sales_seq = 101
+            # Sold/reserved serials reference the CRM sales-order code that owns them.
+            so_code_by_product = {
+                4: "SO-202608-0108",    # IoT Gateway Edge Controller → Nimbus Technologies
+                11: "SO-202608-0101",   # HMI KTP1000 → Halcyon Media
+                26: "SO-202608-0109",   # Drill Machine 13mm → Pinnacle Realty Group
+            }
             for p_idx, wh_idx, count, status in serial_plan:
                 product = products[p_idx]
                 seq_by_product[p_idx] = seq_by_product.get(p_idx, 0) + 1
@@ -390,12 +395,10 @@ async def seed():
                         serial.warranty_until = later(730)
                     elif status == "sold":
                         serial.sold_at = ago(5 + (n % 15))
-                        serial.sales_order_code = f"SO-202608-{sales_seq:04d}"
-                        sales_seq += 1
+                        serial.sales_order_code = so_code_by_product.get(p_idx)
                         serial.activated_at = ago(30 + (n % 20))
                     elif status == "reserved":
-                        serial.sales_order_code = f"SO-202608-{sales_seq:04d}"
-                        sales_seq += 1
+                        serial.sales_order_code = so_code_by_product.get(p_idx)
                         serial.activated_at = ago(20 + (n % 10))
                     elif status == "in_transit":
                         serial.notes = "Dispatched to regional hub, awaiting scan-in"

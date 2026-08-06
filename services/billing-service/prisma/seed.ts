@@ -333,151 +333,145 @@ async function main() {
   }
 
   // ── QUOTATIONS (20) ──────────────────────────────────────────────
+  // Product references (name/SKU/unit price) are bound strictly to the
+  // inventory-service seed catalog (services/inventory-service/scripts/seed.py).
   const quotations = [
     {
-      organizationId: 1, clientId: cid("Meridian Foods"), clientName: "Meridian Foods", quoteNumber: "QT-202608-0001", total: 245000, status: "accepted" as const, issueDate: ago(45), validUntil: ago(15), notes: "Q3 Expansion Contract",
+      organizationId: 1, clientId: cid("Meridian Foods"), clientName: "Meridian Foods", quoteNumber: "QT-202608-0001", total: 132000, status: "accepted" as const, issueDate: ago(45), validUntil: ago(15), notes: "Line automation — photoelectric sensors (converted to SO-202608-0103)",
       items: [
-        { description: "Industrial Automation Controller X200", quantity: 5, unitPrice: 25000, gstRate: 18, amount: 125000 },
-        { description: "Sensor Array Kit — Proximity", quantity: 10, unitPrice: 2500, gstRate: 18, amount: 25000 },
-        { description: "HMI Display Panel Touch 10inch", quantity: 3, unitPrice: 30000, gstRate: 18, amount: 90000 },
-        { description: "Automation Setup Support", quantity: 5, unitPrice: 1000, gstRate: 18, amount: 5000 },
+        { description: "Photoelectric Sensor — Omron E3Z (SEN-E3Z)", quantity: 30, unitPrice: 2800, gstRate: 18, amount: 84000 },
+        { description: "Inductive Proximity Sensor — Omron (SEN-PRX12)", quantity: 40, unitPrice: 1200, gstRate: 18, amount: 48000 },
       ]
     },
     {
-      organizationId: 1, clientId: cid("Cirrus Aviation"), clientName: "Cirrus Aviation", quoteNumber: "QT-202608-0002", total: 510000, status: "sent" as const, issueDate: ago(10), validUntil: later(20), notes: "Fleet-wide telemetry upgrade",
+      organizationId: 1, clientId: cid("Cirrus Aviation"), clientName: "Cirrus Aviation", quoteNumber: "QT-202608-0002", total: 300000, status: "accepted" as const, issueDate: ago(35), validUntil: ago(5), notes: "Fleet-wide telemetry upgrade (converted to SO-202608-0104)",
       items: [
-        { description: "Aviation-Grade Telemetry Module", quantity: 3, unitPrice: 120000, gstRate: 18, amount: 360000 },
-        { description: "Flight Data Recorder Interface", quantity: 2, unitPrice: 30000, gstRate: 18, amount: 60000 },
-        { description: "Custom Harness and Antenna Array", quantity: 3, unitPrice: 30000, gstRate: 18, amount: 90000 },
+        { description: "Aviation-Grade Telemetry Module (TEL-AV900)", quantity: 2, unitPrice: 120000, gstRate: 18, amount: 240000 },
+        { description: "Flight Data Recorder Interface (FDR-INT10)", quantity: 2, unitPrice: 30000, gstRate: 18, amount: 60000 },
       ]
     },
     {
-      organizationId: 1, clientId: cid("Orbit Health"), clientName: "Orbit Health", quoteNumber: "QT-202608-0003", total: 625000, status: "draft" as const, issueDate: null, validUntil: null, notes: "EHR Platform — Phase 2",
+      organizationId: 1, clientId: cid("Halcyon Media"), clientName: "Halcyon Media", quoteNumber: "QT-202608-0003", total: 182000, status: "accepted" as const, issueDate: ago(40), validUntil: ago(10), notes: "Control room HMI upgrade (converted to SO-202608-0101)",
       items: [
-        { description: "EHR Platform Base License — Phase 2", quantity: 1, unitPrice: 450000, gstRate: 18, amount: 450000 },
-        { description: "HL7 Integration Middleware Suite", quantity: 1, unitPrice: 125000, gstRate: 18, amount: 125000 },
-        { description: "Data Migration & Mapping (50 hours)", quantity: 50, unitPrice: 1000, gstRate: 18, amount: 50000 },
+        { description: "HMI Touch Panel 10-inch — Siemens KTP1000 (HMI-KTP1000)", quantity: 3, unitPrice: 42000, gstRate: 18, amount: 126000 },
+        { description: "HMI Graphic Terminal 7-inch — Schneider (HMI-GT7)", quantity: 2, unitPrice: 28000, gstRate: 18, amount: 56000 },
       ]
     },
     {
-      organizationId: 1, clientId: cid("Nimbus Technologies"), clientName: "Nimbus Technologies", quoteNumber: "QT-202608-0004", total: 350000, status: "sent" as const, issueDate: ago(8), validUntil: later(22), notes: "Cloud Migration Package",
+      organizationId: 1, clientId: cid("Orbit Health"), clientName: "Orbit Health", quoteNumber: "QT-202608-0004", total: 68500, status: "sent" as const, issueDate: ago(12), validUntil: later(18), notes: "Environmental monitoring transmitters",
       items: [
-        { description: "Cloud Migration Suite Enterprise", quantity: 1, unitPrice: 280000, gstRate: 18, amount: 280000 },
-        { description: "Cloud Security Architecture Advisory", quantity: 1, unitPrice: 70000, gstRate: 18, amount: 70000 },
+        { description: "Smart Temperature Transmitter — Honeywell (TX-TEMP)", quantity: 5, unitPrice: 6500, gstRate: 18, amount: 32500 },
+        { description: "Differential Pressure Transmitter (TX-DP900)", quantity: 2, unitPrice: 18000, gstRate: 18, amount: 36000 },
       ]
     },
     {
-      organizationId: 1, clientId: cid("Solara Renewable Energy"), clientName: "Solara Renewable Energy", quoteNumber: "QT-202608-0005", total: 480000, status: "draft" as const, issueDate: null, validUntil: null, notes: "Plant SCADA Overhaul",
+      organizationId: 1, clientId: cid("Nimbus Technologies"), clientName: "Nimbus Technologies", quoteNumber: "QT-202608-0005", total: 25500, status: "accepted" as const, issueDate: ago(20), validUntil: later(10), notes: "IoT edge gateway pilot (converted to SO-202608-0108)",
       items: [
-        { description: "SCADA Software Enterprise License", quantity: 1, unitPrice: 350000, gstRate: 18, amount: 350000 },
-        { description: "Modbus TCP/IP Master Controller", quantity: 10, unitPrice: 10000, gstRate: 18, amount: 100000 },
-        { description: "Integration Services (30 hours)", quantity: 30, unitPrice: 1000, gstRate: 18, amount: 30000 },
+        { description: "IoT Gateway Edge Controller (IOT-GW200)", quantity: 3, unitPrice: 8500, gstRate: 18, amount: 25500 },
       ]
     },
     {
-      organizationId: 1, clientId: cid("Pinnacle Realty Group"), clientName: "Pinnacle Realty Group", quoteNumber: "QT-202608-0006", total: 220000, status: "sent" as const, issueDate: ago(5), validUntil: later(25), notes: "PropTech Platform",
+      organizationId: 1, clientId: cid("Solara Renewable Energy"), clientName: "Solara Renewable Energy", quoteNumber: "QT-202608-0006", total: 507000, status: "accepted" as const, issueDate: ago(28), validUntil: ago(1), notes: "Pump control VFD package (converted to SO-202608-0106)",
       items: [
-        { description: "PropTech Portal White-label Setup", quantity: 1, unitPrice: 150000, gstRate: 18, amount: 150000 },
-        { description: "Real Estate API Integration Broker", quantity: 1, unitPrice: 50000, gstRate: 18, amount: 50000 },
-        { description: "Agent Training Material & Guides", quantity: 1, unitPrice: 20000, gstRate: 18, amount: 20000 },
+        { description: "Compact VFD Drive 1.5kW — Omron (VFD-1.5KW)", quantity: 30, unitPrice: 14500, gstRate: 18, amount: 435000 },
+        { description: "Overload Relay 18-25A — Siemens (REL-1825A)", quantity: 30, unitPrice: 2400, gstRate: 18, amount: 72000 },
       ]
     },
     {
-      organizationId: 1, clientId: cid("Delta Automotive"), clientName: "Delta Automotive", quoteNumber: "QT-202608-0007", total: 395000, status: "draft" as const, issueDate: null, validUntil: null, notes: "MES Implementation",
+      organizationId: 1, clientId: cid("Pinnacle Realty Group"), clientName: "Pinnacle Realty Group", quoteNumber: "QT-202608-0007", total: 14000, status: "accepted" as const, issueDate: ago(18), validUntil: later(12), notes: "Facility maintenance tools (converted to SO-202608-0109)",
       items: [
-        { description: "MES Integration Core Module", quantity: 1, unitPrice: 275000, gstRate: 18, amount: 275000 },
-        { description: "Automotive CAN-bus Reader Interface", quantity: 8, unitPrice: 15000, gstRate: 18, amount: 120000 },
+        { description: "Drill Machine 13mm — Bosch (DM-13MM)", quantity: 4, unitPrice: 3500, gstRate: 18, amount: 14000 },
       ]
     },
     {
-      organizationId: 1, clientId: cid("Oceanic Pharmaceuticals"), clientName: "Oceanic Pharmaceuticals", quoteNumber: "QT-202608-0008", total: 780000, status: "sent" as const, issueDate: ago(2), validUntil: later(45), notes: "GxP Compliance Suite",
+      organizationId: 1, clientId: cid("Titan Defence Systems"), clientName: "Titan Defence Systems", quoteNumber: "QT-202608-0008", total: 1340000, status: "accepted" as const, issueDate: ago(32), validUntil: ago(2), notes: "Redundant CPU safety panels (converted to SO-202608-0105)",
       items: [
-        { description: "GxP Compliance Tracker Suite License", quantity: 1, unitPrice: 600000, gstRate: 18, amount: 600000 },
-        { description: "Validation Protocol Run & Report", quantity: 1, unitPrice: 180000, gstRate: 18, amount: 180000 },
+        { description: "Redundant CPU Processor Panel (CPU-RED500)", quantity: 15, unitPrice: 85000, gstRate: 18, amount: 1275000 },
+        { description: "Power Supply 24V DC 10A — Siemens SITOP (PS-24V10A)", quantity: 10, unitPrice: 6500, gstRate: 18, amount: 65000 },
       ]
     },
     {
-      organizationId: 1, clientId: cid("Everest Logistics"), clientName: "Everest Logistics", quoteNumber: "QT-202608-0009", total: 210000, status: "sent" as const, issueDate: ago(6), validUntil: later(24), notes: "WMS Upgrade",
+      organizationId: 1, clientId: cid("Delta Automotive"), clientName: "Delta Automotive", quoteNumber: "QT-202608-0009", total: 86000, status: "accepted" as const, issueDate: ago(25), validUntil: ago(0), notes: "Plant cable trays & enclosures (converted to SO-202608-0107)",
       items: [
-        { description: "WMS Upgrade Core Engine License", quantity: 1, unitPrice: 160000, gstRate: 18, amount: 160000 },
-        { description: "Barcoding Integration Module API", quantity: 1, unitPrice: 50000, gstRate: 18, amount: 50000 },
+        { description: "Perforated Cable Tray 3m — Legrand (CT-3M-LEG)", quantity: 20, unitPrice: 1800, gstRate: 18, amount: 36000 },
+        { description: "IP65 Control Panel Enclosure 600x600 (ENC-IP65)", quantity: 4, unitPrice: 12500, gstRate: 18, amount: 50000 },
       ]
     },
     {
-      organizationId: 1, clientId: cid("Apex Logistics Group"), clientName: "Apex Logistics Group", quoteNumber: "QT-202608-0010", total: 98000, status: "rejected" as const, issueDate: ago(30), validUntil: ago(5), notes: "Budget constraints",
+      organizationId: 1, clientId: cid("Bristow Textiles"), clientName: "Bristow Textiles", quoteNumber: "QT-202608-0010", total: 42000, status: "accepted" as const, issueDate: ago(38), validUntil: ago(8), notes: "Panel wiring materials (converted to SO-202608-0102)",
       items: [
-        { description: "GPS Fleet Tracker Enterprise License", quantity: 1, unitPrice: 75000, gstRate: 18, amount: 75000 },
-        { description: "High-Gain Fleet Antennae", quantity: 23, unitPrice: 1000, gstRate: 18, amount: 23000 },
+        { description: "Industrial Control Cable 2.5mm² (50m Roll) (CAB-2.5MM)", quantity: 5, unitPrice: 6200, gstRate: 18, amount: 31000 },
+        { description: "Wire Crimping Tool Set — Bosch (WCT-8PC)", quantity: 5, unitPrice: 2200, gstRate: 18, amount: 11000 },
       ]
     },
     {
-      organizationId: 1, clientId: cid("Halcyon Media"), clientName: "Halcyon Media", quoteNumber: "QT-202608-0011", total: 310000, status: "accepted" as const, issueDate: ago(15), validUntil: ago(2), notes: "CDN Advanced Edge Cache Config",
+      organizationId: 1, clientId: cid("Halcyon Media"), clientName: "Halcyon Media", quoteNumber: "QT-202608-0011", total: 225000, status: "sent" as const, issueDate: ago(10), validUntil: later(20), notes: "Broadcast automation PLCs",
       items: [
-        { description: "CDN Advanced Edge Cache Config", quantity: 1, unitPrice: 200000, gstRate: 18, amount: 200000 },
-        { description: "Ad Server Integration Middleware", quantity: 1, unitPrice: 110000, gstRate: 18, amount: 110000 },
+        { description: "PLC CPU Module — Siemens S7-1200 (PLC-S71200)", quantity: 3, unitPrice: 25000, gstRate: 18, amount: 75000 },
+        { description: "Distributed I/O Interface — Siemens ET200 (IO-ET200)", quantity: 10, unitPrice: 15000, gstRate: 18, amount: 150000 },
       ]
     },
     {
-      organizationId: 1, clientId: cid("Bristow Textiles"), clientName: "Bristow Textiles", quoteNumber: "QT-202608-0012", total: 180000, status: "sent" as const, issueDate: ago(3), validUntil: later(10), notes: "Textile Design CAD Plugin Suite",
+      organizationId: 1, clientId: cid("Meridian Foods"), clientName: "Meridian Foods", quoteNumber: "QT-202608-0012", total: 224000, status: "sent" as const, issueDate: ago(8), validUntil: later(22), notes: "Process line drives & contactors",
       items: [
-        { description: "Textile Design CAD Plugin License", quantity: 5, unitPrice: 30000, gstRate: 18, amount: 150000 },
-        { description: "Fabric Shader Library Suite", quantity: 1, unitPrice: 30000, gstRate: 18, amount: 30000 },
+        { description: "Variable Frequency Drive 5.5kW — Siemens (VFD-5.5KW)", quantity: 5, unitPrice: 32000, gstRate: 18, amount: 160000 },
+        { description: "Magnetic Contactor 40A — Schneider LC1D (CON-40A)", quantity: 20, unitPrice: 3200, gstRate: 18, amount: 64000 },
       ]
     },
     {
-      organizationId: 1, clientId: cid("Vortex Energy Solutions"), clientName: "Vortex Energy Solutions", quoteNumber: "QT-202608-0013", total: 540000, status: "draft" as const, issueDate: null, validUntil: null, notes: "Wind Farm Telemetry Gateway Setup",
+      organizationId: 1, clientId: cid("Nimbus Technologies"), clientName: "Nimbus Technologies", quoteNumber: "QT-202608-0013", total: 189000, status: "draft" as const, issueDate: null, validUntil: null, notes: "Servo actuation suite",
       items: [
-        { description: "Wind Farm Telemetry Gateway", quantity: 2, unitPrice: 200000, gstRate: 18, amount: 400000 },
-        { description: "Grid SCADA Connector License", quantity: 1, unitPrice: 140000, gstRate: 18, amount: 140000 },
+        { description: "Servo Motor & Drive System — Schneider (SRV-DRV100)", quantity: 2, unitPrice: 75000, gstRate: 18, amount: 150000 },
+        { description: "Power Supply 24V DC 10A — Siemens SITOP (PS-24V10A)", quantity: 6, unitPrice: 6500, gstRate: 18, amount: 39000 },
       ]
     },
     {
-      organizationId: 1, clientId: cid("Cascade Water Solutions"), clientName: "Cascade Water Solutions", quoteNumber: "QT-202608-0014", total: 420000, status: "expired" as const, issueDate: ago(40), validUntil: ago(10), notes: "Water Flow Sensor Node Array",
+      organizationId: 1, clientId: cid("Solara Renewable Energy"), clientName: "Solara Renewable Energy", quoteNumber: "QT-202608-0014", total: 166000, status: "draft" as const, issueDate: null, validUntil: null, notes: "Substation pressure & level monitoring",
       items: [
-        { description: "Water Flow Sensor Node Array", quantity: 20, unitPrice: 15000, gstRate: 18, amount: 300000 },
-        { description: "Hydrological Analysis License", quantity: 1, unitPrice: 120000, gstRate: 18, amount: 120000 },
+        { description: "Differential Pressure Transmitter (TX-DP900)", quantity: 6, unitPrice: 18000, gstRate: 18, amount: 108000 },
+        { description: "Ultrasonic Level Sensor — Honeywell (SEN-USL30)", quantity: 4, unitPrice: 14500, gstRate: 18, amount: 58000 },
       ]
     },
     {
-      organizationId: 1, clientId: cid("Neuron AI Research"), clientName: "Neuron AI Research", quoteNumber: "QT-202608-0015", total: 950000, status: "accepted" as const, issueDate: ago(12), validUntil: later(18), notes: "GPU Cluster Management Core",
+      organizationId: 1, clientId: cid("Titan Defence Systems"), clientName: "Titan Defence Systems", quoteNumber: "QT-202608-0015", total: 240000, status: "sent" as const, issueDate: ago(7), validUntil: later(23), notes: "Flight data recorder interfaces",
       items: [
-        { description: "GPU Cluster Management Core", quantity: 1, unitPrice: 750000, gstRate: 18, amount: 750000 },
-        { description: "High-Performance Storage Mount", quantity: 2, unitPrice: 100000, gstRate: 18, amount: 200000 },
+        { description: "Flight Data Recorder Interface (FDR-INT10)", quantity: 4, unitPrice: 30000, gstRate: 18, amount: 120000 },
+        { description: "Aviation-Grade Telemetry Module (TEL-AV900)", quantity: 1, unitPrice: 120000, gstRate: 18, amount: 120000 },
       ]
     },
     {
-      organizationId: 1, clientId: cid("Gardenia Organic Farms"), clientName: "Gardenia Organic Farms", quoteNumber: "QT-202608-0016", total: 290000, status: "sent" as const, issueDate: ago(3), validUntil: later(25), notes: "Automated Irrigation Valve Master",
+      organizationId: 1, clientId: cid("Cirrus Aviation"), clientName: "Cirrus Aviation", quoteNumber: "QT-202608-0016", total: 159000, status: "draft" as const, issueDate: null, validUntil: null, notes: "Aviation HMI & servo package",
       items: [
-        { description: "Automated Irrigation Valve Master", quantity: 10, unitPrice: 20000, gstRate: 18, amount: 200000 },
-        { description: "Soil Moisture Probe Pro Array", quantity: 15, unitPrice: 6000, gstRate: 18, amount: 90000 },
+        { description: "HMI Graphic Terminal 7-inch — Schneider (HMI-GT7)", quantity: 3, unitPrice: 28000, gstRate: 18, amount: 84000 },
+        { description: "Servo Motor & Drive System — Schneider (SRV-DRV100)", quantity: 1, unitPrice: 75000, gstRate: 18, amount: 75000 },
       ]
     },
     {
-      organizationId: 1, clientId: cid("Titan Defence Systems"), clientName: "Titan Defence Systems", quoteNumber: "QT-202608-0017", total: 820000, status: "draft" as const, issueDate: null, validUntil: null, notes: "Radar Signal Processing Engine Design",
+      organizationId: 1, clientId: cid("Pinnacle Realty Group"), clientName: "Pinnacle Realty Group", quoteNumber: "QT-202608-0017", total: 165000, status: "rejected" as const, issueDate: ago(30), validUntil: ago(5), notes: "Switchgear for new tower",
       items: [
-        { description: "Radar Signal Processing Engine", quantity: 1, unitPrice: 650000, gstRate: 18, amount: 650000 },
-        { description: "Hardware-in-the-Loop Simulator", quantity: 1, unitPrice: 170000, gstRate: 18, amount: 170000 },
+        { description: "MCB 32A Triple Pole — Havells (MCB-33A)", quantity: 100, unitPrice: 850, gstRate: 18, amount: 85000 },
+        { description: "Magnetic Contactor 40A — Schneider LC1D (CON-40A)", quantity: 25, unitPrice: 3200, gstRate: 18, amount: 80000 },
       ]
     },
     {
-      organizationId: 1, clientId: cid("Velora Hospitality"), clientName: "Velora Hospitality", quoteNumber: "QT-202608-0018", total: 340000, status: "rejected" as const, issueDate: ago(25), validUntil: ago(5), notes: "PMS Integration API Gateway Proposal",
+      organizationId: 1, clientId: cid("Bristow Textiles"), clientName: "Bristow Textiles", quoteNumber: "QT-202608-0018", total: 71600, status: "expired" as const, issueDate: ago(40), validUntil: ago(10), notes: "Crimping & cabling kit",
       items: [
-        { description: "PMS Integration API Gateway", quantity: 1, unitPrice: 240000, gstRate: 18, amount: 240000 },
-        { description: "Guest Mobile App Portal Setup", quantity: 1, unitPrice: 100000, gstRate: 18, amount: 100000 },
+        { description: "Wire Crimping Tool Set — Bosch (WCT-8PC)", quantity: 10, unitPrice: 2200, gstRate: 18, amount: 22000 },
+        { description: "Industrial Control Cable 2.5mm² (50m Roll) (CAB-2.5MM)", quantity: 8, unitPrice: 6200, gstRate: 18, amount: 49600 },
       ]
     },
     {
-      organizationId: 1, clientId: cid("Bright Future Education"), clientName: "Bright Future Education", quoteNumber: "QT-202608-0019", total: 150000, status: "sent" as const, issueDate: ago(5), validUntil: later(15), notes: "LMS Platform Customization",
+      organizationId: 1, clientId: cid("Delta Automotive"), clientName: "Delta Automotive", quoteNumber: "QT-202608-0019", total: 132000, status: "sent" as const, issueDate: ago(5), validUntil: later(25), notes: "Assembly line PLCs & proximity sensors",
       items: [
-        { description: "LMS Platform Customization Fee", quantity: 1, unitPrice: 100000, gstRate: 18, amount: 100000 },
-        { description: "Teacher/Student Portal Training", quantity: 5, unitPrice: 10000, gstRate: 18, amount: 50000 },
+        { description: "Micro PLC Controller — Omron CP1E (PLC-CP1E)", quantity: 6, unitPrice: 12000, gstRate: 18, amount: 72000 },
+        { description: "Inductive Proximity Sensor — Omron (SEN-PRX12)", quantity: 50, unitPrice: 1200, gstRate: 18, amount: 60000 },
       ]
     },
     {
-      organizationId: 1, clientId: cid("Starlight Entertainment"), clientName: "Starlight Entertainment", quoteNumber: "QT-202608-0020", total: 620000, status: "accepted" as const, issueDate: ago(20), validUntil: ago(1), notes: "Event Ticketing Broker API Integration",
+      organizationId: 1, clientId: cid("Orbit Health"), clientName: "Orbit Health", quoteNumber: "QT-202608-0020", total: 114500, status: "draft" as const, issueDate: null, validUntil: null, notes: "Medical equipment enclosures",
       items: [
-        { description: "Event Ticketing Broker API", quantity: 1, unitPrice: 480000, gstRate: 18, amount: 480000 },
-        { description: "Venue Seating Layout Designer", quantity: 1, unitPrice: 140000, gstRate: 18, amount: 140000 },
+        { description: "IP65 Control Panel Enclosure 600x600 (ENC-IP65)", quantity: 5, unitPrice: 12500, gstRate: 18, amount: 62500 },
+        { description: "Power Supply 24V DC 10A — Siemens SITOP (PS-24V10A)", quantity: 8, unitPrice: 6500, gstRate: 18, amount: 52000 },
       ]
     },
   ];
