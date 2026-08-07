@@ -81,6 +81,41 @@ async def process_inventory_shortage(message: aio_pika.IncomingMessage):
             logger.error(f"Error processing inventory.order.shortage: {str(e)}", exc_info=True)
 
 
+# Event -> SO status mapping for the inventory fulfillment lifecycle. The CRM keeps the
+# sales order in sync so the sales team sees stock progress without a manual update.
+FULFILLMENT_STATUS_EVENTS = {
+    "inventory.order.reserved": "Reserved",
+    "inventory.order.picking": "Picking",
+    "inventory.order.packed": "Packed",
+    "inventory.shipment.dispatched": "Delivered",
+    "inventory.order.fulfilled": "Done",
+}
+
+
+async def process_inventory_fulfillment_status(message: aio_pika.IncomingMessage):
+    async with message.process():
+        try:
+            body = json.loads(message.body.decode())
+            event = body.get("event", "")
+            sales_order_code = body.get("sales_order_code")
+            new_status = FULFILLMENT_STATUS_EVENTS.get(event)
+            if not sales_order_code or not new_status:
+                return
+
+            logger.info(f"Received {event} for {sales_order_code} -> SO status {new_status}")
+
+            async with AsyncSessionLocal() as db:
+                so_stmt = select(SalesOrder).where(SalesOrder.so_no == sales_order_code)
+                so_res = await db.execute(so_stmt)
+                so = so_res.scalars().first()
+                if so:
+                    so.status = new_status
+                    await db.commit()
+                    logger.info(f"Updated sales order {sales_order_code} status to {new_status}")
+        except Exception as e:
+            logger.error(f"Error processing inventory fulfillment status: {str(e)}", exc_info=True)
+
+
 async def run_crm_worker():
     rabbitmq_url = os.getenv("RABBITMQ_URL", "amqp://guest:guest@localhost:5672/")
     logger.info(f"Starting CRM RabbitMQ worker, connecting to {rabbitmq_url}")
@@ -103,6 +138,11 @@ async def run_crm_worker():
             shortage_queue = await channel.declare_queue("inventory_shortage_crm_queue", durable=True)
             await shortage_queue.bind(exchange, routing_key="inventory.order.shortage")
             
+            # Declare fulfillment-status queue (reserved/picking/packed/dispatched/fulfilled)
+            fulfillment_queue = await channel.declare_queue("inventory_fulfillment_status_crm_queue", durable=True)
+            for routing_key in FULFILLMENT_STATUS_EVENTS:
+                await fulfillment_queue.bind(exchange, routing_key=routing_key)
+            
             logger.info("Successfully connected to RabbitMQ and bound crm queues.")
             
             async def _consume_invoice_paid():
@@ -114,8 +154,13 @@ async def run_crm_worker():
                 async with shortage_queue.iterator() as queue_iter:
                     async for message in queue_iter:
                         await process_inventory_shortage(message)
+
+            async def _consume_fulfillment_status():
+                async with fulfillment_queue.iterator() as queue_iter:
+                    async for message in queue_iter:
+                        await process_inventory_fulfillment_status(message)
             
-            await asyncio.gather(_consume_invoice_paid(), _consume_shortage())
+            await asyncio.gather(_consume_invoice_paid(), _consume_shortage(), _consume_fulfillment_status())
             
         except asyncio.CancelledError:
             logger.info("CRM worker task cancelled, shutting down.")

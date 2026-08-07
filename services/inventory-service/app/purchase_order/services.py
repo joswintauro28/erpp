@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+import logging
 
 import sqlalchemy as sa
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -8,6 +9,8 @@ from fastapi import HTTPException, status
 from app.purchase_order.models import PurchaseOrder, PurchaseOrderItem
 from app.core.database import BaseRepository
 from app.core.events import publish_event, EVENT_PO_CREATED, EVENT_PO_APPROVED, EVENT_PO_RECEIVED
+
+logger = logging.getLogger("app.purchase_order")
 
 # Canonical PO lifecycle transitions.
 PO_STATUS_FLOW: dict[str, set[str]] = {
@@ -254,24 +257,19 @@ class PurchaseOrderService:
         await self._recheck_linked_fulfillments(po, organization_id)
 
     async def _recheck_linked_fulfillments(self, po: PurchaseOrder, organization_id: int) -> None:
-        from app.fulfillment.models import SalesOrderFulfillment
         from app.fulfillment.services import FulfillmentService
 
-        ful_stmt = sa.select(SalesOrderFulfillment).where(
-            SalesOrderFulfillment.purchase_order_id == po.id,
-            SalesOrderFulfillment.organization_id == organization_id
-        )
-        ful_res = await self.db.execute(ful_stmt)
-        fulfillments = list(ful_res.scalars().all())
-        ful_service = FulfillmentService(self.db)
-        for f in fulfillments:
-            try:
-                result = await ful_service.check_stock(organization_id, f.id)
-                if result.overall_available and f.status in ("QUEUED", "SHORTAGE", "PO_CREATED"):
-                    await ful_service.reserve_stock(organization_id, f.id)
-                    logger.info(f"Auto-reserved fulfillment {f.id} after stock arrived from PO {po.order_number}")
-            except Exception:
-                pass
+        # Resume every pending fulfillment that consumes a product received on this PO,
+        # not just the one directly linked to the PO.
+        product_ids = [item.product_id for item in (po.items or []) if item.product_id]
+        try:
+            resumed = await FulfillmentService(self.db).resume_pending_fulfillments(
+                organization_id, product_ids=product_ids or None, warehouse_id=po.warehouse_id
+            )
+            for f in resumed:
+                logger.info(f"Auto-reserved fulfillment {f.id} ({f.sales_order_code}) after stock arrived from PO {po.order_number}")
+        except Exception:
+            pass
 
     def _fully_received(self, po: PurchaseOrder) -> bool:
         return all(

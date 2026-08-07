@@ -11,6 +11,8 @@ logger = logging.getLogger("app.core.events")
 
 # Canonical routing keys for cross-module upward sync.
 EVENT_ORDER_RESERVED = "inventory.order.reserved"
+EVENT_ORDER_PICKING = "inventory.order.picking"
+EVENT_ORDER_PACKED = "inventory.order.packed"
 EVENT_ORDER_FULFILLED = "inventory.order.fulfilled"
 EVENT_SHIPMENT_DISPATCHED = "inventory.shipment.dispatched"
 EVENT_PO_CREATED = "inventory.po.created"

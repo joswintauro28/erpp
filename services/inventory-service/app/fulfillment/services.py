@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 import httpx
 from fastapi import HTTPException, status
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.fulfillment.models import SalesOrderFulfillment, FulfillmentItem
@@ -125,7 +125,9 @@ class FulfillmentService:
 
             res = await self.db.execute(stmt)
             stock_records = res.scalars().all()
-            total_avail = sum(s.quantity for s in stock_records)
+            # ATP = physical quantity minus already-reserved units, so concurrent
+            # fulfillments cannot over-promise the same stock.
+            total_avail = sum(max(0, s.quantity - s.reserved_quantity) for s in stock_records)
 
             is_avail = total_avail >= item.ordered_quantity
             if not is_avail:
@@ -150,6 +152,45 @@ class FulfillmentService:
             warehouse_id=order.warehouse_id,
             items=results
         )
+
+    async def resume_pending_fulfillments(
+        self, org_id: int, product_ids: list[int] | None = None, warehouse_id: int | None = None
+    ) -> list[SalesOrderFulfillment]:
+        """Re-check every unfulfilled order (QUEUED/SHORTAGE/PO_CREATED) and
+        auto-reserve any that now have enough available stock.
+
+        Called whenever stock increases (PO receipt, manual adjustment, stock-in)
+        so waiting orders resume without a manual click.
+        """
+        pending_statuses = ("QUEUED", "SHORTAGE", "PO_CREATED")
+        stmt = select(SalesOrderFulfillment).where(
+            SalesOrderFulfillment.organization_id == org_id,
+            SalesOrderFulfillment.status.in_(pending_statuses),
+        )
+        if product_ids:
+            stmt = stmt.join(FulfillmentItem).where(FulfillmentItem.product_id.in_(product_ids))
+        if warehouse_id:
+            stmt = stmt.where(
+                or_(
+                    SalesOrderFulfillment.warehouse_id == warehouse_id,
+                    SalesOrderFulfillment.warehouse_id.is_(None),
+                )
+            )
+        stmt = stmt.distinct()
+
+        res = await self.db.execute(stmt)
+        pending = list(res.scalars().all())
+
+        resumed: list[SalesOrderFulfillment] = []
+        for order in pending:
+            try:
+                result = await self.check_stock(org_id, order.id)
+                if result.overall_available and order.status in ("QUEUED", "SHORTAGE", "PO_CREATED"):
+                    await self.reserve_stock(org_id, order.id)
+                    resumed.append(order)
+            except Exception:
+                continue
+        return resumed
 
     async def reserve_stock(self, org_id: int, fulfillment_id: int) -> SalesOrderFulfillment:
         order = await self.get_fulfillment(org_id, fulfillment_id)
@@ -195,24 +236,50 @@ class FulfillmentService:
 
     async def pick_items(self, org_id: int, fulfillment_id: int) -> SalesOrderFulfillment:
         order = await self.get_fulfillment(org_id, fulfillment_id)
+        if order.status != "RESERVED":
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Pick list requires stock to be reserved first")
         for item in order.items:
             item.picked_quantity = item.ordered_quantity
         order.status = "PICKING"
         await self.db.commit()
         await self.db.refresh(order)
+
+        from app.core.events import publish_event, EVENT_ORDER_PICKING
+        publish_event(
+            EVENT_ORDER_PICKING,
+            organization_id=org_id,
+            fulfillment_id=order.id,
+            sales_order_code=order.sales_order_code,
+            customer_name=order.customer_name,
+            warehouse_id=order.warehouse_id,
+        )
         return order
 
     async def pack_items(self, org_id: int, fulfillment_id: int) -> SalesOrderFulfillment:
         order = await self.get_fulfillment(org_id, fulfillment_id)
+        if order.status != "PICKING":
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Packing requires the pick list to be generated")
         for item in order.items:
             item.packed_quantity = item.ordered_quantity
         order.status = "PACKED"
         await self.db.commit()
         await self.db.refresh(order)
+
+        from app.core.events import publish_event, EVENT_ORDER_PACKED
+        publish_event(
+            EVENT_ORDER_PACKED,
+            organization_id=org_id,
+            fulfillment_id=order.id,
+            sales_order_code=order.sales_order_code,
+            customer_name=order.customer_name,
+            warehouse_id=order.warehouse_id,
+        )
         return order
 
     async def dispatch_order(self, org_id: int, fulfillment_id: int, data: FulfillmentDispatchAction) -> SalesOrderFulfillment:
         order = await self.get_fulfillment(org_id, fulfillment_id)
+        if order.status != "PACKED":
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Dispatch requires the order to be packed first")
         
         # 1. Update shipping details & status
         order.status = "DISPATCHED"
@@ -416,6 +483,27 @@ class FulfillmentService:
         order.status = "COMPLETED"
         await self.db.commit()
         await self.db.refresh(order)
+
+        from app.core.events import publish_event, EVENT_ORDER_FULFILLED
+        publish_event(
+            EVENT_ORDER_FULFILLED,
+            organization_id=org_id,
+            fulfillment_id=order.id,
+            sales_order_code=order.sales_order_code,
+            customer_name=order.customer_name,
+            warehouse_id=order.warehouse_id,
+            invoice_id=order.invoice_id,
+            items=[
+                {
+                    "product_id": item.product_id,
+                    "product_name": item.product_name,
+                    "sku": item.sku,
+                    "quantity": item.ordered_quantity,
+                    "unit_price": float(item.unit_price or 0.0),
+                }
+                for item in order.items
+            ],
+        )
         return order
 
     async def generate_shipping_label(self, org_id: int, fulfillment_id: int) -> dict:

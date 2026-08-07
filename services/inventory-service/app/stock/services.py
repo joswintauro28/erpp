@@ -127,6 +127,16 @@ class StockService:
             notes=notes,
         )
 
+        # If stock increased, queued/shortage fulfillments for this product can resume.
+        if new_quantity > old_qty:
+            from app.fulfillment.services import FulfillmentService
+            try:
+                await FulfillmentService(self.db).resume_pending_fulfillments(
+                    organization_id, product_ids=[product_id], warehouse_id=warehouse_id
+                )
+            except Exception:
+                pass
+
         return stock
 
     async def record_movement(self, organization_id: int, **data) -> StockMovement:
@@ -173,6 +183,16 @@ class StockService:
         movement = StockMovement(organization_id=organization_id, **data)
         self.db.add(movement)
         await self.db.flush()
+
+        # Stock-in can unlock queued/shortage fulfillments for this product.
+        if movement_type == "in":
+            from app.fulfillment.services import FulfillmentService
+            try:
+                await FulfillmentService(self.db).resume_pending_fulfillments(
+                    organization_id, product_ids=[product_id], warehouse_id=warehouse_id
+                )
+            except Exception:
+                pass
 
         return movement
 
