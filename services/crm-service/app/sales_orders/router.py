@@ -68,6 +68,7 @@ async def _publish_crm_order_approved(token_payload: dict, so, stock_result: dic
             "customer_name": so.account,
             "value": so.value,
             "status": so.status,
+            "warehouse_id": stock_result.get("warehouse_id"),
             "timestamp": datetime.utcnow().isoformat(),
         }
         event_data["items"] = [
@@ -107,9 +108,9 @@ async def _publish_fulfillment_event(token_payload: dict, so, stock_result: dict
                 "available_quantity": item.get("available_quantity"),
                 "is_available": item.get("is_available"),
             })
-        event_data = {
-            "event": "inventory.order.fulfillment",
-            "organization_id": token_payload.get("organization_id", 1),
+        # CRM publishes events in the shared envelope the notifications consumer
+        # expects: {event, organization_id, payload, timestamp}.
+        payload = {
             "sales_order_code": so.so_no,
             "customer_name": so.account,
             "value": so.value,
@@ -117,6 +118,11 @@ async def _publish_fulfillment_event(token_payload: dict, so, stock_result: dict
             "warehouse_id": stock_result.get("warehouse_id"),
             "overall_available": stock_result.get("overall_available"),
             "items": items_payload,
+        }
+        event_data = {
+            "event": "inventory.order.fulfillment",
+            "organization_id": token_payload.get("organization_id", 1),
+            "payload": payload,
             "timestamp": datetime.utcnow().isoformat(),
         }
         message = aio_pika.Message(
@@ -224,6 +230,35 @@ async def create_sales_order(
     new_status = so.status
     approved_statuses = ("Confirmed", "Approved", "Paid", "Invoiced", "Delivered", "Done")
     if new_status in approved_statuses:
+        # Credit check applies to credit-relevant approvals; paid/final orders are already settled.
+        if new_status in ("Confirmed", "Approved"):
+            # Synchronous credit check against billing-service before approving the SO
+            from app.core.billing_client import credit_check
+            try:
+                try:
+                    credit_amount = float(str(so.value).replace(",", "").strip())
+                except Exception:
+                    credit_amount = 0.0
+                credit_result = await credit_check(
+                    token_payload.get("_raw_token", ""),
+                    client_name=so.account,
+                    amount=credit_amount,
+                )
+            except Exception as e:
+                logger.warning(f"Credit check unavailable, defaulting to approved: {str(e)}")
+                credit_result = {"approved": True}
+
+            if not credit_result.get("approved", False):
+                so.status = "Hold"
+                await db.commit()
+                await db.refresh(so)
+                logger.info(
+                    f"Sales order {so.so_no} placed on Financial Hold: "
+                    f"outstanding {credit_result.get('outstanding')} exceeds available credit "
+                    f"({credit_result.get('available_credit')})."
+                )
+                return so
+
         # Immediate stock check against inventory-service before final approval.
         # On shortage the SO is placed on Stock Hold but is STILL ingested into inventory
         # fulfillment (SHORTAGE) so the auto-PO flow can procure the missing items.

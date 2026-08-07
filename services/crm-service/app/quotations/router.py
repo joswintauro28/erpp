@@ -197,12 +197,17 @@ async def update_quotation_status(
             exchange = await get_exchange()
             if exchange:
                 try:
-                    event_data = {
-                        "event": "crm.quotation.sent",
-                        "organization_id": token_payload.get("organization_id", 1),
+                    # CRM publishes events in the shared envelope the notifications
+                    # consumer expects: {event, organization_id, payload, timestamp}.
+                    payload = {
                         "quotationNumber": data.get("quote_number") or data.get("quotationNumber") or "",
                         "clientName": data.get("clientName") or data.get("client_name") or "Client",
                         "total": data.get("total"),
+                    }
+                    event_data = {
+                        "event": "crm.quotation.sent",
+                        "organization_id": token_payload.get("organization_id", 1),
+                        "payload": payload,
                         "timestamp": datetime.utcnow().isoformat()
                     }
                     
