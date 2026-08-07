@@ -59,10 +59,15 @@ export class QuotationsService {
   }
 
   async create(organizationId: number, dto: CreateQuotationDto) {
-    const total = dto.items.reduce(
+    const subtotal = dto.items.reduce(
       (sum, item) => sum + Number(item.quantity) * Number(item.unitPrice),
       0,
     );
+    const discountAmount =
+      dto.discountType === "percent"
+        ? subtotal * (Number(dto.discount ?? 0) / 100)
+        : Number(dto.discount ?? 0);
+    const total = Math.max(0, subtotal - discountAmount);
 
     const quotation = await this.prisma.quotation.create({
       data: {
@@ -110,10 +115,15 @@ export class QuotationsService {
 
       if (dto.items && dto.items.length > 0) {
         await tx.quotationItem.deleteMany({ where: { quotationId: id } });
-        const total = dto.items.reduce(
+        const subtotal = dto.items.reduce(
           (sum, item) => sum + Number(item.quantity) * Number(item.unitPrice),
           0,
         );
+        const discountAmount =
+          dto.discountType === "percent"
+            ? subtotal * (Number(dto.discount ?? 0) / 100)
+            : Number(dto.discount ?? 0);
+        const total = Math.max(0, subtotal - discountAmount);
         const created = await tx.quotation.update({
           where: { id },
           data: {

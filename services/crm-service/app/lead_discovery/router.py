@@ -232,6 +232,8 @@ async def import_leads(request: schemas.ImportLeadsRequest, db: AsyncSession = D
             if c_data.key_decision_makers and len(c_data.key_decision_makers) > 0 and c_data.key_decision_makers[0].name:
                 contact_name = c_data.key_decision_makers[0].name
 
+            from app.leads.scoring import apply_lead_score
+
             new_lead = models.Lead(
                 id_str=await next_document_id(db, models.Lead, "LD"),                name=contact_name,
                 company=c_data.company_name,
@@ -241,6 +243,9 @@ async def import_leads(request: schemas.ImportLeadsRequest, db: AsyncSession = D
                 owner="Unassigned",
                 updated_at=datetime.now().strftime("%Y-%m-%d")
             )
+            # M3: score captured leads immediately (MQL-ready leads are flagged
+            # and surface in the Lead Qualification view).
+            apply_lead_score(new_lead)
             db.add(new_lead)
 
             result = await db.execute(

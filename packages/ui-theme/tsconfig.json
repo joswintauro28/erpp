@@ -14,7 +14,8 @@
     "jsx": "react-jsx",
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@datavex/auth-middleware": ["../auth-middleware/src/index.ts"]
     }
   },
   "include": ["src/**/*"]

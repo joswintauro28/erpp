@@ -20,6 +20,9 @@ from app.warehouse.models import Warehouse
 from app.stock.models import Stock, StockMovement
 from app.supplier.models import Supplier
 from app.purchase_order.models import PurchaseOrder, PurchaseOrderItem
+from app.purchase_requisition.models import PurchaseRequisition, PurchaseRequisitionItem
+from app.quality_check.models import QualityCheck
+from app.work_order.models import WorkOrder, WorkOrderOperation, WorkOrderMaterial
 from app.serial_number.models import SerialNumber
 from app.fulfillment.models import SalesOrderFulfillment, FulfillmentItem
 

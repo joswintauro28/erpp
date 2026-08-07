@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { X, FileText, ShoppingCart, ArrowRight, ClipboardList, FileSpreadsheet, PackageOpen, Download, CheckCircle } from 'lucide-react';
+import { X, FileText, ShoppingCart, ArrowRight, ClipboardList, FileSpreadsheet, PackageOpen, Download, CheckCircle, Lock } from 'lucide-react';
 import { api } from '@/services/api';
 import {
   Dialog,
@@ -823,7 +823,7 @@ const GenericDetailsModal: React.FC<GenericDetailsModalProps> = ({ record, entit
                 <div>
                   <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">SO No.</Label>
                   <Input
-                    placeholder="e.g. SO-20260001 (auto-generated if blank)"
+                    placeholder="e.g. SO-202608-0001 (auto-generated if blank)"
                     value={salesOrderData.so_no}
                     onChange={e => setSalesOrderData(p => ({ ...p, so_no: e.target.value }))}
                   />
@@ -1048,7 +1048,13 @@ const GenericDetailsModal: React.FC<GenericDetailsModalProps> = ({ record, entit
                   <ArrowRight className="size-3.5" />
                 </Button>
               )}
-              {isQuotation && record.status !== 'Converted' && (
+              {isQuotation && record.status !== 'Converted' && record.status !== 'Accepted' && (
+                <div className="flex items-center gap-2 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-[11px] font-medium text-amber-800">
+                  <Lock className="size-3.5 shrink-0" />
+                  Conversion unlocks once the quote is Accepted (O1)
+                </div>
+              )}
+              {isQuotation && record.status === 'Accepted' && (
                 <Button
                   onClick={() => setShowSalesOrderForm(true)}
                   className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700"

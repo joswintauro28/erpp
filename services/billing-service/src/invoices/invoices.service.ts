@@ -99,6 +99,18 @@ export class InvoicesService {
     return invoices.map((inv) => this.flattenInvoice(inv));
   }
 
+  async findBySalesOrderCode(organizationId: number, salesOrderCode: string): Promise<any | null> {
+    return this.prisma.invoice.findFirst({
+      where: { organizationId, salesOrderCode },
+    });
+  }
+
+  async findByPoReference(organizationId: number, poReference: string): Promise<any | null> {
+    return this.prisma.invoice.findFirst({
+      where: { organizationId, type: "payable", poReference },
+    });
+  }
+
   async findOne(id: number, organizationId: number): Promise<any> {
     this.logger.log(`Fetching invoice ${id} for org: ${organizationId}`);
     const invoice = await this.prisma.invoice.findFirst({
@@ -201,6 +213,8 @@ export class InvoicesService {
         vendorId: dto.vendorId,
         vendorName: dto.vendorName,
         invoiceNumber: dto.invoiceNumber ?? (await this.documentNumbers.nextInvoice(organizationId)),
+        salesOrderCode: dto.salesOrderCode,
+        poReference: dto.poReference,
         gstTreatment,
         placeOfSupply: dto.placeOfSupply,
         issueDate: dto.issueDate ? new Date(dto.issueDate) : undefined,
@@ -233,6 +247,7 @@ export class InvoicesService {
       invoiceNumber: result.invoiceNumber ?? `INV-${raw.id}`,
       clientName: dto.clientName ?? "Unknown",
       total: result.total,
+      salesOrderCode: raw.salesOrderCode ?? undefined,
       timestamp: new Date(),
     });
 
@@ -491,6 +506,7 @@ export class InvoicesService {
           clientName: result.clientName ?? "Unknown",
           paymentId: 0,
           amount: result.paidAmount,
+          salesOrderCode: result.salesOrderCode ?? undefined,
           timestamp: new Date(),
         });
       }

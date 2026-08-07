@@ -51,6 +51,10 @@ class PurchaseOrderItem(Base):
     received_quantity: Mapped[int] = mapped_column(sa.Integer, default=0)
     unit_price: Mapped[float] = mapped_column(sa.Numeric(12, 2), nullable=False)
     subtotal: Mapped[float] = mapped_column(sa.Numeric(12, 2), default=0.00)
+    # Putaway (P5): received goods tracked to a physical warehouse location.
+    putaway_quantity: Mapped[int] = mapped_column(sa.Integer, default=0)
+    putaway_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True), nullable=True)
+    location: Mapped[str | None] = mapped_column(sa.String(100), nullable=True)
 
     purchase_order: Mapped["PurchaseOrder"] = relationship(
         "PurchaseOrder",

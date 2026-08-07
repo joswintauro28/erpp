@@ -66,6 +66,14 @@ export class CreateInvoiceDto {
   invoiceNumber?: string;
 
   @IsOptional()
+  @IsString()
+  salesOrderCode?: string;
+
+  @IsOptional()
+  @IsString()
+  poReference?: string;
+
+  @IsOptional()
   @IsEnum(GstTreatment)
   gstTreatment?: GstTreatment;
 

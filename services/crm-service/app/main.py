@@ -152,10 +152,18 @@ async def get_entity_fields(entity_type: str, token_payload: dict = Depends(get_
     from sqlalchemy.inspection import inspect
     mapper = inspect(model_class)
 
+    # Auto-computed / internal-link fields that the generic form should not expose
+    hidden_field_names = {
+        "score", "tier", "is_mql", "mql_qualified_at",
+        "credit_check_status", "credit_check_detail",
+        "approval_status", "approved_at",
+        "stage_history", "lead_id_str", "opportunity_id_str",
+    }
+
     fields = []
     for column in mapper.attrs:
         name = column.key
-        if name in ["id", "id_str"]:
+        if name in ["id", "id_str"] or name in hidden_field_names:
             continue
 
         sql_type = str(column.columns[0].type).lower()
@@ -252,6 +260,25 @@ async def create_entity(entity_type: str, payload: dict, db: AsyncSession = Depe
     await db.commit()
     await db.refresh(db_obj)
 
+    # Leads created through the generic CRUD get their score/tier/MQL flags
+    # computed and persisted automatically (M3/M4).
+    if entity_type == "leads":
+        from app.leads.scoring import apply_lead_score
+        apply_lead_score(db_obj)
+        await db.commit()
+        await db.refresh(db_obj)
+
+    # Sales orders created through the generic CRUD must still start the
+    # approval pipeline (credit check -> stock check -> publish to inventory).
+    if entity_type == "sales-orders":
+        if not getattr(db_obj, "so_no", None):
+            db_obj.so_no = id_str
+            await db.commit()
+            await db.refresh(db_obj)
+        from app.sales_orders.pipeline import SO_APPROVED_STATUSES, finalize_approved_sales_order
+        if getattr(db_obj, "status", None) in SO_APPROVED_STATUSES:
+            await finalize_approved_sales_order(db, db_obj, token_payload)
+
     return db_obj
 
 
@@ -265,6 +292,8 @@ async def update_entity(entity_type: str, id_str: str, payload: dict, db: AsyncS
     db_obj = result.scalars().first()
     if not db_obj:
         raise HTTPException(status_code=404, detail="Record not found")
+
+    old_status = getattr(db_obj, "status", None)
 
     from sqlalchemy.inspection import inspect
     from sqlalchemy import String, Integer, Float, Boolean
@@ -297,6 +326,27 @@ async def update_entity(entity_type: str, id_str: str, payload: dict, db: AsyncS
 
     await db.commit()
     await db.refresh(db_obj)
+
+    # Leads updated through the generic CRUD get their score recomputed.
+    if entity_type == "leads":
+        from app.leads.scoring import apply_lead_score
+        apply_lead_score(db_obj)
+        await db.commit()
+        await db.refresh(db_obj)
+
+    # Sales orders updated through the generic CRUD must still trigger the
+    # approval / cancellation lifecycle events.
+    if entity_type == "sales-orders":
+        from app.sales_orders.pipeline import (
+            SO_APPROVED_STATUSES,
+            finalize_approved_sales_order,
+            publish_sales_order_cancelled,
+        )
+        new_status = getattr(db_obj, "status", None)
+        if new_status == "Cancelled" and old_status != "Cancelled":
+            await publish_sales_order_cancelled(token_payload, db_obj)
+        elif new_status in SO_APPROVED_STATUSES and old_status not in SO_APPROVED_STATUSES:
+            await finalize_approved_sales_order(db, db_obj, token_payload)
 
     return db_obj
 

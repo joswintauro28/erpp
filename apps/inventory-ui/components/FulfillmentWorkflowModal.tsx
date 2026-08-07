@@ -36,10 +36,12 @@ export interface FulfillmentOrder {
   sales_order_code: string;
   customer_name: string;
   warehouse_id?: number;
-  status: "QUEUED" | "RESERVED" | "PICKING" | "PACKED" | "DISPATCHED" | "SHORTAGE" | "PO_CREATED" | "COMPLETED" | "CANCELLED";
+  status: "QUEUED" | "RESERVED" | "PICKING" | "PACKED" | "DISPATCHED" | "SHORTAGE" | "PO_CREATED" | "WO_CREATED" | "COMPLETED" | "CANCELLED";
   shipping_carrier?: string;
   tracking_number?: string;
   dispatched_at?: string;
+  batch_no?: string;
+  work_order_id?: number;
   purchase_order_id?: number;
   invoice_id?: number;
   created_at: string;

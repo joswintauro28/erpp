@@ -55,6 +55,7 @@ async def process_crm_order_approved(message: aio_pika.IncomingMessage):
             fulfillment_create = FulfillmentCreate(
                 sales_order_code=sales_order_code,
                 customer_name=customer_name,
+                sales_owner=body.get("sales_owner"),
                 warehouse_id=body.get("warehouse_id"),
                 items=items
             )
@@ -137,6 +138,28 @@ async def process_crm_order_approved(message: aio_pika.IncomingMessage):
         except Exception as e:
             logger.error(f"Error processing crm.order.approved: {str(e)}", exc_info=True)
 
+async def process_crm_order_cancelled(message: aio_pika.IncomingMessage):
+    async with message.process():
+        try:
+            body = json.loads(message.body.decode())
+            logger.info(f"Received crm.order.cancelled message: {body}")
+
+            organization_id = body.get("organization_id", 1)
+            sales_order_code = body.get("sales_order_code")
+            if not sales_order_code:
+                return
+
+            async with async_session_factory() as db:
+                fulfillment_service = FulfillmentService(db)
+                cancelled = await fulfillment_service.cancel_fulfillment(organization_id, sales_order_code)
+                if cancelled:
+                    logger.info(f"Cancelled fulfillment {cancelled.id} for sales order {sales_order_code}")
+                else:
+                    logger.info(f"No fulfillment found for cancelled sales order {sales_order_code}")
+        except Exception as e:
+            logger.error(f"Error processing crm.order.cancelled: {str(e)}", exc_info=True)
+
+
 async def run_worker():
     rabbitmq_url = os.getenv("RABBITMQ_URL", "amqp://guest:guest@localhost:5672/")
     logger.info(f"Starting RabbitMQ worker, connecting to {rabbitmq_url}")
@@ -155,11 +178,23 @@ async def run_worker():
             # Bind queue
             await queue.bind(exchange, routing_key="crm.order.approved")
             
-            logger.info("Successfully connected to RabbitMQ and bound crm_order_approved_queue.")
+            # Declare cancellation queue (SO cancelled in CRM -> release stock, cancel PO)
+            cancel_queue = await channel.declare_queue("crm_order_cancelled_queue", durable=True)
+            await cancel_queue.bind(exchange, routing_key="crm.order.cancelled")
             
-            async with queue.iterator() as queue_iter:
-                async for message in queue_iter:
-                    await process_crm_order_approved(message)
+            logger.info("Successfully connected to RabbitMQ and bound crm_order_approved_queue + crm_order_cancelled_queue.")
+            
+            async def _consume_approved():
+                async with queue.iterator() as queue_iter:
+                    async for message in queue_iter:
+                        await process_crm_order_approved(message)
+
+            async def _consume_cancelled():
+                async with cancel_queue.iterator() as queue_iter:
+                    async for message in queue_iter:
+                        await process_crm_order_cancelled(message)
+
+            await asyncio.gather(_consume_approved(), _consume_cancelled())
                     
         except asyncio.CancelledError:
             logger.info("Worker task cancelled, shutting down.")

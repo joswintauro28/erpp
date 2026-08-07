@@ -170,6 +170,7 @@ export class PaymentsService {
             clientName: invoice.clientName ?? "Unknown",
             paymentId: id,
             amount: Number(payment.amount),
+            salesOrderCode: invoice.salesOrderCode ?? undefined,
             timestamp: new Date(),
           });
         }

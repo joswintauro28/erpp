@@ -16,6 +16,7 @@ import {
   Building2,
   FileText,
   Trash2,
+  Layers,
 } from "lucide-react";
 import { Button } from "@datavex/ui-theme";
 import { Badge } from "@datavex/ui-theme";
@@ -40,6 +41,9 @@ export default function OrderFulfillmentPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isIngestOpen, setIsIngestOpen] = useState(false);
   const [orderToDelete, setOrderToDelete] = useState<FulfillmentOrder | null>(null);
+  const [isBatchOpen, setIsBatchOpen] = useState(false);
+  const [selectedBatchIds, setSelectedBatchIds] = useState<number[]>([]);
+  const [lastBatch, setLastBatch] = useState<string | null>(null);
 
   // New Order Form state
   const [newOrderCode, setNewOrderCode] = useState(`SO-${Math.floor(1000 + Math.random() * 9000)}`);
@@ -100,13 +104,34 @@ export default function OrderFulfillmentPage() {
     }
   };
 
+  const reservedOrders = orders.filter((o) => o.status === "RESERVED");
+
+  const handleCreateBatch = async () => {
+    if (selectedBatchIds.length === 0) {
+      alert("Select at least one RESERVED order for the picking wave.");
+      return;
+    }
+    try {
+      const res = await api.post<{ batch_no: string }>("/fulfillment/batches", {
+        fulfillment_ids: selectedBatchIds,
+      });
+      setLastBatch(res?.batch_no || null);
+      setIsBatchOpen(false);
+      setSelectedBatchIds([]);
+      fetchOrders();
+    } catch (err) {
+      console.error(err);
+      alert("Batch creation failed — only RESERVED orders can be batched.");
+    }
+  };
+
   const filteredOrders = orders.filter((o) => {
     if (activeTab === "ALL") return true;
     if (activeTab === "QUEUE") return o.status === "QUEUED";
     if (activeTab === "RESERVED") return o.status === "RESERVED";
     if (activeTab === "PICK_PACK") return o.status === "PICKING" || o.status === "PACKED";
     if (activeTab === "DISPATCHED") return o.status === "DISPATCHED" || o.status === "COMPLETED";
-    if (activeTab === "SHORTAGE") return o.status === "SHORTAGE" || o.status === "PO_CREATED";
+    if (activeTab === "SHORTAGE") return o.status === "SHORTAGE" || o.status === "PO_CREATED" || o.status === "WO_CREATED";
     return true;
   });
 
@@ -114,7 +139,7 @@ export default function OrderFulfillmentPage() {
   const reservedCount = orders.filter((o) => o.status === "RESERVED").length;
   const pickPackCount = orders.filter((o) => o.status === "PICKING" || o.status === "PACKED").length;
   const dispatchedCount = orders.filter((o) => o.status === "DISPATCHED" || o.status === "COMPLETED").length;
-  const shortageCount = orders.filter((o) => o.status === "SHORTAGE" || o.status === "PO_CREATED").length;
+  const shortageCount = orders.filter((o) => o.status === "SHORTAGE" || o.status === "PO_CREATED" || o.status === "WO_CREATED").length;
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -132,6 +157,8 @@ export default function OrderFulfillmentPage() {
         return <Badge variant="destructive">Stock Shortage</Badge>;
       case "PO_CREATED":
         return <Badge className="bg-orange-600 text-white">Reorder PO Active</Badge>;
+      case "WO_CREATED":
+        return <Badge className="bg-violet-600 text-white">Work Order Created</Badge>;
       case "COMPLETED":
         return <Badge className="bg-green-700 text-white font-medium">Completed & Billed</Badge>;
       default:
@@ -155,6 +182,9 @@ export default function OrderFulfillmentPage() {
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={fetchOrders}>
             <RefreshCw className="h-4 w-4 mr-2" /> Refresh
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => setIsBatchOpen(true)}>
+            <Layers className="h-4 w-4 mr-2" /> Create Wave Batch ({reservedOrders.length})
           </Button>
           <Button size="sm" onClick={() => setIsIngestOpen(true)} className="bg-[#8C1D24] text-white hover:bg-[#70171d]">
             <Plus className="h-4 w-4 mr-2" /> Ingest Approved Sales Order
@@ -270,6 +300,7 @@ export default function OrderFulfillmentPage() {
                 <th className="p-3">Customer</th>
                 <th className="p-3">Items</th>
                 <th className="p-3">Stage Status</th>
+                <th className="p-3">Batch</th>
                 <th className="p-3">Carrier & Tracking</th>
                 <th className="p-3">Created Date</th>
                 <th className="p-3 text-right pr-4">Action</th>
@@ -278,7 +309,7 @@ export default function OrderFulfillmentPage() {
             <tbody className="divide-y divide-border">
               {filteredOrders.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="p-6 text-center text-muted-foreground text-xs">
+                  <td colSpan={8} className="p-6 text-center text-muted-foreground text-xs">
                     No fulfillment orders found under selected stage filter.
                   </td>
                 </tr>
@@ -291,6 +322,13 @@ export default function OrderFulfillmentPage() {
                       {o.items.map((i) => `${i.product_name} (${i.ordered_quantity})`).join(", ")}
                     </td>
                     <td className="p-3">{getStatusBadge(o.status)}</td>
+                    <td className="p-3 text-xs">
+                      {o.batch_no ? (
+                        <Badge variant="outline" className="font-mono text-[10px]">{o.batch_no}</Badge>
+                      ) : (
+                        <span className="text-muted-foreground">—</span>
+                      )}
+                    </td>
                     <td className="p-3 text-xs text-muted-foreground">
                       {o.shipping_carrier ? (
                         <span>
@@ -429,6 +467,71 @@ export default function OrderFulfillmentPage() {
             </Button>
             <Button size="sm" onClick={handleCreateDemoOrder} className="bg-[#8C1D24] text-white">
               Add to Queue
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Wave Batch Modal (I7) */}
+      <Dialog open={isBatchOpen} onOpenChange={setIsBatchOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Layers className="h-4 w-4 text-[#8C1D24]" /> Create Picking Wave / Batch
+            </DialogTitle>
+            <DialogDescription className="text-xs">
+              Group reserved fulfillments into a single pick list. Batched orders move to Picking status.
+            </DialogDescription>
+          </DialogHeader>
+          {lastBatch && (
+            <div className="p-2.5 rounded-md bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 text-xs text-emerald-700">
+              Created batch <span className="font-mono font-bold">{lastBatch}</span>.
+            </div>
+          )}
+          <div className="my-2 text-xs max-h-64 overflow-y-auto space-y-1.5">
+            {reservedOrders.length === 0 ? (
+              <p className="text-muted-foreground py-4 text-center">No RESERVED orders available to batch. Reserve stock first.</p>
+            ) : (
+              reservedOrders.map((o) => {
+                const checked = selectedBatchIds.includes(o.id);
+                return (
+                  <label
+                    key={o.id}
+                    className="flex items-center gap-2.5 border border-border rounded-md p-2.5 cursor-pointer hover:bg-muted/40 transition-colors"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={() =>
+                        setSelectedBatchIds((prev) =>
+                          checked ? prev.filter((x) => x !== o.id) : [...prev, o.id]
+                        )
+                      }
+                      className="h-4 w-4 accent-[#8C1D24]"
+                    />
+                    <div className="flex-1">
+                      <span className="font-mono font-bold">{o.sales_order_code}</span>
+                      <span className="text-muted-foreground ml-2">{o.customer_name}</span>
+                    </div>
+                    <span className="text-[10px] text-muted-foreground">
+                      {o.items.map((i) => i.ordered_quantity).reduce((a, b) => a + b, 0)} units
+                    </span>
+                  </label>
+                );
+              })
+            )}
+          </div>
+          <div className="flex justify-end gap-2 mt-4">
+            <Button variant="outline" size="sm" onClick={() => setIsBatchOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              size="sm"
+              onClick={handleCreateBatch}
+              disabled={selectedBatchIds.length === 0}
+              className="bg-[#8C1D24] text-white hover:bg-[#70171d]"
+            >
+              <Layers className="h-4 w-4 mr-2" /> Create Batch ({selectedBatchIds.length})
             </Button>
           </div>
         </DialogContent>

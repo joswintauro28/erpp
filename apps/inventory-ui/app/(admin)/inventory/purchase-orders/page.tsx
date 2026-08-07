@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus, ClipboardList, Loader2, Truck, Warehouse as WarehouseIcon, Edit3, Trash2, Calendar, CheckCircle2, AlertTriangle, ArrowRight } from "lucide-react";
+import { Plus, ClipboardList, Loader2, Truck, Warehouse as WarehouseIcon, Edit3, Trash2, Calendar, CheckCircle2, AlertTriangle, ArrowRight, MapPin } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -25,7 +25,7 @@ interface PurchaseOrder {
   received_at?: string | null;
   cancelled_at?: string | null;
   created_at: string;
-  items?: { id: number; product_id: number; quantity: number; received_quantity: number; unit_price: number }[];
+  items?: { id: number; product_id: number; quantity: number; received_quantity: number; putaway_quantity?: number; location?: string | null; unit_price: number }[];
 }
 
 interface Supplier {
@@ -61,6 +61,10 @@ export default function PurchaseOrdersPage() {
   const [editStatus, setEditStatus] = useState("DRAFT");
   const [editReceivedQty, setEditReceivedQty] = useState<number>(0);
   const [editReceivedProductId, setEditReceivedProductId] = useState<number | null>(null);
+
+  // Putaway (P5)
+  const [putawayOrder, setPutawayOrder] = useState<PurchaseOrder | null>(null);
+  const [putawayRows, setPutawayRows] = useState<Record<number, { quantity: number; location: string }>>({});
 
   const fetchData = async () => {
     setLoading(true);
@@ -145,6 +149,42 @@ export default function PurchaseOrdersPage() {
     } catch (err) {
       console.error(err);
       alert("Failed to delete purchase order.");
+    }
+  };
+
+  const openPutaway = (po: PurchaseOrder) => {
+    setPutawayOrder(po);
+    const rows: Record<number, { quantity: number; location: string }> = {};
+    (po.items || []).forEach((it) => {
+      const outstanding = it.received_quantity - (it.putaway_quantity || 0);
+      rows[it.product_id] = {
+        quantity: Math.max(0, outstanding),
+        location: it.location || "Aisle-A",
+      };
+    });
+    setPutawayRows(rows);
+  };
+
+  const handlePutaway = async () => {
+    if (!putawayOrder) return;
+    const items = Object.entries(putawayRows)
+      .filter(([, v]) => v.quantity > 0)
+      .map(([productId, v]) => ({
+        product_id: Number(productId),
+        quantity: Number(v.quantity),
+        location: v.location,
+      }));
+    if (items.length === 0) {
+      alert("Enter at least one putaway quantity.");
+      return;
+    }
+    try {
+      await api.post(`/purchase-orders/${putawayOrder.id}/putaway`, { items });
+      setPutawayOrder(null);
+      fetchData();
+    } catch (err) {
+      console.error(err);
+      alert("Putaway failed — verify quantities against received goods.");
     }
   };
 
@@ -239,6 +279,14 @@ export default function PurchaseOrdersPage() {
                             }}
                           >
                             <Edit3 className="h-3.5 w-3.5 text-muted-foreground hover:text-[#8C1D24]" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="xs"
+                            title="Putaway (P5)"
+                            onClick={() => openPutaway(po)}
+                          >
+                            <MapPin className="h-3.5 w-3.5 text-muted-foreground hover:text-emerald-600" />
                           </Button>
                           <Button
                             variant="ghost"
@@ -469,6 +517,78 @@ export default function PurchaseOrdersPage() {
             <div className="flex justify-end gap-2 mt-4 border-t border-border pt-3">
               <Button variant="outline" size="sm" onClick={() => setSelectedOrder(null)}>
                 Close Panel
+              </Button>
+            </div>
+          </DialogContent>
+        )}
+      </Dialog>
+
+      {/* Putaway Modal (P5) */}
+      <Dialog open={!!putawayOrder} onOpenChange={(open) => !open && setPutawayOrder(null)}>
+        {putawayOrder && (
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-base">
+                <MapPin className="h-4 w-4 text-emerald-600" /> Putaway Received Goods
+              </DialogTitle>
+              <DialogDescription className="text-xs">
+                Assign warehouse locations to received quantities on <span className="font-mono font-bold">{putawayOrder.order_number}</span>.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-2.5 my-2 text-xs max-h-72 overflow-y-auto">
+              {(putawayOrder.items || []).length === 0 ? (
+                <p className="text-muted-foreground">No line items on this PO.</p>
+              ) : (
+                (putawayOrder.items || []).map((it) => {
+                  const outstanding = it.received_quantity - (it.putaway_quantity || 0);
+                  const row = putawayRows[it.product_id] || { quantity: 0, location: "" };
+                  return (
+                    <div key={it.id} className="border border-border rounded-md p-2.5 space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="font-semibold">Product #{it.product_id}</span>
+                        <span className="text-[10px] text-muted-foreground">
+                          received {it.received_quantity} · putaway {it.putaway_quantity || 0} · outstanding {outstanding}
+                        </span>
+                      </div>
+                      {outstanding > 0 && (
+                        <div className="grid grid-cols-2 gap-2">
+                          <input
+                            type="number"
+                            value={row.quantity}
+                            max={outstanding}
+                            onChange={(e) =>
+                              setPutawayRows((prev) => ({
+                                ...prev,
+                                [it.product_id]: { ...row, quantity: Number(e.target.value) },
+                              }))
+                            }
+                            className="w-full p-1.5 border border-border rounded bg-background"
+                          />
+                          <input
+                            type="text"
+                            value={row.location}
+                            onChange={(e) =>
+                              setPutawayRows((prev) => ({
+                                ...prev,
+                                [it.product_id]: { ...row, location: e.target.value },
+                              }))
+                            }
+                            placeholder="Location (e.g. Aisle-B-12)"
+                            className="w-full p-1.5 border border-border rounded bg-background"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  );
+                })
+              )}
+            </div>
+            <div className="flex justify-end gap-2 mt-4 border-t border-border pt-3">
+              <Button variant="outline" size="sm" onClick={() => setPutawayOrder(null)}>
+                Cancel
+              </Button>
+              <Button size="sm" onClick={handlePutaway} className="bg-emerald-700 text-white hover:bg-emerald-800">
+                <MapPin className="h-3.5 w-3.5 mr-1" /> Confirm Putaway
               </Button>
             </div>
           </DialogContent>

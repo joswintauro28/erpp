@@ -810,7 +810,7 @@ const GenericDetailsModal: React.FC<GenericDetailsModalProps> = ({ record, entit
                 <div>
                   <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">SO No.</Label>
                   <Input
-                    placeholder="e.g. SO-20260001 (auto-generated if blank)"
+                    placeholder="e.g. SO-202608-0001 (auto-generated if blank)"
                     value={salesOrderData.so_no}
                     onChange={e => setSalesOrderData(p => ({ ...p, so_no: e.target.value }))}
                   />

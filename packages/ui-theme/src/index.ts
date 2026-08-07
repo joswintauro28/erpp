@@ -18,6 +18,10 @@ export * from "./components/ui/spinner";
 export * from "./components/ui/table";
 export * from "./components/ui/textarea";
 
+// Real-time cross-module notifications
+export * from "./components/ui/notification-provider";
+export * from "./components/ui/notification-bell";
+
 // Export common utilities
 export { cn } from "./lib/utils";
 export * from "./components/shared/multi-step-dialog";

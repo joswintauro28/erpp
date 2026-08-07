@@ -15,6 +15,7 @@ from app.client.router import router as clients_router
 from app.product.router import router as products_router
 from app.dashboard.router import router as dashboard_router
 from app.notification.router import router as notifications_router
+from app.notification.websocket import router as notifications_ws_router
 from app.crm.router import router as crm_router
 from app.billing.router import router as billing_router
 from app.inventory.router import router as inventory_router
@@ -109,6 +110,7 @@ app.include_router(clients_router)
 app.include_router(products_router)
 app.include_router(dashboard_router)
 app.include_router(notifications_router)
+app.include_router(notifications_ws_router)
 app.include_router(crm_router)
 app.include_router(billing_router)
 app.include_router(inventory_router)

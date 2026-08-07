@@ -1,157 +1,178 @@
-# DATAVEX ERP — Repository Audit Report
+# DATAVEX ERP — Inter-Module Communication Audit (REST & RabbitMQ)
 
-Here is a comprehensive audit across all 6 projects inside the monorepo. The key findings are organized by priority.
+**Scope:** Cross-service REST integration, RabbitMQ event wiring (publishers → routing keys → consumers), payload/envelope compatibility, JWT/secret consistency, and frontend → gateway proxy paths across **CRM (8001), Inventory (8004), Billing (8003), ERP Gateway (8000), Core-IAM (8002)**.
 
----
+**Reference docs:** `docs/PROJECT.md` (SSO / DB-per-service / aggregation), `README.md` (technical blueprint: Order.Approved → ATP → Fulfillment → Shipment.Dispatched → Invoice/COGS, PurchaseOrder.Created → AP).
 
-## 🔴 Critical & High Priority Issues
-
-### Data Integrity & Security
-
-| Issue | Location |
-| :--- | :--- |
-| **No transactions on multi-table writes** — payments, refunds, credit/debit notes, quotations &rarr; invoice conversion can leave orphaned data | `/services/billing-service/` (7 locations across payments, credit-notes, debit-notes, and quotations services) |
-| **Refresh token never rotated** — stolen refresh token is reusable indefinitely | `services/core-iam/src/auth/auth.controller.ts:114-123` |
-| **No account lockout** — `failedLoginAttempts`/`lockedUntil` fields exist in schema but are never implemented | `services/core-iam/src/auth/auth.service.ts:22-48` |
-| **No rate limiting on auth endpoints** (login/register) — vulnerable to brute force | `services/core-iam/`, `services/billing-service/`, `services/erp-service/` |
-| **.env files committed to Git in 4 locations** — secrets exposed in repository | `apps/billing-ui/.env`, `services/core-iam/.env`, `services/billing-service/.env`, `services/erp-service/.env` |
-| **Missing .env.example templates** | 3 of 5 projects (`billing-ui`, `core-iam`, `billing-service`) |
-| **PermissionsGuard throws 401 instead of 403** for valid tokens lacking proper permissions | `services/billing-service/.../permissions.guard.ts:36`, `services/core-iam/.../permissions.guard.ts:25` |
-| **[RESOLVED] No permissions claim in JWT** — Verified that JWT signed by NestJS carries the permissions list correctly | `services/core-iam/src/auth/auth.service.ts` |
-
-### Schema & Database
-
-| Issue | Location |
-| :--- | :--- |
-| **No indexes on ownerId or foreign keys** in any `billing-service` model — leads to full table scans on every query | `services/billing-service/prisma/schema.prisma` (all 7 models) |
-| **No indexes on ownerId** in any `erp-service` model | `services/erp-service/app/models/` (Invoice, Payment, Product, etc.) |
-| **WorkflowSetting.created_at typed as String** instead of DateTime — stored as literal `"now"` | `services/core-iam/prisma/schema.prisma:104`, `services/erp-service/app/models/settings.py:53` |
-| **Quotation table doesn't exist** in `erp-service` database — model defined but missing from `__init__.py` and Alembic migrations | `services/erp-service/app/models/__init__.py` |
-| **Missing @@unique([orgId, userId])** on `OrganizationMember` — duplicate member mappings are possible | `services/core-iam/prisma/schema.prisma:122-133` |
-| **Missing @@unique([roleId, permissionId])** on `RolePermission` — duplicate assignments are possible | `services/core-iam/prisma/schema.prisma:166-174` |
-| **onDelete: Cascade** on `CreditNote`/`DebitNote` `invoiceId` — deleting an invoice destroys financial logs and records | `services/billing-service/prisma/schema.prisma:133,150` |
-
-### Frontend Code Quality
-
-| Issue | Location |
-| :--- | :--- |
-| **19+ pages have no API calls** — accounting (4), inventory (9), settings/workflow, team, etc. are static placeholder views | `apps/erp-shell/app/(admin)/accounting/`, `.../inventory/`, `.../settings/`, `.../team/` |
-| **payments/page.tsx** — no fetch logic at all, metrics are entirely hardcoded | `apps/erp-shell/app/(admin)/billing/payments/page.tsx:21-27` |
-| **CSS class overwrite bug** — `.animate-step-in` defined twice, second block overwrites the first | `packages/ui-theme/src/globals.css:234-236` vs `239-279` |
-| **Duplicate statusVariant() helper** function duplicated 11 times across 2 apps | Both `billing-ui` and `erp-shell` billing pages |
-| **Search input pattern duplicated ~26 times** — should be extracted to a shared component | Every list page in both applications |
-| **5+ different data fetching patterns** — `.then()`, async/await, cancellation flags, lacks consistency | All `erp-shell` pages |
-| **No error.tsx in billing-ui** — runtime errors show a blank white screen | `apps/billing-ui/app/` |
-| **Type inconsistencies** — 6 billing types use raw string instead of enums in `billing-ui` vs `erp-shell` | `apps/billing-ui/types/billing.ts` vs `apps/erp-shell/types/billing.ts` |
+**Method:** Static code audit of every `publish_event` / `exchange.publish` / `EventPattern` / `declare_queue` site, every inter-service HTTP client, the Next.js `proxy.ts` files, `docker-compose.yml` env wiring, and `.env` JWT secrets. All line references are to the current working tree.
 
 ---
 
-## 🟡 Medium Priority
+## 1. Executive Summary
 
-### Code Duplication (~70% shared between billing-ui and erp-shell)
+The core pipeline **is wired and functionally complete**: SO approval → inventory fulfillment → dispatch → auto-invoice/COGS → payment → CRM status sync all flow over the shared `erp_events` topic exchange, and the JWT secret is consistent across all 5 services. The previous session's fixes (SO cancellation events, `billing.invoice.created` → SO "Invoiced", `invoice.paid` → SO "Paid", monotonic SO status, `salesOrderCode` invoice linkage, idempotent dispatch consumer) are present and correct.
 
-| Pattern | Files Involved |
-| :--- | :--- |
-| **[RESOLVED] api.ts** — 95% identical custom fetch wrapper (moved to shared package) | Both `apps/*/services/api.ts` |
-| **[RESOLVED] AuthContext.tsx** — structurally duplicated (refactored to import from shared package) | Both `apps/*/contexts/AuthContext.tsx` |
-| **Sidebar.tsx** — identical collapsible/flyout logic (400+ lines each) | Both `apps/*/components/Sidebar.tsx` |
-| **types/billing.ts** — 180 lines duplicated identically | Both `apps/*/types/billing.ts` |
-| **[RESOLVED] types/auth.ts, types/api.ts** — identical models (moved to shared package) | Both `apps/*/types/` |
-| **money() utility** — duplicated identically | Both `apps/*/utils/format.ts` |
-| **Header.tsx** — pulse-sweep animation duplicated | Both `apps/*/components/Header.tsx` |
-| **ESLint configs** — identical config copies | Both `apps/*/eslint.config.mjs` |
+The audit initially found **3 high-severity defects** that produce wrong or lost financial data, **2 Docker-only breakages** from hardcoded `localhost` URLs, and a set of **dead/unconsumed events and broken gateway paths**. The most important: **every PO that reached APPROVED created two Accounts-Payable invoices** (once via RabbitMQ `inventory.po.created`, once via REST `trigger-vendor-bill`).
 
-### NestJS Backend Issues (core-iam & billing-service)
-
-| Issue | Location |
-| :--- | :--- |
-| **[RESOLVED] No Logger anywhere** — Implemented NestJS Logger in `auth.service.ts` and `invoices.service.ts` | Both services |
-| **[RESOLVED] Missing return types** on all controller and service methods — Added explicit return types to AuthService and InvoicesService | Both services (across all modules) |
-| **`any` type abuse** — `flatten()`, `request.user`, raw DTO casts | `services/billing-service/` (6+ locations) |
-| **class-transformer** in dependencies but never imported or utilized | `services/core-iam/package.json` |
-| **[RESOLVED] No health check endpoint** — Added GET /health endpoints returning status ok | Both services |
-| **JwtModule configured with empty options {}** | Both `auth.module.ts` |
-| **No soft delete** — all deletions are hard database deletes | `services/billing-service/` |
-| **No pagination** — all `findAll` queries return unlimited results | `services/billing-service/` |
-| **Duplicate CRUD patterns across 7 services** — same `findAll`/`findOne`/`remove` boilerplate | `services/billing-service/` |
-| **[RESOLVED] Missing updatedAt** on 7 models — Added updatedAt fields to all models | `services/core-iam/prisma/schema.prisma` |
-| **[RESOLVED] register() has no transactional integrity** — Wrapped registration logic in a transaction block | `services/core-iam/src/auth/auth.service.ts:139-213` |
-
-### FastAPI Backend Issues (erp-service)
-
-| Issue | Location |
-| :--- | :--- |
-| **[RESOLVED] `require_permission` never applied** to any endpoint — Secured all 14 routes in invoices.py | `services/erp-service/app/api/v1/endpoints/invoices.py` |
-| **`has_permission` function** is completely dead code (53 lines) | `app/core/permissions.py:83-135` |
-| **Duplicate `DashboardStats` class** definition in two files | `app/schemas/dashboard.py:4-11` and `app/schemas/invoice.py:94-101` |
-| **[RESOLVED] 5 dashboard endpoints missing `response_model`** — Added response_model validation | `app/api/v1/endpoints/dashboard.py` |
-| **[RESOLVED] No global exception handler** — Handled errors globally and log them securely | `app/main.py` |
-| **[RESOLVED] Missing Content-Security-Policy (CSP)** header in security middleware | `app/api/middleware.py:6-15` |
-| **TokenPayload, UserCreate, UserOut** schemas are completely dead code | `app/schemas/auth.py:41-46`, `app/schemas/user.py:6-20` |
-| **Ratelimit settings** defined but never connected to routers | `app/config.py:21-24` |
-| **Hardcoded year "2026"** in quote number generation | `app/api/v1/endpoints/invoices.py:205` |
-| **Redundant `db.commit()` calls** — double commit risk | `app/api/v1/endpoints/invoices.py` (7 locations) |
-| **[RESOLVED] `get_async_session()` duplicate dependency** — Standardized on get_db, deleted get_async_session | `app/database.py:20-29` and `app/api/deps.py:12-21` |
-| **`audit_logs` table doesn't exist** but `log_action()` performs raw SQL `INSERT` | `app/core/audit.py:28-31` |
-| **Fragile `sys.path.append('.')`** imports in scripts | `scripts/seed.py`, `scripts/seed_admin.py`, `scripts/reset_db.py` |
-| **Repository layer is empty shell** — all services bypass repositories with direct database queries | `app/repositories/*.py` |
-
-### Cross-Cutting Infrastructure
-
-| Issue | Location |
-| :--- | :--- |
-| **No Dockerfiles or docker-compose** | Entire repository |
-| **No CI/CD pipeline** (GitHub Actions, etc.) | Entire repository |
-| **No test files** in 4 of 6 projects | `billing-service`, `erp-service`, `erp-shell`, `billing-ui`, `ui-theme` |
-| **README.md only references 2 of 6 projects** | Monorepo root |
-| **SETUP_GUIDE.md has broken step numbering** | `docs/SETUP_GUIDE.md` |
-| **PROJECT.md references non-existent services/packages** | `docs/PROJECT.md` |
-| **Nx project.json files inconsistent** (command vs executor patterns) | `apps/billing-ui/project.json` vs `apps/erp-shell/project.json` |
-| **Missing test/lint targets** in multiple `project.json` files | `billing-ui`, `billing-service`, `erp-service`, `ui-theme` |
-| **No root tsconfig.base.json** — each project duplicates tsconfig configurations | Monorepo root |
-| **No linting/formatting for Python** (no ruff/flake8/black in requirements) | `services/erp-service/requirements.txt` |
-| **billing-service has lint target** in `project.json` but zero eslint configs | `services/billing-service/` |
-| **Broken symlink** at `apps/erp-shell/node_modules/@datavex/ui` | Leftover from old package name |
-
-### UI/UX & Accessibility
-
-| Issue | Location |
-| :--- | :--- |
-| **All search inputs missing `aria-label`** — ~26 locations | Every list page in both applications |
-| **Icon-only action buttons missing `aria-label`** — ~30+ locations | Every page with edit/delete actions |
-| **Table headers missing `scope` attributes** | Both apps |
-| **billing-ui invoice detail page is feature-poor** compared to the `erp-shell` version | `apps/billing-ui/app/(admin)/billing/invoices/[id]/page.tsx` (143 lines vs 389 lines) |
-| **Missing not-found.tsx** in billing-ui | `apps/billing-ui/app/` |
-| **Missing loading.tsx** in billing-ui | `apps/billing-ui/app/` |
-| **Button default variant hardcodes hex colors** instead of utilizing CSS custom theme variables | `packages/ui-theme/src/components/ui/button.tsx` |
-| **Label, Progress, and Textarea** don't use `@base-ui/react` (inconsistent with rest of `ui-theme`) | `packages/ui-theme/src/components/ui/label.tsx`, `progress.tsx`, `textarea.tsx` |
+**Status update (this session):** H1, H6, M1, and M7 are **fixed and validated** — AP creation is now single-path (RabbitMQ only) with a `poReference`-keyed idempotency guard + partial unique index, the inventory→billing URL is env-configurable, `generate_invoice_link` sends a camelCase payload with `salesOrderCode`, and the internal billing endpoints are guarded and org-scoped. The remaining open items are H2/H3/H4/H5/M10 (gateway paths, retry/DLQ) and M2–M9 (payload enrichment, dead code, envelope, docs).
 
 ---
 
-## 🟢 Quick Wins (Low Effort, High Impact)
+## 2. Verified Working — RabbitMQ Event Matrix
 
-1. **Extract `statusVariant()`** to a shared utility &mdash; replaces 11 duplicates with 1 function.
-2. **Create `<SearchInput>` component** &mdash; consolidates 26 inline search bars.
-3. **Create `<EmptyState>` component** &mdash; consolidates 16+ empty state card blocks.
-4. **Create `<LoadingSpinner>` component** &mdash; replaces 14 inline spinner code blocks.
-5. **Create `<PageHeader>` component** &mdash; consolidates 25+ page header designs.
-6. **Add missing `error.tsx` and `not-found.tsx`** views to the `billing-ui` application.
-7. **Add `aria-label` attributes to all icon-only buttons** &mdash; a grep-friendly, 10-minute fix.
-8. **Remove unused imports** (`Spinner`, `BarChart`, `LabelList`, `CreditCard`, `DollarSign`, `BadgePercent`) inside `billing-ui`.
-9. **Fix `.animate-step-in` CSS class overwrite** in `globals.css`.
-10. **Add `.env.example` templates** for the 3 missing NestJS and Next.js services.
+Exchange: **`erp_events`** (topic, durable) — consistently declared by CRM, Inventory, Billing (`amqplib` + NestJS RMQ microservice) and the ERP workers.
+
+| # | Routing Key | Publisher | Consumer(s) | Verified |
+|---|-------------|-----------|-------------|----------|
+| 1 | `crm.order.approved` | CRM `sales_orders/pipeline.py` | Inventory `crm_order_approved_queue` → creates fulfillment, ATP, auto-reserve/auto-PO | ✅ flat payload matches |
+| 2 | `crm.order.cancelled` | CRM `sales_orders/pipeline.py` | Inventory `crm_order_cancelled_queue` → `cancel_fulfillment` (release stock, cancel PO, tombstone) | ✅ |
+| 3 | `crm.quotation.sent` | CRM `quotations/router.py` | ERP notifications `unified_notifications_queue` | ✅ envelope matches |
+| 4 | `inventory.order.shortage` | Inventory `core/worker.py` | CRM `inventory_shortage_crm_queue` → SO "Stock Hold" | ✅ |
+| 5 | `inventory.order.reserved / picking / packed / fulfilled` | Inventory `fulfillment/services.py` | CRM `inventory_fulfillment_status_crm_queue` → SO status sync (monotonic) | ✅ |
+| 6 | `inventory.shipment.dispatched` | Inventory `fulfillment/services.py` | Billing `shipment_dispatched_billing_queue` (auto-invoice + COGS), ERP `shipment_dispatched_cogs_queue`, CRM (SO "Delivered") | ✅ |
+| 7 | `inventory.po.created` | Inventory `purchase_order/services.py` + `fulfillment/services.py` | Billing `po_created_ap_queue` → AP invoice (single path, `poReference`-idempotent) | ✅ (H1 fixed) |
+| 8 | `inventory.order.fulfillment` (shortage summary) | CRM `sales_orders/pipeline.py` | ERP notifications | ✅ envelope matches |
+| 9 | `billing.invoice.created` | Billing `event-bus/event-bus.service.ts` | CRM `invoice_created_crm_queue` → SO "Invoiced" (via `salesOrderCode`) | ✅ (fixed this session) |
+| 10 | `billing.invoice.paid` | Billing `invoices.service.ts` / `payments.service.ts` | CRM `invoice_paid_crm_queue` → SO "Paid" + opp Won + tier, and ERP notifications | ✅ (SO-Paid fixed this session) |
+| 11 | `billing.invoice.sent / billing.invoice.overdue` | Billing `event-bus.service.ts` | ERP notifications | ✅ |
+
+**JWT secret consistency:** `JWT_SECRET=development-jwt-secret-key-123` verified identical in the `.env` of all 5 services and as the Compose default. ✅
 
 ---
 
-## Overall Summary
+## 3. Verified Working — REST Integration
 
-Codebase health is currently **moderate**. The core patterns are sound (Nx monorepo structure, cookie-based SSO flow, unified theme system), but there is significant technical debt due to rapid development:
-1. Massive code duplication exists between the two Next.js frontend applications.
-2. Missing transactional boundary safety in critical financial endpoints.
-3. Zero test coverage.
-4. 19 static placeholders instead of active API-wired functional views.
+| Caller | Endpoint | Verified |
+|--------|----------|----------|
+| CRM → Billing | `GET /api/invoices/credit-check` (credit check on SO approval) | ✅ exists (`invoices.controller.ts`) |
+| CRM → Inventory | `POST /stock/check` (ATP check) | ✅ exists (`stock/router.py`) |
+| Inventory → Billing | `POST /api/internal/billing/trigger-vendor-bill` (guarded, idempotent fallback) | ✅ exists (`internal.controller.ts`, now `AuthGuard`+`PermissionsGuard` + org from JWT) — no longer auto-called by inventory |
+| ERP → Billing | ~40 endpoints: invoices (+`/from-dispatch`), quotations, credit/debit notes, recurring, payments (+`/metrics`), `/dashboard/billing`, `/accounts`, `/expenses` (+`/from-po`), `/ledger`, `/reports`, `/aging`, `/dunning`, `/bank-reconciliation/*`, `/periods/*`, `/reports/cogs/*` | ✅ all target routes exist — except H5 |
+| ERP → Inventory | products, warehouses, stock (+`/adjust`, `/check`), movements, suppliers, POs, serials, fulfillment workflow, `/dashboard/inventory*` | ✅ |
+| ERP → CRM | generic entity CRUD via `/crm/{entity}` passthrough, leads, opportunities, AI, lead-discovery | ✅ except H3 (quotations) |
 
-**Most Impactful Roadmap Goals:**
-* Wrap all multi-table database writes inside transaction scopes.
-* Extract duplicated frontend layouts, types, and hooks to `packages/ui-theme`.
-* Wire the remaining static views to active API endpoints.
+**Frontend proxies:** `crm-ui` (strips `/v1`, `/crm`; `/api/auth` → IAM, rest → CRM `/api`), `billing-ui` (→ billing `/api`), `inventory-ui` (→ inventory, no prefix) all correctly match their backends. `erp-shell` correctly funnels everything except `/api/auth` through the ERP gateway (8000), matching PROJECT.md's API-Aggregation (Option A) pattern.
+
+---
+
+## 4. Findings
+
+### 🔴 High
+
+**H1 — Duplicate Accounts-Payable invoices for every approved PO. — ✅ FIXED**
+`inventory.po.created` is published on PO creation (`purchase_order/services.py:121`, `fulfillment/services.py` auto-PO) and consumed by Billing's `handlePoCreated`, which creates a payable invoice. Previously, `purchase_order/router.py:_trigger_ap_bill` ALSO POSTed to `/api/internal/billing/trigger-vendor-bill` when a PO became `APPROVED`, creating a **second** payable invoice.
+
+*Fix applied:* the REST AP path was **removed** (`_trigger_ap_bill` deleted from `purchase_order/router.py`; the dead `trigger_vendor_bill` helper trimmed from `core/billing_client.py`). RabbitMQ `inventory.po.created` is now the **single AP path**, made idempotent by:
+- `Invoice.poReference` column (Prisma schema + DTO + `findByPoReference` in `invoices.service.ts`);
+- a check-then-create guard plus **P2002 race suppression** in both `handlePoCreated` (`invoices-consumer.controller.ts`) and `InternalService.createVendorBill` (wrapped in `$transaction`);
+- a **partial unique index** `(organization_id, po_reference) WHERE type = 'payable'` on `erp_billing` (verified no pre-existing duplicates before creating it).
+
+**H2 — erp-shell CRM entity calls hit non-existent gateway routes.**
+The shell mutations use un-prefixed paths that do not exist on the ERP gateway (they resolve only under `/crm/...`): `/customers`, `/sales-orders`, `/quotations`, `/requirements`, `/sales`, `/opportunities`, `/documents`, `/contacts`, `/reports`, `/leads` → `http://localhost:8000/<path>` → **404**. Examples: `apps/erp-shell/components/GenericDetailsModal.tsx` (POST `/customers`, `/sales-orders`, `/quotations`, `/requirements`, `/sales`), `apps/erp-shell/app/(admin)/crm/customers/page.tsx:36` (DELETE `/customers/...`), `.../crm/sales-orders/page.tsx:36`, `.../crm/quotations/page.tsx:38`, `.../crm/opportunities/page.tsx:36`, `.../crm/documents/page.tsx:36`, `.../crm/contacts/page.tsx:36`, `.../crm/reports/page.tsx:52`. Some pages correctly use `/crm/...` (e.g. `crm/leads/page.tsx:39`), so the shell is inconsistent. *Fix: normalize all CRM calls to the `/crm/...` gateway prefix (or expose root-level entity passthroughs).*
+
+**H3 — `/crm/quotations` passthrough hardcodes an empty payload.**
+`services/erp-service/app/crm/router.py` (`list_entities`) returns `{"summary": ..., "quotations": []}` for `entity_type == "quotations"` — the gateway never forwards quotation data. Combined with H2, the shell's quotations module is entirely non-functional. *Fix: forward to `billing_client.get_quotations` (billing `/invoices/quotations`) or the CRM quotations router.*
+
+**H4 — Silent event/AP failure loss in consumers.**
+Every RabbitMQ handler (CRM `worker.py`, Inventory `worker.py`, ERP `notifications_consumer.py` / `cogs_consumer.py`, Billing `invoices-consumer.controller.ts`) wraps its work in `try/except` and only logs; `message.process()` then **acks** the message. A poisoned or failed event is dropped with no retry, no dead-letter queue, and no audit trail. COGS has inbox idempotency (`cogs-accounting.service.ts`) but failures still never retry. Combined with H1, the financial ledger can silently diverge. *Fix: add a retry/DLQ policy (bounded requeue or persist failures) and surface failures to the ERP notification feed.*
+
+**H5 — `reopen_period` 404.** ERP `billing_client.reopen_period` POSTs `/periods/{id}/reopen`, but Billing's `month-end-close.controller.ts` only exposes `/periods/{id}/reopen-request` and `/reopen-requests/{id}/approve`. The gateway route (and the accounting UI's reopen action) 404s. *Fix: map `reopen_period` to the existing `/reopen-request` endpoint or add `/periods/:id/reopen`.*
+
+### 🔴 High (Docker-only breakages — hardcoded `localhost`)
+
+**H6 — Inventory → Billing REST is hardcoded to `localhost:8003`. — ✅ FIXED**
+`services/inventory-service/app/core/billing_client.py:5` previously set `BILLING_SERVICE_URL = "http://localhost:8003/api"` (a constant; no env), and `generate_invoice_link` in `fulfillment/services.py` posted to `http://localhost:8003/api/invoices` directly. Inside Docker Compose, `localhost` is the container itself → both calls failed.
+
+*Fix applied:* `BILLING_SERVICE_URL` now reads from `settings.BILLING_SERVICE_URL` (env `BILLING_SERVICE_URL`, default `http://localhost:8003`, overridable in Compose to `http://billing-service:8003`), and `generate_invoice_link` uses `settings.BILLING_SERVICE_URL` (see M1).
+
+### 🟡 Medium
+
+**M1 — "Generate invoice" fulfillment path doesn't link the SO. — ✅ FIXED**
+*Fix applied:* `generate_invoice_link` now posts a **camelCase** payload (`clientName`, `salesOrderCode`, `productId`, `description`, `quantity`, `unitPrice`, `gstRate`) that satisfies Billing's `ValidationPipe({ whitelist, forbidNonWhitelisted })` and `CreateInvoiceDto`/`CreateInvoiceItemDto` (the previous snake_case payload with a missing required `gstRate` would have 400'd), using the env-configurable URL (H6). The created invoice now carries `salesOrderCode` so the CRM worker can advance the SO to "Invoiced"/"Paid".
+
+**M2 — `inventory.po.created` lacks `supplier_name`.** The AP invoice's `vendorName` defaults to "Default Supplier" (`invoices-consumer.controller.ts`). *Fix: include `supplier_name` in the PO event payload.*
+
+**M3 — 11 routing keys are published with zero consumers.** `billing.invoice.updated`, `billing.payment.recorded`, `billing.credit_note.issued`, `billing.debit_note.issued`, `billing.expense.created`, `inventory.po.approved`, `inventory.po.received`, `inventory.stock.adjusted`, `inventory.serial.updated`, `inventory.supplier.status_changed`, `inventory.order.cancelled`. These are PROJECT.md "Option B" analytics/notification events with no subscriber yet — not harmful, but they give a false sense of coverage. *Fix: either subscribe (notifications feed, read-model) or stop publishing.*
+
+**M4 — Dead HTTP webhooks.** `erp-service/app/events/router.py` exposes `/api/events/billing/invoice-created|payment-recorded|note-issued|expense-created`, but nothing POSTs to them (Billing publishes via RabbitMQ). Dead code.
+
+**M5 — No shared event-envelope contract.** CRM→Inventory events are flat (`organization_id`, `sales_order_code`, ... at top level); CRM→ERP-notification and all Billing events use `{event, organization_id, payload, timestamp}` with camelCase payload keys. Every consumer matches its own publisher today, but the two shapes make cross-consumer reuse error-prone (the CRM worker must read both). *Fix: standardize on one envelope (recommend the `{event, organization_id, payload, timestamp}` wrapper).*
+
+**M6 — Duplicated/ambiguous COGS responsibility.** ERP `cogs_consumer.py` computes totals and logs "COGS LEDGER RECOGNITION" but writes nothing; real COGS postings live in Billing (`cogs-accounting.service.ts`). Two services "owning" COGS invites divergence. *Fix: retire the ERP logger consumer or turn it into a real read-model subscriber.*
+
+**M7 — Billing `/api/internal/billing/*` is unauthenticated. — ✅ FIXED**
+*Fix applied:* `internal.controller.ts` now applies `@UseGuards(AuthGuard, PermissionsGuard)` at the controller level with `@Permissions("invoices.create")` per route, and the `organizationId` is taken exclusively from the authenticated JWT (`user.organization_id`), never trusted from the request body. Verified no remaining callers depend on the old unauthenticated contract (the inventory REST AP path was removed in H1).
+
+**M8 — `core-iam` receives `RABBITMQ_URL` in Compose but uses no RabbitMQ.** Inert config.
+
+**M9 — Docs vs code:** `AGENTS.md` §2.1 describes an erp-shell proxy that routes `/api/invoices*`, `/api/products*` etc. directly to 8003/8004; the actual `proxy.ts` routes everything (except `/api/auth`) to the 8000 gateway. The gateway design is correct per PROJECT.md; the docs are stale.
+
+**M10 — Frontend gateway 404s:** `apps/erp-shell/app/(admin)/accounting/reconciliation/page.tsx` calls `/bank-reconciliation/unmatch` and `/bank-reconciliation/config`, which the ERP passthrough does not expose (only import/transactions/match/reports).
+
+### 🟢 Low / Notes
+
+- **N1 — Envelope payload casing:** billing events carry camelCase (`salesOrderCode`, `clientName`) while inventory/CRM events carry snake_case. Handled by per-consumer fallbacks, but see M5.
+- **N2 — RabbitMQ default creds `guest/guest` and no vhost isolation** in `docker-compose.yml` (acceptable for local sandbox only).
+- **N3 — `inventory.po.created` from `create_purchase_order` uses generic `product_name: f"Product {id}"`** — AP line descriptions are unhelpful for manually created POs.
+- **N4 — erp-service `/crm` lead mapping assumes CRM field names** (`company`, `est_value`, `updated_at`); spot-check against the CRM `Lead` model when touching lead flows.
+- **N5 — Dispatch-created invoices are created as `draft`** (not `sent`); CRM advances the SO to "Invoiced" on `invoice.created` regardless of invoice status — acceptable, but note the invoice must be sent manually to start dunning.
+
+---
+
+## 5. Previously Resolved
+
+### This session — audit fixes (H1 / H6 / M1 / M7)
+
+- **H1** — single AP path: REST `_trigger_ap_bill` removed; `inventory.po.created` (RabbitMQ) is the only AP creator, guarded by `poReference` idempotency (`findByPoReference` + P2002 suppression) and a partial unique index `(organization_id, po_reference) WHERE type = 'payable'` on `erp_billing`.
+- **H6** — inventory→billing URL env-configurable via `settings.BILLING_SERVICE_URL` (Compose: `http://billing-service:8003`); dead `trigger_vendor_bill` helper removed.
+- **M1** — `generate_invoice_link` posts camelCase payload with `salesOrderCode` + required `gstRate`, so the invoice links back to the SO (and passes whitelist validation).
+- **M7** — internal billing endpoints guarded (`AuthGuard` + `PermissionsGuard`, `invoices.create`) with org scoped from the JWT.
+
+*Validated:* Prisma schema validates/generates, billing `tsc --noEmit` clean, inventory Python compiles + venv imports OK, `po_reference` column applied additively to `erp_billing`.
+
+### This session — SO → fulfillment ingestion completeness (all stock cases)
+
+- **`check_sales_order_stock` now ALWAYS publishes `crm.order.approved`** (`sales_orders/router.py`): available stock → fulfillment created + auto-reserved; shortage → Stock Hold + fulfillment + auto-PO. Previously the endpoint only ingested on shortage, so an approved SO with available stock never entered the fulfillment queue.
+- **Inventory `FulfillmentCreate.sales_order_code` pattern relaxed** (`fulfillment/schemas.py` → `CODE_ACCEPT_RE`): legacy/manual codes such as `SO-20260001` (the old UI placeholder format) are now accepted instead of being silently dropped by the worker (which acks even on validation failure).
+- **Convert-modal SO-number placeholders updated** in `crm-ui` + `erp-shell` to the canonical `SO-YYYYMM-NNNN` format.
+
+*Validated live against the Docker stack:* bare `check-stock` with available stock → fulfillment `RESERVED`; with shortage → `Stock Hold` + `PO_CREATED` (regression-safe); legacy code `SO-20260001` → `RESERVED`. All test rows were removed afterward.
+
+### Last session — SO lifecycle pipeline
+
+- `crm.order.cancelled` publish + inventory `cancel_fulfillment` (stock release, PO cancel, tombstone race guard).
+- `billing.invoice.created` consumed → SO "Invoiced"; `billing.invoice.paid` → SO "Paid"; monotonic SO status advancement in `crm-service/app/core/worker.py`.
+- `salesOrderCode` added to Invoice model (Prisma + manual additive ALTER on `erp_billing` — full `prisma db push` is still blocked by pre-existing `quotations` schema drift), DTO, and created/paid event payloads.
+- Dispatch-consumer idempotency (duplicate invoice prevention) with COGS retry preserved via the inbox key.
+- Quote→SO conversion now runs the full approval pipeline with line items.
+- Generic CRUD (`main.py`) triggers the approval/cancellation lifecycle for sales-orders.
+
+---
+
+## 6. Recommended Fix Order
+
+1. ~~**H1** — dedupe AP creation~~ ✅ done
+2. ~~**H6/M1** — env-config inventory→billing URL + pass `sales_order_code` on generate-invoice~~ ✅ done
+3. ~~**M7** — guard the internal billing endpoints~~ ✅ done
+4. **H4** — retry/DLQ + failure surfacing for RabbitMQ consumers.
+5. **H2/H3/H5/M10** — gateway route fixes (shell entity prefixes, quotations passthrough, period reopen, bank-recon endpoints).
+6. **M2–M9** — payload enrichment, dead-code removal, envelope standardization, doc updates.
+
+---
+
+## 7. Audit Summary
+
+| Area | Status |
+|------|--------|
+| JWT secret consistency (5 services) | ✅ |
+| SO → fulfillment → dispatch → invoice/COGS → payment event chain | ✅ (after last session) |
+| SO → fulfillment ingestion for ALL stock cases (available + shortage + legacy codes) | ✅ fixed this session |
+| SO cancellation lifecycle (CRM ↔ Inventory) | ✅ |
+| Credit check / ATP check REST calls | ✅ |
+| ERP gateway aggregation (billing/inventory/CRM clients) | ✅ (except H3, H5) |
+| Frontend proxies (all 4 apps) | ✅ (except shell entity paths H2/M10) |
+| Financial integrity (AP dedup, idempotency) | ✅ H1 fixed (retries still open: H4) |
+| Docker parity (no hardcoded localhost) | ✅ H6 fixed |
+| Internal endpoint security | ✅ M7 fixed |
+
+**Overall:** the event-driven backbone is real and mostly correct; the risk concentrates in **duplicate AP postings**, **silent consumer failures**, and **gateway path drift between the shell UI and the ERP aggregation layer**.

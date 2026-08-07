@@ -12,6 +12,9 @@ class SalesOrderFulfillment(Base):
     organization_id: Mapped[int] = mapped_column(sa.Integer, nullable=False, index=True)
     sales_order_code: Mapped[str] = mapped_column(sa.String(100), nullable=False, index=True)
     customer_name: Mapped[str] = mapped_column(sa.String(255), nullable=False)
+    # Sales rep that owns the originating CRM order (forwarded on dispatch for
+    # targeted notifications).
+    sales_owner: Mapped[str | None] = mapped_column(sa.String(255), nullable=True)
     warehouse_id: Mapped[int | None] = mapped_column(sa.Integer, sa.ForeignKey("warehouses.id"), nullable=True)
     
     # Workflow Stage Status:
@@ -22,6 +25,11 @@ class SalesOrderFulfillment(Base):
     tracking_number: Mapped[str | None] = mapped_column(sa.String(100), nullable=True)
     dispatched_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True), nullable=True)
     
+    # Wave/batch picking (I7): a picking batch groups several fulfillments.
+    batch_no: Mapped[str | None] = mapped_column(sa.String(100), nullable=True, index=True)
+    # Manufacturing linkage (I4): work order that supplies this shortage.
+    work_order_id: Mapped[int | None] = mapped_column(sa.Integer, nullable=True)
+
     purchase_order_id: Mapped[int | None] = mapped_column(sa.Integer, sa.ForeignKey("purchase_orders.id"), nullable=True)
     invoice_id: Mapped[int | None] = mapped_column(sa.Integer, nullable=True)
     

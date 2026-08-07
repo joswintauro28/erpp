@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Montserrat, Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { NotificationProvider } from "@datavex/ui-theme";
 
 const montserrat = Montserrat({
   variable: "--font-montserrat",
@@ -35,7 +36,9 @@ export default function RootLayout({
       className={`${montserrat.variable} ${inter.variable} ${jetbrainsMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex">
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>
+          <NotificationProvider>{children}</NotificationProvider>
+        </AuthProvider>
       </body>
     </html>
   );

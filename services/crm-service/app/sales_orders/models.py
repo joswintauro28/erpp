@@ -18,3 +18,9 @@ class SalesOrder(Base):
     file_name = Column(String, nullable=True)
     # Product line items from the quote/order: [{ product_name, sku, quantity, unit_price }]
     line_items = Column(JSON, nullable=True)
+
+    # Order lifecycle (O2/O3): credit check + internal approval state
+    credit_check_status = Column(String, default="Not Checked", nullable=False, server_default="Not Checked")
+    credit_check_detail = Column(JSON, nullable=True)
+    approval_status = Column(String, default="Pending", nullable=False, server_default="Pending")
+    approved_at = Column(String, nullable=True)

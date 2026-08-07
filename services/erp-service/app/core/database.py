@@ -81,5 +81,17 @@ async def get_db():
 
 # Import models here to register with Base.metadata for Alembic autogenerate
 from app.settings.models import SystemSettings
+from app.notification.models import Notification
+
+
+def create_all_schema() -> None:
+    """Create all tables (used by dev tooling / fresh DBs)."""
+    import asyncio
+
+    async def _run():
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+
+    asyncio.run(_run())
 
 

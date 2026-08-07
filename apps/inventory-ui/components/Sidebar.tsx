@@ -18,6 +18,9 @@ import {
   Building2,
   SlidersHorizontal,
   BarChart2,
+  Factory,
+  ClipboardCheck,
+  ShieldCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
@@ -50,6 +53,7 @@ const navItems: NavItem[] = [
       { name: "Stock Levels", href: "/inventory/stock", icon: Warehouse },
       { name: "Stock Movements", href: "/inventory/stock/movements", icon: ArrowRightLeft },
       { name: "Serial Numbers", href: "/inventory/serial-numbers", icon: ScanBarcode },
+      { name: "Quality Checks", href: "/inventory/quality-checks", icon: ShieldCheck },
     ],
   },
 
@@ -58,7 +62,16 @@ const navItems: NavItem[] = [
     icon: ShoppingCart,
     children: [
       { name: "Suppliers", href: "/inventory/suppliers", icon: Truck },
+      { name: "Purchase Requisitions", href: "/inventory/purchase-requisitions", icon: ClipboardCheck },
       { name: "Purchase Orders", href: "/inventory/purchase-orders", icon: ClipboardList },
+    ],
+  },
+
+  {
+    name: "Manufacturing",
+    icon: Factory,
+    children: [
+      { name: "Work Orders", href: "/inventory/work-orders", icon: Factory },
     ],
   },
 

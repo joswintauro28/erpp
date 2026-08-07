@@ -9,6 +9,12 @@ class RequirementBase(BaseModel):
     priority: Optional[str] = None
     status: Optional[str] = None
     owner: Optional[str] = None
+    # Blueprint alignment
+    description: Optional[str] = None
+    source: Optional[str] = None
+    lead_id_str: Optional[str] = None
+    opportunity_id_str: Optional[str] = None
+    submitted_date: Optional[str] = None
 
 class Requirement(RequirementBase):
     id: int

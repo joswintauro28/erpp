@@ -13,6 +13,11 @@ class SalesOrderBase(BaseModel):
     file_data: Optional[str] = None
     file_name: Optional[str] = None
     line_items: Optional[List[dict]] = None
+    # O2/O3 credit check + internal approval state
+    credit_check_status: Optional[str] = "Not Checked"
+    credit_check_detail: Optional[dict] = None
+    approval_status: Optional[str] = "Pending"
+    approved_at: Optional[str] = None
 
 class SalesOrder(SalesOrderBase):
     id: int

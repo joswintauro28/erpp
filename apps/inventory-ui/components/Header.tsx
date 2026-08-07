@@ -2,6 +2,7 @@
 
 import { PanelLeftOpen, PanelLeftClose, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { NotificationBell } from "@/components/ui/notification-bell";
 
 export default function Header({
   collapsed,
@@ -45,6 +46,10 @@ export default function Header({
         <span className="hidden rounded-full bg-accent/10 px-2.5 py-0.5 text-xs font-medium text-accent-foreground sm:inline-block">
           Live
         </span>
+      </div>
+
+      <div className="flex items-center gap-3">
+        <NotificationBell />
       </div>
     </header>
   );

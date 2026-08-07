@@ -18,6 +18,20 @@ export class InvoicesConsumerController {
     this.logger.log(`Received inventory.shipment.dispatched event: ${JSON.stringify(data)}`);
     try {
       const organizationId = Number(data.organization_id || 1);
+
+      // Idempotency: a redelivered dispatch event must not create a duplicate
+      // invoice for the same sales order. The existing invoice is still used
+      // below for COGS recognition so a redelivery never skips the ledger entry.
+      let result: any = null;
+      if (data.sales_order_code) {
+        result = await this.invoicesService.findBySalesOrderCode(organizationId, String(data.sales_order_code));
+        if (result) {
+          this.logger.log(
+            `Invoice ${result.id} already exists for sales order ${data.sales_order_code}; skipping duplicate creation`,
+          );
+        }
+      }
+
       
       // Parse items
       const items = (data.items || []).map((item: any) => ({
@@ -51,10 +65,13 @@ export class InvoicesConsumerController {
         discount: 0,
         gstTreatment: GstTreatment.intrastate,
         placeOfSupply: "State",
+        salesOrderCode: data.sales_order_code,
       };
 
-      const result = await this.invoicesService.create(organizationId, dto);
-      this.logger.log(`Auto-generated Invoice ID ${result.id} for shipment dispatch`);
+      if (!result) {
+        result = await this.invoicesService.create(organizationId, dto);
+        this.logger.log(`Auto-generated Invoice ID ${result.id} for shipment dispatch`);
+      }
 
       // Recognize COGS expense in the general ledger for the dispatched goods
       try {
@@ -97,6 +114,18 @@ export class InvoicesConsumerController {
     try {
       const organizationId = Number(data.organization_id || 1);
 
+      // Idempotency: a redelivered PO event must not create duplicate
+      // Accounts-Payable invoices for the same purchase order.
+      if (data.order_number) {
+        const existing = await this.invoicesService.findByPoReference(organizationId, String(data.order_number));
+        if (existing) {
+          this.logger.log(
+            `AP entry ${existing.id} already exists for PO ${data.order_number}; skipping duplicate creation`,
+          );
+          return;
+        }
+      }
+
       // Parse items
       const items = (data.items || []).map((item: any) => ({
         productId: Number(item.product_id || 999),
@@ -129,10 +158,24 @@ export class InvoicesConsumerController {
         discount: 0,
         gstTreatment: GstTreatment.intrastate,
         placeOfSupply: "State",
+        poReference: data.order_number,
       };
 
-      const result = await this.invoicesService.create(organizationId, dto);
-      this.logger.log(`Auto-created Accounts Payable entry ID ${result.invoiceId} for PO creation`);
+      try {
+        const result = await this.invoicesService.create(organizationId, dto);
+        this.logger.log(`Auto-created Accounts Payable entry ID ${result.id} for PO creation`);
+      } catch (err) {
+        // Unique (organization_id, po_reference) payable constraint: a concurrent
+        // create already won — suppress the duplicate instead of failing.
+        if ((err as any)?.code === "P2002" && data.order_number) {
+          const existing = await this.invoicesService.findByPoReference(organizationId, String(data.order_number));
+          if (existing) {
+            this.logger.log(`AP entry ${existing.id} already exists for PO ${data.order_number}; concurrent duplicate suppressed`);
+            return;
+          }
+        }
+        throw err;
+      }
     } catch (err) {
       this.logger.error(`Failed to handle PO created event: ${(err as any).message}`, (err as any).stack);
     }

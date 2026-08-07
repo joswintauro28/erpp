@@ -6,157 +6,20 @@ from app.core.deps import get_current_token_payload
 from app.core.idgen import next_document_id
 from sqlalchemy import select
 import logging
-import json
-import aio_pika
-from datetime import datetime
+
+from app.sales_orders.pipeline import (
+    SO_APPROVED_STATUSES,
+    build_so_check_items,
+    finalize_approved_sales_order,
+    publish_crm_order_approved,
+    publish_fulfillment_event,
+    publish_sales_order_cancelled,
+)
 
 logger = logging.getLogger("app.sales_orders")
 
 router = APIRouter(prefix="/api/sales-orders", tags=["sales-orders"])
 
-
-def _build_so_check_items(so):
-    line_items = so.line_items
-    if isinstance(line_items, str):
-        try:
-            line_items = json.loads(line_items)
-        except Exception:
-            line_items = None
-    line_items = line_items or []
-    if line_items:
-        return [
-            {
-                "product_name": item.get("product_name") or "Standard Consulting Package",
-                "sku": item.get("sku") or "SCP-CRM",
-                "quantity": int(item.get("quantity") or item.get("ordered_quantity") or 1),
-                "unit_price": float(item.get("unit_price") or 0.0),
-            }
-            for item in line_items
-            if item.get("product_name") or item.get("sku")
-        ]
-    try:
-        val_float = float(str(so.value).replace(",", "").strip())
-    except Exception:
-        val_float = 0.0
-    return [
-        {
-            "product_name": "Standard Consulting Package",
-            "sku": "SCP-CRM",
-            "quantity": 1,
-            "unit_price": val_float,
-        }
-    ]
-
-
-async def _publish_crm_order_approved(token_payload: dict, so, stock_result: dict):
-    from app.core.amqp import get_exchange
-    exchange = await get_exchange()
-    if not exchange:
-        return
-    try:
-        product_ids = {}
-        for r in stock_result.get("items") or []:
-            if r.get("sku"):
-                product_ids[r["sku"]] = r.get("product_id")
-            if r.get("product_name"):
-                product_ids[r["product_name"]] = r.get("product_id")
-
-        event_data = {
-            "event": "crm.order.approved",
-            "organization_id": token_payload.get("organization_id", 1),
-            "sales_order_code": so.so_no,
-            "customer_name": so.account,
-            "value": so.value,
-            "status": so.status,
-            "warehouse_id": stock_result.get("warehouse_id"),
-            "timestamp": datetime.utcnow().isoformat(),
-        }
-        event_data["items"] = [
-            {
-                "product_id": product_ids.get(item.get("sku")) or product_ids.get(item.get("product_name")),
-                "product_name": item["product_name"],
-                "sku": item["sku"],
-                "ordered_quantity": item["quantity"],
-                "unit_price": item["unit_price"],
-            }
-            for item in _build_so_check_items(so)
-        ]
-
-        message = aio_pika.Message(
-            body=json.dumps(event_data).encode(),
-            delivery_mode=aio_pika.DeliveryMode.PERSISTENT
-        )
-        await exchange.publish(message, routing_key="crm.order.approved")
-        logger.info(f"Published crm.order.approved for sales order {so.so_no}")
-    except Exception as e:
-        logger.error(f"Failed to publish crm.order.approved: {str(e)}", exc_info=True)
-
-
-async def _publish_fulfillment_event(token_payload: dict, so, stock_result: dict):
-    from app.core.amqp import get_exchange
-    exchange = await get_exchange()
-    if not exchange:
-        return
-    try:
-        items_payload = []
-        for item in stock_result.get("items", []):
-            items_payload.append({
-                "product_id": item.get("product_id"),
-                "product_name": item.get("product_name"),
-                "sku": item.get("sku"),
-                "requested_quantity": item.get("requested_quantity"),
-                "available_quantity": item.get("available_quantity"),
-                "is_available": item.get("is_available"),
-            })
-        # CRM publishes events in the shared envelope the notifications consumer
-        # expects: {event, organization_id, payload, timestamp}.
-        payload = {
-            "sales_order_code": so.so_no,
-            "customer_name": so.account,
-            "value": so.value,
-            "status": so.status,
-            "warehouse_id": stock_result.get("warehouse_id"),
-            "overall_available": stock_result.get("overall_available"),
-            "items": items_payload,
-        }
-        event_data = {
-            "event": "inventory.order.fulfillment",
-            "organization_id": token_payload.get("organization_id", 1),
-            "payload": payload,
-            "timestamp": datetime.utcnow().isoformat(),
-        }
-        message = aio_pika.Message(
-            body=json.dumps(event_data).encode(),
-            delivery_mode=aio_pika.DeliveryMode.PERSISTENT,
-        )
-        await exchange.publish(message, routing_key="inventory.order.fulfillment")
-        logger.info(f"Published inventory.order.fulfillment event for sales order {so.so_no}")
-    except Exception as e:
-        logger.error(f"Failed to publish inventory.order.fulfillment: {str(e)}", exc_info=True)
-
-
-async def _check_stock_and_hold(token_payload: dict, so, db: AsyncSession) -> dict:
-    from app.core.inventory_client import check_stock_availability
-    token = token_payload.get("_raw_token", "")
-    items = _build_so_check_items(so)
-    try:
-        stock_result = await check_stock_availability(token, items)
-    except Exception as e:
-        logger.warning(f"Stock check unavailable, defaulting to available: {str(e)}")
-        return {"available": True, "overall_available": True, "warehouse_id": None, "items": []}
-
-    available = bool(stock_result.get("overall_available", False))
-    if not available:
-        so.status = "Stock Hold"
-        await db.commit()
-        await db.refresh(so)
-        await _publish_fulfillment_event(token_payload, so, stock_result)
-    return {
-        "available": available,
-        "overall_available": stock_result.get("overall_available"),
-        "warehouse_id": stock_result.get("warehouse_id"),
-        "items": stock_result.get("items", []),
-    }
 
 @router.get("", response_model=schemas.SalesOrderManagementData)
 async def get_sales_orders_data(db=Depends(database.get_db)):
@@ -227,43 +90,8 @@ async def create_sales_order(
     await db.commit()
     await db.refresh(so)
 
-    new_status = so.status
-    approved_statuses = ("Confirmed", "Approved", "Paid", "Invoiced", "Delivered", "Done")
-    if new_status in approved_statuses:
-        # Credit check applies to credit-relevant approvals; paid/final orders are already settled.
-        if new_status in ("Confirmed", "Approved"):
-            # Synchronous credit check against billing-service before approving the SO
-            from app.core.billing_client import credit_check
-            try:
-                try:
-                    credit_amount = float(str(so.value).replace(",", "").strip())
-                except Exception:
-                    credit_amount = 0.0
-                credit_result = await credit_check(
-                    token_payload.get("_raw_token", ""),
-                    client_name=so.account,
-                    amount=credit_amount,
-                )
-            except Exception as e:
-                logger.warning(f"Credit check unavailable, defaulting to approved: {str(e)}")
-                credit_result = {"approved": True}
-
-            if not credit_result.get("approved", False):
-                so.status = "Hold"
-                await db.commit()
-                await db.refresh(so)
-                logger.info(
-                    f"Sales order {so.so_no} placed on Financial Hold: "
-                    f"outstanding {credit_result.get('outstanding')} exceeds available credit "
-                    f"({credit_result.get('available_credit')})."
-                )
-                return so
-
-        # Immediate stock check against inventory-service before final approval.
-        # On shortage the SO is placed on Stock Hold but is STILL ingested into inventory
-        # fulfillment (SHORTAGE) so the auto-PO flow can procure the missing items.
-        stock_result = await _check_stock_and_hold(token_payload, so, db)
-        await _publish_crm_order_approved(token_payload, so, stock_result)
+    if so.status in SO_APPROVED_STATUSES:
+        await finalize_approved_sales_order(db, so, token_payload)
 
     return so
 
@@ -316,49 +144,66 @@ async def update_sales_order(
     await db.refresh(so)
 
     new_status = so.status
-    approved_statuses = ("Confirmed", "Approved", "Paid", "Invoiced", "Delivered", "Done")
-    if (new_status in approved_statuses) and (old_status not in approved_statuses):
-        # Credit check only applies to credit-relevant approvals; paid/final orders are already settled.
-        if new_status in ("Confirmed", "Approved"):
-            # Synchronous credit check against billing-service before approving the SO
-            from app.core.billing_client import credit_check
-            try:
-                try:
-                    credit_amount = float(str(so.value).replace(",", "").strip())
-                except Exception:
-                    credit_amount = 0.0
-                credit_result = await credit_check(
-                    token_payload.get("_raw_token", ""),
-                    client_name=so.account,
-                    amount=credit_amount,
-                )
-            except Exception as e:
-                logger.warning(f"Credit check unavailable, defaulting to approved: {str(e)}")
-                credit_result = {"approved": True}
 
-            if not credit_result.get("approved", False):
-                so.status = "Hold"
-                await db.commit()
-                await db.refresh(so)
-                logger.info(
-                    f"Sales order {so.so_no} placed on Financial Hold: "
-                    f"outstanding {credit_result.get('outstanding')} exceeds available credit "
-                    f"({credit_result.get('available_credit')})."
-                )
-                return so
+    # Cancellation lifecycle: tell inventory to cancel the linked fulfillment,
+    # release reserved stock and cancel any auto-created POs.
+    if new_status == "Cancelled" and old_status != "Cancelled":
+        await publish_sales_order_cancelled(token_payload, so)
 
-        # Immediate stock check against inventory-service before final approval.
-        # On shortage the SO is placed on Stock Hold but is STILL ingested into inventory
-        # fulfillment (SHORTAGE) so the auto-PO flow can procure the missing items.
-        stock_result = await _check_stock_and_hold(token_payload, so, db)
-        if not stock_result.get("available", True):
-            logger.info(
-                f"Sales order {so.so_no} placed on Stock Hold — inventory shortage detected; "
-                f"ingesting into fulfillment for auto-procurement."
-            )
-        await _publish_crm_order_approved(token_payload, so, stock_result)
+    # Approval lifecycle: credit check -> stock check -> publish to inventory.
+    if (new_status in SO_APPROVED_STATUSES) and (old_status not in SO_APPROVED_STATUSES):
+        await finalize_approved_sales_order(db, so, token_payload)
 
     return so
+
+
+@router.post("/{id_str}/approve")
+async def approve_sales_order(
+    id_str: str,
+    db: AsyncSession = Depends(database.get_db),
+    token_payload: dict = Depends(get_current_token_payload),
+):
+    """O2/O3/O4: dedicated approval endpoint.
+
+    1. Synchronous REST credit check against billing-service (O2) — on failure
+       or timeout the SO is placed on Hold (O3) and NOT published.
+    2. If approved, runs the stock check and publishes `crm.order.approved`
+       (O4) so inventory performs its ATP check.
+
+    Returns the full audit trail (credit + stock) for the UI toast.
+    """
+    result = await db.execute(
+        select(models.SalesOrder).filter(models.SalesOrder.id_str == id_str)
+    )
+    so = result.scalars().first()
+    if not so:
+        raise HTTPException(status_code=404, detail="Sales Order not found")
+
+    from app.sales_orders.pipeline import finalize_approved_sales_order
+
+    if so.status not in SO_APPROVED_STATUSES:
+        so.status = "Confirmed"
+        await db.commit()
+        await db.refresh(so)
+
+    outcome = await finalize_approved_sales_order(db, so, token_payload)
+    await db.refresh(so)
+
+    return {
+        "id_str": so.id_str,
+        "so_no": so.so_no,
+        "status": so.status,
+        "approved": outcome.get("approved", False),
+        "reason": outcome.get("reason"),
+        "credit": outcome.get("credit") or getattr(so, "credit_check_detail", None),
+        "approval_status": so.approval_status,
+        "credit_check_status": so.credit_check_status,
+        "message": (
+            f"{so.so_no} approved — fulfillment started."
+            if outcome.get("approved")
+            else f"{so.so_no} placed on {so.status}: credit check failed or stock unavailable."
+        ),
+    }
 
 
 @router.post("/{id_str}/check-stock")
@@ -376,21 +221,27 @@ async def check_sales_order_stock(
 
     from app.core.inventory_client import check_stock_availability
     token = token_payload.get("_raw_token", "")
-    items = _build_so_check_items(so)
+    items = build_so_check_items(so)
     try:
         stock_result = await check_stock_availability(token, items)
     except Exception as e:
         logger.warning(f"Stock check unavailable for {so.so_no}: {str(e)}")
-        return {"available": True, "overall_available": True, "status": so.status, "items": []}
+        # Fail open BUT still ingest: the durable crm.order.approved event will
+        # be consumed once inventory is reachable, and the worker runs its own
+        # ATP check anyway.
+        stock_result = {"available": True, "overall_available": True, "warehouse_id": None, "items": []}
 
     available = bool(stock_result.get("overall_available", False))
     if not available:
         so.status = "Stock Hold"
         await db.commit()
         await db.refresh(so)
-        await _publish_fulfillment_event(token_payload, so, stock_result)
-        # Ingest into inventory fulfillment (SHORTAGE -> auto-PO) so procurement can begin.
-        await _publish_crm_order_approved(token_payload, so, stock_result)
+        await publish_fulfillment_event(token_payload, so, stock_result)
+
+    # ALWAYS ingest into the fulfillment queue: when stock is available the
+    # inventory worker auto-reserves it; on shortage it runs the auto-PO flow.
+    # Both cases must enter the queue as an approved sales order.
+    await publish_crm_order_approved(token_payload, so, stock_result)
 
     return {
         "available": available,

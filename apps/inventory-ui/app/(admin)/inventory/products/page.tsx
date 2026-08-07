@@ -21,6 +21,8 @@ interface Product {
   cost_price: number;
   track_inventory: boolean;
   is_active: boolean;
+  make_or_buy?: string;
+  qc_required?: boolean;
 }
 
 export default function ProductsPage() {
@@ -39,6 +41,8 @@ export default function ProductsPage() {
   const [category, setCategory] = useState("Electronics & Machinery");
   const [price, setPrice] = useState("15000");
   const [costPrice, setCostPrice] = useState("10000");
+  const [makeOrBuy, setMakeOrBuy] = useState("buy");
+  const [qcRequired, setQcRequired] = useState(false);
 
   const fetchProducts = () => {
     setLoading(true);
@@ -60,10 +64,14 @@ export default function ProductsPage() {
         cost_price: Number(costPrice),
         track_inventory: true,
         is_active: true,
+        make_or_buy: makeOrBuy,
+        qc_required: qcRequired,
       });
       setIsAddOpen(false);
       setName("");
       setSku("");
+      setMakeOrBuy("buy");
+      setQcRequired(false);
       fetchProducts();
     } catch (err) {
       console.error(err);
@@ -81,6 +89,8 @@ export default function ProductsPage() {
         cost_price: Number(costPrice),
         track_inventory: editingProduct.track_inventory,
         is_active: editingProduct.is_active,
+        make_or_buy: makeOrBuy,
+        qc_required: qcRequired,
       });
       setEditingProduct(null);
       fetchProducts();
@@ -198,6 +208,8 @@ export default function ProductsPage() {
                             setCategory(p.category || "General");
                             setPrice(String(p.price));
                             setCostPrice(String(p.cost_price));
+                            setMakeOrBuy(p.make_or_buy || "buy");
+                            setQcRequired(!!p.qc_required);
                           }}
                         >
                           <Edit3 className="h-3.5 w-3.5 text-muted-foreground hover:text-[#8C1D24]" />
@@ -276,6 +288,31 @@ export default function ProductsPage() {
                 />
               </div>
             </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="font-medium block mb-1">Supply Policy (Make/Buy)</label>
+                <select
+                  value={makeOrBuy}
+                  onChange={(e) => setMakeOrBuy(e.target.value)}
+                  className="w-full p-2 border border-border rounded bg-background text-xs font-semibold"
+                >
+                  <option value="buy">Buy (procure from supplier)</option>
+                  <option value="make">Make (manufacture in-house)</option>
+                  <option value="both">Both</option>
+                </select>
+              </div>
+              <div className="flex items-end pb-1">
+                <label className="flex items-center gap-2 font-medium cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={qcRequired}
+                    onChange={(e) => setQcRequired(e.target.checked)}
+                    className="h-4 w-4 accent-[#8C1D24]"
+                  />
+                  QC Required on Receipt
+                </label>
+              </div>
+            </div>
           </div>
           <div className="flex justify-end gap-2 mt-4">
             <Button variant="outline" size="sm" onClick={() => setIsAddOpen(false)}>
@@ -342,6 +379,31 @@ export default function ProductsPage() {
                     onChange={(e) => setCostPrice(e.target.value)}
                     className="w-full p-2 border border-border rounded bg-background"
                   />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="font-medium block mb-1">Supply Policy (Make/Buy)</label>
+                  <select
+                    value={makeOrBuy}
+                    onChange={(e) => setMakeOrBuy(e.target.value)}
+                    className="w-full p-2 border border-border rounded bg-background text-xs font-semibold"
+                  >
+                    <option value="buy">Buy</option>
+                    <option value="make">Make</option>
+                    <option value="both">Both</option>
+                  </select>
+                </div>
+                <div className="flex items-end pb-1">
+                  <label className="flex items-center gap-2 font-medium cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={qcRequired}
+                      onChange={(e) => setQcRequired(e.target.checked)}
+                      className="h-4 w-4 accent-[#8C1D24]"
+                    />
+                    QC Required on Receipt
+                  </label>
                 </div>
               </div>
             </div>

@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { exportToCSV } from "@/utils/exportCsv";
+import { toastSuccess, toastError, toastWarning, errorMessage } from "@/utils/toast";
 import SalesOrderTable from "./SalesOrderTable";
 import { Spinner } from "@/components/ui/spinner";
 import { api } from "@/services/api";
@@ -36,6 +37,20 @@ export default function SalesOrdersPage() {
     if (window.confirm("Are you sure?")) {
       try { await api.delete("/sales-orders/" + record.id_str); fetchData(); }
       catch { alert("Delete failed"); }
+    }
+  };
+
+  const handleApprove = async (record: any) => {
+    try {
+      const res = await api.post<any>(`/sales-orders/${record.id_str}/approve`, {});
+      if (res.approved) {
+        toastSuccess("Sales order approved", `${res.so_no} — credit check ${res.credit_check_status || "passed"}, fulfillment published to inventory.`);
+      } else {
+        toastWarning("Sales order on hold", `${res.so_no} ${res.message || "could not be approved."}`);
+      }
+      fetchData();
+    } catch (err) {
+      toastError("Approval failed", errorMessage(err));
     }
   };
 
@@ -98,6 +113,7 @@ export default function SalesOrdersPage() {
               onView={(rec) => { setSelectedRecordForDetails(rec); setIsDetailsOpen(true); }} 
               onEdit={(rec) => { setEditRecord(rec); setIsModalOpen(true); }} 
               onDelete={handleDelete} 
+              onApprove={handleApprove} 
             />
           </div>
         </Card>
