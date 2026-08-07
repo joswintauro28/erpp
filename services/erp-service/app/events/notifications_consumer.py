@@ -110,13 +110,15 @@ async def _persist_and_broadcast(event: str, body: dict, alert_message: str) -> 
         logger.info(f"Persisted + broadcast {event} → roles {template['roles']} ({alert_message})")
         return
 
-    # Single-target template (role or name).
+    # Name-targeted template (e.g. dispatched → specific sales rep).
+    # Always attach the fallback role too: JWTs carry the user's email, not
+    # their display name, so the rep is reached via the role even when the
+    # name match misses. The name is kept for precise targeting on top.
     if template.get("name_field"):
         owner = _get(body, template["name_field"], default="")
         if owner:
             create_kwargs["target_name"] = str(owner)
-        else:
-            create_kwargs["role"] = template.get("fallback_role", "Sales Executive")
+        create_kwargs["role"] = template.get("fallback_role", "Sales Executive")
 
     from app.core.database import async_session_factory
     from app.notification.services import NotificationStore

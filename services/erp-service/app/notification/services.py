@@ -54,6 +54,12 @@ class NotificationStore:
             or_conditions.append(Notification.role == role)
         if name:
             or_conditions.append(Notification.target_name.ilike(f"%{name}%"))
+            # JWTs carry emails; event payloads carry display names. Match the
+            # email local-part against the target name too (e.g. "maya" vs
+            # "Maya Patel") so the specific-rep notification is visible.
+            local_part = name.strip().lower().split("@")[0].replace(".", " ").replace("_", " ").strip()
+            if local_part:
+                or_conditions.append(Notification.target_name.ilike(f"%{local_part}%"))
         if not or_conditions:
             return []
         from sqlalchemy import or_

@@ -49,8 +49,9 @@ class ConnectionManager:
                 if role and meta.get("role", "").lower() == role.lower():
                     matches.append((ws, meta))
                     continue
-                if name and name.strip() and meta.get("name", "").strip().lower() == name.strip().lower():
+                if name and _name_matches(meta.get("name", ""), name):
                     matches.append((ws, meta))
+                    continue
         return matches
 
     async def broadcast_payload(self, payload: dict, *, user_id: int | None = None, role: str | None = None, name: str | None = None) -> int:
@@ -77,6 +78,35 @@ class ConnectionManager:
 
 
 manager = ConnectionManager()
+
+
+def _name_matches(meta_name: str, target: str) -> bool:
+    """Match a display-name target against a JWT name.
+
+    JWTs carry the user's email (no full_name claim), while event payloads
+    carry the sales rep's display name (e.g. "Maya Patel"). We match exact
+    equality, then the email local-part, then shared tokens — but only for
+    local-parts of meaningful length to avoid false positives on short
+    common words.
+    """
+    a = meta_name.strip().lower()
+    b = target.strip().lower()
+    if not a or not b:
+        return False
+    if a == b:
+        return True
+
+    def tokens(s: str) -> list[str]:
+        return [
+            t
+            for t in s.split("@")[0].replace(".", " ").replace("_", " ").split()
+            if len(t) >= 3
+        ]
+
+    a_tokens, b_tokens = tokens(a), tokens(b)
+    if not a_tokens or not b_tokens:
+        return False
+    return bool(set(a_tokens) & set(b_tokens))
 
 
 def _decode_ws_token(token: str | None) -> dict:
@@ -112,10 +142,18 @@ async def ws_notifications(websocket: WebSocket):
     except Exception:
         pass
 
+    # Keep-alive: the frontend sends a ping every 25s; respond so proxies
+    # don't reap idle connections.
     try:
         while True:
-            # Clients may send a keep-alive ping; ignore the content.
-            await websocket.receive_text()
+            msg = await websocket.receive_text()
+            if msg in ("ping", "\n"):
+                try:
+                    await websocket.send_json({"event": "pong"})
+                except Exception:
+                    # Socket is dead — clean up the registration before exiting.
+                    await manager.disconnect(websocket, user_id)
+                    return
     except WebSocketDisconnect:
         await manager.disconnect(websocket, user_id)
     except Exception as exc:

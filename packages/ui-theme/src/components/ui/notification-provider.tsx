@@ -68,6 +68,7 @@ export function NotificationProvider({
   const socketRef = useRef<WebSocket | null>(null);
   const reconnectAttempts = useRef(0);
   const reconnectTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const heartbeatRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const mountedRef = useRef(true);
 
   const getRestBase = () => endpointsRef.current.restBase;
@@ -108,6 +109,13 @@ export function NotificationProvider({
     ws.onopen = () => {
       reconnectAttempts.current = 0;
       setConnected(true);
+      // Keep-alive: the gateway replies with a pong, which also serves as
+      // a heartbeat to detect dead pipes quickly.
+      heartbeatRef.current = setInterval(() => {
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.send("ping");
+        }
+      }, 25000);
     };
     ws.onmessage = (ev) => {
       try {
@@ -126,6 +134,10 @@ export function NotificationProvider({
       }
     };
     ws.onclose = () => {
+      if (heartbeatRef.current) {
+        clearInterval(heartbeatRef.current);
+        heartbeatRef.current = null;
+      }
       setConnected(false);
       socketRef.current = null;
       scheduleReconnect();
@@ -161,6 +173,7 @@ export function NotificationProvider({
     return () => {
       mountedRef.current = false;
       if (reconnectTimer.current) clearTimeout(reconnectTimer.current);
+      if (heartbeatRef.current) clearInterval(heartbeatRef.current);
       clearInterval(tokenPoll);
       socketRef.current?.close();
     };
