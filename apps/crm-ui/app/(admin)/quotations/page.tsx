@@ -8,8 +8,8 @@ import { Spinner } from "@/components/ui/spinner";
 import { api } from "@/services/api";
 import { exportToCSV } from "@/utils/exportCsv";
 import { toastSuccess, toastError, errorMessage } from "@/utils/toast";
-import GenericCreateModal from "@/components/GenericCreateModal";
-import GenericDetailsModal from "@/components/GenericDetailsModal";
+import QuotationCreateModal from "./QuotationCreateModal";
+import QuotationDetailsModal from "./QuotationDetailsModal";
 import QuotationTable from "./QuotationTable";
 import QuotationCpqModal from "./QuotationCpqModal";
 
@@ -146,8 +146,8 @@ export default function QuotationsPage() {
       </div>
 
       <QuotationCpqModal isOpen={isCpqOpen} onClose={() => setIsCpqOpen(false)} onSuccess={fetchData} />
-      <GenericCreateModal entityType="quotations" entityName="Quotation" isOpen={isModalOpen} onClose={() => { setIsModalOpen(false); setEditRecord(null); }} editRecord={editRecord} onSuccess={fetchData} />
-      <GenericDetailsModal record={selectedRecord} entityName="Quotation" isOpen={isDetailsOpen} onClose={() => { setIsDetailsOpen(false); setSelectedRecord(null); setAutoConvert(false); }} onSuccess={fetchData} initialShowForm={autoConvert ? "sales-order" : ""} />
+      <QuotationCreateModal isOpen={isModalOpen} onClose={() => { setIsModalOpen(false); setEditRecord(null); }} editRecord={editRecord} onSuccess={fetchData} />
+      <QuotationDetailsModal record={selectedRecord} isOpen={isDetailsOpen} onClose={() => { setIsDetailsOpen(false); setSelectedRecord(null); setAutoConvert(false); }} onSuccess={fetchData} initialShowForm={autoConvert ? "sales-order" : ""} />
     </div>
   );
 }

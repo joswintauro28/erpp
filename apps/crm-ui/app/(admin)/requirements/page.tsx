@@ -9,8 +9,8 @@ import { exportToCSV } from "@/utils/exportCsv";
 import RequirementTable from "./RequirementTable";
 import { Spinner } from "@/components/ui/spinner";
 import { api } from "@/services/api";
-import GenericCreateModal from "@/components/GenericCreateModal";
-import GenericDetailsModal from "@/components/GenericDetailsModal";
+import RequirementCreateModal from "./RequirementCreateModal";
+import RequirementDetailsModal from "./RequirementDetailsModal";
 
 
 export default function RequirementsPage() {
@@ -98,8 +98,8 @@ export default function RequirementsPage() {
         </Card>
       </div>
 
-      <GenericCreateModal entityType="requirements" entityName="Requirement" isOpen={isModalOpen} onClose={() => { setIsModalOpen(false); setEditRecord(null); }} editRecord={editRecord} onSuccess={fetchData} />
-      <GenericDetailsModal record={selectedRecordForDetails} entityName="Requirement" isOpen={isDetailsOpen} onClose={() => { setIsDetailsOpen(false); setSelectedRecordForDetails(null); }} onSuccess={fetchData} />
+      <RequirementCreateModal isOpen={isModalOpen} onClose={() => { setIsModalOpen(false); setEditRecord(null); }} editRecord={editRecord} onSuccess={fetchData} />
+      <RequirementDetailsModal record={selectedRecordForDetails} isOpen={isDetailsOpen} onClose={() => { setIsDetailsOpen(false); setSelectedRecordForDetails(null); }} onSuccess={fetchData} />
     </div>
   );
 }

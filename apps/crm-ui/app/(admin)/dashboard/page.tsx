@@ -19,7 +19,7 @@ import MetricCard from "./MetricCard";
 import PipelineChart from "./PipelineChart";
 import Recommendations from "./Recommendations";
 
-const STAGE_COLORS = ["#6366f1", "#0ea5e9", "#14b8a6", "#f59e0b", "#10b981"];
+const STAGE_COLORS = ["#8C1D24", "#E5B83C", "#6366f1", "#10b981", "#f43f5e"];
 const KPI_COLORS = ["var(--chart-1)", "var(--chart-2)", "var(--chart-4)", "var(--chart-3)"];
 
 const tooltipStyle = {
@@ -209,12 +209,43 @@ export default function DashboardPage() {
                 {stages.length > 0 ? (
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={[...stages].sort((a: any, b: any) => b.value - a.value)} margin={{ top: 16, right: 8, bottom: 0, left: -16 }}>
+                      <defs>
+                        <linearGradient id="colorDiscoveryBar" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#8C1D24" stopOpacity={0.9}/>
+                          <stop offset="95%" stopColor="#8C1D24" stopOpacity={0.4}/>
+                        </linearGradient>
+                        <linearGradient id="colorQuoteBar" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#E5B83C" stopOpacity={0.9}/>
+                          <stop offset="95%" stopColor="#E5B83C" stopOpacity={0.4}/>
+                        </linearGradient>
+                        <linearGradient id="colorNegotiationBar" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#6366f1" stopOpacity={0.9}/>
+                          <stop offset="95%" stopColor="#6366f1" stopOpacity={0.4}/>
+                        </linearGradient>
+                        <linearGradient id="colorWonBar" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#10b981" stopOpacity={0.9}/>
+                          <stop offset="95%" stopColor="#10b981" stopOpacity={0.4}/>
+                        </linearGradient>
+                        <linearGradient id="colorLostBar" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#f43f5e" stopOpacity={0.9}/>
+                          <stop offset="95%" stopColor="#f43f5e" stopOpacity={0.4}/>
+                        </linearGradient>
+                      </defs>
                       <CartesianGrid strokeDasharray="4 4" stroke="var(--shell-border)" strokeOpacity={0.4} />
                       <XAxis dataKey="name" tick={{ fontSize: 11, fill: "var(--shell-muted)" }} stroke="var(--shell-border)" axisLine={false} tickLine={false} />
                       <YAxis tick={{ fontSize: 11, fill: "var(--shell-muted)" }} stroke="var(--shell-border)" axisLine={false} tickLine={false} tickFormatter={(v) => formatPipelineValue(v)} />
                       <Tooltip contentStyle={tooltipStyle} formatter={(value) => [formatPipelineValue(Number(value)), "Stage Value"]} labelStyle={{ fontWeight: 600, marginBottom: 4, color: "var(--shell-foreground)" }} />
                       <Bar dataKey="value" radius={[4, 4, 0, 0]} maxBarSize={64}>
-                        {stages.map((_: any, i: number) => <Cell key={i} fill={STAGE_COLORS[i % STAGE_COLORS.length]} />)}
+                        {stages.map((_: any, i: number) => {
+                          const barGradients = [
+                            "url(#colorDiscoveryBar)",
+                            "url(#colorQuoteBar)",
+                            "url(#colorNegotiationBar)",
+                            "url(#colorWonBar)",
+                            "url(#colorLostBar)"
+                          ];
+                          return <Cell key={i} fill={barGradients[i % barGradients.length]} />;
+                        })}
                       </Bar>
                     </BarChart>
                   </ResponsiveContainer>

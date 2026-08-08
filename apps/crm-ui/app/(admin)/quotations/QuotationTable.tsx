@@ -43,8 +43,7 @@ export default function QuotationTable({ quotations, onView, onEdit, onDelete, o
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>ID</TableHead>
-          <TableHead>QUOTE #</TableHead>
+          <TableHead>QUOTE NO</TableHead>
           <TableHead>ACCOUNT</TableHead>
           <TableHead>VALUE</TableHead>
           <TableHead>DISCOUNT</TableHead>
@@ -60,8 +59,7 @@ export default function QuotationTable({ quotations, onView, onEdit, onDelete, o
           const canConvert = quote.status === "Accepted";
           return (
             <TableRow key={quote.id}>
-              <TableCell className="text-[var(--shell-muted)] cursor-pointer" onClick={() => onView(quote)}>{quote.id_str}</TableCell>
-              <TableCell className="font-medium text-primary cursor-pointer" onClick={() => onView(quote)}>
+              <TableCell className="font-semibold text-[var(--shell-brand)] hover:underline cursor-pointer" onClick={() => onView(quote)}>
                 <span className="flex items-center gap-1.5">
                   {quote.quote_no}
                   {approvalPending && (

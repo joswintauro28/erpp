@@ -12,7 +12,7 @@ import OpportunityKanban from "./OpportunityKanban";
 import OpportunityDetailModal from "./OpportunityDetailModal";
 import { Spinner } from "@/components/ui/spinner";
 import { api } from "@/services/api";
-import GenericCreateModal from "@/components/GenericCreateModal";
+import OpportunityCreateModal from "./OpportunityCreateModal";
 
 
 export default function OpportunitiesPage() {
@@ -140,7 +140,7 @@ export default function OpportunitiesPage() {
         </Card>
       </div>
 
-      <GenericCreateModal entityType="opportunities" entityName="Opportunity" isOpen={isModalOpen} onClose={() => { setIsModalOpen(false); setEditRecord(null); }} editRecord={editRecord} onSuccess={fetchData} />
+      <OpportunityCreateModal isOpen={isModalOpen} onClose={() => { setIsModalOpen(false); setEditRecord(null); }} editRecord={editRecord} onSuccess={fetchData} />
       <OpportunityDetailModal record={selectedRecordForDetails} isOpen={isDetailsOpen} onClose={() => { setIsDetailsOpen(false); setSelectedRecordForDetails(null); }} onSuccess={fetchData} />
     </div>
   );

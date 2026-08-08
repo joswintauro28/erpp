@@ -12,7 +12,7 @@ import LeadTable from "./LeadTable";
 import LeadDetailsModal from "./LeadDetailsModal";
 import { Spinner } from "@/components/ui/spinner";
 import { api } from "@/services/api";
-import GenericCreateModal from "@/components/GenericCreateModal";
+import LeadCreateModal from "./LeadCreateModal";
 
 
 
@@ -159,7 +159,7 @@ export default function LeadsPage() {
         </Card>
       </div>
 
-      <GenericCreateModal entityType="leads" entityName="Lead" isOpen={isModalOpen} onClose={() => { setIsModalOpen(false); setEditRecord(null); }} editRecord={editRecord} onSuccess={fetchData} />
+      <LeadCreateModal isOpen={isModalOpen} onClose={() => { setIsModalOpen(false); setEditRecord(null); }} editRecord={editRecord} onSuccess={fetchData} />
       <LeadDetailsModal lead={selectedRecord} isOpen={isDetailsOpen} onClose={() => { setIsDetailsOpen(false); setSelectedRecord(null); }} onSuccess={fetchData} />
     </div>
   );

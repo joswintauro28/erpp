@@ -5,7 +5,14 @@ import { BarChart3 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 
-const STAGE_COLORS = ["#6366f1", "#0ea5e9", "#14b8a6", "#f59e0b", "#10b981"];
+const STAGE_COLORS = ["#8C1D24", "#E5B83C", "#6366f1", "#10b981", "#f43f5e"];
+const STAGE_GRADIENTS = [
+  "url(#colorDiscovery)",
+  "url(#colorQuote)",
+  "url(#colorNegotiation)",
+  "url(#colorWon)",
+  "url(#colorLost)"
+];
 
 const tooltipStyle = {
   background: "var(--shell-popover)",
@@ -37,7 +44,7 @@ export default function PipelineChart({ stages, pipelineValue }: PipelineChartPr
       <CardHeader className="flex flex-row items-center justify-between pb-2 border-b border-[var(--shell-border)]/20">
         <div>
           <CardTitle className="flex items-center gap-2 text-sm font-semibold text-[var(--shell-foreground)]">
-            <BarChart3 className="h-4 w-4 text-[var(--shell-accent)]" />
+            <BarChart3 className="h-4 w-4 text-[var(--shell-brand)]" />
             Pipeline Distribution
           </CardTitle>
           <CardDescription className="text-xs text-[var(--shell-muted)]">Value breakdown by stage</CardDescription>
@@ -55,8 +62,30 @@ export default function PipelineChart({ stages, pipelineValue }: PipelineChartPr
               </div>
               <ResponsiveContainer width="100%" height="100%" className="relative z-10">
                 <PieChart>
+                  <defs>
+                    <linearGradient id="colorDiscovery" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#8C1D24" stopOpacity={0.95}/>
+                      <stop offset="95%" stopColor="#3D1013" stopOpacity={0.95}/>
+                    </linearGradient>
+                    <linearGradient id="colorQuote" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#E5B83C" stopOpacity={0.95}/>
+                      <stop offset="95%" stopColor="#B38F2E" stopOpacity={0.95}/>
+                    </linearGradient>
+                    <linearGradient id="colorNegotiation" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#6366f1" stopOpacity={0.95}/>
+                      <stop offset="95%" stopColor="#4f46e5" stopOpacity={0.95}/>
+                    </linearGradient>
+                    <linearGradient id="colorWon" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.95}/>
+                      <stop offset="95%" stopColor="#047857" stopOpacity={0.95}/>
+                    </linearGradient>
+                    <linearGradient id="colorLost" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#f43f5e" stopOpacity={0.95}/>
+                      <stop offset="95%" stopColor="#be123c" stopOpacity={0.95}/>
+                    </linearGradient>
+                  </defs>
                   <Pie data={stages.map((s: any) => ({ name: s.name, value: s.value }))} cx="50%" cy="50%" innerRadius={78} outerRadius={108} paddingAngle={3} dataKey="value" stroke="var(--shell-surface)" strokeWidth={2}>
-                    {stages.map((_: any, i: number) => <Cell key={i} fill={STAGE_COLORS[i % STAGE_COLORS.length]} className="hover:opacity-90 transition-opacity" />)}
+                    {stages.map((_: any, i: number) => <Cell key={i} fill={STAGE_GRADIENTS[i % STAGE_GRADIENTS.length]} className="hover:opacity-90 transition-opacity" />)}
                   </Pie>
                   <Tooltip contentStyle={tooltipStyle} formatter={(_value: unknown, _name: unknown, entry: any) => { const v = entry?.payload?.value ?? 0; return [formatPipelineValue(v), entry?.payload?.name]; }} />
                 </PieChart>

@@ -44,8 +44,7 @@ export default function SalesOrderTable({ salesOrders, onView, onEdit, onDelete,
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>ID</TableHead>
-          <TableHead>SO NO</TableHead>
+          <TableHead>ORDER NO</TableHead>
           <TableHead>ACCOUNT</TableHead>
           <TableHead>VALUE</TableHead>
           <TableHead>ETA</TableHead>
@@ -61,8 +60,7 @@ export default function SalesOrderTable({ salesOrders, onView, onEdit, onDelete,
           const canApprove = APPROVABLE.includes(item.status);
           return (
           <TableRow key={item.id}>
-            <TableCell className="text-[var(--shell-muted)] cursor-pointer" onClick={() => onView(item)}>{item.id_str}</TableCell>
-            <TableCell className="font-medium text-[var(--shell-foreground)] cursor-pointer" onClick={() => onView(item)}>{item.so_no}</TableCell>
+            <TableCell className="font-semibold text-[var(--shell-brand)] hover:underline cursor-pointer" onClick={() => onView(item)}>{item.so_no}</TableCell>
             <TableCell>{item.account}</TableCell>
             <TableCell>{formatCurrency(item.value)}</TableCell>
             <TableCell>{item.eta}</TableCell>

@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { api } from "@/services/api";
 import { exportToCSV } from "@/utils/exportCsv";
-import GenericCreateModal from "@/components/GenericCreateModal";
+import DocumentCreateModal from "./DocumentCreateModal";
 import DocumentTable from "./DocumentTable";
 import DocumentDetailsModal from "./DocumentDetailsModal";
 
@@ -106,7 +106,7 @@ export default function DocumentsPage() {
         </Card>
       </div>
 
-      <GenericCreateModal entityType="documents" entityName="Document" isOpen={isModalOpen} onClose={() => { setIsModalOpen(false); setEditRecord(null); }} editRecord={editRecord} onSuccess={fetchData} />
+      <DocumentCreateModal isOpen={isModalOpen} onClose={() => { setIsModalOpen(false); setEditRecord(null); }} editRecord={editRecord} onSuccess={fetchData} />
       <DocumentDetailsModal doc={selectedDoc} isOpen={isDetailsOpen} onClose={() => { setIsDetailsOpen(false); setSelectedDoc(null); }} />
     </div>
   );

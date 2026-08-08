@@ -8,8 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { api } from "@/services/api";
 import { exportToCSV } from "@/utils/exportCsv";
-import GenericCreateModal from "@/components/GenericCreateModal";
-import GenericDetailsModal from "@/components/GenericDetailsModal";
+import CustomerCreateModal from "./CustomerCreateModal";
+import CustomerDetailsModal from "./CustomerDetailsModal";
 import CustomerTable from "./CustomerTable";
 
 export default function CustomersPage() {
@@ -106,8 +106,8 @@ export default function CustomersPage() {
         </Card>
       </div>
 
-      <GenericCreateModal entityType="customers" entityName="Customer" isOpen={isModalOpen} onClose={() => { setIsModalOpen(false); setEditRecord(null); }} editRecord={editRecord} onSuccess={fetchData} />
-      <GenericDetailsModal record={selectedRecordForDetails} entityName="Customer" isOpen={isDetailsOpen} onClose={() => { setIsDetailsOpen(false); setSelectedRecordForDetails(null); }} onSuccess={fetchData} />
+      <CustomerCreateModal isOpen={isModalOpen} onClose={() => { setIsModalOpen(false); setEditRecord(null); }} editRecord={editRecord} onSuccess={fetchData} />
+      <CustomerDetailsModal record={selectedRecordForDetails} isOpen={isDetailsOpen} onClose={() => { setIsDetailsOpen(false); setSelectedRecordForDetails(null); }} />
     </div>
   );
 }

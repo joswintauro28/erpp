@@ -1,9 +1,15 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { X, FileText, Download, ExternalLink } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface FileItem {
   name: string;
@@ -95,7 +101,11 @@ function getMockHtml(doc: any) {
   `;
 }
 
-export default function DocumentDetailsModal({ doc, isOpen, onClose }: DocumentDetailsModalProps) {
+export default function DocumentDetailsModal({
+  doc,
+  isOpen,
+  onClose,
+}: DocumentDetailsModalProps) {
   const [fileList, setFileList] = useState<FileItem[]>([]);
   const [activeFile, setActiveFile] = useState<FileItem | null>(null);
 
@@ -114,7 +124,13 @@ export default function DocumentDetailsModal({ doc, isOpen, onClose }: DocumentD
     }
 
     if (list.length === 0 && doc.file_data) {
-      list = [{ name: doc.name || doc.title, size: doc.size, file_data: doc.file_data }];
+      list = [
+        {
+          name: doc.name || doc.title,
+          size: doc.size,
+          file_data: doc.file_data,
+        },
+      ];
     }
 
     setFileList(list);
@@ -167,7 +183,9 @@ export default function DocumentDetailsModal({ doc, isOpen, onClose }: DocumentD
       } catch {
         const newTab = window.open();
         if (newTab) {
-          newTab.document.write(`<iframe src="${target.file_data}" frameborder="0" style="border:0; width:100%; height:100%;" allowfullscreen></iframe>`);
+          newTab.document.write(
+            `<iframe src="${target.file_data}" frameborder="0" style="border:0; width:100%; height:100%;" allowfullscreen></iframe>`
+          );
           newTab.document.close();
         }
       }
@@ -186,15 +204,19 @@ export default function DocumentDetailsModal({ doc, isOpen, onClose }: DocumentD
         return (
           <iframe
             src={activeFile.file_data}
-            className="w-full h-[420px] border-0 rounded"
+            className="w-full h-[420px] border-0 rounded-lg bg-[var(--shell-surface)]"
             title={activeFile.name}
           />
         );
       }
       if (activeFile.file_data.startsWith("data:image/")) {
         return (
-          <div className="flex items-center justify-center bg-[var(--shell-surface-alt)] p-4 rounded h-[420px]">
-            <img src={activeFile.file_data} alt={activeFile.name} className="max-w-full max-h-full object-contain rounded" />
+          <div className="flex items-center justify-center bg-[var(--shell-surface-alt)] border border-[var(--shell-border)] p-4 rounded-lg h-[420px]">
+            <img
+              src={activeFile.file_data}
+              alt={activeFile.name}
+              className="max-w-full max-h-full object-contain rounded-md"
+            />
           </div>
         );
       }
@@ -203,101 +225,161 @@ export default function DocumentDetailsModal({ doc, isOpen, onClose }: DocumentD
     return (
       <iframe
         srcDoc={getMockHtml(doc)}
-        className="w-full h-[420px] border border-[var(--shell-border)] rounded"
+        className="w-full h-[420px] border border-[var(--shell-border)] rounded-lg bg-white"
         title={doc.title || doc.name}
       />
     );
   };
 
   return (
-    <div
-      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
-      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
-    >
-      <div className="rounded-xl border border-border bg-card w-full max-w-[900px] max-h-[90vh] overflow-y-auto p-6 shadow-xl">
-        <div className="flex justify-between items-center pb-4 mb-6 border-b border-border">
+    <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
+      <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto bg-[var(--shell-surface)] border-[var(--shell-border)] text-[var(--shell-foreground)]">
+        <DialogHeader className="flex flex-row items-center justify-between border-b border-[var(--shell-border)] pb-3">
           <div className="flex items-center gap-2">
-            <FileText size={20} className="text-primary" />
-            <h3 className="text-base font-bold text-foreground m-0">
+            <FileText className="size-5 text-[#C81D25]" />
+            <DialogTitle className="text-lg font-semibold tracking-tight text-[var(--shell-foreground)]">
               Document Details: {(doc.title || doc.name || "").split(", ")[0]}
-            </h3>
+            </DialogTitle>
           </div>
-          <button className="p-1 rounded-md hover:bg-muted text-muted-foreground cursor-pointer" onClick={onClose}><X size={18} /></button>
-        </div>
+        </DialogHeader>
 
-        <div className="grid grid-cols-1 md:grid-cols-[250px_1fr] gap-6 mb-6">
-          <div className="flex flex-col gap-5 border-b md:border-b-0 md:border-r border-[var(--shell-border)] pb-6 md:pb-0 md:pr-6 max-h-[65vh] overflow-y-auto">
+        <div className="grid grid-cols-1 md:grid-cols-[260px_1fr] gap-6 py-4">
+          {/* Sidebar details */}
+          <div className="flex flex-col gap-4 border-b md:border-b-0 md:border-r border-[var(--shell-border)] pb-4 md:pb-0 md:pr-6">
             <div>
-              <div className="text-[11px] font-semibold uppercase text-[var(--shell-muted)] mb-0.5">Document ID</div>
-              <div className="text-sm font-medium text-[var(--shell-foreground)]">{doc.id_str}</div>
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-[var(--shell-muted)] block mb-0.5">
+                Document ID
+              </span>
+              <span className="text-sm font-medium text-[var(--shell-foreground)]">
+                {doc.id_str}
+              </span>
             </div>
+
             <div>
-              <div className="text-[11px] font-semibold uppercase text-[var(--shell-muted)] mb-0.5">Type</div>
-              <div className="text-sm font-medium text-[var(--shell-foreground)]">{doc.type}</div>
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-[var(--shell-muted)] block mb-0.5">
+                Type
+              </span>
+              <span className="text-sm font-medium text-[var(--shell-foreground)]">
+                {doc.type}
+              </span>
             </div>
+
             <div>
-              <div className="text-[11px] font-semibold uppercase text-[var(--shell-muted)] mb-0.5">Account</div>
-              <div className="text-sm font-medium text-[var(--shell-foreground)]">{doc.account}</div>
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-[var(--shell-muted)] block mb-0.5">
+                Account
+              </span>
+              <span className="text-sm font-medium text-[var(--shell-foreground)]">
+                {doc.account}
+              </span>
             </div>
+
             <div>
-              <div className="text-[11px] font-semibold uppercase text-[var(--shell-muted)] mb-0.5">Owner</div>
-              <div className="text-sm font-medium text-[var(--shell-foreground)]">{doc.owner}</div>
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-[var(--shell-muted)] block mb-0.5">
+                Owner
+              </span>
+              <span className="text-sm font-medium text-[var(--shell-foreground)]">
+                {doc.owner}
+              </span>
             </div>
+
             <div>
-              <div className="text-[11px] font-semibold uppercase text-[var(--shell-muted)] mb-0.5">Status</div>
-              <Badge variant={
-                doc.status === "Signed" ? "default" :
-                doc.status === "Under Review" ? "secondary" :
-                doc.status === "Expired" ? "destructive" :
-                "outline"
-              }>{doc.status}</Badge>
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-[var(--shell-muted)] block mb-1">
+                Status
+              </span>
+              <Badge
+                variant={
+                  doc.status === "Signed"
+                    ? "default"
+                    : doc.status === "Under Review"
+                    ? "secondary"
+                    : doc.status === "Expired"
+                    ? "destructive"
+                    : "outline"
+                }
+                className="px-2 py-0.5 text-xs font-semibold"
+              >
+                {doc.status}
+              </Badge>
             </div>
 
             {doc.summary && doc.summary !== "None" && doc.summary.trim() !== "" && (
-              <div>
-                <div className="text-[11px] font-semibold uppercase text-[var(--shell-muted)] mb-0.5">Summary</div>
-                <p className="text-xs leading-relaxed text-[var(--shell-foreground)] m-0 bg-[var(--shell-surface-alt)] p-2 rounded">{doc.summary}</p>
+              <div className="mt-2">
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-[var(--shell-muted)] block mb-1">
+                  Summary
+                </span>
+                <p className="text-xs leading-relaxed text-[var(--shell-foreground)] m-0 bg-[var(--shell-surface-alt)] border border-[var(--shell-border)] p-2.5 rounded-lg font-light">
+                  {doc.summary}
+                </p>
               </div>
             )}
 
-            <div className="border-t border-[var(--shell-border)] pt-4">
-              <div className="text-[11px] font-semibold uppercase text-[var(--shell-muted)] mb-2">Uploaded Files ({fileList.length})</div>
-              <div className="flex flex-col gap-2">
-                {fileList.map((file, idx) => (
-                  <div
-                    key={idx}
-                    className={`p-2 rounded-md border cursor-pointer text-xs ${
-                      activeFile?.name === file.name
-                        ? "border-[var(--shell-brand)] bg-[var(--shell-surface-alt)]"
-                        : "border-[var(--shell-border)]"
-                    }`}
-                    onClick={() => setActiveFile(file)}
-                  >
-                    <div className="font-medium text-[var(--shell-foreground)] truncate" title={file.name}>{file.name}</div>
-                    <div className="flex justify-between items-center mt-1 text-[var(--shell-muted)]">
-                      <span>{file.size}</span>
-                      <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
-                        <button onClick={() => handleOpenInNewTab(file)} className="hover:text-[var(--shell-foreground)] cursor-pointer" title="Open in new tab"><ExternalLink size={12} /></button>
-                        <button onClick={() => handleDownloadFile(file)} className="hover:text-[var(--shell-foreground)] cursor-pointer" title="Download"><Download size={12} /></button>
+            {fileList.length > 0 && (
+              <div className="border-t border-[var(--shell-border)] pt-4 mt-2">
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-[var(--shell-muted)] block mb-2">
+                  Uploaded Files ({fileList.length})
+                </span>
+                <div className="flex flex-col gap-2">
+                  {fileList.map((file, idx) => (
+                    <div
+                      key={idx}
+                      className={`p-2 rounded-lg border cursor-pointer text-xs transition-all ${
+                        activeFile?.name === file.name
+                          ? "border-[#C81D25] bg-[var(--shell-surface-alt)]"
+                          : "border-[var(--shell-border)] hover:bg-[var(--shell-surface-alt)]"
+                      }`}
+                      onClick={() => setActiveFile(file)}
+                    >
+                      <div className="font-medium text-[var(--shell-foreground)] truncate" title={file.name}>
+                        {file.name}
+                      </div>
+                      <div className="flex justify-between items-center mt-1 text-[var(--shell-muted)] text-[10px]">
+                        <span>{file.size}</span>
+                        <div className="flex gap-1.5" onClick={(e) => e.stopPropagation()}>
+                          <button
+                            onClick={() => handleOpenInNewTab(file)}
+                            className="hover:text-[var(--shell-foreground)] cursor-pointer transition-colors"
+                            title="Open in new tab"
+                          >
+                            <ExternalLink size={12} />
+                          </button>
+                          <button
+                            onClick={() => handleDownloadFile(file)}
+                            className="hover:text-[var(--shell-foreground)] cursor-pointer transition-colors"
+                            title="Download"
+                          >
+                            <Download size={12} />
+                          </button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
-          <div className="min-w-0">
-            <div className="flex justify-between items-center mb-2">
-              <span className="text-[11px] font-semibold uppercase text-[var(--shell-muted)]">
-                Frame Preview: {activeFile ? activeFile.name : (doc.title || doc.name)}
+          {/* Right sidebar frame / preview */}
+          <div className="min-w-0 flex flex-col gap-2">
+            <div className="flex justify-between items-center">
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-[var(--shell-muted)]">
+                Document Preview
               </span>
               <div className="flex gap-2">
-                <Button variant="outline" size="sm" onClick={() => handleOpenInNewTab(null)}>
-                  <ExternalLink size={12} className="mr-1" /> Open in New Tab
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleOpenInNewTab(null)}
+                  className="h-8 text-xs border-[var(--shell-border)] hover:bg-[var(--shell-surface-alt)]"
+                >
+                  <ExternalLink size={12} className="mr-1.5" /> Open
                 </Button>
-                <Button variant="outline" size="sm" onClick={() => handleDownloadFile(null)}>
-                  <Download size={12} className="mr-1" /> Download
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleDownloadFile(null)}
+                  className="h-8 text-xs border-[var(--shell-border)] hover:bg-[var(--shell-surface-alt)]"
+                >
+                  <Download size={12} className="mr-1.5" /> Download
                 </Button>
               </div>
             </div>
@@ -305,10 +387,16 @@ export default function DocumentDetailsModal({ doc, isOpen, onClose }: DocumentD
           </div>
         </div>
 
-        <div className="flex justify-end pt-4 border-t border-[var(--shell-border)]">
-          <Button variant="outline" size="sm" onClick={onClose}>Close</Button>
+        <div className="flex justify-end pt-3 border-t border-[var(--shell-border)]">
+          <Button
+            variant="outline"
+            onClick={onClose}
+            className="h-9 text-xs border-[var(--shell-border)] bg-transparent hover:bg-[var(--shell-surface-alt)] text-[var(--shell-foreground)]"
+          >
+            Close
+          </Button>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

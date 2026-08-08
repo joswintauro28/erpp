@@ -14,11 +14,10 @@ export default function Header({
   return (
     <header className="sticky top-0 z-30 flex h-20 shrink-0 items-center justify-between border-b border-border bg-background px-6 shadow-engineered">
       <span
-        className="pointer-events-none absolute bottom-0 left-0 h-[2px] w-[200%]"
+        className="pointer-events-none absolute bottom-0 left-0 h-[2px] w-[200%] pulse-sweep-line"
         style={{
           background:
             "linear-gradient(90deg, transparent 0%, var(--shell-accent) 25%, var(--shell-border) 50%, var(--shell-accent) 75%, transparent 100%)",
-          animation: "pulse-sweep 3s ease-in-out infinite",
         }}
       />
 

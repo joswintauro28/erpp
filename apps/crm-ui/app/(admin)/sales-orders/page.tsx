@@ -10,8 +10,8 @@ import { toastSuccess, toastError, toastWarning, errorMessage } from "@/utils/to
 import SalesOrderTable from "./SalesOrderTable";
 import { Spinner } from "@/components/ui/spinner";
 import { api } from "@/services/api";
-import GenericCreateModal from "@/components/GenericCreateModal";
-import GenericDetailsModal from "@/components/GenericDetailsModal";
+import SalesOrderCreateModal from "./SalesOrderCreateModal";
+import SalesOrderDetailsModal from "./SalesOrderDetailsModal";
 
 
 export default function SalesOrdersPage() {
@@ -42,11 +42,25 @@ export default function SalesOrdersPage() {
 
   const handleApprove = async (record: any) => {
     try {
-      const res = await api.post<any>(`/sales-orders/${record.id_str}/approve`, {});
-      if (res.approved) {
-        toastSuccess("Sales order approved", `${res.so_no} — credit check ${res.credit_check_status || "passed"}, fulfillment published to inventory.`);
+      const check = await api.post<any>(`/sales-orders/${record.id_str}/check-stock`);
+      
+      const payload = {
+        ...record,
+        status: check.available ? 'Paid' : 'Stock Hold',
+      };
+
+      await api.put(`/sales-orders/${record.id_str}`, payload);
+
+      if (check.available) {
+        alert('Stock available — order confirmed.');
+        toastSuccess("Sales order approved", `${record.so_no} approved — fulfillment started.`);
       } else {
-        toastWarning("Sales order on hold", `${res.so_no} ${res.message || "could not be approved."}`);
+        const shortItems = (check.items || [])
+          .filter((i: any) => !i.is_available)
+          .map((i: any) => `- ${i.product_name || i.sku || i.product_id} (needed ${i.requested_quantity}, available ${i.available_quantity})`)
+          .join('\n');
+        alert(`Insufficient stock — order placed on Stock Hold. Inventory accounts have been notified.\n\nShort items:\n${shortItems}`);
+        toastWarning("Sales order on hold", `${record.so_no} placed on Stock Hold: stock unavailable.`);
       }
       fetchData();
     } catch (err) {
@@ -119,8 +133,8 @@ export default function SalesOrdersPage() {
         </Card>
       </div>
 
-      <GenericCreateModal entityType="sales-orders" entityName="Sales Order" isOpen={isModalOpen} onClose={() => { setIsModalOpen(false); setEditRecord(null); }} editRecord={editRecord} onSuccess={fetchData} />
-      <GenericDetailsModal record={selectedRecordForDetails} entityName="Sales Order" isOpen={isDetailsOpen} onClose={() => { setIsDetailsOpen(false); setSelectedRecordForDetails(null); }} onSuccess={fetchData} />
+      <SalesOrderCreateModal isOpen={isModalOpen} onClose={() => { setIsModalOpen(false); setEditRecord(null); }} editRecord={editRecord} onSuccess={fetchData} />
+      <SalesOrderDetailsModal record={selectedRecordForDetails} isOpen={isDetailsOpen} onClose={() => { setIsDetailsOpen(false); setSelectedRecordForDetails(null); }} onSuccess={fetchData} onEdit={(rec) => { setIsDetailsOpen(false); setSelectedRecordForDetails(null); setEditRecord(rec); setIsModalOpen(true); }} onApprove={handleApprove} />
     </div>
   );
 }
