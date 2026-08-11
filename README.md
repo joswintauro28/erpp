@@ -71,8 +71,7 @@ graph TD
     %% DOMAIN 1: CRM & SALES
     %% ==========================================
     subgraph CRM ["1. CRM & Order Management (Domain: Sales)"]
-        RouteRequest --> M1(Marketing Campaign)
-        M1 --> M2(Lead Capture)
+        RouteRequest --> M2(Lead Capture)
         M2 --> M3(Lead Scoring & Nurture)
         M3 --> M4{MQL Criteria Met?}
         M4 -- No --> M3
@@ -194,7 +193,7 @@ graph TD
     %% Apply Classes
     class Client client;
     class APIGateway,AuthCheck,RouteRequest iam;
-    class M1,M2,M3,S1,S2,S3,S4,S6,S7,S9,O1 marketing;
+    class M2,M3,S1,S2,S3,S4,S6,S7,S9,O1 marketing;
     class O1,O3,O4 sales;
     class I1,I3,P1,P2,P3,P4,P5,M1_Prod,M2_Prod,M3_Prod,M4_Prod,I5,I6,I7,I8,I9,I10 inventory;
     class A1,AP1,A2,A3,A4,A6,A7,A8,F1,F2,F3,F4,F5,F6 finance;
@@ -224,13 +223,13 @@ graph TD
 
     %% ==========================================
 
-    %% PHASE 1: MARKETING & CRM (Acquisition)
+    %% PHASE 1: CRM (Acquisition)
 
     %% ==========================================
 
-    subgraph CRM ["1. Marketing & CRM (Lead to Opportunity)"]
+    subgraph CRM ["1. CRM (Lead to Opportunity)"]
 
-        M1([Marketing Campaign]) --> M2(Lead Capture)
+        M2(Lead Capture)
 
         M2 --> M3(Lead Scoring & Nurture)
 
@@ -428,7 +427,7 @@ graph TD
 
     %% Apply Classes
 
-    class M1,M2,M3,S1,S2,S3,S4,S6,S7,S9,O1 marketing;
+    class M2,M3,S1,S2,S3,S4,S6,S7,S9,O1 marketing;
 
     class O1,O3,O4 sales;
 
@@ -479,7 +478,7 @@ Each service operates on its own dedicated PostgreSQL database target. In local 
 | `erp_iam` | `core-iam` | SSO user credentials, global roles, permissions mapping |
 | `erp_billing` | `billing-service` | Financial invoices, payments, credit/debit records, quotations |
 | `erp_inventory` | `inventory-service` | Product catalog items, stock records, warehouses, and PO listings |
-| `erp_crm` | `crm-service` | Sales leads, client accounts, interactions tracking |
+| `erp_crm` | `crm-service` | Sales leads, client accounts, opportunities, sales orders & quotations |
 | `erp_db` | `erp-service` | Central business gateway stats |
 
 ---

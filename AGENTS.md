@@ -254,12 +254,12 @@ DATAVEX ERP utilizes a decoupled backend architecture where each business domain
 
 | Module | Endpoints | Key Features |
 |--------|-----------|-------------|
-| **Dashboard** | `GET /api/dashboard` | Aggregated KPIs: pipeline value, open opps, active customers, open complaints, pipeline stages, recommendations, hot leads |
-| **Customer** | `GET /api/customers`, `POST /api/customers`, `PUT /api/customers/:id_str`, `DELETE /api/customers/:id_str` (via generic CRUD) | Account, industry, tier, ARR tracking, contacts, documents |
+| **Dashboard** | `GET /api/dashboard` | Aggregated KPIs: pipeline value, open opps, active customers, pipeline stages, recommendations, hot leads |
+| **Customer** | `GET /api/customers`, `POST /api/customers`, `PUT /api/customers/:id_str`, `DELETE /api/customers/:id_str` (via generic CRUD) | Account, industry, tier, ARR, **credit limit** (enforced by the billing credit check on SO approval), status, contacts, documents |
 | **Lead** | `GET /api/leads`, `POST /api/leads`, etc. (via generic CRUD) | Lead scoring, source tracking, status lifecycle (New→Qualified→Converted/Lost) |
 | **Sales** | `GET /api/sales`, `POST /api/quotations`, `POST /api/sales-orders`, etc. | Requirements, quotations, sales orders with status lifecycle |
-| **Interaction** | `GET /api/enquiries`, `POST /api/site-visits`, etc. | Enquiries, site visits, follow-ups, tasks, communications, visit plans |
-| **Service** | `GET /api/complaints`, `POST /api/feedback` | Complaint tracking, feedback scoring |
+| **Interaction** *(planned — Service-Desk)* | — | Enquiries, site visits, follow-ups, tasks, communications, visit plans — **not in this service**; will ship as part of the future Service-Desk module |
+| **Service** *(planned — Service-Desk)* | — | Complaint tracking, feedback scoring — **not in this service**; will ship as part of the future Service-Desk module |
 | **AI** | `GET /api/ai-assistant` | AI assistant query log |
 | **Generic CRUD** | `GET /api/:entity_type/fields`, `POST /api/:entity_type`, `PUT /api/:entity_type/:id_str`, `DELETE /api/:entity_type/:id_str` | Dynamic CRUD for all entity types with auto-generated ID strings |
 

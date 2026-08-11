@@ -76,8 +76,7 @@ graph TD
     %% DOMAIN 1: CRM & SALES
     %% ==========================================
     subgraph CRM ["1. CRM & Order Management (Domain: Sales)"]
-        RouteRequest --> M1(Marketing Campaign)
-        M1 --> M2(Lead Capture)
+        RouteRequest --> M2(Lead Capture)
         M2 --> M3(Lead Scoring & Nurture)
         M3 --> M4{MQL Criteria Met?}
         M4 -- No --> M3
@@ -199,7 +198,7 @@ graph TD
     %% Apply Classes
     class Client client;
     class APIGateway,AuthCheck,RouteRequest iam;
-    class M1,M2,M3,S1,S2,S3,S4,S6,S7,S9,O1 marketing;
+    class M2,M3,S1,S2,S3,S4,S6,S7,S9,O1 marketing;
     class O1,O3,O4 sales;
     class I1,I3,P1,P2,P3,P4,P5,M1_Prod,M2_Prod,M3_Prod,M4_Prod,I5,I6,I7,I8,I9,I10 inventory;
     class A1,AP1,A2,A3,A4,A6,A7,A8,F1,F2,F3,F4,F5,F6 finance;
@@ -229,13 +228,13 @@ graph TD
 
     %% ==========================================
 
-    %% PHASE 1: MARKETING & CRM (Acquisition)
+    %% PHASE 1: CRM (Acquisition)
 
     %% ==========================================
 
-    subgraph CRM ["1. Marketing & CRM (Lead to Opportunity)"]
+    subgraph CRM ["1. CRM (Lead to Opportunity)"]
 
-        M1([Marketing Campaign]) --> M2(Lead Capture)
+        M2(Lead Capture)
 
         M2 --> M3(Lead Scoring & Nurture)
 
@@ -433,7 +432,7 @@ graph TD
 
     %% Apply Classes
 
-    class M1,M2,M3,S1,S2,S3,S4,S6,S7,S9,O1 marketing;
+    class M2,M3,S1,S2,S3,S4,S6,S7,S9,O1 marketing;
 
     class O1,O3,O4 sales;
 
@@ -473,7 +472,7 @@ Each core domain folder in your project owns its own data store completely:
 You will need **5 separate logical databases** (which can be hosted on a single server engine locally, but split apart in production):
 
 1. `erp_iam` (Core IAM): Stores global users, password hashes, organizations, tenants, master roles, and global system metadata (PostgreSQL via Prisma).
-2. `erp_crm`: Stores leads, clients, sales pipelines, and customer interactions (PostgreSQL via SQLModel).
+2. `erp_crm`: Stores leads, clients, sales pipelines, opportunities, and sales orders (PostgreSQL via SQLAlchemy 2.0).
 3. `erp_billing`: Stores invoices, quotations, payments, receipts, and the general accounting ledger (PostgreSQL via Prisma).
 4. `erp_inventory`: Stores product catalogs, warehouse locations, stock levels, batches, and serial tracking numbers (PostgreSQL via SQLModel).
 5. `erp_hrms`: Stores employee files, payroll history, attendance logs, and internal department structures (PostgreSQL via Prisma).
