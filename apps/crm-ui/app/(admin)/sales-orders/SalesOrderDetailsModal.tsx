@@ -141,6 +141,9 @@ export default function SalesOrderDetailsModal({
   };
 
   const renderFrameContent = () => {
+    const inr = (v: any) =>
+      v != null && !isNaN(Number(v)) ? `₹${Number(v).toLocaleString("en-IN")}` : "N/A";
+    const cd = record.credit_check_detail || {};
     const fields = [
       { label: "Order No", value: record.so_no },
       { label: "Company Name", value: record.account },
@@ -149,6 +152,9 @@ export default function SalesOrderDetailsModal({
       { label: "ETA", value: record.eta },
       { label: "Status", value: record.status },
       { label: "Credit Status", value: record.credit_check_status || "Not Checked" },
+      { label: "Credit Limit", value: cd.unlimited || cd.credit_limit == null ? "Unlimited" : inr(cd.credit_limit) },
+      { label: "Credit Exposure", value: cd.outstanding != null ? inr(cd.outstanding) : "N/A" },
+      { label: "Available Credit", value: cd.available_credit != null ? inr(cd.available_credit) : "N/A" },
       { label: "Approval Status", value: record.approval_status || "Pending" },
       { label: "Representative", value: record.owner },
     ];
@@ -197,7 +203,9 @@ export default function SalesOrderDetailsModal({
     );
   };
 
-  const APPROVABLE = ["Pending", "Confirmed", "Approved"];
+  // "Hold"/"Stock Hold" stay approvable so a held order can be re-run through
+  // the approval pipeline once credit exposure or stock changes.
+  const APPROVABLE = ["Pending", "Confirmed", "Approved", "Hold", "Stock Hold"];
   const canApprove = APPROVABLE.includes(record.status);
 
   return (

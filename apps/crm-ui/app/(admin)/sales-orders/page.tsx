@@ -40,27 +40,41 @@ export default function SalesOrdersPage() {
     }
   };
 
+  // O2/O3/O4: the dedicated /approve endpoint runs the synchronous Billing
+  // credit check first (O2), places the SO on Hold when it fails (O3), then
+  // runs the stock check and publishes crm.order.approved to inventory (O4).
   const handleApprove = async (record: any) => {
     try {
-      const check = await api.post<any>(`/sales-orders/${record.id_str}/check-stock`);
-      
-      const payload = {
-        ...record,
-        status: check.available ? 'Paid' : 'Stock Hold',
-      };
+      const res = await api.post<any>(`/sales-orders/${record.id_str}/approve`);
 
-      await api.put(`/sales-orders/${record.id_str}`, payload);
-
-      if (check.available) {
-        alert('Stock available — order confirmed.');
-        toastSuccess("Sales order approved", `${record.so_no} approved — fulfillment started.`);
+      if (res.approved) {
+        if (res.status === "Stock Hold") {
+          toastWarning("Sales order on hold", `${res.so_no || record.so_no} placed on Stock Hold: stock unavailable — shortage auto-procurement started.`);
+        } else {
+          const cd = res.credit || {};
+          const limitNote =
+            cd.unlimited
+              ? " (no credit limit configured)"
+              : cd.credit_limit != null
+              ? ` (limit ₹${Number(cd.credit_limit).toLocaleString("en-IN")}, available ₹${Number(cd.available_credit ?? 0).toLocaleString("en-IN")})`
+              : "";
+          toastSuccess("Sales order approved", `${res.so_no || record.so_no} approved — fulfillment started${limitNote}.`);
+        }
+      } else if (res.reason === "credit") {
+        const cd = res.credit || {};
+        const over = cd.over_limit_amount != null
+          ? ` over by ₹${Number(cd.over_limit_amount).toLocaleString("en-IN")}`
+          : "";
+        const limitText = cd.credit_limit != null
+          ? `₹${Number(cd.credit_limit).toLocaleString("en-IN")}`
+          : "no limit";
+        const exposure = cd.outstanding != null ? Number(cd.outstanding) : 0;
+        toastError(
+          "Financial hold",
+          `${res.so_no || record.so_no} placed on Hold: credit limit ${limitText} exceeded (outstanding ₹${exposure.toLocaleString("en-IN")} + order value)${over}.`
+        );
       } else {
-        const shortItems = (check.items || [])
-          .filter((i: any) => !i.is_available)
-          .map((i: any) => `- ${i.product_name || i.sku || i.product_id} (needed ${i.requested_quantity}, available ${i.available_quantity})`)
-          .join('\n');
-        alert(`Insufficient stock — order placed on Stock Hold. Inventory accounts have been notified.\n\nShort items:\n${shortItems}`);
-        toastWarning("Sales order on hold", `${record.so_no} placed on Stock Hold: stock unavailable.`);
+        toastWarning("Sales order on hold", `${res.so_no || record.so_no} placed on ${res.status || "Hold"}.`);
       }
       fetchData();
     } catch (err) {

@@ -30,6 +30,7 @@ export default function CustomerCreateModal({
     industry: "Software",
     tier: "Silver",
     arr: 0,
+    credit_limit: null as number | null,
     status: "Prospect",
     owner: "",
   });
@@ -38,24 +39,29 @@ export default function CustomerCreateModal({
 
   useEffect(() => {
     if (isOpen) {
+      const base = {
+        account: "",
+        industry: "Software",
+        tier: "Silver",
+        arr: 0,
+        credit_limit: null as number | null,
+        status: "Prospect",
+        owner: "",
+      };
       if (editRecord) {
         setFormData({
+          ...base,
           account: editRecord.account || "",
           industry: editRecord.industry || "Software",
           tier: editRecord.tier || "Silver",
           arr: editRecord.arr || 0,
+          credit_limit:
+            editRecord.credit_limit != null ? Number(editRecord.credit_limit) : null,
           status: editRecord.status || "Prospect",
           owner: editRecord.owner || "",
         });
       } else {
-        setFormData({
-          account: "",
-          industry: "Software",
-          tier: "Silver",
-          arr: 0,
-          status: "Prospect",
-          owner: "",
-        });
+        setFormData(base);
       }
       setError("");
     }
@@ -67,7 +73,14 @@ export default function CustomerCreateModal({
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: name === "arr" ? parseFloat(value) || 0 : value,
+      [name]:
+        name === "arr"
+          ? parseFloat(value) || 0
+          : name === "credit_limit"
+          ? value === ""
+            ? null
+            : parseFloat(value)
+          : value,
     }));
   };
 
@@ -194,6 +207,25 @@ export default function CustomerCreateModal({
                 required
                 className="h-9 border-[var(--shell-border)] bg-[var(--shell-bg)] text-xs text-[var(--shell-foreground)] focus:ring-1 focus:ring-primary"
               />
+            </div>
+
+            <div className="space-y-1">
+              <Label htmlFor="credit_limit" className="text-xs font-semibold uppercase tracking-wider text-[var(--shell-muted)]">
+                Credit Limit (INR)
+              </Label>
+              <Input
+                id="credit_limit"
+                name="credit_limit"
+                type="number"
+                min="0"
+                value={formData.credit_limit ?? ""}
+                onChange={handleChange}
+                placeholder="Leave empty for unlimited credit"
+                className="h-9 border-[var(--shell-border)] bg-[var(--shell-bg)] text-xs text-[var(--shell-foreground)] focus:ring-1 focus:ring-primary"
+              />
+              <p className="text-[10px] text-[var(--shell-muted)]">
+                Enforced by the billing credit check on order approval. Empty = no limit.
+              </p>
             </div>
 
             <div className="space-y-1">

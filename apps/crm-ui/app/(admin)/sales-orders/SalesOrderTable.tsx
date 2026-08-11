@@ -5,7 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Edit2, Trash2, BadgeCheck, Lock } from "lucide-react";
 
-const APPROVABLE = ["Pending", "Confirmed", "Approved"];
+// "Hold" is approvable so a held order can be re-run through the approval
+// pipeline once the credit exposure changes (limit raised, invoices paid).
+const APPROVABLE = ["Pending", "Confirmed", "Approved", "Hold", "Stock Hold"];
 
 const badgeVariant = (status: string) => {
   switch (status) {

@@ -104,6 +104,24 @@ export default function CustomerDetailsModal({
 
             <div className="space-y-1">
               <span className="text-[10px] font-semibold uppercase tracking-wider text-[var(--shell-muted)] block">
+                Credit Limit
+              </span>
+              <span
+                className={`text-sm font-semibold flex items-center gap-0.5 ${
+                  record.credit_limit != null && record.credit_limit > 0
+                    ? "text-[var(--shell-foreground)]"
+                    : "text-emerald-600"
+                }`}
+                title={record.credit_limit ? "Enforced on sales order approval" : "No limit configured — orders are not blocked"}
+              >
+                {record.credit_limit != null && record.credit_limit > 0
+                  ? `₹${Number(record.credit_limit).toLocaleString("en-IN")}`
+                  : "Unlimited"}
+              </span>
+            </div>
+
+            <div className="space-y-1">
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-[var(--shell-muted)] block">
                 Account Owner
               </span>
               <span className="text-sm font-medium text-[var(--shell-foreground)] flex items-center gap-1">

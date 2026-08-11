@@ -38,27 +38,30 @@ async def seed():
             await db.commit()
 
             # ── Customers (10) ───────────────────────────────────────────
+            # credit_limit (INR) drives the ERP credit check on SO approval:
+            # NULL/0 => unlimited; otherwise the order is blocked when
+            # outstanding + order value would exceed the limit.
             customers = [
                 Customer(id_str="CUST-0001", account="Meridian Foods", industry="Food Processing",
-                         tier="Enterprise", arr=240000, status="Active", owner="Maya Patel", updated_at=ago(1)),
+                         tier="Enterprise", arr=240000, credit_limit=500000, status="Active", owner="Maya Patel", updated_at=ago(1)),
                 Customer(id_str="CUST-0002", account="Cirrus Aviation", industry="Aerospace",
-                         tier="Enterprise", arr=520000, status="Active", owner="Maya Patel", updated_at=ago(0)),
+                         tier="Enterprise", arr=520000, credit_limit=900000, status="Active", owner="Maya Patel", updated_at=ago(0)),
                 Customer(id_str="CUST-0003", account="Halcyon Media", industry="Media & Entertainment",
-                         tier="Mid-Market", arr=85000, status="Active", owner="Maya Patel", updated_at=ago(2)),
+                         tier="Mid-Market", arr=85000, credit_limit=150000, status="Active", owner="Maya Patel", updated_at=ago(2)),
                 Customer(id_str="CUST-0004", account="Orbit Health", industry="Healthcare",
-                         tier="Enterprise", arr=180000, status="Active", owner="Alex Chen", updated_at=ago(1)),
+                         tier="Enterprise", arr=180000, credit_limit=400000, status="Active", owner="Alex Chen", updated_at=ago(1)),
                 Customer(id_str="CUST-0005", account="Bristow Textiles", industry="Textiles",
-                         tier="Mid-Market", arr=62000, status="Prospect", owner="Maya Patel", updated_at=ago(3)),
+                         tier="Mid-Market", arr=62000, credit_limit=250000, status="Prospect", owner="Maya Patel", updated_at=ago(3)),
                 Customer(id_str="CUST-0006", account="Nimbus Technologies", industry="Technology",
-                         tier="Enterprise", arr=350000, status="Active", owner="Maya Patel", updated_at=ago(0)),
+                         tier="Enterprise", arr=350000, credit_limit=600000, status="Active", owner="Maya Patel", updated_at=ago(0)),
                 Customer(id_str="CUST-0007", account="Solara Renewable Energy", industry="Renewable Energy",
-                         tier="Enterprise", arr=410000, status="Active", owner="Alex Chen", updated_at=ago(1)),
+                         tier="Enterprise", arr=410000, credit_limit=900000, status="Active", owner="Alex Chen", updated_at=ago(1)),
                 Customer(id_str="CUST-0008", account="Pinnacle Realty Group", industry="Real Estate",
-                         tier="Gold", arr=95000, status="Active", owner="Maya Patel", updated_at=ago(2)),
+                         tier="Gold", arr=95000, credit_limit=250000, status="Active", owner="Maya Patel", updated_at=ago(2)),
                 Customer(id_str="CUST-0009", account="Titan Defence Systems", industry="Defence",
-                         tier="Enterprise", arr=680000, status="Active", owner="Alex Chen", updated_at=ago(0)),
+                         tier="Enterprise", arr=680000, credit_limit=1500000, status="Active", owner="Alex Chen", updated_at=ago(0)),
                 Customer(id_str="CUST-0010", account="Delta Automotive", industry="Automotive",
-                         tier="Mid-Market", arr=78000, status="Dormant", owner="Maya Patel", updated_at=ago(5)),
+                         tier="Mid-Market", arr=78000, credit_limit=400000, status="Dormant", owner="Maya Patel", updated_at=ago(5)),
             ]
             db.add_all(customers)
             await db.flush()

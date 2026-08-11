@@ -190,6 +190,25 @@ async def finalize_approved_sales_order(db: AsyncSession, so, token_payload: dic
 
     if so.status in SO_CREDIT_CHECK_STATUSES:
         from app.core.billing_client import credit_check
+        from app.customers.models import Customer
+        from sqlalchemy import select as sa_select
+
+        # ERP convention: resolve the customer's configured credit limit. A
+        # missing/zero limit means unlimited credit — we pass nothing and
+        # billing fail-opens instead of applying an arbitrary default.
+        credit_limit = None
+        try:
+            cust_res = await db.execute(
+                sa_select(Customer).filter(Customer.account == so.account)
+            )
+            customer = cust_res.scalars().first()
+            if customer is not None and customer.credit_limit is not None:
+                credit_limit = float(customer.credit_limit)
+                if credit_limit <= 0:
+                    credit_limit = None
+        except Exception as e:
+            logger.warning(f"Could not resolve credit limit for {so.account}: {str(e)}")
+
         credit_detail = {"status": "Not Checked"}
         try:
             try:
@@ -200,6 +219,7 @@ async def finalize_approved_sales_order(db: AsyncSession, so, token_payload: dic
                 token_payload.get("_raw_token", ""),
                 client_name=so.account,
                 amount=credit_amount,
+                credit_limit=credit_limit,
             )
             credit_detail = {
                 "status": "approved" if credit_result.get("approved") else "rejected",
@@ -207,6 +227,8 @@ async def finalize_approved_sales_order(db: AsyncSession, so, token_payload: dic
                 "outstanding": credit_result.get("outstanding"),
                 "credit_limit": credit_result.get("credit_limit"),
                 "available_credit": credit_result.get("available_credit"),
+                "over_limit_amount": credit_result.get("over_limit_amount"),
+                "unlimited": credit_result.get("unlimited"),
                 "amount": credit_amount,
                 "checked_at": datetime.utcnow().strftime("%Y-%m-%d %H:%M"),
             }
