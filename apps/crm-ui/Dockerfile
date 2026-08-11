@@ -1,10 +1,17 @@
-FROM node:24-alpine AS base
+FROM node:22-alpine AS base
 WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
 COPY --from=oven/bun:1.2-alpine /usr/local/bin/bun /usr/local/bin/bun
 
+# Optional outbound proxy for `apk add` (e.g. Docker Desktop proxy on restricted
+# networks). Populated from compose build args; empty by default so normal
+# networks fetch directly. Uses a neutral name (not HTTP_PROXY) so bun installs
+# in child stages never inherit proxy env — bun breaks on the Docker Desktop
+# proxy while apk requires it.
+ARG BUILD_PROXY
+
 FROM base AS deps
-RUN apk add --no-cache libc6-compat
+RUN HTTP_PROXY="${BUILD_PROXY:-}" HTTPS_PROXY="${BUILD_PROXY:-}" apk add --no-cache libc6-compat
 
 COPY package.json bun.lock nx.json ./
 COPY apps/erp-shell/package.json apps/erp-shell/
@@ -35,7 +42,7 @@ ENV NEXT_PUBLIC_SHELL_APP_URL=$NEXT_PUBLIC_SHELL_APP_URL \
 RUN --mount=type=cache,target=/app/apps/crm-ui/.next/cache \
     mkdir -p apps/crm-ui/public && cd apps/crm-ui && bun run build
 
-FROM node:24-alpine AS runner
+FROM node:22-alpine AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production \
@@ -43,7 +50,9 @@ ENV NODE_ENV=production \
     PORT=3001 \
     HOSTNAME="0.0.0.0"
 
-RUN apk add --no-cache dumb-init
+ARG BUILD_PROXY
+
+RUN HTTP_PROXY="${BUILD_PROXY:-}" HTTPS_PROXY="${BUILD_PROXY:-}" apk add --no-cache dumb-init
 
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs

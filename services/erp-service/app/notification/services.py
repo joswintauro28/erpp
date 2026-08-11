@@ -22,6 +22,7 @@ class NotificationStore:
             organization_id=data.organization_id,
             user_id=data.user_id,
             role=data.role,
+            permission=data.permission,
             target_name=data.target_name,
             title=data.title,
             message=data.message,
@@ -40,18 +41,27 @@ class NotificationStore:
         organization_id: int,
         user_id: int | None = None,
         role: str | None = None,
+        permissions: list[str] | None = None,
         name: str | None = None,
         limit: int = 50,
         only_unread: bool = False,
     ) -> list[Notification]:
         """Return notifications targeted at this user: their own, their role,
-        or a name match on their full name."""
+        their permission codes (from the JWT), or a name match on their
+        full name/email."""
         stmt = select(Notification).where(Notification.organization_id == organization_id)
         or_conditions = []
         if user_id is not None:
             or_conditions.append(Notification.user_id == user_id)
         if role:
             or_conditions.append(Notification.role == role)
+        if permissions:
+            or_conditions.append(Notification.permission.in_(permissions))
+        elif role and role.strip().lower() == "organization owner":
+            # Owner bypasses permission checks (mirrors deps.require_permission
+            # and the WS gateway): sees every permission-targeted notification
+            # even when the JWT carries no explicit permission list.
+            or_conditions.append(Notification.permission.is_not(None))
         if name:
             or_conditions.append(Notification.target_name.ilike(f"%{name}%"))
             # JWTs carry emails; event payloads carry display names. Match the
@@ -81,6 +91,7 @@ class NotificationStore:
         organization_id: int,
         user_id: int | None = None,
         role: str | None = None,
+        permissions: list[str] | None = None,
         name: str | None = None,
     ) -> Notification | None:
         """Mark one notification read, but only if it is targeted at the caller.
@@ -97,6 +108,10 @@ class NotificationStore:
             or_conditions.append(Notification.user_id == user_id)
         if role:
             or_conditions.append(Notification.role == role)
+        if permissions:
+            or_conditions.append(Notification.permission.in_(permissions))
+        elif role and role.strip().lower() == "organization owner":
+            or_conditions.append(Notification.permission.is_not(None))
         if name:
             or_conditions.append(Notification.target_name.ilike(f"%{name}%"))
         if or_conditions:

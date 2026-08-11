@@ -56,6 +56,8 @@ services:
     build:
       context: ../../
       dockerfile: services/core-iam/Dockerfile
+      args:
+        BUILD_PROXY: ${HTTP_PROXY:-}
     container_name: datavex-core-iam
     restart: unless-stopped
     environment:
@@ -84,6 +86,8 @@ services:
     build:
       context: ../../
       dockerfile: services/billing-service/Dockerfile
+      args:
+        BUILD_PROXY: ${HTTP_PROXY:-}
     container_name: datavex-billing-service
     restart: unless-stopped
     environment:
@@ -192,6 +196,7 @@ services:
       context: ../../
       dockerfile: apps/erp-shell/Dockerfile
       args:
+        BUILD_PROXY: ${HTTP_PROXY:-}
         NEXT_PUBLIC_BILLING_APP_URL: ${BILLING_APP_URL:-http://billing.erp.local}
         NEXT_PUBLIC_CRM_APP_URL: ${CRM_APP_URL:-http://crm.erp.local}
         NEXT_PUBLIC_INVENTORY_APP_URL: ${INVENTORY_APP_URL:-http://inventory.erp.local}
@@ -233,6 +238,7 @@ services:
       context: ../../
       dockerfile: apps/crm-ui/Dockerfile
       args:
+        BUILD_PROXY: ${HTTP_PROXY:-}
         NEXT_PUBLIC_SHELL_APP_URL: ${SHELL_APP_URL:-http://app.erp.local}
         NEXT_PUBLIC_APP_URL: ${CRM_APP_URL:-http://crm.erp.local}
     container_name: datavex-crm-shell
@@ -268,6 +274,7 @@ services:
       context: ../../
       dockerfile: apps/billing-ui/Dockerfile
       args:
+        BUILD_PROXY: ${HTTP_PROXY:-}
         NEXT_PUBLIC_SHELL_APP_URL: ${SHELL_APP_URL:-http://app.erp.local}
         NEXT_PUBLIC_APP_URL: ${BILLING_APP_URL:-http://billing.erp.local}
     container_name: datavex-billing-ui
@@ -303,6 +310,7 @@ services:
       context: ../../
       dockerfile: apps/inventory-ui/Dockerfile
       args:
+        BUILD_PROXY: ${HTTP_PROXY:-}
         NEXT_PUBLIC_SHELL_APP_URL: ${SHELL_APP_URL:-http://app.erp.local}
         NEXT_PUBLIC_APP_URL: ${INVENTORY_APP_URL:-http://inventory.erp.local}
     container_name: datavex-inventory-ui

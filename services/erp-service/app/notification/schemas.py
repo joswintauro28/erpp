@@ -10,6 +10,7 @@ class NotificationCreate(BaseModel):
     organization_id: int = 1
     user_id: int | None = None
     role: str | None = None
+    permission: str | None = None
     target_name: str | None = None
     title: str
     message: str
@@ -24,6 +25,7 @@ class NotificationOut(BaseModel):
     organization_id: int
     user_id: int | None = None
     role: str | None = None
+    permission: str | None = None
     target_name: str | None = None
     title: str
     message: str

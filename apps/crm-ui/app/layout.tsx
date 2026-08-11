@@ -1,26 +1,26 @@
 import type { Metadata } from "next";
-import { Montserrat, Inter, JetBrains_Mono } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { NotificationProvider } from "@datavex/ui-theme";
 import ToastContainer from "@/components/ToastContainer";
 
-const montserrat = Montserrat({
+const montserrat = localFont({
+  src: "./fonts/montserrat-variable.woff2",
   variable: "--font-montserrat",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  weight: "100 900",
 });
 
-const inter = Inter({
+const inter = localFont({
+  src: "./fonts/inter-variable.woff2",
   variable: "--font-inter",
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
+  weight: "100 900",
 });
 
-const jetbrainsMono = JetBrains_Mono({
+const jetbrainsMono = localFont({
+  src: "./fonts/jetbrains-mono-variable.woff2",
   variable: "--font-jetbrains-mono",
-  subsets: ["latin"],
-  weight: ["400", "500"],
+  weight: "100 900",
 });
 
 export const metadata: Metadata = {

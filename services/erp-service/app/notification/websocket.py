@@ -25,8 +25,8 @@ class ConnectionManager:
         # user_id -> list of (websocket, meta)
         self._by_user: dict[int, list[tuple[WebSocket, dict]]] = {}
 
-    async def connect(self, websocket: WebSocket, *, user_id: int, role: str, name: str) -> None:
-        meta = {"user_id": user_id, "role": role, "name": name}
+    async def connect(self, websocket: WebSocket, *, user_id: int, role: str, name: str, permissions: list[str] | None = None) -> None:
+        meta = {"user_id": user_id, "role": role, "name": name, "permissions": [p.lower() for p in (permissions or [])]}
         async with self._lock:
             self._by_user.setdefault(user_id, []).append((websocket, meta))
         logger.info(f"WS connected: user {user_id} ({role}) — {len(self._by_user.get(user_id, []))} socket(s)")
@@ -39,7 +39,14 @@ class ConnectionManager:
                 self._by_user.pop(user_id, None)
         logger.info(f"WS disconnected: user {user_id}")
 
-    def _users_matching(self, *, user_id: int | None = None, role: str | None = None, name: str | None = None) -> list[tuple[WebSocket, dict]]:
+    def _users_matching(
+        self,
+        *,
+        user_id: int | None = None,
+        role: str | None = None,
+        permission: str | None = None,
+        name: str | None = None,
+    ) -> list[tuple[WebSocket, dict]]:
         matches = []
         for uid, sockets in self._by_user.items():
             for ws, meta in sockets:
@@ -49,14 +56,31 @@ class ConnectionManager:
                 if role and meta.get("role", "").lower() == role.lower():
                     matches.append((ws, meta))
                     continue
+                if permission:
+                    # Audience = anyone holding the permission code. The
+                    # Organization Owner bypasses permission checks (mirrors
+                    # require_permission in core/deps.py) even if their JWT was
+                    # issued without an explicit permission list.
+                    perms = meta.get("permissions", [])
+                    if permission.lower() in perms or meta.get("role", "").lower() == "organization owner":
+                        matches.append((ws, meta))
+                        continue
                 if name and _name_matches(meta.get("name", ""), name):
                     matches.append((ws, meta))
                     continue
         return matches
 
-    async def broadcast_payload(self, payload: dict, *, user_id: int | None = None, role: str | None = None, name: str | None = None) -> int:
+    async def broadcast_payload(
+        self,
+        payload: dict,
+        *,
+        user_id: int | None = None,
+        role: str | None = None,
+        permission: str | None = None,
+        name: str | None = None,
+    ) -> int:
         """Send `payload` to every matching socket. Returns count delivered."""
-        sockets = self._users_matching(user_id=user_id, role=role, name=name)
+        sockets = self._users_matching(user_id=user_id, role=role, permission=permission, name=name)
         if not sockets:
             return 0
         message = json.dumps(payload, default=str)
@@ -132,9 +156,10 @@ async def ws_notifications(websocket: WebSocket):
     user_id = int(payload.get("user_id") or payload.get("sub") or 0)
     role = str(payload.get("role") or "")
     name = str(payload.get("full_name") or payload.get("email") or "")
+    permissions = list(payload.get("permissions") or [])
 
     await websocket.accept()
-    await manager.connect(websocket, user_id=user_id, role=role, name=name)
+    await manager.connect(websocket, user_id=user_id, role=role, name=name, permissions=permissions)
 
     # Greeting so the client can confirm the live pipe is open.
     try:
@@ -171,5 +196,6 @@ async def push_live_notification(notification: dict) -> int:
         payload,
         user_id=notification.get("user_id"),
         role=notification.get("role"),
+        permission=notification.get("permission"),
         name=notification.get("target_name"),
     )

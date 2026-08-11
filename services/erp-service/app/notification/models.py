@@ -20,10 +20,15 @@ class Notification(Base):
     id: Mapped[int] = mapped_column(sa.Integer, primary_key=True)
     organization_id: Mapped[int] = mapped_column(sa.Integer, nullable=False, default=1, index=True)
 
-    # Targeting: either a specific user_id, a role, or a name (matched against
-    # the JWT full_name of connected sockets). At least one should be set.
+    # Targeting: a specific user_id, a role, a permission code, or a name
+    # (matched against the JWT full_name/email of connected sockets). At least
+    # one should be set. Permission targeting is the primary mechanism: the
+    # recipient is anyone whose JWT `permissions` includes the code (e.g.
+    # stock.view reaches Inventory Manager + Organization Owner), so audience
+    # follows the IAM role model instead of hardcoded role names.
     user_id: Mapped[int | None] = mapped_column(sa.Integer, nullable=True, index=True)
     role: Mapped[str | None] = mapped_column(sa.String(100), nullable=True, index=True)
+    permission: Mapped[str | None] = mapped_column(sa.String(100), nullable=True, index=True)
     target_name: Mapped[str | None] = mapped_column(sa.String(255), nullable=True)
 
     title: Mapped[str] = mapped_column(sa.String(255), nullable=False)

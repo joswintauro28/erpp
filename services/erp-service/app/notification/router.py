@@ -14,11 +14,16 @@ router = APIRouter(tags=["notifications"])
 
 
 def _target_from_payload(payload: dict) -> dict:
-    """Extract the user's targeting fields from the verified JWT payload."""
+    """Extract the user's targeting fields from the verified JWT payload.
+
+    `permissions` comes straight from the core-iam JWT claim, so permission-
+    targeted notifications (e.g. stock.view -> Inventory Manager + admin) are
+    visible to exactly the users who hold the code."""
     return {
         "organization_id": int(payload.get("organization_id") or payload.get("sub") or 1),
         "user_id": int(payload.get("user_id") or payload.get("sub") or 0) or None,
         "role": payload.get("role"),
+        "permissions": list(payload.get("permissions") or []),
         "name": payload.get("full_name") or payload.get("email"),
     }
 
@@ -54,6 +59,7 @@ async def get_notification_history(
     target = _target_from_payload(payload)
     store = NotificationStore(db)
     items = await store.list_for_user(
+        organization_id=target["organization_id"],
         limit=min(limit, 100),
         only_unread=unread_only,
         **{k: v for k, v in target.items() if k != "organization_id"},

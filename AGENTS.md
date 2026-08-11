@@ -386,7 +386,7 @@ All FastAPI microservices expose interactive OpenAPI 3.0 documentation with buil
 The application contains a production-optimized local Docker sandbox configured in `infrastructure/local/`.
 
 ### Docker Architecture Details:
-- **Consistent Alpine Builders**: Node/Bun services compile natively on Alpine-based Node layers (`node:24-alpine`) with Bun copied inside, avoiding glibc vs musl runtime crashes.
+- **Consistent Alpine Builders**: Node/Bun services compile natively on Alpine-based Node layers (`node:22-alpine`) with Bun copied inside, avoiding glibc vs musl runtime crashes.
 - **Next.js Standalone Mode**: Configured to compile to minimal standalone node targets, reducing container image size by ~95% (~100MB instead of ~2GB).
 - **Python Isolation & Auto-Migrations**: FastAPI backends run in virtualenvs (`/opt/venv`), run under non-root permissions, and perform Alembic db migrations (`alembic upgrade head`) automatically on startup.
 - **Consolidated Healthchecks**: All containers run custom, lightweight healthchecks (via Node `http` or Python `urllib`) to track container status inside Compose.
