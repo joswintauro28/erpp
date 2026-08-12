@@ -13,6 +13,7 @@ import {
   Wifi,
   WifiOff,
   Loader2,
+  ClipboardCheck,
 } from "lucide-react";
 
 import { cn } from "../../lib/utils";
@@ -23,6 +24,7 @@ const TYPE_META: Record<string, { icon: typeof Info; cls: string }> = {
   SUCCESS: { icon: CheckCircle2, cls: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" },
   WARNING: { icon: AlertTriangle, cls: "bg-amber-500/10 text-amber-500 border-amber-500/20" },
   ERROR: { icon: XCircle, cls: "bg-red-500/10 text-red-500 border-red-500/20" },
+  ACTION: { icon: ClipboardCheck, cls: "bg-violet-500/10 text-violet-500 border-violet-500/20" },
 };
 
 function ModuleBadge({ source }: { source: string }) {

@@ -53,9 +53,15 @@ class ConnectionManager:
                 if user_id is not None and meta["user_id"] == user_id:
                     matches.append((ws, meta))
                     continue
-                if role and meta.get("role", "").lower() == role.lower():
-                    matches.append((ws, meta))
-                    continue
+                if role:
+                    # Super-role: the Organization Owner receives notifications
+                    # targeted at ANY role (mirrors the store + require_permission).
+                    if (
+                        meta.get("role", "").lower() == role.lower()
+                        or meta.get("role", "").lower() == "organization owner"
+                    ):
+                        matches.append((ws, meta))
+                        continue
                 if permission:
                     # Audience = anyone holding the permission code. The
                     # Organization Owner bypasses permission checks (mirrors

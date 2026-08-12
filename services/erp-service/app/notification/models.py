@@ -20,12 +20,12 @@ class Notification(Base):
     id: Mapped[int] = mapped_column(sa.Integer, primary_key=True)
     organization_id: Mapped[int] = mapped_column(sa.Integer, nullable=False, default=1, index=True)
 
-    # Targeting: a specific user_id, a role, a permission code, or a name
-    # (matched against the JWT full_name/email of connected sockets). At least
-    # one should be set. Permission targeting is the primary mechanism: the
-    # recipient is anyone whose JWT `permissions` includes the code (e.g.
-    # stock.view reaches Inventory Manager + Organization Owner), so audience
-    # follows the IAM role model instead of hardcoded role names.
+    # Targeting: a role name (primary), a specific user_id, a permission code
+    # (legacy), or a display name/email matched against the JWT of connected
+    # sockets. At least one should be set. Role targeting follows the IAM role
+    # model directly: any user whose JWT role matches receives it, and the
+    # Organization Owner sees every role-targeted row (super-role bypass in
+    # the store + WS gateway).
     user_id: Mapped[int | None] = mapped_column(sa.Integer, nullable=True, index=True)
     role: Mapped[str | None] = mapped_column(sa.String(100), nullable=True, index=True)
     permission: Mapped[str | None] = mapped_column(sa.String(100), nullable=True, index=True)
@@ -33,7 +33,7 @@ class Notification(Base):
 
     title: Mapped[str] = mapped_column(sa.String(255), nullable=False)
     message: Mapped[str] = mapped_column(sa.Text, nullable=False)
-    # INFO | SUCCESS | WARNING | ERROR
+    # INFO | SUCCESS | WARNING | ERROR | ACTION
     type: Mapped[str] = mapped_column(sa.String(20), default="INFO", index=True)
     # CRM | BILLING | INVENTORY | SYSTEM
     module_source: Mapped[str] = mapped_column(sa.String(20), default="SYSTEM")

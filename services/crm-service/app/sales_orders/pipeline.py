@@ -24,6 +24,7 @@ SO_APPROVED_STATUSES = ("Confirmed", "Approved", "Paid", "Invoiced", "Delivered"
 SO_CREDIT_CHECK_STATUSES = ("Confirmed", "Approved")
 
 EVENT_ORDER_APPROVED = "crm.order.approved"
+EVENT_ORDER_HELD = "crm.order.held"
 EVENT_ORDER_CANCELLED = "crm.order.cancelled"
 EVENT_FULFILLMENT_STATUS = "inventory.order.fulfillment"
 
@@ -116,6 +117,29 @@ async def publish_crm_order_approved(token_payload: dict, so, stock_result: dict
         logger.error(f"Failed to publish crm.order.approved: {str(e)}", exc_info=True)
 
 
+async def publish_crm_order_held(token_payload: dict, so, reason: str, detail: dict | None = None) -> None:
+    """Publish `crm.order.held` when an SO is placed on Hold (O3).
+
+    reason is "credit" (financial hold — credit check failed) or "stock"
+    (stock hold — ATP shortage). Carries sales_owner so the notification
+    matrix can target the owning rep privately, plus the audit detail.
+    """
+    event_data = {
+        "event": EVENT_ORDER_HELD,
+        "organization_id": token_payload.get("organization_id", 1),
+        "sales_order_code": so.so_no,
+        "so_id": so.id,
+        "customer_name": so.account,
+        "sales_owner": getattr(so, "owner", None) or None,
+        "value": so.value,
+        "status": so.status,
+        "reason": reason,
+        "detail": detail or {},
+        "timestamp": datetime.utcnow().isoformat(),
+    }
+    await _publish(EVENT_ORDER_HELD, event_data)
+
+
 async def publish_fulfillment_event(token_payload: dict, so, stock_result: dict) -> None:
     """Publish the shortage summary in the shared envelope the notifications
     consumer expects: {event, organization_id, payload, timestamp}."""
@@ -162,13 +186,16 @@ async def check_stock_and_hold(token_payload: dict, so, db: AsyncSession) -> dic
     except Exception as e:
         logger.warning(f"Stock check unavailable, defaulting to available: {str(e)}")
         return {"available": True, "overall_available": True, "warehouse_id": None, "items": []}
-
     available = bool(stock_result.get("overall_available", False))
     if not available:
         so.status = "Stock Hold"
         await db.commit()
         await db.refresh(so)
-        await publish_fulfillment_event(token_payload, so, stock_result)
+        # O3 notification: stock shortage -> the owning rep + accounting.
+        await publish_crm_order_held(token_payload, so, "stock", stock_result)
+
+    await db.refresh(so)
+    await publish_fulfillment_event(token_payload, so, stock_result)
     return {
         "available": available,
         "overall_available": stock_result.get("overall_available"),
@@ -254,6 +281,9 @@ async def finalize_approved_sales_order(db: AsyncSession, so, token_payload: dic
                 f"outstanding {credit_result.get('outstanding')} exceeds available credit "
                 f"({credit_result.get('available_credit')})."
             )
+            # O3 notification: accounting tracks exposure, the owning rep
+            # follows up with the client for prepayment / renegotiation.
+            await publish_crm_order_held(token_payload, so, "credit", credit_detail)
             return {
                 "approved": False,
                 "reason": "credit",

@@ -306,6 +306,35 @@ async def create_cpq_quotation(
         organization_id=token_payload.get("organization_id", 1) or 1,
     )
 
+    # S5: quote over the discount threshold -> notify the manager (Organization
+    # Owner per the IAM role matrix) that approval is required.
+    if approval_required and quote_number:
+        try:
+            from app.core.amqp import get_exchange
+            import aio_pika
+            payload = {
+                "quotationNumber": quote_number,
+                "clientName": account,
+                "discount_pct": round(discount_pct, 2),
+                "subtotal": round(subtotal, 2),
+                "requested_by": str(token_payload.get("full_name") or token_payload.get("email") or ""),
+            }
+            event_data = {
+                "event": "crm.quotation.pending_approval",
+                "organization_id": token_payload.get("organization_id", 1) or 1,
+                "payload": payload,
+                "timestamp": datetime.utcnow().isoformat(),
+            }
+            exchange = await get_exchange()
+            if exchange:
+                message = aio_pika.Message(
+                    body=json.dumps(event_data).encode(),
+                    delivery_mode=aio_pika.DeliveryMode.PERSISTENT,
+                )
+                await exchange.publish(message, routing_key="crm.quotation.pending_approval")
+        except Exception:
+            pass
+
     return {
         "quotation": _build_quotation_out(data),
         "approval": {

@@ -12,71 +12,167 @@ logger = logging.getLogger("app.notifications_consumer")
 # Global list to store recent alerts in memory (legacy alert feed)
 recent_alerts = []
 
-# Map routing key -> notification template. Audience is permission-driven:
-#   permissions    -> one row per permission code; anyone whose JWT holds any of
-#                     the codes receives it (e.g. stock.view reaches Inventory
-#                     Manager + Organization Owner/admin, exactly the IAM model)
-#   name_field     -> a row private to the specific user (matched by name/email)
-#   fallback_permission -> shared visibility row on top of the private row
-# Each entry yields (type, module_source, title_template, message_template).
-EVENT_TEMPLATES: dict[str, dict] = {
-    # O1/O4: SO approved in CRM -> inventory must allocate stock.
+# ---------------------------------------------------------------------------
+# Role-based notification matrix (source of truth for the notification
+# channel). Audience is expressed in terms of IAM ROLE NAMES (as seeded in
+# core-iam) plus optional ENTITY-OWNERSHIP targeting:
+#
+#   targets[].roles  -> one row per role; any user whose JWT role matches
+#                       receives it. The Organization Owner sees EVERY
+#                       role-targeted row (super-role bypass, mirrored in the
+#                       store + WS gateway).
+#   targets[].owner  -> a payload field name (e.g. "sales_owner") holding the
+#                       display name/email of the specific user who owns the
+#                       entity; a private row is created for them.
+#
+# Each target may carry its own type/title/message so the same event can say
+# "ATP allocation required" to Inventory and "approved, sent to fulfillment"
+# to the owning sales rep.
+#
+# Role names MUST match core-iam seed: Organization Owner, Accountant, Sales
+# Executive, Inventory Manager, Auditor, Employee.
+# ---------------------------------------------------------------------------
+ROLE_MATRIX: dict[str, dict] = {
+    # O1/O4: SO approved in CRM -> inventory must allocate stock; the owning
+    # sales rep gets a FYI that the order moved to fulfillment.
     "crm.order.approved": {
-        "type": "INFO",
         "module_source": "CRM",
-        "title": "New Sales Order Approved",
-        "message": "New Sales Order {code} requires stock allocation.",
-        "permissions": ["stock.view"],  # Inventory Manager + admin
+        "targets": [
+            {
+                "roles": ["Inventory Manager"],
+                "type": "ACTION",
+                "title": "New Sales Order Approved",
+                "message": "New Sales Order {code} approved — ATP allocation required.",
+            },
+            {
+                "owner": "sales_owner",
+                "type": "SUCCESS",
+                "title": "Sales Order Approved",
+                "message": "Sales Order {code} approved and sent to fulfillment.",
+            },
+        ],
+    },
+    # O3: order placed on Hold (credit check failed / stock unavailable). The
+    # owning sales rep must contact the client; accounting tracks exposure.
+    "crm.order.held": {
+        "module_source": "CRM",
+        "targets": [
+            {
+                "roles": ["Accountant"],
+                "type": "WARNING",
+                "title": "Sales Order On Hold",
+                "message": "Sales Order {code} placed on {reason} — credit exposure or stock review required.",
+            },
+            {
+                "owner": "sales_owner",
+                "type": "ERROR",
+                "title": "Sales Order On Hold",
+                "message": "Sales Order {code} placed on {reason}. Contact the client for prepayment or renegotiation.",
+            },
+        ],
+    },
+    # S5/S6: CPQ quote over discount threshold -> manager approval required.
+    "crm.quotation.pending_approval": {
+        "module_source": "CRM",
+        "targets": [
+            {
+                "roles": ["Organization Owner"],
+                "type": "ACTION",
+                "title": "Quotation Requires Approval",
+                "message": "Quote {code} requires approval ({reason} discount).",
+            },
+        ],
     },
     # O4 -> I1/I5: stock reserved for the approved SO (order fulfilment pipeline).
     "inventory.order.reserved": {
-        "type": "SUCCESS",
         "module_source": "INVENTORY",
-        "title": "Stock Reserved",
-        "message": "Stock reserved for Sales Order {code} ({count} item(s)) — ready for picking.",
-        "permissions": ["stock.view"],  # Inventory Manager + admin
+        "targets": [
+            {
+                "roles": ["Inventory Manager"],
+                "type": "SUCCESS",
+                "title": "Stock Reserved",
+                "message": "Stock reserved for Sales Order {code} ({count} item(s)) — ready for picking.",
+            },
+        ],
     },
     # I2 -> No: ATP shortage triggered -> procurement action required.
     "inventory.order.shortage": {
-        "type": "WARNING",
         "module_source": "INVENTORY",
-        "title": "Stock Shortage",
-        "message": "Sales Order {code} is short {count} item(s) — procurement action required.",
-        "permissions": ["stock.manage"],  # Inventory/procurement managers + admin
+        "targets": [
+            {
+                "roles": ["Inventory Manager"],
+                "type": "WARNING",
+                "title": "Stock Shortage",
+                "message": "Sales Order {code} is short {count} item(s) — procurement action required.",
+            },
+        ],
     },
-    # I10 -> A1: order completed, billing invoice auto-generated.
+    # I10 -> A1: order completed, billing invoice auto-generated -> accounting.
     "inventory.order.fulfilled": {
-        "type": "SUCCESS",
         "module_source": "INVENTORY",
-        "title": "Order Completed & Invoiced",
-        "message": "Sales Order {code} fulfilled — invoice auto-generated for billing.",
-        "permissions": ["invoices.view"],  # Accountant + Auditor + admin
+        "targets": [
+            {
+                "roles": ["Accountant"],
+                "type": "SUCCESS",
+                "title": "Order Completed & Invoiced",
+                "message": "Sales Order {code} fulfilled — invoice auto-generated for billing.",
+            },
+        ],
     },
-    # I10 dispatch: notify the specific sales rep, plus everyone with stock
-    # visibility (the team that picked/packed/dispatched it).
+    # I10 dispatch: notify the owning sales rep (client follow-up) + the
+    # inventory team that shipped it.
     "inventory.shipment.dispatched": {
-        "type": "SUCCESS",
         "module_source": "INVENTORY",
-        "title": "Order Dispatched",
-        "message": "Order {code} has been dispatched.",
-        "name_field": "sales_owner",  # specific sales rep from the CRM order
-        "fallback_permission": "stock.view",
+        "targets": [
+            {
+                "roles": ["Inventory Manager"],
+                "type": "SUCCESS",
+                "title": "Order Dispatched",
+                "message": "Order {code} has been dispatched.",
+            },
+            {
+                "owner": "sales_owner",
+                "type": "SUCCESS",
+                "title": "Order Dispatched",
+                "message": "Order {code} has been dispatched to the client — notify them of delivery.",
+            },
+        ],
     },
-    # A1/A3: invoice issued -> billing stakeholders.
+    # A1/A3: invoice issued -> accounting stakeholders.
     "billing.invoice.sent": {
-        "type": "INFO",
         "module_source": "BILLING",
-        "title": "Invoice Issued",
-        "message": "Invoice {code} sent to customer.",
-        "permissions": ["invoices.view"],  # Accountant + Auditor + admin
+        "targets": [
+            {
+                "roles": ["Accountant"],
+                "type": "INFO",
+                "title": "Invoice Issued",
+                "message": "Invoice {code} sent to customer.",
+            },
+        ],
     },
-    # A5/A7: payment clears -> accounting stakeholders.
+    # A5/A7: payment clears -> accounting reconciles.
     "billing.invoice.paid": {
-        "type": "SUCCESS",
         "module_source": "BILLING",
-        "title": "Payment Received",
-        "message": "Payment received for Invoice {code}.",
-        "permissions": ["payments.view"],  # Accountant + Auditor + admin
+        "targets": [
+            {
+                "roles": ["Accountant"],
+                "type": "SUCCESS",
+                "title": "Payment Received",
+                "message": "Payment received for Invoice {code} — reconcile the bank statement.",
+            },
+        ],
+    },
+    # A6: invoice overdue -> accounting triggers dunning; sales follows up.
+    "billing.invoice.overdue": {
+        "module_source": "BILLING",
+        "targets": [
+            {
+                "roles": ["Accountant", "Auditor"],
+                "type": "WARNING",
+                "title": "Invoice Overdue",
+                "message": "Invoice {code} is overdue — trigger dunning / follow up with the client.",
+            },
+        ],
     },
 }
 
@@ -93,63 +189,70 @@ def _get(body: dict, *keys, default=None):
 async def _persist_and_broadcast(event: str, body: dict, alert_message: str) -> None:
     """Persist Notification rows and push them live to matching sockets.
 
-    One row is created per audience (permission code / specific user) so each
-    keeps its own read state. A user holding any of the targeted permission
-    codes — e.g. the admin (Organization Owner holds all codes), the Inventory
-    Manager (stock.view), or the Accountant (invoices.view) — receives it.
+    One row is created per audience: one per role (any user whose JWT role
+    matches receives it — the Organization Owner sees every role row via the
+    super-role bypass) plus one private row per owner-target (e.g. the
+    specific sales rep named in `sales_owner`).
     """
-    template = EVENT_TEMPLATES.get(event)
-    if not template:
+    entry = ROLE_MATRIX.get(event)
+    if not entry:
         return
 
     organization_id = int(_get(body, "organization_id", "organizationId", default=1) or 1)
     code = str(
-        _get(body, "sales_order_code", "salesOrderCode", "invoice_number", "invoiceNumber", "quotation_number", default="") or ""
+        _get(
+            body,
+            "sales_order_code",
+            "salesOrderCode",
+            "invoice_number",
+            "invoiceNumber",
+            "quotation_number",
+            "quotationNumber",
+            default="",
+        )
+        or ""
     )
     items = _get(body, "items", default=[])
     count = len(items) if isinstance(items, list) else 0
-
-    base_kwargs: dict = {
-        "organization_id": organization_id,
-        "type": template["type"],
-        "module_source": template["module_source"],
-        "title": template["title"],
-        "message": template["message"].format(code=code, count=count),
-        "event": event,
-        "entity_ref": code or None,
-    }
+    reason = str(_get(body, "reason", default="hold") or "hold")
+    discount_pct = _get(body, "discount_pct", default=None)
+    if discount_pct is not None:
+        reason = f"{discount_pct}%"
 
     from app.core.database import async_session_factory
     from app.notification.services import NotificationStore
 
     created = []
+    for target in entry.get("targets") or []:
+        base_kwargs: dict = {
+            "organization_id": organization_id,
+            "type": target.get("type", "INFO"),
+            "module_source": entry.get("module_source", "SYSTEM"),
+            "title": target["title"],
+            "message": target["message"].format(code=code, count=count, reason=reason),
+            "event": event,
+            "entity_ref": code or None,
+        }
 
-    # Permission-targeted audience: one row per code so read state stays
-    # per-audience. Everyone whose JWT permissions contain the code matches.
-    for perm in template.get("permissions") or []:
-        async with async_session_factory() as db:
-            store = NotificationStore(db)
-            n = await store.create(NotificationCreate(**{**base_kwargs, "permission": perm}))
-            await db.commit()
-            created.append(n)
-
-    # Name-targeted row(s): e.g. dispatched -> the specific sales rep, plus a
-    # fallback permission row so the whole inventory team stays in the loop.
-    if template.get("name_field"):
-        owner = _get(body, template["name_field"], default="")
-        if owner:
+        # Role-targeted row(s): one per role so read state stays per-audience.
+        for role in target.get("roles") or []:
             async with async_session_factory() as db:
                 store = NotificationStore(db)
-                n = await store.create(NotificationCreate(**{**base_kwargs, "target_name": str(owner)}))
+                n = await store.create(NotificationCreate(**{**base_kwargs, "role": role}))
                 await db.commit()
                 created.append(n)
-        fallback = template.get("fallback_permission")
-        if fallback and fallback not in (template.get("permissions") or []):
-            async with async_session_factory() as db:
-                store = NotificationStore(db)
-                n = await store.create(NotificationCreate(**{**base_kwargs, "permission": fallback}))
-                await db.commit()
-                created.append(n)
+
+        # Owner-targeted row: private to the specific user named in the payload
+        # field (e.g. sales_owner = "Maya Patel" -> matched by JWT name/email).
+        owner_field = target.get("owner")
+        if owner_field:
+            owner = _get(body, owner_field, default="")
+            if owner:
+                async with async_session_factory() as db:
+                    store = NotificationStore(db)
+                    n = await store.create(NotificationCreate(**{**base_kwargs, "target_name": str(owner)}))
+                    await db.commit()
+                    created.append(n)
 
     if not created:
         logger.warning(f"No targets for {event} — skipping persistence")
@@ -172,7 +275,7 @@ async def _persist_and_broadcast(event: str, body: dict, alert_message: str) -> 
             "created_at": n.created_at.isoformat() if n.created_at else None,
         }
         delivered += await push_live_notification(notification)
-    targets = [n.permission or n.target_name or n.role or n.user_id for n in created]
+    targets = [n.role or n.target_name or n.permission or n.user_id for n in created]
     logger.info(
         f"Persisted + broadcast {event} → {len(created)} row(s) {targets} "
         f"(delivered={delivered}) — {alert_message}"
@@ -233,8 +336,8 @@ async def process_notification(message: aio_pika.IncomingMessage):
             if len(recent_alerts) > 100:
                 recent_alerts.pop(0)
 
-            # Persist + live-broadcast any event with a notification template.
-            if event in EVENT_TEMPLATES:
+            # Persist + live-broadcast any event with a matrix entry.
+            if event in ROLE_MATRIX:
                 await _persist_and_broadcast(event, body, alert_message)
 
         except Exception as e:
@@ -265,6 +368,8 @@ async def run_notifications_worker():
             # Live notification triggers — order fulfilment pipeline
             # (O1: approved -> I5: stock reserved -> I2: shortage -> I10: dispatched -> A1: invoiced)
             await queue.bind(exchange, routing_key="crm.order.approved")
+            await queue.bind(exchange, routing_key="crm.order.held")
+            await queue.bind(exchange, routing_key="crm.quotation.pending_approval")
             await queue.bind(exchange, routing_key="inventory.order.reserved")
             await queue.bind(exchange, routing_key="inventory.order.shortage")
             await queue.bind(exchange, routing_key="inventory.order.fulfilled")

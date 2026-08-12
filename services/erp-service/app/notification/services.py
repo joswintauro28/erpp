@@ -54,14 +54,14 @@ class NotificationStore:
         if user_id is not None:
             or_conditions.append(Notification.user_id == user_id)
         if role:
-            or_conditions.append(Notification.role == role)
+            if role.strip().lower() == "organization owner":
+                # Super-role: the Owner sees notifications targeted at ANY role
+                # (mirrors the WS gateway and require_permission bypass).
+                or_conditions.append(Notification.role.is_not(None))
+            else:
+                or_conditions.append(Notification.role == role)
         if permissions:
             or_conditions.append(Notification.permission.in_(permissions))
-        elif role and role.strip().lower() == "organization owner":
-            # Owner bypasses permission checks (mirrors deps.require_permission
-            # and the WS gateway): sees every permission-targeted notification
-            # even when the JWT carries no explicit permission list.
-            or_conditions.append(Notification.permission.is_not(None))
         if name:
             or_conditions.append(Notification.target_name.ilike(f"%{name}%"))
             # JWTs carry emails; event payloads carry display names. Match the
@@ -107,11 +107,14 @@ class NotificationStore:
         if user_id is not None:
             or_conditions.append(Notification.user_id == user_id)
         if role:
-            or_conditions.append(Notification.role == role)
+            if role.strip().lower() == "organization owner":
+                # Super-role: the Owner can act on notifications targeted at
+                # ANY role.
+                or_conditions.append(Notification.role.is_not(None))
+            else:
+                or_conditions.append(Notification.role == role)
         if permissions:
             or_conditions.append(Notification.permission.in_(permissions))
-        elif role and role.strip().lower() == "organization owner":
-            or_conditions.append(Notification.permission.is_not(None))
         if name:
             or_conditions.append(Notification.target_name.ilike(f"%{name}%"))
         if or_conditions:
