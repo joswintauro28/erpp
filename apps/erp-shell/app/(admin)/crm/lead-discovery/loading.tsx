@@ -1,8 +1,10 @@
 export default function LeadDiscoveryLoading() {
   return (
     <div className="relative space-y-6">
+      {/* Brand progress sweep bar */}
       <span className="absolute -top-6 left-0 h-0.5 w-1/3 rounded-full bg-[var(--shell-brand)] shimmer-glow" />
 
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div className="space-y-2">
           <div className="h-6 w-28 rounded-md shimmer-glow" />

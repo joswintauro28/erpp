@@ -6,11 +6,13 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { exportToCSV } from "@/utils/exportCsv";
+import { toastSuccess, toastError, toastWarning, errorMessage } from "@/utils/toast";
 import SalesOrderTable from "./SalesOrderTable";
 import { Spinner } from "@/components/ui/spinner";
 import { api } from "@/services/api";
-import GenericCreateModal from "@/components/GenericCreateModal";
-import GenericDetailsModal from "@/components/GenericDetailsModal";
+import SalesOrderCreateModal from "./SalesOrderCreateModal";
+import SalesOrderDetailsModal from "./SalesOrderDetailsModal";
+
 
 export default function SalesOrdersPage() {
   const [data, setData] = useState({ summary: { total_sales_orders: 0, open: 0, overdue_at_risk: 0, owners: 0 }, sales_orders: [] });
@@ -18,8 +20,8 @@ export default function SalesOrdersPage() {
   const [search, setSearch] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
-  const [selectedRecordForDetails, setSelectedRecordForDetails] = useState<any>(null);
-  const [editRecord, setEditRecord] = useState<any>(null);
+  const [selectedRecordForDetails, setSelectedRecordForDetails] = useState(null);
+  const [editRecord, setEditRecord] = useState(null);
 
   const fetchData = useCallback(async () => {
     try {
@@ -38,6 +40,48 @@ export default function SalesOrdersPage() {
     }
   };
 
+  // O2/O3/O4: the dedicated /approve endpoint runs the synchronous Billing
+  // credit check first (O2), places the SO on Hold when it fails (O3), then
+  // runs the stock check and publishes crm.order.approved to inventory (O4).
+  const handleApprove = async (record: any) => {
+    try {
+      const res = await api.post<any>(`/sales-orders/${record.id_str}/approve`);
+
+      if (res.approved) {
+        if (res.status === "Stock Hold") {
+          toastWarning("Sales order on hold", `${res.so_no || record.so_no} placed on Stock Hold: stock unavailable — shortage auto-procurement started.`);
+        } else {
+          const cd = res.credit || {};
+          const limitNote =
+            cd.unlimited
+              ? " (no credit limit configured)"
+              : cd.credit_limit != null
+              ? ` (limit ₹${Number(cd.credit_limit).toLocaleString("en-IN")}, available ₹${Number(cd.available_credit ?? 0).toLocaleString("en-IN")})`
+              : "";
+          toastSuccess("Sales order approved", `${res.so_no || record.so_no} approved — fulfillment started${limitNote}.`);
+        }
+      } else if (res.reason === "credit") {
+        const cd = res.credit || {};
+        const over = cd.over_limit_amount != null
+          ? ` over by ₹${Number(cd.over_limit_amount).toLocaleString("en-IN")}`
+          : "";
+        const limitText = cd.credit_limit != null
+          ? `₹${Number(cd.credit_limit).toLocaleString("en-IN")}`
+          : "no limit";
+        const exposure = cd.outstanding != null ? Number(cd.outstanding) : 0;
+        toastError(
+          "Financial hold",
+          `${res.so_no || record.so_no} placed on Hold: credit limit ${limitText} exceeded (outstanding ₹${exposure.toLocaleString("en-IN")} + order value)${over}.`
+        );
+      } else {
+        toastWarning("Sales order on hold", `${res.so_no || record.so_no} placed on ${res.status || "Hold"}.`);
+      }
+      fetchData();
+    } catch (err) {
+      toastError("Approval failed", errorMessage(err));
+    }
+  };
+
   if (loading) return <div className="space-y-10 lg:space-y-12"><div className="flex h-full items-center justify-center py-20"><Spinner /></div></div>;
 
   const items = data?.sales_orders || [];
@@ -49,12 +93,12 @@ export default function SalesOrdersPage() {
     <div className="space-y-10 lg:space-y-12">
       <div className="flex items-center justify-end gap-3">
         <Button variant="outline" size="sm" onClick={fetchData}>
-          <RotateCw className={"h-4 w-4" + (loading ? " animate-spin" : "")} /> Refresh
-        </Button>
-        <Button variant="outline" size="sm" onClick={() => exportToCSV(items, "sales_orders")}>
-          <Download className="h-4 w-4" /> Export
-        </Button>
-        <Button size="sm" onClick={() => setIsModalOpen(true)}><Plus className="h-4 w-4" /> New Sales Order</Button>
+            <RotateCw className={"h-4 w-4" + (loading ? " animate-spin" : "")} /> Refresh
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => exportToCSV(items, "sales_orders")}>
+            <Download className="h-4 w-4" /> Export
+          </Button>
+          <Button size="sm" onClick={() => setIsModalOpen(true)}><Plus className="h-4 w-4" /> New Sales Order</Button>
       </div>
 
       <div>
@@ -92,18 +136,19 @@ export default function SalesOrdersPage() {
             <Filter className="h-4 w-4 text-[var(--shell-muted)]" />
           </div>
           <div className="overflow-x-auto">
-            <SalesOrderTable
-              salesOrders={filtered}
-              onView={(rec) => { setSelectedRecordForDetails(rec); setIsDetailsOpen(true); }}
-              onEdit={(rec) => { setEditRecord(rec); setIsModalOpen(true); }}
-              onDelete={handleDelete}
+            <SalesOrderTable 
+              salesOrders={filtered} 
+              onView={(rec) => { setSelectedRecordForDetails(rec); setIsDetailsOpen(true); }} 
+              onEdit={(rec) => { setEditRecord(rec); setIsModalOpen(true); }} 
+              onDelete={handleDelete} 
+              onApprove={handleApprove} 
             />
           </div>
         </Card>
       </div>
 
-      <GenericCreateModal entityType="sales-orders" entityName="Sales Order" isOpen={isModalOpen} onClose={() => { setIsModalOpen(false); setEditRecord(null); }} editRecord={editRecord} onSuccess={fetchData} />
-      <GenericDetailsModal record={selectedRecordForDetails} entityName="Sales Order" isOpen={isDetailsOpen} onClose={() => { setIsDetailsOpen(false); setSelectedRecordForDetails(null); }} onSuccess={fetchData} />
+      <SalesOrderCreateModal isOpen={isModalOpen} onClose={() => { setIsModalOpen(false); setEditRecord(null); }} editRecord={editRecord} onSuccess={fetchData} />
+      <SalesOrderDetailsModal record={selectedRecordForDetails} isOpen={isDetailsOpen} onClose={() => { setIsDetailsOpen(false); setSelectedRecordForDetails(null); }} onSuccess={fetchData} onEdit={(rec) => { setIsDetailsOpen(false); setSelectedRecordForDetails(null); setEditRecord(rec); setIsModalOpen(true); }} onApprove={handleApprove} />
     </div>
   );
 }

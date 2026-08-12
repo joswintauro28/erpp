@@ -7,9 +7,11 @@ import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { api } from "@/services/api";
 import { exportToCSV } from "@/utils/exportCsv";
-import GenericCreateModal from "@/components/GenericCreateModal";
-import GenericDetailsModal from "@/components/GenericDetailsModal";
+import { toastSuccess, toastError, errorMessage } from "@/utils/toast";
+import QuotationCreateModal from "./QuotationCreateModal";
+import QuotationDetailsModal from "./QuotationDetailsModal";
 import QuotationTable from "./QuotationTable";
+import QuotationCpqModal from "./QuotationCpqModal";
 
 export default function QuotationsPage() {
   const [data, setData] = useState({ summary: { total_quotations: 0, open: 0, overdue_at_risk: 0, owners: 0 }, quotations: [] });
@@ -20,6 +22,7 @@ export default function QuotationsPage() {
   const [selectedRecord, setSelectedRecord] = useState<any>(null);
   const [editRecord, setEditRecord] = useState<any>(null);
   const [autoConvert, setAutoConvert] = useState(false);
+  const [isCpqOpen, setIsCpqOpen] = useState(false);
 
   const fetchData = useCallback(async () => {
     try {
@@ -41,9 +44,28 @@ export default function QuotationsPage() {
   };
 
   const handleFinalize = (record: any) => {
+    // User-flow enforcement (O1): conversion requires an Accepted quote.
+    if (record.status !== "Accepted") {
+      toastError("Quote not accepted yet", "Mark the quotation as Accepted before converting to a Sales Order.");
+      return;
+    }
     setAutoConvert(true);
     setSelectedRecord(record);
     setIsDetailsOpen(true);
+  };
+
+  const handleApprovalDecision = async (record: any, approve: boolean) => {
+    try {
+      const res = await api.put<any>(`/quotations/${record.id}/approval`, { approve });
+      if (approve) {
+        toastSuccess("Quote approved", `${record.quote_no || record.quote_number || ""} is now unlocked for sending.`);
+      } else {
+        toastSuccess("Quote rejected", "The quote stays locked.");
+      }
+      fetchData();
+    } catch (err) {
+      toastError("Approval decision failed", errorMessage(err));
+    }
   };
 
   if (loading) return <div className="space-y-10 lg:space-y-12"><div className="flex h-full items-center justify-center py-20"><Spinner /></div></div>;
@@ -98,8 +120,8 @@ export default function QuotationsPage() {
             <Button variant="outline" size="sm" onClick={() => exportToCSV(filtered, "quotations")}>
               <Download size={14} className="mr-1.5" /> Export
             </Button>
-            <Button size="sm" onClick={() => setIsModalOpen(true)}>
-              <Plus size={14} className="mr-1.5" /> New Quotation
+            <Button size="sm" onClick={() => setIsCpqOpen(true)}>
+              <Plus size={14} className="mr-1.5" /> New Quotation (CPQ)
             </Button>
           </div>
         </div>
@@ -118,12 +140,14 @@ export default function QuotationsPage() {
             onEdit={(quote) => { setEditRecord(quote); setIsModalOpen(true); }}
             onDelete={handleDelete}
             onFinalize={handleFinalize}
+            onApprovalDecision={handleApprovalDecision}
           />
         </Card>
       </div>
 
-      <GenericCreateModal entityType="quotations" entityName="Quotation" isOpen={isModalOpen} onClose={() => { setIsModalOpen(false); setEditRecord(null); }} editRecord={editRecord} onSuccess={fetchData} />
-      <GenericDetailsModal record={selectedRecord} entityName="Quotation" isOpen={isDetailsOpen} onClose={() => { setIsDetailsOpen(false); setSelectedRecord(null); setAutoConvert(false); }} onSuccess={fetchData} initialShowForm={autoConvert ? "sales-order" : ""} />
+      <QuotationCpqModal isOpen={isCpqOpen} onClose={() => setIsCpqOpen(false)} onSuccess={fetchData} />
+      <QuotationCreateModal isOpen={isModalOpen} onClose={() => { setIsModalOpen(false); setEditRecord(null); }} editRecord={editRecord} onSuccess={fetchData} />
+      <QuotationDetailsModal record={selectedRecord} isOpen={isDetailsOpen} onClose={() => { setIsDetailsOpen(false); setSelectedRecord(null); setAutoConvert(false); }} onSuccess={fetchData} initialShowForm={autoConvert ? "sales-order" : ""} />
     </div>
   );
 }

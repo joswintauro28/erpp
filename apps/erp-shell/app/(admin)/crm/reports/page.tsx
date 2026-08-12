@@ -10,8 +10,8 @@ import { Spinner } from "@/components/ui/spinner";
 import { exportToCSV } from "@/utils/exportCsv";
 import { api } from "@/services/api";
 import ReportTable from "./ReportTable";
-import GenericCreateModal from "@/components/GenericCreateModal";
-import GenericDetailsModal from "@/components/GenericDetailsModal";
+import ReportCreateModal from "./ReportCreateModal";
+import ReportDetailsModal from "./ReportDetailsModal";
 
 const formatCurrency = (val: number) => {
   if (val >= 1_000_000) return `$${(val / 1_000_000).toFixed(1)}M`;
@@ -227,8 +227,8 @@ export default function ReportsPage() {
         </Card>
       </div>
 
-      <GenericCreateModal entityType="reports" entityName="Report" isOpen={isModalOpen} onClose={() => { setIsModalOpen(false); setEditRecord(null); }} editRecord={editRecord} onSuccess={fetchReportData} />
-      <GenericDetailsModal record={selectedRecord} entityName="Report" isOpen={isDetailsOpen} onClose={() => { setIsDetailsOpen(false); setSelectedRecord(null); }} onSuccess={fetchReportData} />
+      <ReportCreateModal isOpen={isModalOpen} onClose={() => { setIsModalOpen(false); setEditRecord(null); }} editRecord={editRecord} onSuccess={fetchReportData} />
+      <ReportDetailsModal record={selectedRecord} isOpen={isDetailsOpen} onClose={() => { setIsDetailsOpen(false); setSelectedRecord(null); }} />
     </div>
   );
 }

@@ -23,7 +23,7 @@ export default function Recommendations({ recommendations }: RecommendationsProp
           </CardTitle>
           <CardDescription className="text-xs text-[var(--shell-muted)]">Actionable insights from your pipeline</CardDescription>
         </div>
-        <Button variant="ghost" size="sm" className="text-xs gap-1" onClick={() => router.push("/crm/ai-assistant")}>
+        <Button variant="ghost" size="sm" className="text-xs gap-1" onClick={() => router.push("/ai-assistant")}>
           View all <ArrowUp className="h-3 w-3 rotate-90" />
         </Button>
       </CardHeader>

@@ -3,8 +3,8 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import {
   X, TrendingUp, ClipboardList, FileSpreadsheet, Plus,
-  CheckCircle, Trash2, ChevronRight, ChevronDown,
-  Paperclip, Download, Eye, ShoppingCart, Edit2, PackageOpen, Loader,
+  CheckCircle, Loader, Trash2, ChevronRight, ChevronDown,
+  Paperclip, Download, Eye, ShoppingCart, Edit2, PackageOpen,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -19,12 +19,20 @@ const stageColors: Record<string, { bg: string; color: string }> = {
   Lost:        { bg: "#fee2e2", color: "#b91c1c" },
 };
 
-interface ReqRowProps { req: any; onDelete: (r: any) => void; onEdit: (r: any) => void; }
+interface ReqRowProps {
+  req: any;
+  onDelete: (r: any) => void;
+  onEdit: (r: any) => void;
+}
+
 function ReqRow({ req, onDelete, onEdit }: ReqRowProps) {
   const [open, setOpen] = useState(false);
   return (
     <div className="rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface)] mb-2 overflow-hidden">
-      <div onClick={() => setOpen((o) => !o)} className="flex items-center gap-3 p-3 cursor-pointer select-none">
+      <div
+        onClick={() => setOpen((o) => !o)}
+        className="flex items-center gap-3 p-3 cursor-pointer select-none"
+      >
         <ClipboardList size={14} className="shrink-0 text-[var(--shell-brand)]" />
         <div className="flex-1 min-w-0">
           <div className="font-semibold text-sm text-[var(--shell-foreground)] truncate">{req.name}</div>
@@ -33,6 +41,7 @@ function ReqRow({ req, onDelete, onEdit }: ReqRowProps) {
         <Badge variant="secondary">{req.status}</Badge>
         {open ? <ChevronDown size={14} className="shrink-0 text-[var(--shell-muted)]" /> : <ChevronRight size={14} className="shrink-0 text-[var(--shell-muted)]" />}
       </div>
+
       {open && (
         <div className="border-t border-[var(--shell-border)] p-3 bg-[var(--shell-bg)]">
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-3">
@@ -64,7 +73,14 @@ function ReqRow({ req, onDelete, onEdit }: ReqRowProps) {
   );
 }
 
-interface QuoteRowProps { quote: any; onDelete: (q: any) => void; onPreview: (q: any) => void; onConverted?: () => void; onEdit: (q: any) => void; }
+interface QuoteRowProps {
+  quote: any;
+  onDelete: (q: any) => void;
+  onPreview: (q: any) => void;
+  onConverted?: () => void;
+  onEdit: (q: any) => void;
+}
+
 function QuoteRow({ quote, onDelete, onPreview, onConverted, onEdit }: QuoteRowProps) {
   const [open, setOpen] = useState(false);
   const [showSaleForm, setShowSaleForm] = useState(false);
@@ -93,7 +109,9 @@ function QuoteRow({ quote, onDelete, onPreview, onConverted, onEdit }: QuoteRowP
         status: "Pending",
         owner: saleData.rep,
       });
+
       await api.put(`/quotations/${quote.id}/status?status=Converted`);
+
       setSaleSuccess(true);
       setShowSaleForm(false);
       if (onConverted) onConverted();
@@ -105,8 +123,15 @@ function QuoteRow({ quote, onDelete, onPreview, onConverted, onEdit }: QuoteRowP
   };
 
   return (
-    <div className={`rounded-xl border mb-2 overflow-hidden ${isConverted ? "border-green-300 bg-green-50" : "border-[var(--shell-border)] bg-[var(--shell-surface)]"}`}>
-      <div onClick={() => setOpen((o) => !o)} className="flex items-center gap-3 p-3 cursor-pointer select-none">
+    <div
+      className={`rounded-xl border mb-2 overflow-hidden ${
+        isConverted ? "border-green-300 bg-green-50" : "border-[var(--shell-border)] bg-[var(--shell-surface)]"
+      }`}
+    >
+      <div
+        onClick={() => setOpen((o) => !o)}
+        className="flex items-center gap-3 p-3 cursor-pointer select-none"
+      >
         <FileSpreadsheet size={14} className={`shrink-0 ${isConverted ? "text-green-600" : "text-amber-600"}`} />
         <div className="flex-1 min-w-0">
           <div className="font-semibold text-sm text-[var(--shell-foreground)] flex items-center gap-1.5 flex-wrap">
@@ -125,6 +150,7 @@ function QuoteRow({ quote, onDelete, onPreview, onConverted, onEdit }: QuoteRowP
         <Badge variant={isConverted ? "default" : isAccepted ? "default" : "secondary"}>{quote.status}</Badge>
         {open ? <ChevronDown size={14} className="shrink-0 text-[var(--shell-muted)]" /> : <ChevronRight size={14} className="shrink-0 text-[var(--shell-muted)]" />}
       </div>
+
       {open && (
         <div className="border-t border-[var(--shell-border)] p-3 bg-[var(--shell-bg)]">
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-3">
@@ -143,6 +169,7 @@ function QuoteRow({ quote, onDelete, onPreview, onConverted, onEdit }: QuoteRowP
               </div>
             ))}
           </div>
+
           {quote.file_data ? (
             <div className="border-t border-[var(--shell-border)] pt-3 mb-3">
               <div className="text-[11px] font-bold uppercase tracking-wider text-[var(--shell-muted)] mb-2">Attached File</div>
@@ -158,6 +185,7 @@ function QuoteRow({ quote, onDelete, onPreview, onConverted, onEdit }: QuoteRowP
           ) : (
             <div className="border-t border-[var(--shell-border)] pt-3 mb-3 text-[11px] italic text-[var(--shell-muted)]">No file attached.</div>
           )}
+
           <div className="border-t border-[var(--shell-border)] pt-3">
             {isConverted || saleSuccess ? (
               <div className="flex items-center gap-2 p-2.5 rounded-lg bg-green-50 border border-green-300 text-green-700 text-xs font-semibold">
@@ -168,10 +196,14 @@ function QuoteRow({ quote, onDelete, onPreview, onConverted, onEdit }: QuoteRowP
                 <span className="text-[11px] text-[var(--shell-muted)]">
                   {isAccepted
                     ? "Quotation accepted — ready to convert to a Sales Order."
-                    : 'Set status to Accepted to enable sales order conversion.'
+                    : 'Set status to <strong>Accepted</strong> to enable sales order conversion.'
                   }
                 </span>
-                <Button disabled={!isAccepted} onClick={(e) => { e.stopPropagation(); setShowSaleForm(true); }} className="h-8 text-xs shrink-0">
+                <Button
+                  disabled={!isAccepted}
+                  onClick={(e) => { e.stopPropagation(); setShowSaleForm(true); }}
+                  className="h-8 text-xs shrink-0"
+                >
                   <ShoppingCart size={13} className="mr-1.5" /> Convert to Sales Order
                 </Button>
               </div>
@@ -208,6 +240,7 @@ function QuoteRow({ quote, onDelete, onPreview, onConverted, onEdit }: QuoteRowP
               </form>
             )}
           </div>
+
           {!showSaleForm && !isConverted && !saleSuccess && (
             <div className="flex justify-end gap-2 mt-3">
               <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); onEdit(quote); }}><Edit2 size={12} className="mr-1" /> Edit</Button>
@@ -220,15 +253,23 @@ function QuoteRow({ quote, onDelete, onPreview, onConverted, onEdit }: QuoteRowP
   );
 }
 
-interface OpportunityDetailModalProps { record: any; isOpen: boolean; onClose: () => void; onSuccess: () => void; }
+interface OpportunityDetailModalProps {
+  record: any;
+  isOpen: boolean;
+  onClose: () => void;
+  onSuccess: () => void;
+}
+
 export default function OpportunityDetailModal({ record, isOpen, onClose, onSuccess }: OpportunityDetailModalProps) {
   const [tab, setTab] = useState("details");
+
   const [requirements, setRequirements] = useState<any[]>([]);
   const [reqLoading, setReqLoading] = useState(false);
   const [showReqForm, setShowReqForm] = useState(false);
   const [reqSubmitting, setReqSubmitting] = useState(false);
   const [reqError, setReqError] = useState("");
   const [reqData, setReqData] = useState({ name: "", category: "Technical", priority: "Medium", status: "Draft", owner: "" });
+
   const [quotations, setQuotations] = useState<any[]>([]);
   const [quoteLoading, setQuoteLoading] = useState(false);
   const [showQuoteForm, setShowQuoteForm] = useState(false);
@@ -238,6 +279,7 @@ export default function OpportunityDetailModal({ record, isOpen, onClose, onSucc
   const [quoteFile, setQuoteFile] = useState<{ name: string; base64: string } | null>(null);
   const [previewQuote, setPreviewQuote] = useState<any>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
   const [editReq, setEditReq] = useState<any>(null);
   const [editQuote, setEditQuote] = useState<any>(null);
 
@@ -247,7 +289,11 @@ export default function OpportunityDetailModal({ record, isOpen, onClose, onSucc
     try {
       const d = await api.get<any>("/requirements");
       setRequirements((d.requirements || []).filter((r: any) => r.account === record.account));
-    } catch { /* silent */ } finally { setReqLoading(false); }
+    } catch {
+      /* silent */
+    } finally {
+      setReqLoading(false);
+    }
   }, [record]);
 
   const fetchQuotations = useCallback(async () => {
@@ -256,18 +302,28 @@ export default function OpportunityDetailModal({ record, isOpen, onClose, onSucc
     try {
       const d = await api.get<any>("/quotations");
       setQuotations((d.quotations || []).filter((q: any) => q.account === record.account));
-    } catch { /* silent */ } finally { setQuoteLoading(false); }
+    } catch {
+      /* silent */
+    } finally {
+      setQuoteLoading(false);
+    }
   }, [record]);
 
   useEffect(() => {
     if (isOpen && record) {
       setTab("details");
-      setShowReqForm(false); setShowQuoteForm(false);
-      setReqError(""); setQuoteError("");
+      setShowReqForm(false);
+      setShowQuoteForm(false);
+      setReqError("");
+      setQuoteError("");
       setReqData({ name: "", category: "Technical", priority: "Medium", status: "Draft", owner: "" });
       setQuoteData({ quote_no: "", value: "", valid_until: "", status: "Draft", owner: "" });
-      setEditReq(null); setEditQuote(null); setPreviewQuote(null); setQuoteFile(null);
-      fetchRequirements(); fetchQuotations();
+      setEditReq(null);
+      setEditQuote(null);
+      setPreviewQuote(null);
+      setQuoteFile(null);
+      fetchRequirements();
+      fetchQuotations();
     }
   }, [isOpen, record]);
 
@@ -301,56 +357,94 @@ export default function OpportunityDetailModal({ record, isOpen, onClose, onSucc
 
   const handleReqSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setReqSubmitting(true); setReqError("");
+    setReqSubmitting(true);
+    setReqError("");
     try {
       const isEdit = !!editReq;
       const body = {
         name: reqData.name || `Requirement for ${record.account}`,
         account: record.account || "",
-        category: reqData.category, priority: reqData.priority,
-        status: reqData.status, owner: reqData.owner,
+        category: reqData.category,
+        priority: reqData.priority,
+        status: reqData.status,
+        owner: reqData.owner,
       };
-      if (isEdit) await api.put(`/requirements/${editReq.id_str}`, body);
-      else await api.post("/requirements", body);
-      setShowReqForm(false); setEditReq(null);
+      if (isEdit) {
+        await api.put(`/requirements/${editReq.id_str}`, body);
+      } else {
+        await api.post("/requirements", body);
+      }
+      setShowReqForm(false);
+      setEditReq(null);
       setReqData({ name: "", category: "Technical", priority: "Medium", status: "Draft", owner: "" });
       fetchRequirements();
       if (onSuccess) onSuccess();
-    } catch { setReqError("Failed to save."); } finally { setReqSubmitting(false); }
+    } catch {
+      setReqError("Failed to save.");
+    } finally {
+      setReqSubmitting(false);
+    }
   };
 
   const handleQuoteSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setQuoteSubmitting(true); setQuoteError("");
+    setQuoteSubmitting(true);
+    setQuoteError("");
     try {
       const isEdit = !!editQuote;
       const body = {
         quote_no: quoteData.quote_no || "",
-        account: record.account || "", value: quoteData.value,
-        valid_until: quoteData.valid_until, status: quoteData.status,
+        account: record.account || "",
+        value: quoteData.value,
+        valid_until: quoteData.valid_until,
+        status: quoteData.status,
         owner: quoteData.owner,
         file_data: quoteFile ? quoteFile.base64 : (isEdit ? editQuote.file_data : null),
         file_name: quoteFile ? quoteFile.name : (isEdit ? editQuote.file_name : null),
       };
-      if (isEdit) await api.put(`/quotations/${editQuote.id}`, body);
-      else await api.post("/quotations", body);
-      setShowQuoteForm(false); setEditQuote(null);
+      if (isEdit) {
+        await api.put(`/quotations/${editQuote.id}`, body);
+        if (quoteData.status !== editQuote.status) {
+          await api.put(`/quotations/${editQuote.id}/status?status=${quoteData.status}`);
+        }
+      } else {
+        const res = await api.post<any>("/quotations", body);
+        if (quoteData.status && quoteData.status.toLowerCase() !== "draft") {
+          await api.put(`/quotations/${res.id}/status?status=${quoteData.status}`);
+        }
+      }
+      setShowQuoteForm(false);
+      setEditQuote(null);
       setQuoteData({ quote_no: "", value: "", valid_until: "", status: "Draft", owner: "" });
       setQuoteFile(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
       fetchQuotations();
       if (onSuccess) onSuccess();
-    } catch { setQuoteError("Failed to save."); } finally { setQuoteSubmitting(false); }
+    } catch {
+      setQuoteError("Failed to save.");
+    } finally {
+      setQuoteSubmitting(false);
+    }
   };
 
   const handleDeleteReq = async (req: any) => {
     if (!window.confirm("Delete this requirement?")) return;
-    try { await api.delete(`/requirements/${req.id_str}`); fetchRequirements(); } catch { /* silent */ }
+    try {
+      await api.delete(`/requirements/${req.id_str}`);
+      fetchRequirements();
+    } catch {
+      /* silent */
+    }
   };
 
   const handleDeleteQuote = async (q: any) => {
     if (!window.confirm("Delete this quotation?")) return;
-    try { await api.delete(`/quotations/${q.id}`); fetchQuotations(); } catch { /* silent */ }
+    try {
+      await api.delete(`/quotations/${q.id}`);
+      fetchQuotations();
+    } catch (err: any) {
+      alert(err?.response?.data?.detail || err?.message || "Failed to delete quotation.");
+    }
   };
 
   const detailRows = [
@@ -368,7 +462,10 @@ export default function OpportunityDetailModal({ record, isOpen, onClose, onSucc
 
   return (
     <>
-      <div className="fixed inset-0 bg-black/45 flex items-center justify-center z-50 p-4" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <div
+        className="fixed inset-0 bg-black/45 flex items-center justify-center z-50 p-4"
+        onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      >
         <div className="w-full max-w-[860px] max-h-[90vh] flex flex-col rounded-xl border border-border bg-card overflow-hidden shadow-xl">
           <div className="flex items-center gap-3 px-6 py-5 border-b border-border shrink-0">
             <TrendingUp size={20} className="shrink-0 text-primary" />
@@ -382,8 +479,15 @@ export default function OpportunityDetailModal({ record, isOpen, onClose, onSucc
 
           <div className="flex px-6 border-b border-border shrink-0">
             {["details", "requirements", "quotations"].map((t) => (
-              <button key={t} onClick={() => setTab(t)} className="relative py-2.5 px-4 text-sm font-medium whitespace-nowrap cursor-pointer"
-                style={{ color: "var(--shell-brand)", borderBottom: tab === t ? "2px solid var(--shell-brand)" : "2px solid transparent" }}>
+              <button
+                key={t}
+                onClick={() => setTab(t)}
+                className="relative py-2.5 px-4 text-sm font-medium whitespace-nowrap cursor-pointer"
+                style={{
+                  color: tab === t ? "var(--shell-brand)" : "var(--shell-muted)",
+                  borderBottom: tab === t ? "2px solid var(--shell-brand)" : "2px solid transparent",
+                }}
+              >
                 {t === "details" ? "Details" : t === "requirements" ? `Requirements${requirements.length ? ` (${requirements.length})` : ""}` : `Quotations${quotations.length ? ` (${quotations.length})` : ""}`}
               </button>
             ))}
@@ -408,13 +512,17 @@ export default function OpportunityDetailModal({ record, isOpen, onClose, onSucc
 
                 <div className="rounded-xl border border-border overflow-hidden">
                   {detailRows.map((row, i) => (
-                    <div key={row.label} className="flex flex-col sm:flex-row px-4 py-2.5 text-xs gap-1 sm:gap-0"
-                      style={{ backgroundColor: i % 2 === 0 ? "var(--shell-surface)" : "var(--shell-bg)", borderBottom: i < detailRows.length - 1 ? "1px solid var(--shell-border)" : "none" }}>
+                    <div
+                      key={row.label}
+                      className="flex flex-col sm:flex-row px-4 py-2.5 text-xs gap-1 sm:gap-0"
+                      style={{ backgroundColor: i % 2 === 0 ? "var(--shell-surface)" : "var(--shell-bg)", borderBottom: i < detailRows.length - 1 ? "1px solid var(--shell-border)" : "none" }}
+                    >
                       <span className="w-[140px] shrink-0 font-semibold uppercase text-[var(--shell-muted)]">{row.label}</span>
                       <span className="font-medium text-[var(--shell-foreground)] break-words">{row.value}</span>
                     </div>
                   ))}
                 </div>
+
                 <div className="mt-5 p-3 rounded-lg bg-sky-50 border border-sky-200 text-[11px] text-sky-700 flex items-center gap-2">
                   <ChevronRight size={14} />
                   Use the <strong className="mx-1">Requirements</strong> and <strong className="mx-1">Quotations</strong> tabs to attach linked records to this opportunity.
@@ -429,8 +537,11 @@ export default function OpportunityDetailModal({ record, isOpen, onClose, onSucc
                     <div className="text-sm font-bold text-[var(--shell-foreground)]">Requirements</div>
                     <div className="text-[11px] text-[var(--shell-muted)]">Linked to: <strong>{record.account}</strong></div>
                   </div>
-                  {!showReqForm && <Button size="sm" onClick={() => setShowReqForm(true)}><Plus size={14} className="mr-1" /> Add Requirement</Button>}
+                  {!showReqForm && (
+                    <Button size="sm" onClick={() => setShowReqForm(true)}><Plus size={14} className="mr-1" /> Add Requirement</Button>
+                  )}
                 </div>
+
                 {showReqForm && (
                   <form onSubmit={handleReqSubmit} className="p-4 rounded-xl border border-blue-300 bg-blue-50 mb-4">
                     <div className="text-xs font-bold text-blue-800 flex items-center gap-1.5 mb-3">
@@ -438,22 +549,27 @@ export default function OpportunityDetailModal({ record, isOpen, onClose, onSucc
                     </div>
                     {reqError && <div className="p-2 bg-red-100 text-red-700 rounded-md text-[11px] mb-3">{reqError}</div>}
                     <div className="flex flex-col gap-3">
-                      <div><label className="block text-[10px] font-semibold uppercase text-[var(--shell-muted)] mb-1">Description *</label>
+                      <div>
+                        <label className="block text-[10px] font-semibold uppercase text-[var(--shell-muted)] mb-1">Description *</label>
                         <input type="text" placeholder="Describe the requirement..." value={reqData.name} onChange={(e) => setReqData((p) => ({ ...p, name: e.target.value }))} className="h-8 w-full rounded-md border border-[var(--shell-border)] bg-[var(--shell-surface)] px-2.5 text-xs" required />
                       </div>
                       <div className="grid grid-cols-2 gap-3">
-                        <div><label className="block text-[10px] font-semibold uppercase text-[var(--shell-muted)] mb-1">Category *</label>
+                        <div>
+                          <label className="block text-[10px] font-semibold uppercase text-[var(--shell-muted)] mb-1">Category *</label>
                           <input type="text" placeholder="e.g. Technical, Security" value={reqData.category} onChange={(e) => setReqData((p) => ({ ...p, category: e.target.value }))} className="h-8 w-full rounded-md border border-[var(--shell-border)] bg-[var(--shell-surface)] px-2.5 text-xs" required />
                         </div>
-                        <div><label className="block text-[10px] font-semibold uppercase text-[var(--shell-muted)] mb-1">Priority</label>
+                        <div>
+                          <label className="block text-[10px] font-semibold uppercase text-[var(--shell-muted)] mb-1">Priority</label>
                           <input type="text" placeholder="e.g. High, Medium, Low" value={reqData.priority} onChange={(e) => setReqData((p) => ({ ...p, priority: e.target.value }))} className="h-8 w-full rounded-md border border-[var(--shell-border)] bg-[var(--shell-surface)] px-2.5 text-xs" required />
                         </div>
                       </div>
                       <div className="grid grid-cols-2 gap-3">
-                        <div><label className="block text-[10px] font-semibold uppercase text-[var(--shell-muted)] mb-1">Status</label>
+                        <div>
+                          <label className="block text-[10px] font-semibold uppercase text-[var(--shell-muted)] mb-1">Status</label>
                           <input type="text" placeholder="e.g. Draft, Review, Approved" value={reqData.status} onChange={(e) => setReqData((p) => ({ ...p, status: e.target.value }))} className="h-8 w-full rounded-md border border-[var(--shell-border)] bg-[var(--shell-surface)] px-2.5 text-xs" required />
                         </div>
-                        <div><label className="block text-[10px] font-semibold uppercase text-[var(--shell-muted)] mb-1">Owner *</label>
+                        <div>
+                          <label className="block text-[10px] font-semibold uppercase text-[var(--shell-muted)] mb-1">Owner *</label>
                           <input type="text" placeholder="e.g. Aditi Rao" value={reqData.owner} onChange={(e) => setReqData((p) => ({ ...p, owner: e.target.value }))} className="h-8 w-full rounded-md border border-[var(--shell-border)] bg-[var(--shell-surface)] px-2.5 text-xs" required />
                         </div>
                       </div>
@@ -467,6 +583,7 @@ export default function OpportunityDetailModal({ record, isOpen, onClose, onSucc
                     </div>
                   </form>
                 )}
+
                 {reqLoading ? (
                   <div className="text-center py-8 text-[var(--shell-muted)] text-sm">Loading...</div>
                 ) : requirements.length === 0 ? (
@@ -474,7 +591,18 @@ export default function OpportunityDetailModal({ record, isOpen, onClose, onSucc
                     <EmptyState icon={ClipboardList} title={`No requirements linked to ${record.account} yet.`} />
                   </div>
                 ) : (
-                  requirements.map((r) => <ReqRow key={r.id || r.id_str} req={r} onDelete={handleDeleteReq} onEdit={(req) => { setEditReq(req); setReqData({ name: req.name, category: req.category, priority: req.priority, status: req.status, owner: req.owner }); setShowReqForm(true); }} />)
+                  requirements.map((r) => (
+                    <ReqRow
+                      key={r.id || r.id_str}
+                      req={r}
+                      onDelete={handleDeleteReq}
+                      onEdit={(req) => {
+                        setEditReq(req);
+                        setReqData({ name: req.name, category: req.category, priority: req.priority, status: req.status, owner: req.owner });
+                        setShowReqForm(true);
+                      }}
+                    />
+                  ))
                 )}
               </div>
             )}
@@ -486,8 +614,11 @@ export default function OpportunityDetailModal({ record, isOpen, onClose, onSucc
                     <div className="text-sm font-bold text-[var(--shell-foreground)]">Quotations</div>
                     <div className="text-[11px] text-[var(--shell-muted)]">Linked to: <strong>{record.account}</strong></div>
                   </div>
-                  {!showQuoteForm && <Button size="sm" onClick={() => setShowQuoteForm(true)}><Plus size={14} className="mr-1" /> Add Quotation</Button>}
+                  {!showQuoteForm && (
+                    <Button size="sm" onClick={() => setShowQuoteForm(true)}><Plus size={14} className="mr-1" /> Add Quotation</Button>
+                  )}
                 </div>
+
                 {showQuoteForm && (
                   <form onSubmit={handleQuoteSubmit} className="p-4 rounded-xl border border-amber-300 bg-amber-50 mb-4">
                     <div className="text-xs font-bold text-amber-800 flex items-center gap-1.5 mb-3">
@@ -496,22 +627,38 @@ export default function OpportunityDetailModal({ record, isOpen, onClose, onSucc
                     {quoteError && <div className="p-2 bg-red-100 text-red-700 rounded-md text-[11px] mb-3">{quoteError}</div>}
                     <div className="flex flex-col gap-3">
                       <div className="grid grid-cols-2 gap-3">
-                        <div><label className="block text-[10px] font-semibold uppercase text-[var(--shell-muted)] mb-1">Quote No.</label>
+                        <div>
+                          <label className="block text-[10px] font-semibold uppercase text-[var(--shell-muted)] mb-1">Quote No.</label>
                           <input type="text" placeholder="Auto-generated if blank" value={quoteData.quote_no} onChange={(e) => setQuoteData((p) => ({ ...p, quote_no: e.target.value }))} className="h-8 w-full rounded-md border border-[var(--shell-border)] bg-[var(--shell-surface)] px-2.5 text-xs" />
                         </div>
-                        <div><label className="block text-[10px] font-semibold uppercase text-[var(--shell-muted)] mb-1">Value *</label>
+                        <div>
+                          <label className="block text-[10px] font-semibold uppercase text-[var(--shell-muted)] mb-1">Value *</label>
                           <input type="text" placeholder="e.g. 500000" value={quoteData.value} onChange={(e) => setQuoteData((p) => ({ ...p, value: e.target.value }))} className="h-8 w-full rounded-md border border-[var(--shell-border)] bg-[var(--shell-surface)] px-2.5 text-xs" required />
                         </div>
                       </div>
                       <div className="grid grid-cols-2 gap-3">
-                        <div><label className="block text-[10px] font-semibold uppercase text-[var(--shell-muted)] mb-1">Valid Until *</label>
+                        <div>
+                          <label className="block text-[10px] font-semibold uppercase text-[var(--shell-muted)] mb-1">Valid Until *</label>
                           <input type="date" value={quoteData.valid_until} onChange={(e) => setQuoteData((p) => ({ ...p, valid_until: e.target.value }))} className="h-8 w-full rounded-md border border-[var(--shell-border)] bg-[var(--shell-surface)] px-2.5 text-xs" required />
                         </div>
-                        <div><label className="block text-[10px] font-semibold uppercase text-[var(--shell-muted)] mb-1">Status</label>
-                          <input type="text" placeholder="e.g. Draft, Sent, Accepted" value={quoteData.status} onChange={(e) => setQuoteData((p) => ({ ...p, status: e.target.value }))} className="h-8 w-full rounded-md border border-[var(--shell-border)] bg-[var(--shell-surface)] px-2.5 text-xs" required />
+                        <div>
+                          <label className="block text-[10px] font-semibold uppercase text-[var(--shell-muted)] mb-1">Status</label>
+                          <select
+                            value={quoteData.status}
+                            onChange={(e) => setQuoteData((p) => ({ ...p, status: e.target.value }))}
+                            className="h-8 w-full rounded-md border border-[var(--shell-border)] bg-[var(--shell-surface)] px-2 text-xs text-[var(--shell-foreground)] focus:outline-none focus:ring-1 focus:ring-[var(--shell-brand)]"
+                            required
+                          >
+                            <option value="Draft">Draft</option>
+                            <option value="Sent">Sent</option>
+                            <option value="Accepted">Accepted</option>
+                            <option value="Rejected">Rejected</option>
+                            <option value="Expired">Expired</option>
+                          </select>
                         </div>
                       </div>
-                      <div><label className="block text-[10px] font-semibold uppercase text-[var(--shell-muted)] mb-1">Owner *</label>
+                      <div>
+                        <label className="block text-[10px] font-semibold uppercase text-[var(--shell-muted)] mb-1">Owner *</label>
                         <input type="text" placeholder="e.g. Rohan Mehta" value={quoteData.owner} onChange={(e) => setQuoteData((p) => ({ ...p, owner: e.target.value }))} className="h-8 w-full rounded-md border border-[var(--shell-border)] bg-[var(--shell-surface)] px-2.5 text-xs" required />
                       </div>
                       <div>
@@ -521,7 +668,11 @@ export default function OpportunityDetailModal({ record, isOpen, onClose, onSucc
                         <label className="flex items-center gap-2 p-2.5 rounded-md border border-dashed border-[var(--shell-border)] bg-[var(--shell-surface)] cursor-pointer text-xs text-[var(--shell-muted)]">
                           <Paperclip size={14} className="text-amber-600 shrink-0" />
                           <span className="flex-1 truncate">{quoteFile ? quoteFile.name : "Click to choose PDF or image..."}</span>
-                          {quoteFile && <button type="button" onClick={() => { setQuoteFile(null); if (fileInputRef.current) fileInputRef.current.value = ""; }} className="text-red-600 hover:text-red-800 shrink-0"><X size={12} /></button>}
+                          {quoteFile && (
+                            <button type="button" onClick={() => { setQuoteFile(null); if (fileInputRef.current) fileInputRef.current.value = ""; }} className="text-red-600 hover:text-red-800 shrink-0">
+                              <X size={12} />
+                            </button>
+                          )}
                           <input ref={fileInputRef} type="file" accept="application/pdf,image/*" onChange={handleFileChange} className="hidden" />
                         </label>
                       </div>
@@ -535,6 +686,7 @@ export default function OpportunityDetailModal({ record, isOpen, onClose, onSucc
                     </div>
                   </form>
                 )}
+
                 {quoteLoading ? (
                   <div className="text-center py-8 text-[var(--shell-muted)] text-sm">Loading...</div>
                 ) : quotations.length === 0 ? (
@@ -543,8 +695,19 @@ export default function OpportunityDetailModal({ record, isOpen, onClose, onSucc
                   </div>
                 ) : (
                   quotations.map((q) => (
-                    <QuoteRow key={q.id || q.id_str} quote={q} onDelete={handleDeleteQuote} onPreview={setPreviewQuote}
-                      onEdit={(quote) => { setEditQuote(quote); const rawVal = String(quote.value || ""); const cleanVal = rawVal.replace(/[^0-9.]/g, ""); setQuoteData({ quote_no: quote.quote_no, value: cleanVal, valid_until: quote.valid_until, status: quote.status, owner: quote.owner }); setShowQuoteForm(true); }} />
+                    <QuoteRow
+                      key={q.id || q.id_str}
+                      quote={q}
+                      onDelete={handleDeleteQuote}
+                      onPreview={setPreviewQuote}
+                      onEdit={(quote) => {
+                        setEditQuote(quote);
+                        const rawVal = String(quote.value || "");
+                        const cleanVal = rawVal.replace(/[^0-9.]/g, "");
+                        setQuoteData({ quote_no: quote.quote_no, value: cleanVal, valid_until: quote.valid_until, status: quote.status, owner: quote.owner });
+                        setShowQuoteForm(true);
+                      }}
+                    />
                   ))
                 )}
               </div>

@@ -8,8 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { api } from "@/services/api";
 import { exportToCSV } from "@/utils/exportCsv";
-import GenericCreateModal from "@/components/GenericCreateModal";
-import GenericDetailsModal from "@/components/GenericDetailsModal";
+import ContactCreateModal from "./ContactCreateModal";
+import ContactDetailsModal from "./ContactDetailsModal";
 import ContactTable from "./ContactTable";
 
 export default function ContactsPage() {
@@ -106,8 +106,8 @@ export default function ContactsPage() {
         </Card>
       </div>
 
-      <GenericCreateModal entityType="contacts" entityName="Contact" isOpen={isModalOpen} onClose={() => { setIsModalOpen(false); setEditRecord(null); }} editRecord={editRecord} onSuccess={fetchData} />
-      <GenericDetailsModal record={selectedRecordForDetails} entityName="Contact" isOpen={isDetailsOpen} onClose={() => { setIsDetailsOpen(false); setSelectedRecordForDetails(null); }} onSuccess={fetchData} />
+      <ContactCreateModal isOpen={isModalOpen} onClose={() => { setIsModalOpen(false); setEditRecord(null); }} editRecord={editRecord} onSuccess={fetchData} />
+      <ContactDetailsModal record={selectedRecordForDetails} isOpen={isDetailsOpen} onClose={() => { setIsDetailsOpen(false); setSelectedRecordForDetails(null); }} />
     </div>
   );
 }

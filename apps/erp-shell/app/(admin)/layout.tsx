@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import Sidebar from "@/components/Sidebar";
 import Header from "@/components/Header";
+import ToastContainer from "@/components/ToastContainer";
 import { useAuth } from "@/contexts/AuthContext";
 import { getAccessToken } from "@datavex/auth-middleware";
 
@@ -71,6 +72,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           {children}
         </main>
       </div>
+      <ToastContainer />
     </div>
   );
 }

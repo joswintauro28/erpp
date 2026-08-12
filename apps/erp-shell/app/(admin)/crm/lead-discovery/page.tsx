@@ -39,7 +39,7 @@ export default function LeadDiscoveryPage() {
 
   const fetchPinnedLeads = useCallback(async () => {
     try {
-      const data = await api.get<any[]>("/crm/lead-discovery/pinned");
+      const data = await api.get<any[]>("/lead-discovery/pinned");
       setPinnedLeads(data);
     } catch {}
   }, []);
@@ -61,12 +61,12 @@ export default function LeadDiscoveryPage() {
 
     try {
       const isUrl = searchMode === "url" && targetUrl.trim().length > 0;
-      const endpoint = isUrl ? "/crm/lead-discovery/scrape-url" : "/crm/lead-discovery/search";
+      const endpoint = isUrl ? "/lead-discovery/scrape-url" : "/lead-discovery/search";
       const body = isUrl
         ? { url: targetUrl }
         : { city: city || null, industry: industry || null, company_name: companyName || null, searchBy: "Employees", minEmployees: "200", refresh: false };
 
-      const res = await fetch(`/api${endpoint}`, {
+      const res = await fetch(`${CRM_BASE}/api${endpoint}`, {
         method: "POST", headers: getAuthHeaders(), body: JSON.stringify(body), signal: controller.signal,
       });
 
@@ -113,10 +113,10 @@ export default function LeadDiscoveryPage() {
   const togglePin = async (company: any) => {
     if (isPinned(company)) {
       setPinnedLeads(prev => prev.filter(c => c.company_name !== company.company_name));
-      try { await api.delete(`/crm/lead-discovery/pinned/${encodeURIComponent(company.company_name)}`); } catch {}
+      try { await api.delete(`/lead-discovery/pinned/${encodeURIComponent(company.company_name)}`); } catch {}
     } else {
       setPinnedLeads(prev => [...prev, company]);
-      try { await api.post("/crm/lead-discovery/pinned", company); } catch {}
+      try { await api.post("/lead-discovery/pinned", company); } catch {}
     }
   };
 
@@ -124,7 +124,7 @@ export default function LeadDiscoveryPage() {
     if (selectedLeads.length === 0) return;
     setImporting(true);
     try {
-      await api.post("/crm/lead-discovery/import", { companies: selectedLeads });
+      await api.post("/lead-discovery/import", { companies: selectedLeads });
       alert(`Successfully imported ${selectedLeads.length} leads!`);
       setSelectedLeads([]);
     } catch {

@@ -89,7 +89,6 @@ const navItems: NavItem[] = [
         name: "Intelligence",
         children: [
           { name: "Reports", href: "/crm/reports", icon: BarChart2 },
-          { name: "AI Assistant", href: "/crm/ai-assistant", icon: Sparkles },
           { name: "Lead Discovery", href: "/crm/lead-discovery", icon: Search },
         ],
       },
