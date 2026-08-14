@@ -26,7 +26,6 @@ class DashboardService:
             "low_stock_count": inventory.get("low_stock_count", 0),
             "pipeline_value": crm.get("pipeline_value", 0),
             "open_opportunities": crm.get("open_opportunities", 0),
-            "open_complaints": crm.get("open_complaints", 0),
             "total_warehouses": inventory.get("total_warehouses", 0),
             "total_stock": inventory.get("total_stock", 0),
             "pending_purchase_orders": inventory.get("pending_pos", 0),

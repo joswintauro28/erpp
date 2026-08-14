@@ -19,7 +19,7 @@ import MetricCard from "./MetricCard";
 import PipelineChart from "./PipelineChart";
 import Recommendations from "./Recommendations";
 
-const STAGE_COLORS = ["#8C1D24", "#E5B83C", "#6366f1", "#10b981", "#f43f5e"];
+const STAGE_COLORS = ["var(--shell-brand)", "#E5B83C", "#6366f1", "#10b981", "#f43f5e"];
 const KPI_COLORS = ["var(--chart-1)", "var(--chart-2)", "var(--chart-4)", "var(--chart-3)"];
 
 const tooltipStyle = {
@@ -98,11 +98,18 @@ export default function DashboardPage() {
   return (
     <div className="space-y-10 lg:space-y-12">
       {/* Welcome Greeting */}
-      <div className="flex flex-col gap-1">
-        <h1 className="font-heading text-xl font-semibold tracking-tight text-[var(--shell-foreground)]">
-          {getGreeting()}, {user?.full_name || user?.email || "User"}
-        </h1>
-        <p className="text-sm text-[var(--shell-muted)]">Here&apos;s what&apos;s moving across your pipeline and accounts today.</p>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[var(--shell-border)] pb-5">
+        <div className="flex flex-col gap-1">
+          <h1 className="font-heading text-2xl font-semibold tracking-tight text-[var(--shell-foreground)]">
+            {getGreeting()}, {user?.full_name || user?.email || "Sales Executive"}
+          </h1>
+          <p className="text-sm text-[var(--shell-muted)]">Here&apos;s what&apos;s moving across your pipeline and accounts today.</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Badge variant="outline" className="px-3 py-1 text-xs border-[var(--shell-brand)]/40 text-[var(--shell-brand)] bg-[var(--shell-brand)]/5 font-medium">
+            CRM Sales Hub
+          </Badge>
+        </div>
       </div>
 
       {/* Alert Banner */}
@@ -211,8 +218,8 @@ export default function DashboardPage() {
                     <BarChart data={[...stages].sort((a: any, b: any) => b.value - a.value)} margin={{ top: 16, right: 8, bottom: 0, left: -16 }}>
                       <defs>
                         <linearGradient id="colorDiscoveryBar" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#8C1D24" stopOpacity={0.9}/>
-                          <stop offset="95%" stopColor="#8C1D24" stopOpacity={0.4}/>
+                          <stop offset="5%" stopColor="var(--shell-brand)" stopOpacity={0.9}/>
+                          <stop offset="95%" stopColor="var(--shell-brand)" stopOpacity={0.4}/>
                         </linearGradient>
                         <linearGradient id="colorQuoteBar" x1="0" y1="0" x2="0" y2="1">
                           <stop offset="5%" stopColor="#E5B83C" stopOpacity={0.9}/>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus, PackageOpen, Loader2, Search, ArrowRight, Boxes, Warehouse, Edit3, Trash2, AlertTriangle } from "lucide-react";
+import { Plus, PackageOpen, Loader2, Search, ArrowRight, Boxes, Warehouse, Edit3, Trash2, AlertTriangle, Truck } from "lucide-react";
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,8 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { api } from "@/services/api";
 import { money } from "@/utils/format";
+import { toastError } from "@/utils/toast";
+import { PageHeader, KpiCard, SectionHeading } from "@datavex/ui-theme";
 import Link from "next/link";
 
 interface Product {
@@ -107,7 +109,7 @@ export default function ProductsPage() {
       fetchProducts();
     } catch (err) {
       console.error(err);
-      alert("Failed to delete product.");
+      toastError("Failed to delete product.");
     }
   };
 
@@ -119,31 +121,40 @@ export default function ProductsPage() {
   );
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-4">
-        <div>
-          <h1 className="font-heading text-2xl font-semibold tracking-tight text-[--shell-foreground] flex items-center gap-2">
-            <Boxes className="h-6 w-6 text-[#8C1D24]" />
-            Product Master Catalog
-          </h1>
-          <p className="mt-1 text-sm text-[--shell-muted]">
-            Manage master product records, SKU identifiers, selling prices, and cost margins.
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Link href="/inventory/stock">
-            <Button variant="outline" size="sm">
-              <Warehouse className="h-4 w-4 mr-2" /> View Stock Levels
+    <div className="space-y-10 lg:space-y-12">
+      {/* Sticky Header Block */}
+      <PageHeader
+        title="Product Master Catalog"
+        subtitle="Manage master product records, SKU identifiers, selling prices, and cost margins."
+        badge="Inventory Center"
+        actions={
+          <>
+            <Link href="/inventory/stock">
+              <Button variant="outline" size="sm" className="gap-1.5 text-xs">
+                <Warehouse className="h-3.5 w-3.5" /> View Stock Levels
+              </Button>
+            </Link>
+            <Button size="sm" onClick={() => setIsAddOpen(true)} className="bg-[var(--shell-brand)] text-white hover:bg-[var(--shell-brand)]/90 gap-1.5 text-xs shadow-sm">
+              <Plus className="h-3.5 w-3.5" /> Add New Product
             </Button>
-          </Link>
-          <Button size="sm" onClick={() => setIsAddOpen(true)} className="bg-[#8C1D24] text-white hover:bg-[#70171d]">
-            <Plus className="h-4 w-4 mr-2" /> Add New Product
-          </Button>
+          </>
+        }
+      />
+
+      {/* Summary KPI Bar */}
+      <section>
+        <SectionHeading label="Overview" />
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+          <KpiCard label="Total SKUs" value={products.length} subtitle="Catalog Items" icon={Boxes} color="var(--chart-1)" index={0} />
+          <KpiCard label="Active Items" value={products.filter((p) => p.is_active).length} subtitle="Ready for Sales" icon={PackageOpen} color="var(--chart-2)" index={1} />
+          <KpiCard label="QC Mandatory" value={products.filter((p) => p.qc_required).length} subtitle="Quality Check" icon={AlertTriangle} color="var(--chart-3)" index={2} />
+          <KpiCard label="Purchased SKUs" value={products.filter((p) => p.make_or_buy === "buy").length} subtitle="Vendor Sourced" icon={Truck} color="var(--chart-4)" index={3} />
         </div>
-      </div>
+      </section>
 
       {/* Catalog Table */}
+      <section>
+        <SectionHeading label="Master Catalog" />
       <Card>
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
@@ -212,7 +223,7 @@ export default function ProductsPage() {
                             setQcRequired(!!p.qc_required);
                           }}
                         >
-                          <Edit3 className="h-3.5 w-3.5 text-muted-foreground hover:text-[#8C1D24]" />
+                          <Edit3 className="h-3.5 w-3.5 text-muted-foreground hover:text-[var(--shell-brand)]" />
                         </Button>
                         <Button
                           variant="ghost"
@@ -230,6 +241,7 @@ export default function ProductsPage() {
           )}
         </CardContent>
       </Card>
+      </section>
 
       {/* Add Product Modal */}
       <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
@@ -307,7 +319,7 @@ export default function ProductsPage() {
                     type="checkbox"
                     checked={qcRequired}
                     onChange={(e) => setQcRequired(e.target.checked)}
-                    className="h-4 w-4 accent-[#8C1D24]"
+                    className="h-4 w-4 accent-[var(--shell-brand)]"
                   />
                   QC Required on Receipt
                 </label>
@@ -318,7 +330,7 @@ export default function ProductsPage() {
             <Button variant="outline" size="sm" onClick={() => setIsAddOpen(false)}>
               Cancel
             </Button>
-            <Button size="sm" onClick={handleCreateProduct} className="bg-[#8C1D24] text-white">
+            <Button size="sm" onClick={handleCreateProduct} className="bg-[var(--shell-brand)] text-white">
               Save Product
             </Button>
           </div>
@@ -400,7 +412,7 @@ export default function ProductsPage() {
                       type="checkbox"
                       checked={qcRequired}
                       onChange={(e) => setQcRequired(e.target.checked)}
-                      className="h-4 w-4 accent-[#8C1D24]"
+                      className="h-4 w-4 accent-[var(--shell-brand)]"
                     />
                     QC Required on Receipt
                   </label>
@@ -411,7 +423,7 @@ export default function ProductsPage() {
               <Button variant="outline" size="sm" onClick={() => setEditingProduct(null)}>
                 Cancel
               </Button>
-              <Button size="sm" onClick={handleUpdateProduct} className="bg-[#8C1D24] text-white">
+              <Button size="sm" onClick={handleUpdateProduct} className="bg-[var(--shell-brand)] text-white">
                 Save Changes
               </Button>
             </div>

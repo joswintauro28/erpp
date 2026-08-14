@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { money } from "@/utils/format";
+import { toastError } from "@/utils/toast";
 import { api } from "@/services/api";
 import type { ApiProduct } from "@/types/inventory";
 import ProductsLoading from "./loading";
@@ -107,7 +108,7 @@ export default function Products() {
   const handleDeleteProduct = async () => {
     if (!productToDelete) return;
     try { await api.delete(`/products/${productToDelete.id}`); setProductToDelete(null); fetchProducts(); }
-    catch { alert("Failed to delete product."); }
+    catch { toastError("Failed to delete product."); }
   };
 
   const activeCount = apiProducts.filter((p) => p.is_active).length;

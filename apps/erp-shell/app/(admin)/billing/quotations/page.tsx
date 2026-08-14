@@ -16,19 +16,13 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { MultiStepDialog } from "@/components/multi-step-dialog";
-import { searchBilling, money } from "@/utils/format";
+import { searchBilling, money, statusVariant } from "@/utils/format";
 import type { Quotation } from "@/types/billing";
 import { api } from "@/services/api";
 import QuotationsLoading from "./loading";
 
 const statusOptions = ["", "draft", "sent", "accepted", "rejected", "expired"] as const;
 
-const statusVariant = (s: string) => {
-  if (s === "accepted") return "default" as const;
-  if (s === "sent") return "secondary" as const;
-  if (s === "rejected" || s === "expired") return "destructive" as const;
-  return "outline" as const;
-};
 
 interface ClientRef {
   id: number;
@@ -212,7 +206,7 @@ export default function Quotations() {
                       <TableCell className="text-xs text-[var(--shell-muted)]">{q.issue_date}</TableCell>
                       <TableCell className="text-xs text-[var(--shell-muted)]">{q.valid_until}</TableCell>
                       <TableCell>
-                        <Badge variant={statusVariant(q.status)} className="capitalize">
+                        <Badge variant={statusVariant("quotation", q.status)} className="capitalize">
                           {q.status}
                           {q.converted_invoice_id && " (Invoiced)"}
                         </Badge>

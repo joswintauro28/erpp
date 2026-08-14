@@ -95,6 +95,8 @@
   --shell-success: #166534;            /* Dark emerald forest safe text */
   --shell-warning: #9A3412;            /* Highly readable safety orange */
   --shell-danger: #991B1B;             /* Pure crisis notification red */
+  --shell-info: #1E40AF;               /* Deep indigo informational text (D-12) */
+  --shell-info-surface: #EFF6FF;       /* Ice-blue tint behind info badges */
   --shell-header: #3D1013;             /* Darkened premium header context */
 
   /* Sidebar Architecture — Deep Chassis Shell */
@@ -144,6 +146,8 @@
   --shell-success: #4ADE80;
   --shell-warning: #F97316;
   --shell-danger: #F87171;
+  --shell-info: #60A5FA;
+  --shell-info-surface: #1E293B;
   --shell-header: #270A0C;
 
   /* Sidebar Architecture — Dark Chassis */
@@ -245,11 +249,11 @@
   }
 
   label {
-    font-size: 0.725rem !important;
-    font-weight: 650 !important;
-    color: var(--shell-muted) !important;
-    letter-spacing: 0.04em;
-    text-transform: uppercase; /* Industrial micro-caps look */
+    font-size: 0.8125rem !important; /* 13px sentence-case field labels (DESIGN.md §4.2) */
+    font-weight: 500 !important;
+    color: var(--shell-foreground) !important;
+    letter-spacing: normal;
+    text-transform: none;
   }
 
   input,
@@ -296,6 +300,18 @@
 
 ::-webkit-scrollbar-thumb:hover {
   background-color: var(--shell-brand, #9a3412);
+}
+
+/* Accessibility: honor reduced-motion preferences (DESIGN.md §12/§13) */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 @keyframes shimmer-swipe {

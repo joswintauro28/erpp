@@ -181,7 +181,7 @@ export default function ReconciliationPage() {
           <Button size="sm" variant="outline" className="gap-1.5" onClick={() => load()}>
             <RefreshCw className="h-4 w-4" /> Reload
           </Button>
-          <Button size="sm" className="gap-1.5 bg-[#8C1D24] text-white hover:bg-[#72161B]" onClick={() => setImportOpen(true)}>
+          <Button size="sm" className="gap-1.5 bg-[var(--shell-brand)] text-white hover:bg-[var(--shell-action)]" onClick={() => setImportOpen(true)}>
             <Upload className="h-4 w-4" /> Import Statement
           </Button>
         </div>
@@ -204,25 +204,25 @@ export default function ReconciliationPage() {
       <div className="flex border-b border-[var(--shell-border)]">
         <button onClick={() => setActiveTab("transactions")}
           className={`px-5 py-3 text-sm font-medium border-b-2 transition-all ${
-            activeTab === "transactions" ? "border-[#8C1D24] text-[#8C1D24]" : "border-transparent text-[var(--shell-muted)] hover:text-[var(--shell-foreground)]"
+            activeTab === "transactions" ? "border-[var(--shell-brand)] text-[var(--shell-brand)]" : "border-transparent text-[var(--shell-muted)] hover:text-[var(--shell-foreground)]"
           }`}>
           <span className="flex items-center gap-2"><Banknote className="h-4 w-4" /> Transactions ({filteredTransactions.length})</span>
         </button>
         <button onClick={() => setActiveTab("settings")}
           className={`px-5 py-3 text-sm font-medium border-b-2 transition-all ${
-            activeTab === "settings" ? "border-[#8C1D24] text-[#8C1D24]" : "border-transparent text-[var(--shell-muted)] hover:text-[var(--shell-foreground)]"
+            activeTab === "settings" ? "border-[var(--shell-brand)] text-[var(--shell-brand)]" : "border-transparent text-[var(--shell-muted)] hover:text-[var(--shell-foreground)]"
           }`}>
           <span className="flex items-center gap-2"><Sliders className="h-4 w-4" /> Tolerance Rules</span>
         </button>
         <button onClick={() => setActiveTab("variance")}
           className={`px-5 py-3 text-sm font-medium border-b-2 transition-all ${
-            activeTab === "variance" ? "border-[#8C1D24] text-[#8C1D24]" : "border-transparent text-[var(--shell-muted)] hover:text-[var(--shell-foreground)]"
+            activeTab === "variance" ? "border-[var(--shell-brand)] text-[var(--shell-brand)]" : "border-transparent text-[var(--shell-muted)] hover:text-[var(--shell-foreground)]"
           }`}>
           <span className="flex items-center gap-2"><Activity className="h-4 w-4" /> Variance Report</span>
         </button>
         <button onClick={() => setActiveTab("audit")}
           className={`px-5 py-3 text-sm font-medium border-b-2 transition-all ${
-            activeTab === "audit" ? "border-[#8C1D24] text-[#8C1D24]" : "border-transparent text-[var(--shell-muted)] hover:text-[var(--shell-foreground)]"
+            activeTab === "audit" ? "border-[var(--shell-brand)] text-[var(--shell-brand)]" : "border-transparent text-[var(--shell-muted)] hover:text-[var(--shell-foreground)]"
           }`}>
           <span className="flex items-center gap-2"><History className="h-4 w-4" /> Audit Trails</span>
         </button>
@@ -309,7 +309,7 @@ export default function ReconciliationPage() {
                         {tx.matched ? (
                           <Button variant="ghost" size="sm" className="text-xs text-destructive hover:bg-destructive/10" onClick={() => handleUnmatch(tx.id)}>Unmatch</Button>
                         ) : (
-                          <Button variant="outline" size="sm" className="text-xs hover:border-[#8C1D24] hover:text-[#8C1D24]" onClick={() => openMatchDialog(tx)}>Match Manually</Button>
+                          <Button variant="outline" size="sm" className="text-xs hover:border-[var(--shell-brand)] hover:text-[var(--shell-brand)]" onClick={() => openMatchDialog(tx)}>Match Manually</Button>
                         )}
                       </TableCell>
                     </TableRow>
@@ -351,7 +351,7 @@ export default function ReconciliationPage() {
                 <div className="space-y-3 pt-2">
                   <Label className="text-xs font-semibold">Enabled Criteria MATCH Priority</Label>
                   <div className="flex items-center space-x-3 rounded-lg border border-[var(--shell-border)] p-3.5">
-                    <input id="match_by_reference" type="checkbox" className="h-4 w-4 accent-[#8C1D24]"
+                    <input id="match_by_reference" type="checkbox" className="h-4 w-4 accent-[var(--shell-brand)]"
                       checked={toleranceRule.match_by_reference}
                       onChange={(e) => setToleranceRule({ ...toleranceRule, match_by_reference: e.target.checked })}
                     />
@@ -361,7 +361,7 @@ export default function ReconciliationPage() {
                     </div>
                   </div>
                   <div className="flex items-center space-x-3 rounded-lg border border-[var(--shell-border)] p-3.5">
-                    <input id="match_by_ledger" type="checkbox" className="h-4 w-4 accent-[#8C1D24]"
+                    <input id="match_by_ledger" type="checkbox" className="h-4 w-4 accent-[var(--shell-brand)]"
                       checked={toleranceRule.match_by_ledger}
                       onChange={(e) => setToleranceRule({ ...toleranceRule, match_by_ledger: e.target.checked })}
                     />
@@ -372,7 +372,7 @@ export default function ReconciliationPage() {
                   </div>
                 </div>
               </div>
-              <Button type="submit" className="bg-[#8C1D24] text-white hover:bg-[#72161B]">Save Configurations</Button>
+              <Button type="submit" className="bg-[var(--shell-brand)] text-white hover:bg-[var(--shell-action)]">Save Configurations</Button>
             </form>
           </CardContent>
         </Card>
@@ -490,7 +490,7 @@ export default function ReconciliationPage() {
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" size="sm" onClick={() => setImportOpen(false)}>Cancel</Button>
-              <Button type="submit" size="sm" className="bg-[#8C1D24] text-white hover:bg-[#72161B]" disabled={importing || !selectedFile}>
+              <Button type="submit" size="sm" className="bg-[var(--shell-brand)] text-white hover:bg-[var(--shell-action)]" disabled={importing || !selectedFile}>
                 {importing ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : null}
                 {importing ? "Processing Statement..." : "Upload & Analyze"}
               </Button>
@@ -571,7 +571,7 @@ export default function ReconciliationPage() {
           )}
           <DialogFooter>
             <Button variant="outline" size="sm" onClick={() => setMatchDialog(null)}>Cancel</Button>
-            <Button size="sm" className="bg-[#8C1D24] text-white hover:bg-[#72161B]" onClick={handleManualMatch} disabled={!matchDialog?.pairId}>Reconcile Match</Button>
+            <Button size="sm" className="bg-[var(--shell-brand)] text-white hover:bg-[var(--shell-action)]" onClick={handleManualMatch} disabled={!matchDialog?.pairId}>Reconcile Match</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

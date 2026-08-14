@@ -4,16 +4,7 @@ import { Edit2, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
-
-const badgeVariant = (status: string) => {
-  switch (status) {
-    case "Draft": return "outline";
-    case "Under Review": return "secondary";
-    case "Signed": return "default";
-    case "Expired": return "destructive";
-    default: return "default";
-  }
-};
+import { statusVariant } from "@/lib/utils";
 
 interface DocumentTableProps {
   documents: any[];
@@ -54,7 +45,7 @@ export default function DocumentTable({ documents, onView, onEdit, onDelete }: D
             <TableCell>{item.type}</TableCell>
             <TableCell>{item.account}</TableCell>
             <TableCell>{item.size}</TableCell>
-            <TableCell><Badge variant={badgeVariant(item.status)}>{item.status}</Badge></TableCell>
+            <TableCell><Badge variant={statusVariant("document", item.status)}>{item.status}</Badge></TableCell>
             <TableCell>{item.owner}</TableCell>
             <TableCell className="text-[var(--shell-muted)]">{item.updated_at}</TableCell>
             <TableCell>

@@ -19,12 +19,13 @@ import {
 import { cn } from "../../lib/utils";
 import { useNotifications, type LiveNotification } from "./notification-provider";
 
+// Semantic tints from --shell-* status tokens (DESIGN.md §7.3, D-11)
 const TYPE_META: Record<string, { icon: typeof Info; cls: string }> = {
-  INFO: { icon: Info, cls: "bg-blue-500/10 text-blue-500 border-blue-500/20" },
-  SUCCESS: { icon: CheckCircle2, cls: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" },
-  WARNING: { icon: AlertTriangle, cls: "bg-amber-500/10 text-amber-500 border-amber-500/20" },
-  ERROR: { icon: XCircle, cls: "bg-red-500/10 text-red-500 border-red-500/20" },
-  ACTION: { icon: ClipboardCheck, cls: "bg-violet-500/10 text-violet-500 border-violet-500/20" },
+  INFO: { icon: Info, cls: "bg-[var(--shell-info)]/10 text-[var(--shell-info)] border-[var(--shell-info)]/20" },
+  SUCCESS: { icon: CheckCircle2, cls: "bg-[var(--shell-success)]/10 text-[var(--shell-success)] border-[var(--shell-success)]/20" },
+  WARNING: { icon: AlertTriangle, cls: "bg-[var(--shell-warning)]/10 text-[var(--shell-warning)] border-[var(--shell-warning)]/20" },
+  ERROR: { icon: XCircle, cls: "bg-[var(--shell-danger)]/10 text-[var(--shell-danger)] border-[var(--shell-danger)]/20" },
+  ACTION: { icon: ClipboardCheck, cls: "bg-[var(--shell-brand)]/10 text-[var(--shell-brand)] border-[var(--shell-brand)]/20" },
 };
 
 function ModuleBadge({ source }: { source: string }) {
@@ -114,7 +115,7 @@ export function NotificationBell({
               <span
                 className={cn(
                   "flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[9px] font-semibold",
-                  connected ? "bg-emerald-500/10 text-emerald-500" : "bg-muted text-muted-foreground"
+                  connected ? "bg-[var(--shell-success)]/10 text-[var(--shell-success)]" : "bg-muted text-muted-foreground"
                 )}
               >
                 {connected ? <Wifi className="h-2.5 w-2.5" /> : <WifiOff className="h-2.5 w-2.5" />}

@@ -1,8 +1,9 @@
 "use client";
 
-import { PanelLeftOpen, PanelLeftClose, Search } from "lucide-react";
+import { PanelLeftOpen, PanelLeftClose } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NotificationBell } from "@/components/ui/notification-bell";
+import { SearchInput } from "@datavex/ui-theme";
 
 export default function Header({ collapsed, onToggleSidebar }: { collapsed: boolean; onToggleSidebar: () => void }) {
   return (
@@ -36,13 +37,8 @@ export default function Header({ collapsed, onToggleSidebar }: { collapsed: bool
       </div>
 
       <div className="flex items-center gap-3">
-        <div className="relative hidden md:block">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <input
-            type="text"
-            placeholder="Search invoices, clients, products..."
-            className="h-9 w-64 rounded-md border border-input bg-muted/50 pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-          />
+        <div className="hidden md:block">
+          <SearchInput placeholder="Search invoices, clients, products..." className="w-64" />
         </div>
 
         <NotificationBell />

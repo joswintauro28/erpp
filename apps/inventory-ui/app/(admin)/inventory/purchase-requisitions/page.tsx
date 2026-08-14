@@ -20,6 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { api } from "@/services/api";
+import { toastError, toastWarning } from "@/utils/toast";
 import { money } from "@/utils/format";
 
 interface ReqItem {
@@ -128,7 +129,7 @@ export default function PurchaseRequisitionsPage() {
       fetchData();
     } catch (err) {
       console.error(err);
-      alert("Failed to create requisition. Unknown product names must first exist in the product catalog.");
+      toastError("Failed to create requisition", "Unknown product names must first exist in the product catalog.");
     }
   };
 
@@ -138,14 +139,14 @@ export default function PurchaseRequisitionsPage() {
       fetchData();
     } catch (err) {
       console.error(err);
-      alert("Action failed — invalid transition?");
+      toastError("Action failed", "Invalid transition?");
     }
   };
 
   const handleConvert = async () => {
     if (!selectedReq) return;
     if (!convertSupplier || !convertWarehouse) {
-      alert("Select a supplier and destination warehouse for the purchase order.");
+      toastWarning("Select a supplier and destination warehouse for the purchase order.");
       return;
     }
     try {
@@ -157,7 +158,7 @@ export default function PurchaseRequisitionsPage() {
       fetchData();
     } catch (err) {
       console.error(err);
-      alert("Conversion failed. Only APPROVED requisitions can become purchase orders.");
+      toastError("Conversion failed", "Only APPROVED requisitions can become purchase orders.");
     }
   };
 
@@ -169,7 +170,7 @@ export default function PurchaseRequisitionsPage() {
       fetchData();
     } catch (err) {
       console.error(err);
-      alert("Failed to delete requisition.");
+      toastError("Failed to delete requisition.");
     }
   };
 
@@ -189,14 +190,14 @@ export default function PurchaseRequisitionsPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-4">
         <div>
           <h1 className="font-heading text-2xl font-semibold tracking-tight text-[--shell-foreground] flex items-center gap-2">
-            <ClipboardCheck className="h-6 w-6 text-[#8C1D24]" />
+            <ClipboardCheck className="h-6 w-6 text-[var(--shell-brand)]" />
             Purchase Requisitions
           </h1>
           <p className="mt-1 text-sm text-[--shell-muted]">
             Capture internal buy requests, route them through approval, and convert approved requests into purchase orders.
           </p>
         </div>
-        <Button size="sm" onClick={() => setIsAddOpen(true)} className="bg-[#8C1D24] text-white hover:bg-[#70171d]">
+        <Button size="sm" onClick={() => setIsAddOpen(true)} className="bg-[var(--shell-brand)] text-white hover:bg-[var(--shell-action)]">
           <Plus className="h-4 w-4 mr-2" /> Create Requisition
         </Button>
       </div>
@@ -257,7 +258,7 @@ export default function PurchaseRequisitionsPage() {
               <TableBody>
                 {filtered.map((r) => (
                   <TableRow key={r.id}>
-                    <TableCell className="font-mono text-xs font-bold text-[#8C1D24]">{r.pr_number}</TableCell>
+                    <TableCell className="font-mono text-xs font-bold text-[var(--shell-brand)]">{r.pr_number}</TableCell>
                     <TableCell>
                       <div className="font-medium text-foreground text-xs">{r.title}</div>
                       <div className="text-[10px] text-muted-foreground">
@@ -279,7 +280,7 @@ export default function PurchaseRequisitionsPage() {
                     <TableCell className="text-center">
                       <div className="flex items-center justify-center gap-1.5">
                         <Button variant="ghost" size="xs" onClick={() => setSelectedReq(r)}>
-                          <FileText className="h-3.5 w-3.5 text-muted-foreground hover:text-[#8C1D24]" />
+                          <FileText className="h-3.5 w-3.5 text-muted-foreground hover:text-[var(--shell-brand)]" />
                         </Button>
                         {r.status === "DRAFT" && (
                           <Button variant="ghost" size="xs" title="Submit for approval" onClick={() => runStatus(r.id, "submit")}>
@@ -358,7 +359,7 @@ export default function PurchaseRequisitionsPage() {
           </div>
           <div className="flex justify-end gap-2 mt-4">
             <Button variant="outline" size="sm" onClick={() => setIsAddOpen(false)}>Cancel</Button>
-            <Button size="sm" onClick={handleCreate} className="bg-[#8C1D24] text-white">Create Requisition</Button>
+            <Button size="sm" onClick={handleCreate} className="bg-[var(--shell-brand)] text-white">Create Requisition</Button>
           </div>
         </DialogContent>
       </Dialog>
@@ -370,7 +371,7 @@ export default function PurchaseRequisitionsPage() {
             <DialogHeader>
               <DialogTitle className="flex items-center justify-between text-base">
                 <span className="flex items-center gap-2">
-                  <FileText className="h-4 w-4 text-[#8C1D24]" /> {selectedReq.pr_number}
+                  <FileText className="h-4 w-4 text-[var(--shell-brand)]" /> {selectedReq.pr_number}
                 </span>
                 <Badge className={`${STATUS_BADGES[selectedReq.status]?.cls || "bg-muted"} text-[10px]`}>
                   {STATUS_BADGES[selectedReq.status]?.label || selectedReq.status}
@@ -401,7 +402,7 @@ export default function PurchaseRequisitionsPage() {
             </div>
 
             {selectedReq.status === "APPROVED" && (
-              <div className="p-3 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 rounded-md text-xs space-y-2">
+              <div className="p-3 bg-blue-50  border border-blue-200 rounded-md text-xs space-y-2">
                 <p className="font-bold uppercase tracking-wide text-muted-foreground">Convert to Purchase Order</p>
                 <div className="grid grid-cols-2 gap-2">
                   <div>
@@ -431,7 +432,7 @@ export default function PurchaseRequisitionsPage() {
                     </select>
                   </div>
                 </div>
-                <Button size="sm" onClick={handleConvert} className="bg-[#8C1D24] text-white w-full">
+                <Button size="sm" onClick={handleConvert} className="bg-[var(--shell-brand)] text-white w-full">
                   <ArrowRight className="h-4 w-4 mr-2" /> Generate Purchase Order
                 </Button>
               </div>
@@ -443,7 +444,7 @@ export default function PurchaseRequisitionsPage() {
                   <Button size="sm" variant="outline" onClick={() => runStatus(selectedReq.id, "reject")}>
                     Reject
                   </Button>
-                  <Button size="sm" onClick={() => runStatus(selectedReq.id, "approve")} className="bg-[#8C1D24] text-white">
+                  <Button size="sm" onClick={() => runStatus(selectedReq.id, "approve")} className="bg-[var(--shell-brand)] text-white">
                     Approve
                   </Button>
                 </>

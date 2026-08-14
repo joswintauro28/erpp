@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { api } from "@/services/api";
+import { toastError } from "@/utils/toast";
 import type { ApiSerialNumber, ApiProduct, ApiWarehouse } from "@/types/inventory";
 import SerialsLoading from "./loading";
 
@@ -89,7 +90,7 @@ export default function Serials() {
   const handleDelete = async () => {
     if (!serialToDelete) return;
     try { await api.delete(`/serial-numbers/${serialToDelete.id}`); setSerialToDelete(null); fetchSerials(); }
-    catch { alert("Failed to delete serial number."); }
+    catch { toastError("Failed to delete serial number."); }
   };
 
   const filtered = useMemo(() => {

@@ -10,27 +10,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { statusVariant } from "@/lib/utils";
 
 interface ContactDetailsModalProps {
   record: any;
   isOpen: boolean;
   onClose: () => void;
 }
-
-const badgeVariant = (type: string) => {
-  switch (type) {
-    case "Primary":
-      return "default";
-    case "Decision":
-      return "secondary";
-    case "Influencer":
-      return "outline";
-    case "Inactive":
-      return "destructive";
-    default:
-      return "default";
-  }
-};
 
 export default function ContactDetailsModal({
   record,
@@ -44,7 +30,7 @@ export default function ContactDetailsModal({
       <DialogContent className="sm:max-w-md bg-[var(--shell-surface)] border-[var(--shell-border)] text-[var(--shell-foreground)]">
         <DialogHeader className="flex flex-row items-center justify-between border-b border-[var(--shell-border)] pb-3">
           <div className="flex items-center gap-2">
-            <User className="size-5 text-[#C81D25]" />
+            <User className="size-5 text-[var(--shell-brand)]" />
             <DialogTitle className="text-lg font-semibold tracking-tight text-[var(--shell-foreground)]">
               Contact Details
             </DialogTitle>
@@ -61,7 +47,7 @@ export default function ContactDetailsModal({
                 {record.role} &middot; ID: {record.id_str}
               </p>
             </div>
-            <Badge variant={badgeVariant(record.type)} className="px-2.5 py-0.5 text-xs font-semibold">
+            <Badge variant={statusVariant("contact", record.type)} className="px-2.5 py-0.5 text-xs font-semibold">
               {record.type}
             </Badge>
           </div>
@@ -87,7 +73,7 @@ export default function ContactDetailsModal({
                 </span>
                 <a
                   href={`mailto:${record.email}`}
-                  className="font-medium text-[#C81D25] hover:underline"
+                  className="font-medium text-[var(--shell-brand)] hover:underline"
                 >
                   {record.email || "N/A"}
                 </a>

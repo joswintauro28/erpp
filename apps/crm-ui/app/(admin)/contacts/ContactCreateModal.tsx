@@ -252,7 +252,7 @@ export default function ContactCreateModal({
             <Button
               type="submit"
               disabled={submitting}
-              className="h-9 text-xs font-medium bg-[#C81D25] hover:bg-[#A0171E] text-white"
+              className="h-9 text-xs font-medium bg-[var(--shell-brand)] hover:bg-[var(--shell-action)] text-white"
             >
               {submitting ? "Saving..." : editRecord ? "Save Changes" : "Add Contact"}
             </Button>

@@ -30,12 +30,6 @@ import {
 import { api } from "@/services/api";
 import { money } from "@/utils/format";
 
-const statusVariant = (s: string) => {
-  if (s === "paid") return "default" as const;
-  if (s === "sent" || s === "pending") return "secondary" as const;
-  if (s === "overdue" || s === "DISCREPANCY") return "destructive" as const;
-  return "outline" as const;
-};
 
 export default function AgingWorkstationPage() {
   const [activeTab, setActiveTab] = useState<"summary" | "customers" | "invoices" | "reconciliation">("summary");
@@ -213,12 +207,12 @@ export default function AgingWorkstationPage() {
       </div>
 
       {/* Reconciliation Status Banner */}
-      <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border p-4 shadow-sm ${isReconciled ? "border-emerald-500/30 bg-emerald-50/50 dark:bg-emerald-950/20" : "border-amber-500/30 bg-amber-50/50 dark:bg-amber-950/20"}`}>
+      <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border p-4 shadow-sm ${isReconciled ? "border-emerald-500/30 bg-emerald-50/50 " : "border-amber-500/30 bg-amber-50/50 "}`}>
         <div className="flex items-center gap-3">
           {isReconciled ? (
-            <ShieldCheck className="h-6 w-6 text-emerald-600 dark:text-emerald-400 shrink-0" />
+            <ShieldCheck className="h-6 w-6 text-emerald-600  shrink-0" />
           ) : (
-            <AlertTriangle className="h-6 w-6 text-amber-600 dark:text-amber-400 shrink-0" />
+            <AlertTriangle className="h-6 w-6 text-amber-600  shrink-0" />
           )}
           <div>
             <h4 className="text-sm font-semibold flex items-center gap-2">
@@ -258,7 +252,7 @@ export default function AgingWorkstationPage() {
               <span>Unapplied Credits</span>
               <DollarSign className="h-4 w-4 text-emerald-600" />
             </div>
-            <p className="font-heading text-xl font-bold text-emerald-600 dark:text-emerald-400">
+            <p className="font-heading text-xl font-bold text-emerald-600 ">
               {money(summary?.kpis?.unappliedCredits || 0)}
             </p>
             <p className="text-[11px] text-muted-foreground mt-1">Advance customer credits</p>
@@ -295,7 +289,7 @@ export default function AgingWorkstationPage() {
               <span>Overdue &gt;30 Days</span>
               <AlertTriangle className="h-4 w-4 text-amber-500" />
             </div>
-            <p className="font-heading text-xl font-bold text-amber-600 dark:text-amber-400">
+            <p className="font-heading text-xl font-bold text-amber-600 ">
               {summary?.kpis?.overdue30PlusRatio || 0}%
             </p>
             <p className="text-[11px] text-muted-foreground mt-1">Overdue exposure ratio</p>

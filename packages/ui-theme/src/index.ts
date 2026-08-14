@@ -22,6 +22,36 @@ export * from "./components/ui/textarea";
 export * from "./components/ui/notification-provider";
 export * from "./components/ui/notification-bell";
 
+// Loading & layout primitives
+export * from "./components/ui/skeleton";
+export * from "./components/ui/tabs";
+export * from "./components/ui/toaster";
+
+// Accessible confirmation dialogs (replaces window.confirm)
+export * from "./components/ui/confirm-dialog";
+
+// Interaction primitives (D-14)
+export * from "./components/ui/tooltip";
+export * from "./components/ui/dropdown-menu";
+export * from "./components/ui/switch";
+export * from "./components/ui/checkbox";
+export * from "./components/ui/avatar";
+export * from "./components/ui/separator";
+
+// Navigation primitives (D-14)
+export * from "./components/ui/pagination";
+export * from "./components/ui/breadcrumb";
+
+// Shared composites
+export * from "./components/shared/multi-step-dialog";
+export * from "./components/shared/empty-state";
+export * from "./components/shared/search-input";
+export * from "./components/shared/loading-spinner";
+export * from "./components/shared/page-header";
+export * from "./components/shared/kpi-card";
+export * from "./components/shared/section-heading";
+
 // Export common utilities
 export { cn } from "./lib/utils";
-export * from "./components/shared/multi-step-dialog";
+export * from "./lib/utils";
+export * from "./utils/toast";

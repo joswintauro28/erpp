@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { exportToCSV } from "@/utils/exportCsv";
 import { toastSuccess, toastError, toastWarning, errorMessage } from "@/utils/toast";
+import { useConfirm } from "@datavex/ui-theme";
 import SalesOrderTable from "./SalesOrderTable";
 import { Spinner } from "@/components/ui/spinner";
 import { api } from "@/services/api";
@@ -33,10 +34,12 @@ export default function SalesOrdersPage() {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
+  const confirm = useConfirm();
+
   const handleDelete = async (record: any) => {
-    if (window.confirm("Are you sure?")) {
+    if (await confirm({ title: "Delete sales order", message: "Are you sure you want to delete this sales order?", destructive: true })) {
       try { await api.delete("/sales-orders/" + record.id_str); fetchData(); }
-      catch { alert("Delete failed"); }
+      catch { toastError("Delete failed"); }
     }
   };
 

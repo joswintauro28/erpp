@@ -4,23 +4,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Edit2, Trash2, BadgeCheck, Lock } from "lucide-react";
+import { statusVariant } from "@/lib/utils";
 
 // "Hold" is approvable so a held order can be re-run through the approval
 // pipeline once the credit exposure changes (limit raised, invoices paid).
 const APPROVABLE = ["Pending", "Confirmed", "Approved", "Hold", "Stock Hold"];
-
-const badgeVariant = (status: string) => {
-  switch (status) {
-    case "Pending": return "secondary";
-    case "Confirmed": return "default";
-    case "Invoiced": return "outline";
-    case "Cancelled": return "destructive";
-    case "Paid": return "default";
-    case "Hold": return "secondary";
-    case "Stock Hold": return "outline";
-    default: return "default";
-  }
-};
 
 const formatCurrency = (value: number) =>
   new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(value);
@@ -66,7 +54,7 @@ export default function SalesOrderTable({ salesOrders, onView, onEdit, onDelete,
             <TableCell>{item.account}</TableCell>
             <TableCell>{formatCurrency(item.value)}</TableCell>
             <TableCell>{item.eta}</TableCell>
-            <TableCell><Badge variant={badgeVariant(item.status)}>{item.status}</Badge></TableCell>
+            <TableCell><Badge variant={statusVariant("sales_order", item.status)}>{item.status}</Badge></TableCell>
             <TableCell>
               {creditStatus === "Approved" ? (
                 <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-600">

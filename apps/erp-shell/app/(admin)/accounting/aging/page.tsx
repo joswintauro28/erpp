@@ -16,12 +16,6 @@ import {
 import { api } from "@/services/api";
 import { money } from "@/utils/format";
 
-const statusVariant = (s: string) => {
-  if (s === "paid") return "default" as const;
-  if (s === "sent" || s === "pending") return "secondary" as const;
-  if (s === "overdue" || s === "DISCREPANCY") return "destructive" as const;
-  return "outline" as const;
-};
 
 export default function AgingWorkstationPage() {
   const [activeTab, setActiveTab] = useState<"summary" | "customers" | "invoices" | "reconciliation">("summary");

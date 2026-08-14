@@ -6,6 +6,8 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { exportToCSV } from "@/utils/exportCsv";
+import { toastError } from "@/utils/toast";
+import { useConfirm } from "@datavex/ui-theme";
 import RequirementTable from "./RequirementTable";
 import { Spinner } from "@/components/ui/spinner";
 import { api } from "@/services/api";
@@ -32,10 +34,12 @@ export default function RequirementsPage() {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
+  const confirm = useConfirm();
+
   const handleDelete = async (record: any) => {
-    if (window.confirm("Are you sure?")) {
+    if (await confirm({ title: "Delete requirement", message: "Are you sure you want to delete this requirement?", destructive: true })) {
       try { await api.delete("/requirements/" + record.id_str); fetchData(); }
-      catch { alert("Delete failed"); }
+      catch { toastError("Delete failed"); }
     }
   };
 

@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { api } from "@/services/api";
+import { toastError } from "@/utils/toast";
 
 interface QualityCheck {
   id: number;
@@ -76,7 +77,7 @@ export default function QualityChecksPage() {
       fetchData();
     } catch (err) {
       console.error(err);
-      alert("Failed to record quality result.");
+      toastError("Failed to record quality result.");
     }
   };
 
@@ -94,7 +95,7 @@ export default function QualityChecksPage() {
       fetchData();
     } catch (err) {
       console.error(err);
-      alert("Failed to create quality check.");
+      toastError("Failed to create quality check.");
     }
   };
 
@@ -116,14 +117,14 @@ export default function QualityChecksPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-4">
         <div>
           <h1 className="font-heading text-2xl font-semibold tracking-tight text-[--shell-foreground] flex items-center gap-2">
-            <ShieldCheck className="h-6 w-6 text-[#8C1D24]" />
+            <ShieldCheck className="h-6 w-6 text-[var(--shell-brand)]" />
             Quality Checks
           </h1>
           <p className="mt-1 text-sm text-[--shell-muted]">
             Inspect received goods before they move to stock — products flagged QC-required auto-create a pending check on GRN.
           </p>
         </div>
-        <Button size="sm" onClick={() => setIsAddOpen(true)} className="bg-[#8C1D24] text-white hover:bg-[#70171d]">
+        <Button size="sm" onClick={() => setIsAddOpen(true)} className="bg-[var(--shell-brand)] text-white hover:bg-[var(--shell-action)]">
           <Plus className="h-4 w-4 mr-2" /> Record Inspection
         </Button>
       </div>
@@ -134,7 +135,7 @@ export default function QualityChecksPage() {
           <Card key={s}>
             <CardContent className="p-4 flex items-center justify-between">
               <span className="text-xs font-semibold uppercase text-muted-foreground">{STATUS_BADGES[s].label}</span>
-              <span className="text-xl font-bold text-[#8C1D24]">{counts[s] || 0}</span>
+              <span className="text-xl font-bold text-[var(--shell-brand)]">{counts[s] || 0}</span>
             </CardContent>
           </Card>
         ))}
@@ -215,7 +216,7 @@ export default function QualityChecksPage() {
                             setSelectedCheck(c);
                             setQcResult("PASS");
                           }}
-                          className="bg-[#8C1D24] text-white"
+                          className="bg-[var(--shell-brand)] text-white"
                         >
                           Record Result
                         </Button>
@@ -254,10 +255,10 @@ export default function QualityChecksPage() {
                     className={`p-2.5 rounded-md border text-xs font-semibold transition-colors ${
                       qcResult === r
                         ? r === "PASS"
-                          ? "border-emerald-500 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30"
+                          ? "border-emerald-500 bg-emerald-50 text-emerald-700 "
                           : r === "FAIL"
-                            ? "border-red-500 bg-red-50 text-red-700 dark:bg-red-950/30"
-                            : "border-blue-500 bg-blue-50 text-blue-700 dark:bg-blue-950/30"
+                            ? "border-red-500 bg-red-50 text-red-700 "
+                            : "border-blue-500 bg-blue-50 text-blue-700 "
                         : "border-border text-muted-foreground hover:bg-muted"
                     }`}
                   >
@@ -279,7 +280,7 @@ export default function QualityChecksPage() {
             </div>
             <div className="flex justify-end gap-2 mt-4">
               <Button variant="outline" size="sm" onClick={() => setSelectedCheck(null)}>Cancel</Button>
-              <Button size="sm" onClick={handleRecord} className="bg-[#8C1D24] text-white">
+              <Button size="sm" onClick={handleRecord} className="bg-[var(--shell-brand)] text-white">
                 Save Result
               </Button>
             </div>
@@ -316,7 +317,7 @@ export default function QualityChecksPage() {
           </div>
           <div className="flex justify-end gap-2 mt-4">
             <Button variant="outline" size="sm" onClick={() => setIsAddOpen(false)}>Cancel</Button>
-            <Button size="sm" onClick={handleCreate} className="bg-[#8C1D24] text-white">Create Check</Button>
+            <Button size="sm" onClick={handleCreate} className="bg-[var(--shell-brand)] text-white">Create Check</Button>
           </div>
         </DialogContent>
       </Dialog>

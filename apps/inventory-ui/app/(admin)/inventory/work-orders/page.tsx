@@ -22,6 +22,7 @@ import { Input } from "@/components/ui/input";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { api } from "@/services/api";
+import { toastError, toastWarning } from "@/utils/toast";
 
 interface Operation {
   id: number;
@@ -111,7 +112,7 @@ export default function WorkOrdersPage() {
 
   const handleCreate = async () => {
     if (!productId) {
-      alert("Select the finished good to produce.");
+      toastWarning("Select the finished good to produce.");
       return;
     }
     try {
@@ -125,7 +126,7 @@ export default function WorkOrdersPage() {
       fetchData();
     } catch (err) {
       console.error(err);
-      alert("Failed to create work order.");
+      toastError("Failed to create work order.");
     }
   };
 
@@ -135,7 +136,7 @@ export default function WorkOrdersPage() {
       fetchData();
     } catch (err) {
       console.error(err);
-      alert("Action failed — check backend logs.");
+      toastError("Action failed", "Check backend logs.");
     }
   };
 
@@ -149,7 +150,7 @@ export default function WorkOrdersPage() {
       fetchData();
     } catch (err) {
       console.error(err);
-      alert("Material issue failed — insufficient stock?");
+      toastError("Material issue failed", "Insufficient stock?");
     }
   };
 
@@ -161,7 +162,7 @@ export default function WorkOrdersPage() {
       fetchData();
     } catch (err) {
       console.error(err);
-      alert("Failed to delete work order.");
+      toastError("Failed to delete work order.");
     }
   };
 
@@ -183,14 +184,14 @@ export default function WorkOrdersPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-4">
         <div>
           <h1 className="font-heading text-2xl font-semibold tracking-tight text-[--shell-foreground] flex items-center gap-2">
-            <Factory className="h-6 w-6 text-[#8C1D24]" />
+            <Factory className="h-6 w-6 text-[var(--shell-brand)]" />
             Manufacturing Work Orders
           </h1>
           <p className="mt-1 text-sm text-[--shell-muted]">
             Plan production runs, release raw materials, route operations, and receive finished goods into stock.
           </p>
         </div>
-        <Button size="sm" onClick={() => setIsAddOpen(true)} className="bg-[#8C1D24] text-white hover:bg-[#70171d]">
+        <Button size="sm" onClick={() => setIsAddOpen(true)} className="bg-[var(--shell-brand)] text-white hover:bg-[var(--shell-action)]">
           <Plus className="h-4 w-4 mr-2" /> Create Work Order
         </Button>
       </div>
@@ -201,7 +202,7 @@ export default function WorkOrdersPage() {
           <Card key={s}>
             <CardContent className="p-4 flex items-center justify-between">
               <span className="text-xs font-semibold uppercase text-muted-foreground">{STATUS_BADGES[s].label}</span>
-              <span className="text-xl font-bold text-[#8C1D24]">{counts[s] || 0}</span>
+              <span className="text-xl font-bold text-[var(--shell-brand)]">{counts[s] || 0}</span>
             </CardContent>
           </Card>
         ))}
@@ -263,7 +264,7 @@ export default function WorkOrdersPage() {
               <TableBody>
                 {filtered.map((wo) => (
                   <TableRow key={wo.id}>
-                    <TableCell className="font-mono text-xs font-bold text-[#8C1D24]">{wo.work_order_no}</TableCell>
+                    <TableCell className="font-mono text-xs font-bold text-[var(--shell-brand)]">{wo.work_order_no}</TableCell>
                     <TableCell>
                       <div className="font-medium text-foreground text-xs">{wo.product_name}</div>
                       <div className="text-[10px] text-muted-foreground">{wo.sku || "—"}</div>
@@ -290,7 +291,7 @@ export default function WorkOrdersPage() {
                     <TableCell className="text-center">
                       <div className="flex items-center justify-center gap-1.5">
                         <Button variant="ghost" size="xs" onClick={() => setSelectedOrder(wo)}>
-                          <Layers className="h-3.5 w-3.5 text-muted-foreground hover:text-[#8C1D24]" />
+                          <Layers className="h-3.5 w-3.5 text-muted-foreground hover:text-[var(--shell-brand)]" />
                         </Button>
                         {wo.status === "DRAFT" && (
                           <Button variant="ghost" size="xs" title="Release (check raw material ATP)" onClick={() => runAction(wo.id, "release")}>
@@ -385,7 +386,7 @@ export default function WorkOrdersPage() {
             <Button variant="outline" size="sm" onClick={() => setIsAddOpen(false)}>
               Cancel
             </Button>
-            <Button size="sm" onClick={handleCreate} className="bg-[#8C1D24] text-white">
+            <Button size="sm" onClick={handleCreate} className="bg-[var(--shell-brand)] text-white">
               Create Work Order
             </Button>
           </div>
@@ -399,7 +400,7 @@ export default function WorkOrdersPage() {
             <DialogHeader>
               <DialogTitle className="flex items-center justify-between text-base">
                 <span className="flex items-center gap-2">
-                  <Wrench className="h-4 w-4 text-[#8C1D24]" /> {selectedOrder.work_order_no}
+                  <Wrench className="h-4 w-4 text-[var(--shell-brand)]" /> {selectedOrder.work_order_no}
                 </span>
                 <Badge className={`${STATUS_BADGES[selectedOrder.status]?.cls || "bg-muted"} text-[10px]`}>
                   {STATUS_BADGES[selectedOrder.status]?.label || selectedOrder.status}
@@ -476,7 +477,7 @@ export default function WorkOrdersPage() {
                       </span>
                     </div>
                     {selectedOrder.status !== "COMPLETED" && m.quantity_issued < m.quantity_required && (
-                      <Button size="xs" onClick={() => handleIssueMaterial(selectedOrder, m)} className="bg-[#8C1D24] text-white">
+                      <Button size="xs" onClick={() => handleIssueMaterial(selectedOrder, m)} className="bg-[var(--shell-brand)] text-white">
                         <Boxes className="h-3 w-3 mr-1" /> Issue Remaining
                       </Button>
                     )}
@@ -486,14 +487,14 @@ export default function WorkOrdersPage() {
             </div>
 
             {selectedOrder.status === "RELEASED" && (
-              <div className="p-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 rounded-md text-xs">
+              <div className="p-3 bg-amber-50  border border-amber-200 rounded-md text-xs">
                 Release succeeded. Start production to open routing operations and issue materials.
               </div>
             )}
 
             <div className="flex justify-end gap-2 mt-4 border-t border-border pt-3">
               {selectedOrder.status === "IN_PROGRESS" && (
-                <Button size="sm" onClick={() => runAction(selectedOrder.id, "complete")} className="bg-[#8C1D24] text-white">
+                <Button size="sm" onClick={() => runAction(selectedOrder.id, "complete")} className="bg-[var(--shell-brand)] text-white">
                   <CheckCircle2 className="h-4 w-4 mr-2" /> Complete & Credit Finished Goods
                 </Button>
               )}

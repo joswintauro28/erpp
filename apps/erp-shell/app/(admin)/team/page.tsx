@@ -21,7 +21,7 @@ import { api } from "@/services/api";
 import type { TeamMember } from "@/types/settings";
 
 const roleColors: Record<string, string> = {
-  "Organization Owner": "#8C1D24", // Crimson Red
+  "Organization Owner": "var(--shell-brand)", // Crimson Red
   "Accountant": "#E5B83C",        // Brushed Gold
   "Sales Executive": "#3b82f6",    // Blue
   "Inventory Manager": "#10b981",  // Green
@@ -251,7 +251,7 @@ export default function TeamManagement() {
   return (
     <div className="relative space-y-6">
       {/* Brand Sweep Line */}
-      <span className="absolute -top-6 left-0 h-0.5 w-1/3 rounded-full bg-[#8C1D24] shimmer-glow" />
+      <span className="absolute -top-6 left-0 h-0.5 w-1/3 rounded-full bg-[var(--shell-brand)] shimmer-glow" />
 
       {/* Header */}
       <div className="flex items-center justify-between">
@@ -266,7 +266,7 @@ export default function TeamManagement() {
         <Button 
           size="sm" 
           onClick={() => setInviteOpen(true)}
-          className="bg-[#8C1D24] hover:bg-[#8C1D24]/90 text-white shadow"
+          className="bg-[var(--shell-brand)] hover:bg-[var(--shell-brand)]/90 text-white shadow"
         >
           <Plus className="mr-1.5 h-3.5 w-3.5" />
           Invite Member
@@ -279,7 +279,7 @@ export default function TeamManagement() {
           onClick={() => setActiveTab("directory")}
           className={`px-4 py-1.5 text-sm font-semibold rounded-md transition-all ${
             activeTab === "directory"
-              ? "bg-[#8C1D24]/10 text-[#8C1D24] border border-[#8C1D24]/20"
+              ? "bg-[var(--shell-brand)]/10 text-[var(--shell-brand)] border border-[var(--shell-brand)]/20"
               : "text-[var(--shell-muted)] hover:text-[var(--shell-foreground)] hover:bg-[var(--shell-surface-alt)]/40"
           }`}
         >
@@ -294,7 +294,7 @@ export default function TeamManagement() {
           }}
           className={`px-4 py-1.5 text-sm font-semibold rounded-md transition-all ${
             activeTab === "permissions"
-              ? "bg-[#8C1D24]/10 text-[#8C1D24] border border-[#8C1D24]/20"
+              ? "bg-[var(--shell-brand)]/10 text-[var(--shell-brand)] border border-[var(--shell-brand)]/20"
               : "text-[var(--shell-muted)] hover:text-[var(--shell-foreground)] hover:bg-[var(--shell-surface-alt)]/40"
           }`}
         >
@@ -348,7 +348,7 @@ export default function TeamManagement() {
                 value: String(members.filter((m) => m.status === "disabled").length),
                 subtitle: "Access revoked",
                 icon: PowerOff,
-                color: "#8C1D24",
+                color: "var(--shell-brand)",
                 index: 2,
               },
               {
@@ -432,7 +432,7 @@ export default function TeamManagement() {
                           className={`text-[10px] font-semibold ${
                             m.status === "active"
                               ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20"
-                              : "bg-[#8C1D24]/10 text-[#8C1D24] border-[#8C1D24]/20"
+                              : "bg-[var(--shell-brand)]/10 text-[var(--shell-brand)] border-[var(--shell-brand)]/20"
                           }`}
                         >
                           {m.status}
@@ -467,7 +467,7 @@ export default function TeamManagement() {
                             }}
                             className="hover:bg-[var(--shell-surface-alt)]"
                           >
-                            <Pencil className="h-3.5 w-3.5 text-[var(--shell-muted)] hover:text-[#8C1D24] transition-colors" />
+                            <Pencil className="h-3.5 w-3.5 text-[var(--shell-muted)] hover:text-[var(--shell-brand)] transition-colors" />
                           </Button>
                           <Button 
                             variant="ghost" 
@@ -516,7 +516,7 @@ export default function TeamManagement() {
                   onClick={() => handleRoleSelect(r.id)}
                   className={`w-full text-left px-3.5 py-2.5 rounded-lg text-sm font-semibold transition-all ${
                     selectedRoleId === r.id
-                      ? "bg-[#8C1D24]/10 text-[#8C1D24] border border-[#8C1D24]/20"
+                      ? "bg-[var(--shell-brand)]/10 text-[var(--shell-brand)] border border-[var(--shell-brand)]/20"
                       : "text-[var(--shell-muted)] hover:text-[var(--shell-foreground)] hover:bg-[var(--shell-surface-alt)]/40"
                   }`}
                 >
@@ -543,7 +543,7 @@ export default function TeamManagement() {
                 onClick={handleSavePermissions}
                 disabled={savingPermissions}
                 size="sm"
-                className="bg-[#8C1D24] hover:bg-[#8C1D24]/90 text-white shadow"
+                className="bg-[var(--shell-brand)] hover:bg-[var(--shell-brand)]/90 text-white shadow"
               >
                 <Key className="mr-1.5 h-3.5 w-3.5" />
                 {savingPermissions ? "Saving Matrix..." : "Save Permissions"}
@@ -562,7 +562,7 @@ export default function TeamManagement() {
                           onClick={() => handlePermissionToggle(p.id)}
                           className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer select-none transition-all ${
                             isChecked
-                              ? "border-[#8C1D24]/40 bg-[#8C1D24]/5 hover:bg-[#8C1D24]/10"
+                              ? "border-[var(--shell-brand)]/40 bg-[var(--shell-brand)]/5 hover:bg-[var(--shell-brand)]/10"
                               : "border-[var(--shell-border)] bg-transparent hover:bg-[var(--shell-surface-alt)]/30"
                           }`}
                         >
@@ -570,7 +570,7 @@ export default function TeamManagement() {
                             type="checkbox"
                             checked={isChecked}
                             onChange={() => {}} // Controlled via onClick on outer box
-                            className="h-4 w-4 rounded border-[var(--shell-border)] accent-[#8C1D24] mt-0.5 cursor-pointer"
+                            className="h-4 w-4 rounded border-[var(--shell-border)] accent-[var(--shell-brand)] mt-0.5 cursor-pointer"
                           />
                           <div className="space-y-0.5">
                             <span className="block text-xs font-semibold text-[var(--shell-foreground)]">{p.name || p.code}</span>
@@ -643,7 +643,7 @@ export default function TeamManagement() {
             </div>
             <DialogFooter className="p-4 border-t border-[var(--shell-border)]/40 flex justify-end gap-2 bg-[var(--shell-surface-alt)]/25">
               <Button type="button" variant="outline" size="sm" onClick={() => setInviteOpen(false)} className="hover:bg-[var(--shell-surface-alt)]">Cancel</Button>
-              <Button type="submit" size="sm" disabled={inviting} className="bg-[#8C1D24] hover:bg-[#8C1D24]/90 text-white">
+              <Button type="submit" size="sm" disabled={inviting} className="bg-[var(--shell-brand)] hover:bg-[var(--shell-brand)]/90 text-white">
                 {inviting ? "Inviting..." : "Create Account"}
               </Button>
             </DialogFooter>
@@ -679,7 +679,7 @@ export default function TeamManagement() {
             </div>
             <DialogFooter className="p-4 border-t border-[var(--shell-border)]/40 flex justify-end gap-2 bg-[var(--shell-surface-alt)]/25">
               <Button type="button" variant="outline" size="sm" onClick={() => setEditRoleOpen(false)} className="hover:bg-[var(--shell-surface-alt)]">Cancel</Button>
-              <Button type="submit" size="sm" disabled={editingRole} className="bg-[#8C1D24] hover:bg-[#8C1D24]/90 text-white">
+              <Button type="submit" size="sm" disabled={editingRole} className="bg-[var(--shell-brand)] hover:bg-[var(--shell-brand)]/90 text-white">
                 {editingRole ? "Updating..." : "Update Role"}
               </Button>
             </DialogFooter>

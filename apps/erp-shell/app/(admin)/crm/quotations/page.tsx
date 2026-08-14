@@ -8,6 +8,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { api } from "@/services/api";
 import { exportToCSV } from "@/utils/exportCsv";
 import { toastSuccess, toastError, errorMessage } from "@/utils/toast";
+import { useConfirm } from "@datavex/ui-theme";
 import QuotationCreateModal from "./QuotationCreateModal";
 import QuotationDetailsModal from "./QuotationDetailsModal";
 import QuotationTable from "./QuotationTable";
@@ -35,8 +36,10 @@ export default function QuotationsPage() {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
+  const confirm = useConfirm();
+
   const handleDelete = async (record: any) => {
-    if (!window.confirm("Are you sure you want to delete this quotation?")) return;
+    if (!(await confirm({ title: "Delete quotation", message: "Are you sure you want to delete this quotation?", destructive: true }))) return;
     try {
       await api.delete("/quotations/" + record.id);
       fetchData();

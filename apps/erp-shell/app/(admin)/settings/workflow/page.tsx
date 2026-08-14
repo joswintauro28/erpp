@@ -34,7 +34,7 @@ export default function WorkflowAutomation() {
   return (
     <div className="relative space-y-6">
       {/* Brand Sweep Line */}
-      <span className="absolute -top-6 left-0 h-0.5 w-1/3 rounded-full bg-[#8C1D24] shimmer-glow" />
+      <span className="absolute -top-6 left-0 h-0.5 w-1/3 rounded-full bg-[var(--shell-brand)] shimmer-glow" />
 
       {/* Header */}
       <div className="flex items-center justify-between">
@@ -46,7 +46,7 @@ export default function WorkflowAutomation() {
             Define automated rules and triggers
           </p>
         </div>
-        <Button size="sm" className="bg-[#8C1D24] hover:bg-[#8C1D24]/90 text-white shadow">
+        <Button size="sm" className="bg-[var(--shell-brand)] hover:bg-[var(--shell-brand)]/90 text-white shadow">
           <Plus className="mr-1.5 h-3.5 w-3.5" />
           New Rule
         </Button>
@@ -76,7 +76,7 @@ export default function WorkflowAutomation() {
             value: String(rules.length),
             subtitle: "Total automation rules",
             icon: Repeat,
-            color: "#8C1D24", // Crimson Red
+            color: "var(--shell-brand)", // Crimson Red
             index: 2,
           },
         ].map((kpi) => (
@@ -117,10 +117,10 @@ export default function WorkflowAutomation() {
         <CardContent className="p-0">
           {filtered.length === 0 ? (
             <div className="flex flex-col items-center gap-3 py-20 text-[var(--shell-muted)]">
-              <Repeat className="h-12 w-12 text-[#8C1D24]/60" />
+              <Repeat className="h-12 w-12 text-[var(--shell-brand)]/60" />
               <p className="text-base font-medium text-[var(--shell-foreground)]">No workflow rules yet</p>
               <p className="text-sm">Create automation triggers to handle alerts, emails, and updates.</p>
-              <Button size="sm" className="mt-2 bg-[#8C1D24] hover:bg-[#8C1D24]/90 text-white shadow">
+              <Button size="sm" className="mt-2 bg-[var(--shell-brand)] hover:bg-[var(--shell-brand)]/90 text-white shadow">
                 <Plus className="mr-1.5 h-3.5 w-3.5" />
                 Create First Rule
               </Button>

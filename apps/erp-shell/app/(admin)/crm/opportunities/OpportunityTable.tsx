@@ -4,17 +4,7 @@ import { Edit2, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
-
-const badgeVariant = (stage: string) => {
-  switch (stage) {
-    case "Discovery": return "secondary";
-    case "Proposal": return "outline";
-    case "Negotiation": return "default";
-    case "Won": return "default";
-    case "Lost": return "destructive";
-    default: return "default";
-  }
-};
+import { statusVariant } from "@/lib/utils";
 
 const formatCurrency = (value: number) =>
   new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(value);
@@ -59,7 +49,7 @@ export default function OpportunityTable({ opportunities, onView, onEdit, onDele
             <TableCell>{formatCurrency(item.value)}</TableCell>
             <TableCell>{item.probability}</TableCell>
             <TableCell>{item.close_date}</TableCell>
-            <TableCell><Badge variant={badgeVariant(item.stage)}>{item.stage}</Badge></TableCell>
+            <TableCell><Badge variant={statusVariant("opportunity", item.stage)}>{item.stage}</Badge></TableCell>
             <TableCell>{item.owner}</TableCell>
             <TableCell>
               <div className="flex gap-2 text-[var(--shell-muted)]">

@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { api } from "@/services/api";
+import { toastError, toastWarning, toastSuccess } from "@/utils/toast";
 import type { ApiFulfillment, ApiFulfillmentItem } from "@/types/inventory";
 
 interface StockCheckItem {
@@ -75,11 +76,11 @@ export default function FulfillmentWorkflowModal({
   const handleStepBack = async () => {
     setLoading(true);
     try { await api.post(`/fulfillment/orders/${order.id}/step-back`, {}); onUpdate(); }
-    catch { alert("Failed to roll back."); } finally { setLoading(false); }
+    catch { toastError("Failed to roll back."); } finally { setLoading(false); }
   };
 
   const handleDispatch = async () => {
-    if (!trackingNumber) { alert("Please enter a tracking number"); return; }
+    if (!trackingNumber) { toastWarning("Please enter a tracking number"); return; }
     setLoading(true);
     try {
       await api.post(`/fulfillment/orders/${order.id}/dispatch`, {
@@ -95,7 +96,7 @@ export default function FulfillmentWorkflowModal({
     setLoading(true);
     try {
       await api.post(`/fulfillment/orders/${order.id}/create-po-shortage`, {});
-      alert("Purchase Order created for out-of-stock items!");
+      toastSuccess("Purchase Order created for out-of-stock items!");
       onUpdate();
     } catch { /* ignore */ } finally { setLoading(false); }
   };

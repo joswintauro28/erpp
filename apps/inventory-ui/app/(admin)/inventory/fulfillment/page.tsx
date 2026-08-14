@@ -23,6 +23,7 @@ import { Badge } from "@datavex/ui-theme";
 import { Card, CardContent, CardHeader, CardTitle } from "@datavex/ui-theme";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@datavex/ui-theme";
 import { api } from "@/services/api";
+import { toastError, toastWarning } from "@/utils/toast";
 import FulfillmentWorkflowModal, { FulfillmentOrder } from "@/components/FulfillmentWorkflowModal";
 
 interface MasterProduct {
@@ -88,7 +89,7 @@ export default function OrderFulfillmentPage() {
       fetchOrders();
     } catch (err) {
       console.error(err);
-      alert("Failed to create sales order. Please check backend logs.");
+      toastError("Failed to create sales order", "Please check backend logs.");
     }
   };
 
@@ -100,7 +101,7 @@ export default function OrderFulfillmentPage() {
       fetchOrders();
     } catch (err) {
       console.error(err);
-      alert("Failed to delete fulfillment order.");
+      toastError("Failed to delete fulfillment order.");
     }
   };
 
@@ -108,7 +109,7 @@ export default function OrderFulfillmentPage() {
 
   const handleCreateBatch = async () => {
     if (selectedBatchIds.length === 0) {
-      alert("Select at least one RESERVED order for the picking wave.");
+      toastWarning("Select at least one RESERVED order for the picking wave.");
       return;
     }
     try {
@@ -121,7 +122,7 @@ export default function OrderFulfillmentPage() {
       fetchOrders();
     } catch (err) {
       console.error(err);
-      alert("Batch creation failed — only RESERVED orders can be batched.");
+      toastError("Batch creation failed", "Only RESERVED orders can be batched.");
     }
   };
 
@@ -172,7 +173,7 @@ export default function OrderFulfillmentPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
-            <Boxes className="h-6 w-6 text-[#8C1D24]" />
+            <Boxes className="h-6 w-6 text-[var(--shell-brand)]" />
             Sales Order Fulfillment Workstation
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
@@ -186,7 +187,7 @@ export default function OrderFulfillmentPage() {
           <Button variant="outline" size="sm" onClick={() => setIsBatchOpen(true)}>
             <Layers className="h-4 w-4 mr-2" /> Create Wave Batch ({reservedOrders.length})
           </Button>
-          <Button size="sm" onClick={() => setIsIngestOpen(true)} className="bg-[#8C1D24] text-white hover:bg-[#70171d]">
+          <Button size="sm" onClick={() => setIsIngestOpen(true)} className="bg-[var(--shell-brand)] text-white hover:bg-[var(--shell-action)]">
             <Plus className="h-4 w-4 mr-2" /> Ingest Approved Sales Order
           </Button>
         </div>
@@ -254,37 +255,37 @@ export default function OrderFulfillmentPage() {
       <div className="flex items-center gap-2 border-b border-border pb-2 overflow-x-auto">
         <button
           onClick={() => setActiveTab("ALL")}
-          className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors ${activeTab === "ALL" ? "bg-[#8C1D24] text-white" : "text-muted-foreground hover:bg-muted"}`}
+          className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors ${activeTab === "ALL" ? "bg-[var(--shell-brand)] text-white" : "text-muted-foreground hover:bg-muted"}`}
         >
           All Orders ({orders.length})
         </button>
         <button
           onClick={() => setActiveTab("QUEUE")}
-          className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors ${activeTab === "QUEUE" ? "bg-[#8C1D24] text-white" : "text-muted-foreground hover:bg-muted"}`}
+          className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors ${activeTab === "QUEUE" ? "bg-[var(--shell-brand)] text-white" : "text-muted-foreground hover:bg-muted"}`}
         >
           Queue ({queuedCount})
         </button>
         <button
           onClick={() => setActiveTab("RESERVED")}
-          className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors ${activeTab === "RESERVED" ? "bg-[#8C1D24] text-white" : "text-muted-foreground hover:bg-muted"}`}
+          className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors ${activeTab === "RESERVED" ? "bg-[var(--shell-brand)] text-white" : "text-muted-foreground hover:bg-muted"}`}
         >
           Reserved ({reservedCount})
         </button>
         <button
           onClick={() => setActiveTab("PICK_PACK")}
-          className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors ${activeTab === "PICK_PACK" ? "bg-[#8C1D24] text-white" : "text-muted-foreground hover:bg-muted"}`}
+          className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors ${activeTab === "PICK_PACK" ? "bg-[var(--shell-brand)] text-white" : "text-muted-foreground hover:bg-muted"}`}
         >
           Pick & Pack ({pickPackCount})
         </button>
         <button
           onClick={() => setActiveTab("DISPATCHED")}
-          className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors ${activeTab === "DISPATCHED" ? "bg-[#8C1D24] text-white" : "text-muted-foreground hover:bg-muted"}`}
+          className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors ${activeTab === "DISPATCHED" ? "bg-[var(--shell-brand)] text-white" : "text-muted-foreground hover:bg-muted"}`}
         >
           Dispatched & Billed ({dispatchedCount})
         </button>
         <button
           onClick={() => setActiveTab("SHORTAGE")}
-          className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors ${activeTab === "SHORTAGE" ? "bg-[#8C1D24] text-white" : "text-muted-foreground hover:bg-muted"}`}
+          className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors ${activeTab === "SHORTAGE" ? "bg-[var(--shell-brand)] text-white" : "text-muted-foreground hover:bg-muted"}`}
         >
           Shortages ({shortageCount})
         </button>
@@ -349,7 +350,7 @@ export default function OrderFulfillmentPage() {
                             setSelectedOrder(o);
                             setIsModalOpen(true);
                           }}
-                          className="bg-[#8C1D24] text-white hover:bg-[#70171d] text-xs"
+                          className="bg-[var(--shell-brand)] text-white hover:bg-[var(--shell-action)] text-xs"
                         >
                           Manage Workflow <ArrowUpRight className="h-3.5 w-3.5 ml-1" />
                         </Button>
@@ -465,7 +466,7 @@ export default function OrderFulfillmentPage() {
             <Button variant="outline" size="sm" onClick={() => setIsIngestOpen(false)}>
               Cancel
             </Button>
-            <Button size="sm" onClick={handleCreateDemoOrder} className="bg-[#8C1D24] text-white">
+            <Button size="sm" onClick={handleCreateDemoOrder} className="bg-[var(--shell-brand)] text-white">
               Add to Queue
             </Button>
           </div>
@@ -477,14 +478,14 @@ export default function OrderFulfillmentPage() {
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Layers className="h-4 w-4 text-[#8C1D24]" /> Create Picking Wave / Batch
+              <Layers className="h-4 w-4 text-[var(--shell-brand)]" /> Create Picking Wave / Batch
             </DialogTitle>
             <DialogDescription className="text-xs">
               Group reserved fulfillments into a single pick list. Batched orders move to Picking status.
             </DialogDescription>
           </DialogHeader>
           {lastBatch && (
-            <div className="p-2.5 rounded-md bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 text-xs text-emerald-700">
+            <div className="p-2.5 rounded-md bg-emerald-50  border border-emerald-200 text-xs text-emerald-700">
               Created batch <span className="font-mono font-bold">{lastBatch}</span>.
             </div>
           )}
@@ -507,7 +508,7 @@ export default function OrderFulfillmentPage() {
                           checked ? prev.filter((x) => x !== o.id) : [...prev, o.id]
                         )
                       }
-                      className="h-4 w-4 accent-[#8C1D24]"
+                      className="h-4 w-4 accent-[var(--shell-brand)]"
                     />
                     <div className="flex-1">
                       <span className="font-mono font-bold">{o.sales_order_code}</span>
@@ -529,7 +530,7 @@ export default function OrderFulfillmentPage() {
               size="sm"
               onClick={handleCreateBatch}
               disabled={selectedBatchIds.length === 0}
-              className="bg-[#8C1D24] text-white hover:bg-[#70171d]"
+              className="bg-[var(--shell-brand)] text-white hover:bg-[var(--shell-action)]"
             >
               <Layers className="h-4 w-4 mr-2" /> Create Batch ({selectedBatchIds.length})
             </Button>

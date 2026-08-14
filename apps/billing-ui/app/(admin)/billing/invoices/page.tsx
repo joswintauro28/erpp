@@ -20,23 +20,15 @@ import {
 } from "@/components/ui/dialog";
 import { SearchInput } from "@/components/shared/search-input";
 import { EmptyState } from "@/components/shared/empty-state";
-import { money, formatDate } from "@/utils/format";
+import { money, formatDate, statusVariant } from "@/utils/format";
 import { KanbanBoard, type KanbanColumn } from "@/components/kanban/kanban-board";
 import { api } from "@/services/api";
 import { useToast } from "@/contexts/ToastContext";
+import { useConfirm, PageHeader, KpiCard, SectionHeading } from "@datavex/ui-theme";
 import type { ApiInvoice, InvoiceListView } from "@/types/billing";
 import InvoicesLoading from "./loading";
 
 const statusOptions = ["paid", "pending", "partially_paid", "overdue", "void"];
-
-const statusStyles: Record<string, string> = {
-  draft: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/30 dark:text-amber-400 dark:border-amber-800",
-  sent: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/30 dark:text-blue-400 dark:border-blue-800",
-  partially_paid: "bg-cyan-50 text-cyan-700 border-cyan-200 dark:bg-cyan-950/30 dark:text-cyan-400 dark:border-cyan-800",
-  paid: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-400 dark:border-emerald-800",
-  overdue: "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/30 dark:text-rose-400 dark:border-rose-800",
-  void: "bg-zinc-100 text-zinc-500 border-zinc-200 dark:bg-zinc-900/30 dark:text-zinc-400 dark:border-zinc-800",
-};
 
 const GST_RATES = [0, 5, 12, 18, 28];
 
@@ -224,51 +216,42 @@ export default function Invoices() {
   if (loading) return <InvoicesLoading />;
 
   return (
-    <div className="space-y-5">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div>
-          <h1 className="font-heading text-xl font-bold tracking-tight text-[--shell-foreground]">Invoices</h1>
-          <p className="text-sm text-[--shell-muted] mt-0.5">Create, manage, and track all client invoices</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="flex items-center rounded-lg border border-border bg-card p-0.5">
-            <Button
-              variant={viewMode === "table" ? "secondary" : "ghost"} size="sm" className="h-8 w-8 p-0"
-              onClick={() => handleViewMode("table")}
-            ><List className="h-3.5 w-3.5" /></Button>
-            <Button
-              variant={viewMode === "kanban" ? "secondary" : "ghost"} size="sm" className="h-8 w-8 p-0"
-              onClick={() => handleViewMode("kanban")}
-            ><LayoutGrid className="h-3.5 w-3.5" /></Button>
-          </div>
-          <Button size="sm" aria-label="Create Invoice" id="create-invoice-btn" onClick={() => setCreateOpen(true)}>
-            <Plus className="h-4 w-4" /> Create Invoice
-          </Button>
-        </div>
-      </div>
+    <div className="space-y-10 lg:space-y-12">
+      {/* Sticky Header Block */}
+      <PageHeader
+        title="Invoices & Billing Registry"
+        subtitle="Create, track, and manage client GST invoices, payment balances, and tax breakdowns."
+        badge="Billing Console"
+        actions={
+          <>
+            <div className="flex items-center rounded-lg border border-[var(--shell-border)] bg-[var(--shell-surface)] p-0.5">
+              <Button
+                variant={viewMode === "table" ? "secondary" : "ghost"} size="sm" className="h-8 w-8 p-0"
+                onClick={() => handleViewMode("table")}
+              ><List className="h-3.5 w-3.5" /></Button>
+              <Button
+                variant={viewMode === "kanban" ? "secondary" : "ghost"} size="sm" className="h-8 w-8 p-0"
+                onClick={() => handleViewMode("kanban")}
+              ><LayoutGrid className="h-3.5 w-3.5" /></Button>
+            </div>
+            <Button size="sm" aria-label="Create Invoice" id="create-invoice-btn" onClick={() => setCreateOpen(true)} className="bg-[var(--shell-brand)] text-white hover:bg-[var(--shell-brand)]/90 gap-1.5 text-xs shadow-sm">
+              <Plus className="h-3.5 w-3.5" /> Create Invoice
+            </Button>
+          </>
+        }
+      />
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
-        <Card><CardContent className="flex items-center gap-3 px-4 py-3">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-[--chart-1]/10"><Receipt className="h-4 w-4 text-[--chart-1]" /></div>
-          <div className="min-w-0"><p className="font-heading text-base font-semibold leading-tight">{money(gstSummary.taxable_value)}</p><p className="text-[11px] font-medium text-[--shell-muted] leading-tight mt-0.5">Taxable Value</p></div>
-        </CardContent></Card>
-        <Card><CardContent className="flex items-center gap-3 px-4 py-3">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-[--chart-2]/10"><BadgePercent className="h-4 w-4 text-[--chart-2]" /></div>
-          <div className="min-w-0"><p className="font-heading text-base font-semibold leading-tight">{money(gstSummary.total_gst)}</p><p className="text-[11px] font-medium text-[--shell-muted] leading-tight mt-0.5">Total GST</p></div>
-        </CardContent></Card>
-        <Card><CardContent className="flex items-center gap-3 px-4 py-3">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-[--chart-3]/10"><DollarSign className="h-4 w-4 text-[--chart-3]" /></div>
-          <div className="min-w-0"><p className="font-heading text-base font-semibold leading-tight">{money(gstSummary.total_cgst + gstSummary.total_sgst)}</p><p className="text-[11px] font-medium text-[--shell-muted] leading-tight mt-0.5">CGST + SGST</p></div>
-        </CardContent></Card>
-        <Card><CardContent className="flex items-center gap-3 px-4 py-3">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-[--chart-4]/10"><CreditCard className="h-4 w-4 text-[--chart-4]" /></div>
-          <div className="min-w-0"><p className="font-heading text-base font-semibold leading-tight">{money(gstSummary.total_igst)}</p><p className="text-[11px] font-medium text-[--shell-muted] leading-tight mt-0.5">IGST</p></div>
-        </CardContent></Card>
-        <Card><CardContent className="flex items-center gap-3 px-4 py-3">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-[--shell-success]/10"><FileText className="h-4 w-4 text-[--shell-success]" /></div>
-          <div className="min-w-0"><p className="font-heading text-base font-semibold leading-tight">{invoices.length}</p><p className="text-[11px] font-medium text-[--shell-muted] leading-tight mt-0.5">Total Invoices</p></div>
-        </CardContent></Card>
-      </div>
+      {/* Summary KPI Bar */}
+      <section>
+        <SectionHeading label="Overview" />
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-5">
+          <KpiCard label="Taxable Value" value={money(gstSummary.taxable_value)} subtitle="Net Goods/Services" icon={Receipt} color="var(--chart-1)" index={0} />
+          <KpiCard label="Total GST" value={money(gstSummary.total_gst)} subtitle="Accrued Tax" icon={BadgePercent} color="var(--chart-2)" index={1} />
+          <KpiCard label="CGST + SGST" value={money(gstSummary.total_cgst + gstSummary.total_sgst)} subtitle="Intrastate Tax" icon={DollarSign} color="var(--chart-3)" index={2} />
+          <KpiCard label="IGST" value={money(gstSummary.total_igst)} subtitle="Interstate Tax" icon={CreditCard} color="var(--chart-4)" index={3} />
+          <KpiCard label="Total Invoices" value={invoices.length} subtitle="Issued To Date" icon={FileText} color="var(--shell-success)" index={4} />
+        </div>
+      </section>
 
       {viewMode === "table" && (
         <>
@@ -326,7 +309,7 @@ export default function Invoices() {
                           <TableCell className="font-mono text-sm text-right">{money(inv.paid_amount)}</TableCell>
                           <TableCell className="font-mono text-sm text-right">{money(inv.balance_due)}</TableCell>
                           <TableCell>
-                            <Badge variant="outline" className={`h-6 text-[11px] font-semibold px-2.5 rounded-full capitalize border ${statusStyles[inv.status] || ""}`}>
+                            <Badge variant={statusVariant("invoice", inv.status)} className="h-6 text-[11px] font-semibold px-2.5 capitalize">
                               {inv.status.replace("_", " ")}
                             </Badge>
                           </TableCell>
@@ -364,7 +347,7 @@ export default function Invoices() {
       {viewMode === "kanban" && (
         <KanbanBoard
           columns={kanbanColumns}
-          onItemClick={(id) => router.push(`/billing/invoices/${id}`)}
+          onItemClick={(id: number | string) => router.push(`/billing/invoices/${id}`)}
           onStatusChange={handleStatusChange}
         />
       )}

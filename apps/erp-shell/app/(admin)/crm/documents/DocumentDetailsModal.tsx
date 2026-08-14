@@ -236,7 +236,7 @@ export default function DocumentDetailsModal({
       <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto bg-[var(--shell-surface)] border-[var(--shell-border)] text-[var(--shell-foreground)]">
         <DialogHeader className="flex flex-row items-center justify-between border-b border-[var(--shell-border)] pb-3">
           <div className="flex items-center gap-2">
-            <FileText className="size-5 text-[#C81D25]" />
+            <FileText className="size-5 text-[var(--shell-brand)]" />
             <DialogTitle className="text-lg font-semibold tracking-tight text-[var(--shell-foreground)]">
               Document Details: {(doc.title || doc.name || "").split(", ")[0]}
             </DialogTitle>
@@ -324,7 +324,7 @@ export default function DocumentDetailsModal({
                       key={idx}
                       className={`p-2 rounded-lg border cursor-pointer text-xs transition-all ${
                         activeFile?.name === file.name
-                          ? "border-[#C81D25] bg-[var(--shell-surface-alt)]"
+                          ? "border-[var(--shell-brand)] bg-[var(--shell-surface-alt)]"
                           : "border-[var(--shell-border)] hover:bg-[var(--shell-surface-alt)]"
                       }`}
                       onClick={() => setActiveFile(file)}

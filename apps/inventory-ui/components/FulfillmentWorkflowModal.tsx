@@ -18,6 +18,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from "@datavex/ui-theme";
 import { Badge } from "@datavex/ui-theme";
 import { api } from "@/services/api";
+import { toastError, toastWarning, toastSuccess } from "@/utils/toast";
 
 export interface FulfillmentItem {
   id: number;
@@ -138,7 +139,7 @@ export default function FulfillmentWorkflowModal({
       onUpdate();
     } catch (err) {
       console.error(err);
-      alert("Failed to roll back to previous stage.");
+      toastError("Failed to roll back to previous stage.");
     } finally {
       setLoading(false);
     }
@@ -146,7 +147,7 @@ export default function FulfillmentWorkflowModal({
 
   const handleDispatch = async () => {
     if (!trackingNumber) {
-      alert("Please enter a tracking number");
+      toastWarning("Please enter a tracking number");
       return;
     }
     setLoading(true);
@@ -168,7 +169,7 @@ export default function FulfillmentWorkflowModal({
     setLoading(true);
     try {
       await api.post(`/fulfillment/orders/${order.id}/create-po-shortage`, {});
-      alert("Purchase Order created successfully for out-of-stock items!");
+      toastSuccess("Purchase Order created successfully for out-of-stock items!");
       onUpdate();
     } catch (err) {
       console.error(err);
@@ -221,7 +222,7 @@ export default function FulfillmentWorkflowModal({
         <DialogHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Boxes className="h-6 w-6 text-[#8C1D24]" />
+              <Boxes className="h-6 w-6 text-[var(--shell-brand)]" />
               <div>
                 <DialogTitle className="text-xl font-bold">{order.sales_order_code}</DialogTitle>
                 <DialogDescription>Customer: {order.customer_name}</DialogDescription>
@@ -237,7 +238,7 @@ export default function FulfillmentWorkflowModal({
             Fulfillment Workflow Pipeline
           </div>
           <div className="grid grid-cols-5 gap-2 text-center text-xs">
-            <div className={`p-2 rounded font-medium border ${order.status === "QUEUED" ? "bg-[#8C1D24] text-white border-[#8C1D24]" : "bg-background border-border"}`}>
+            <div className={`p-2 rounded font-medium border ${order.status === "QUEUED" ? "bg-[var(--shell-brand)] text-white border-[var(--shell-brand)]" : "bg-background border-border"}`}>
               1. Check Stock
             </div>
             <div className={`p-2 rounded font-medium border ${order.status === "RESERVED" ? "bg-blue-600 text-white border-blue-600" : "bg-background border-border"}`}>
@@ -291,7 +292,7 @@ export default function FulfillmentWorkflowModal({
                     <h5 className="font-semibold">Step 1: Check Stock Availability</h5>
                     <p className="text-xs text-muted-foreground">Verify physical stock levels in warehouse before allocation.</p>
                   </div>
-                  <Button onClick={handleCheckStock} disabled={loading} className="bg-[#8C1D24] text-white hover:bg-[#70171d]">
+                  <Button onClick={handleCheckStock} disabled={loading} className="bg-[var(--shell-brand)] text-white hover:bg-[var(--shell-action)]">
                     {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <ClipboardCheck className="h-4 w-4 mr-2" />}
                     Check Stock
                   </Button>
@@ -423,11 +424,11 @@ export default function FulfillmentWorkflowModal({
             {/* Step 5: Dispatched -> Trigger Billing */}
             {(order.status === "DISPATCHED" || order.status === "COMPLETED") && (
               <div className="space-y-3">
-                <div className="p-3 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 rounded-md">
-                  <h5 className="font-semibold text-emerald-700 dark:text-emerald-300 flex items-center gap-2 text-sm">
+                <div className="p-3 bg-emerald-50  border border-emerald-200  rounded-md">
+                  <h5 className="font-semibold text-emerald-700  flex items-center gap-2 text-sm">
                     <Truck className="h-5 w-5" /> Order Dispatched Successfully
                   </h5>
-                  <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-1">
+                  <p className="text-xs text-emerald-600  mt-1">
                     Carrier: <strong>{order.shipping_carrier || "FedEx"}</strong> | Tracking #: <strong>{order.tracking_number || "TRK-2026-991"}</strong>
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">Physical stock was automatically deducted and logged under Stock Movements.</p>
@@ -447,7 +448,7 @@ export default function FulfillmentWorkflowModal({
                       <Button variant="outline" size="sm" onClick={handleStepBack} disabled={loading}>
                         ← Rollback Dispatch
                       </Button>
-                      <Button onClick={handleGenerateInvoice} disabled={loading} className="bg-[#8C1D24] text-white hover:bg-[#70171d]">
+                      <Button onClick={handleGenerateInvoice} disabled={loading} className="bg-[var(--shell-brand)] text-white hover:bg-[var(--shell-action)]">
                         <FileText className="h-4 w-4 mr-1" /> Generate Invoice in Billing
                       </Button>
                     </div>
@@ -462,12 +463,12 @@ export default function FulfillmentWorkflowModal({
 
             {/* Shortage PO Active */}
             {order.status === "PO_CREATED" && (
-              <div className="p-3 bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-800 rounded-md flex items-center justify-between">
+              <div className="p-3 bg-orange-50  border border-orange-200  rounded-md flex items-center justify-between">
                 <div>
-                  <h5 className="font-semibold text-orange-700 dark:text-orange-300 text-xs flex items-center gap-1">
+                  <h5 className="font-semibold text-orange-700  text-xs flex items-center gap-1">
                     <ShoppingBag className="h-4 w-4" /> Reorder Purchase Order Sent to Supplier
                   </h5>
-                  <p className="text-xs text-orange-600 dark:text-orange-400 mt-0.5">
+                  <p className="text-xs text-orange-600  mt-0.5">
                     PO #{order.purchase_order_id}. Awaiting Goods Received Note (GRN) to update stock and complete fulfillment.
                   </p>
                 </div>

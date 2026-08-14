@@ -4,18 +4,7 @@ import { Edit2, Trash2, BadgeCheck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
-import { cn } from "@/lib/utils";
-
-const badgeVariant = (status: string) => {
-  switch (status) {
-    case "New": return "secondary";
-    case "Qualified": return "default";
-    case "In Progress": return "outline";
-    case "Converted": return "default";
-    case "Lost": return "destructive";
-    default: return "outline";
-  }
-};
+import { cn, statusVariant } from "@/lib/utils";
 
 const tierVariant = (tier: string) => {
   switch (tier) {
@@ -96,7 +85,7 @@ export default function LeadTable({ leads, onView, onEdit, onDelete, onQualify }
                 </div>
               </TableCell>
               <TableCell><Badge variant={tierVariant(item.tier)}>{item.tier}</Badge></TableCell>
-              <TableCell><Badge variant={badgeVariant(item.status)}>{item.status}</Badge></TableCell>
+              <TableCell><Badge variant={statusVariant("lead", item.status)}>{item.status}</Badge></TableCell>
               <TableCell>{item.owner}</TableCell>
               <TableCell>
                 <div className="flex gap-2 text-[var(--shell-muted)] items-center">

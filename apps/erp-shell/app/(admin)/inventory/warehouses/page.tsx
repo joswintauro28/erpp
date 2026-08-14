@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { api } from "@/services/api";
+import { toastError } from "@/utils/toast";
 import type { ApiWarehouse } from "@/types/inventory";
 import WarehousesLoading from "./loading";
 
@@ -69,7 +70,7 @@ export default function Warehouses() {
   const handleDelete = async () => {
     if (!warehouseToDelete) return;
     try { await api.delete(`/warehouses/${warehouseToDelete.id}`); setWarehouseToDelete(null); fetchWarehouses(); }
-    catch { alert("Failed to delete warehouse."); }
+    catch { toastError("Failed to delete warehouse."); }
   };
 
   const filtered = useMemo(() => {

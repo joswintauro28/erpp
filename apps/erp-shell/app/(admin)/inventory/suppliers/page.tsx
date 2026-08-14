@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { api } from "@/services/api";
+import { toastError } from "@/utils/toast";
 import type { ApiSupplier } from "@/types/inventory";
 import SuppliersLoading from "./loading";
 
@@ -68,7 +69,7 @@ export default function Suppliers() {
   const handleDelete = async () => {
     if (!supplierToDelete) return;
     try { await api.delete(`/suppliers/${supplierToDelete.id}`); setSupplierToDelete(null); fetchSuppliers(); }
-    catch { alert("Failed to delete supplier."); }
+    catch { toastError("Failed to delete supplier."); }
   };
 
   const toggleActive = async (s: ApiSupplier) => {

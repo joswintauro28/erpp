@@ -9,6 +9,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
 import { api, getAccessToken } from "@/services/api";
 import { exportToCSV } from "@/utils/exportCsv";
+import { toastError, toastSuccess, toastInfo } from "@/utils/toast";
 import SearchCard from "./SearchCard";
 import ResultsCard from "./ResultsCard";
 
@@ -81,7 +82,7 @@ export default function LeadDiscoveryPage() {
       setResults(data);
     } catch (err: any) {
       if (err.name === "AbortError") return;
-      alert("Failed to fetch leads: " + err.message);
+      toastError("Failed to fetch leads", err.message);
     } finally {
       setLoading(false);
     }
@@ -125,10 +126,10 @@ export default function LeadDiscoveryPage() {
     setImporting(true);
     try {
       await api.post("/lead-discovery/import", { companies: selectedLeads });
-      alert(`Successfully imported ${selectedLeads.length} leads!`);
+      toastSuccess(`Successfully imported ${selectedLeads.length} leads!`);
       setSelectedLeads([]);
     } catch {
-      alert("Error importing leads. Ensure backend is running.");
+      toastError("Error importing leads", "Ensure backend is running.");
     } finally {
       setImporting(false);
     }

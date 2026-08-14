@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { api } from "@/services/api";
+import { toastSuccess, toastError, toastInfo, toastWarning } from "@/utils/toast";
 
 interface SalesOrderDetailsModalProps {
   record: any;
@@ -87,13 +88,13 @@ export default function SalesOrderDetailsModal({
       await api.put(`/sales-orders/${record.id_str}`, payload);
 
       if (check.available) {
-        alert("Stock available — order confirmed.");
+        toastSuccess("Stock available — order confirmed.");
       } else {
         const shortItems = (check.items || [])
           .filter((i: any) => !i.is_available)
           .map((i: any) => `- ${i.product_name || i.sku || i.product_id} (needed ${i.requested_quantity}, available ${i.available_quantity})`)
           .join("\n");
-        alert(`Insufficient stock — order placed on Stock Hold. Inventory accounts have been notified.\n\nShort items:\n${shortItems}`);
+        toastWarning(`Insufficient stock — order placed on Stock Hold. Inventory accounts have been notified.\n\nShort items:\n${shortItems}`);
       }
 
       if (onSuccess) onSuccess();
@@ -110,7 +111,7 @@ export default function SalesOrderDetailsModal({
       const custData = await api.get<any>("/customers");
       const exists = custData.customers?.some((c: any) => c.account === record.account);
       if (exists) {
-        alert("This account is already added as a customer!");
+        toastInfo("This account is already added as a customer!");
         return;
       }
 
@@ -125,11 +126,11 @@ export default function SalesOrderDetailsModal({
         owner: record.owner || "",
       });
 
-      alert("Added successfully to Customers!");
+      toastSuccess("Added successfully to Customers!");
       if (onSuccess) onSuccess();
       onClose();
     } catch (err) {
-      alert("Network error.");
+      toastError("Network error.");
     }
   };
 
@@ -262,7 +263,7 @@ export default function SalesOrderDetailsModal({
                       <a
                         href={record.file_data}
                         download={record.file_name || "invoice"}
-                        className="inline-flex shrink-0 items-center justify-center rounded bg-[#C81D25] px-2 py-0.5 text-xs text-white hover:bg-[#A0171E]"
+                        className="inline-flex shrink-0 items-center justify-center rounded bg-[var(--shell-brand)] px-2 py-0.5 text-xs text-white hover:bg-[var(--shell-action)]"
                       >
                         <Download className="mr-1 size-3" /> Download
                       </a>

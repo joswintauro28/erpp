@@ -10,6 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { statusVariant } from "@/lib/utils";
 
 interface CustomerDetailsModalProps {
   record: any;
@@ -17,20 +18,6 @@ interface CustomerDetailsModalProps {
   onClose: () => void;
 }
 
-const badgeVariant = (status: string) => {
-  switch (status) {
-    case "Active":
-      return "default";
-    case "Prospect":
-      return "secondary";
-    case "Dormant":
-      return "outline";
-    case "Churned":
-      return "destructive";
-    default:
-      return "default";
-  }
-};
 
 const formatCurrency = (value: number) =>
   new Intl.NumberFormat("en-US", {
@@ -52,7 +39,7 @@ export default function CustomerDetailsModal({
       <DialogContent className="sm:max-w-lg bg-[var(--shell-surface)] border-[var(--shell-border)] text-[var(--shell-foreground)]">
         <DialogHeader className="flex flex-row items-center justify-between border-b border-[var(--shell-border)] pb-3">
           <div className="flex items-center gap-2">
-            <Building2 className="size-5 text-[#C81D25]" />
+            <Building2 className="size-5 text-[var(--shell-brand)]" />
             <DialogTitle className="text-lg font-semibold tracking-tight text-[var(--shell-foreground)]">
               Customer Details
             </DialogTitle>
@@ -69,7 +56,7 @@ export default function CustomerDetailsModal({
                 ID: {record.id_str}
               </p>
             </div>
-            <Badge variant={badgeVariant(record.status)} className="px-2.5 py-0.5 text-xs font-semibold">
+            <Badge variant={statusVariant("customer", record.status)} className="px-2.5 py-0.5 text-xs font-semibold">
               {record.status}
             </Badge>
           </div>

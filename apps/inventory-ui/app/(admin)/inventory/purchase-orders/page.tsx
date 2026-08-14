@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { api } from "@/services/api";
+import { toastError, toastWarning } from "@/utils/toast";
 import { money } from "@/utils/format";
 
 interface PurchaseOrder {
@@ -113,7 +114,7 @@ export default function PurchaseOrdersPage() {
       fetchData();
     } catch (err) {
       console.error(err);
-      alert("Failed to create Purchase Order.");
+      toastError("Failed to create Purchase Order.");
     }
   };
 
@@ -136,7 +137,7 @@ export default function PurchaseOrdersPage() {
       fetchData();
     } catch (err) {
       console.error(err);
-      alert("Failed to update status.");
+      toastError("Failed to update status.");
     }
   };
 
@@ -148,7 +149,7 @@ export default function PurchaseOrdersPage() {
       fetchData();
     } catch (err) {
       console.error(err);
-      alert("Failed to delete purchase order.");
+      toastError("Failed to delete purchase order.");
     }
   };
 
@@ -175,7 +176,7 @@ export default function PurchaseOrdersPage() {
         location: v.location,
       }));
     if (items.length === 0) {
-      alert("Enter at least one putaway quantity.");
+      toastWarning("Enter at least one putaway quantity.");
       return;
     }
     try {
@@ -184,7 +185,7 @@ export default function PurchaseOrdersPage() {
       fetchData();
     } catch (err) {
       console.error(err);
-      alert("Putaway failed — verify quantities against received goods.");
+      toastError("Putaway failed", "Verify quantities against received goods.");
     }
   };
 
@@ -214,14 +215,14 @@ export default function PurchaseOrdersPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-4">
         <div>
           <h1 className="font-heading text-2xl font-semibold tracking-tight text-[--shell-foreground] flex items-center gap-2">
-            <ClipboardList className="h-6 w-6 text-[#8C1D24]" />
+            <ClipboardList className="h-6 w-6 text-[var(--shell-brand)]" />
             Purchase Orders & Reordering
           </h1>
           <p className="mt-1 text-sm text-[--shell-muted]">
             Procure stock from approved suppliers, track receipts, and update stock counts automatically.
           </p>
         </div>
-        <Button onClick={() => setIsAddOpen(true)} className="bg-[#8C1D24] text-white hover:bg-[#70171d]">
+        <Button onClick={() => setIsAddOpen(true)} className="bg-[var(--shell-brand)] text-white hover:bg-[var(--shell-action)]">
           <Plus className="h-4 w-4 mr-2" /> Create Purchase Order
         </Button>
       </div>
@@ -260,7 +261,7 @@ export default function PurchaseOrdersPage() {
                   const whName = warehouses.find((w) => w.id === po.warehouse_id)?.name || `Warehouse #${po.warehouse_id}`;
                   return (
                     <TableRow key={po.id}>
-                      <TableCell className="font-mono text-xs font-bold text-[#8C1D24]">{po.order_number}</TableCell>
+                      <TableCell className="font-mono text-xs font-bold text-[var(--shell-brand)]">{po.order_number}</TableCell>
                       <TableCell className="font-medium text-foreground text-xs">{supName}</TableCell>
                       <TableCell className="text-xs text-muted-foreground">{whName}</TableCell>
                       <TableCell className="text-center">{getStatusBadge(po.status)}</TableCell>
@@ -278,7 +279,7 @@ export default function PurchaseOrdersPage() {
                               setEditStatus(po.status);
                             }}
                           >
-                            <Edit3 className="h-3.5 w-3.5 text-muted-foreground hover:text-[#8C1D24]" />
+                            <Edit3 className="h-3.5 w-3.5 text-muted-foreground hover:text-[var(--shell-brand)]" />
                           </Button>
                           <Button
                             variant="ghost"
@@ -393,7 +394,7 @@ export default function PurchaseOrdersPage() {
             <Button variant="outline" size="sm" onClick={() => setIsAddOpen(false)}>
               Cancel
             </Button>
-            <Button size="sm" onClick={handleCreatePurchaseOrder} className="bg-[#8C1D24] text-white">
+            <Button size="sm" onClick={handleCreatePurchaseOrder} className="bg-[var(--shell-brand)] text-white">
               Issue Purchase Order
             </Button>
           </div>
@@ -407,7 +408,7 @@ export default function PurchaseOrdersPage() {
             <DialogHeader>
               <DialogTitle className="flex items-center justify-between text-base">
                 <span>Manage Purchase Order</span>
-                <span className="font-mono text-sm text-[#8C1D24]">{selectedOrder.order_number}</span>
+                <span className="font-mono text-sm text-[var(--shell-brand)]">{selectedOrder.order_number}</span>
               </DialogTitle>
               <DialogDescription>Update procurement lifecycle status and view transaction logs.</DialogDescription>
             </DialogHeader>
@@ -428,7 +429,7 @@ export default function PurchaseOrdersPage() {
                   <option value="COMPLETED">Goods Received (Stock Added)</option>
                   <option value="CANCELLED">Cancelled</option>
                 </select>
-                <Button size="xs" onClick={handleUpdateStatus} className="bg-[#8C1D24] text-white hover:bg-[#70171d]">
+                <Button size="xs" onClick={handleUpdateStatus} className="bg-[var(--shell-brand)] text-white hover:bg-[var(--shell-action)]">
                   Save Status
                 </Button>
               </div>

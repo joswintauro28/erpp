@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { exportToCSV } from "@/utils/exportCsv";
 import { toastSuccess, toastError, errorMessage } from "@/utils/toast";
+import { useConfirm } from "@datavex/ui-theme";
 import { cn } from "@/lib/utils";
 import LeadTable from "./LeadTable";
 import LeadDetailsModal from "./LeadDetailsModal";
@@ -38,8 +39,10 @@ export default function LeadsPage() {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
+  const confirm = useConfirm();
+
   const handleDelete = async (lead: any) => {
-    if (!window.confirm("Are you sure you want to delete this lead?")) return;
+    if (!(await confirm({ title: "Delete lead", message: "Are you sure you want to delete this lead?", destructive: true }))) return;
     try {
       await api.delete("/leads/" + lead.id_str);
       toastSuccess("Lead deleted", lead.id_str);

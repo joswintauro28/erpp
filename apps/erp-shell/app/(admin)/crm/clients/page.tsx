@@ -14,6 +14,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { statusVariant } from "@/lib/utils";
 import { MultiStepDialog } from "@/components/multi-step-dialog";
 import { api } from "@/services/api";
 import type { CrmCustomer, CrmCustomersResponse } from "@/types/crm";
@@ -28,12 +29,6 @@ const tierVariant = (tier: string) => {
   return "outline" as const;
 };
 
-const statusVariant = (status: string) => {
-  if (status === "Active") return "default" as const;
-  if (status === "Prospect") return "secondary" as const;
-  if (status === "Dormant") return "outline" as const;
-  return "destructive" as const;
-};
 
 const f = (v: number) => `₹${(v / 100000).toFixed(1)}L`;
 
@@ -309,7 +304,7 @@ export default function Clients() {
                       </TableCell>
                       <TableCell className="font-mono text-sm font-medium text-right">{f(c.arr)}</TableCell>
                       <TableCell>
-                        <Badge variant={statusVariant(c.status)} className="uppercase text-[10px]">
+                        <Badge variant={statusVariant("customer", c.status)} className="uppercase text-[10px]">
                           {c.status}
                         </Badge>
                       </TableCell>

@@ -8,6 +8,8 @@ import { Progress } from "@/components/ui/progress";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Spinner } from "@/components/ui/spinner";
 import { exportToCSV } from "@/utils/exportCsv";
+import { toastError } from "@/utils/toast";
+import { useConfirm } from "@datavex/ui-theme";
 import { api } from "@/services/api";
 import ReportTable from "./ReportTable";
 import ReportCreateModal from "./ReportCreateModal";
@@ -46,8 +48,10 @@ export default function ReportsPage() {
 
   useEffect(() => { fetchReportData(); }, [fetchReportData]);
 
+  const confirm = useConfirm();
+
   const handleDelete = async (record: any) => {
-    if (!window.confirm("Are you sure you want to delete this report?")) return;
+    if (!(await confirm({ title: "Delete report", message: "Are you sure you want to delete this report?", destructive: true }))) return;
     try {
       await api.delete("/reports/" + record.id_str);
       fetchReportData();

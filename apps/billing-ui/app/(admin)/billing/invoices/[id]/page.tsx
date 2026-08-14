@@ -18,17 +18,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { LoadingSpinner } from "@/components/shared/loading-spinner";
 import { api } from "@/services/api";
 import { useToast } from "@/contexts/ToastContext";
-import { money, formatDate } from "@/utils/format";
+import { money, formatDate, statusVariant } from "@/utils/format";
 import type { InvoiceDetailView } from "@/types/billing";
 
 const GST_RATES = [0, 5, 12, 18, 28];
 
-const statusVariant = (s: string) => {
-  if (s === "paid") return "default" as const;
-  if (s === "sent" || s === "pending") return "secondary" as const;
-  if (s === "overdue") return "destructive" as const;
-  return "outline" as const;
-};
 
 // Which status transitions are allowed from each state
 const statusActions: Record<string, string[]> = {
@@ -239,7 +233,7 @@ export default function InvoiceDetail() {
                 <h1 className="font-heading text-[34px] font-bold leading-tight tracking-tight text-[--shell-foreground] truncate">
                   {invoice.invoice_number}
                 </h1>
-                <Badge variant={statusVariant(invoice.status)} className="capitalize text-xs font-medium px-2.5 rounded-full shrink-0 leading-none inline-flex items-center h-[26px]">
+                <Badge variant={statusVariant("invoice", invoice.status)} className="capitalize text-xs font-medium px-2.5 shrink-0 leading-none inline-flex items-center h-[26px]">
                   {invoice.status.replace("_", " ")}
                 </Badge>
               </div>

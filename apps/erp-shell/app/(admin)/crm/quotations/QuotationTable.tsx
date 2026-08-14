@@ -4,18 +4,7 @@ import { Edit2, Trash2, ShoppingCart, Lock, CheckCircle2, XCircle } from "lucide
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
-import { cn } from "@/lib/utils";
-
-const badgeVariant = (status: string): "default" | "secondary" | "outline" | "destructive" => {
-  switch (status) {
-    case "Draft": return "outline";
-    case "Sent": return "secondary";
-    case "Under Review": return "secondary";
-    case "Accepted": case "Converted": return "default";
-    case "Rejected": case "Expired": return "destructive";
-    default: return "outline";
-  }
-};
+import { cn, statusVariant } from "@/lib/utils";
 
 function formatCurrency(value: string | number) {
   return new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(Number(value) || 0);
@@ -81,7 +70,7 @@ export default function QuotationTable({ quotations, onView, onEdit, onDelete, o
                 )}
               </TableCell>
               <TableCell>{quote.valid_until}</TableCell>
-              <TableCell><Badge variant={badgeVariant(quote.status)}>{quote.status}</Badge></TableCell>
+              <TableCell><Badge variant={statusVariant("quotation", quote.status)}>{quote.status}</Badge></TableCell>
               <TableCell>{quote.owner}</TableCell>
               <TableCell>
                 <div className="flex gap-2 text-[var(--shell-muted)] items-center">

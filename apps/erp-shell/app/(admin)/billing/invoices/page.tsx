@@ -17,20 +17,13 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
 import { MultiStepDialog } from "@/components/multi-step-dialog";
-import { money } from "@/utils/format";
+import { money, statusVariant } from "@/utils/format";
 import { api } from "@/services/api";
 import type { ApiInvoice, ApiClientRef, InvoiceListView } from "@/types/billing";
 import InvoicesLoading from "./loading";
 
 const statusOptions = ["", "paid", "pending", "partially_paid", "overdue", "cancelled"] as const;
 
-const statusVariant = (s: string) => {
-  if (s === "paid") return "default" as const;
-  if (s === "pending") return "secondary" as const;
-  if (s === "overdue" || s === "cancelled") return "destructive" as const;
-  if (s === "partially_paid") return "outline" as const;
-  return "outline" as const;
-};
 
 function SectionHeading({ label }: { label: string }) {
   return (
@@ -299,7 +292,7 @@ export default function Invoices() {
                       <TableCell className="font-mono text-sm text-right">{money(inv.paid_amount)}</TableCell>
                       <TableCell className="font-mono text-sm text-right">{money(inv.balance_due)}</TableCell>
                       <TableCell>
-                        <Badge variant={statusVariant(inv.status)} className="capitalize">{inv.status.replace("_", " ")}</Badge>
+                        <Badge variant={statusVariant("invoice", inv.status)} className="capitalize">{inv.status.replace("_", " ")}</Badge>
                       </TableCell>
                       <TableCell className="text-xs text-muted-foreground">{inv.due_date}</TableCell>
                       <TableCell>

@@ -55,6 +55,11 @@ export default function ErrorPage({
                 Ref: {error.digest}
               </p>
             )}
+            {error.message && (
+              <pre className="mt-3 max-h-40 w-full overflow-auto rounded bg-muted p-3 text-[10px] font-mono text-muted-foreground select-all whitespace-pre-wrap">
+                {error.message}\n\n{error.stack}
+              </pre>
+            )}
 
             <button
               type="button"

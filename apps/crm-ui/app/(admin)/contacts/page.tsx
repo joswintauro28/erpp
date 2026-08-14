@@ -8,6 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { api } from "@/services/api";
 import { exportToCSV } from "@/utils/exportCsv";
+import { toastError } from "@/utils/toast";
+import { useConfirm } from "@datavex/ui-theme";
 import ContactCreateModal from "./ContactCreateModal";
 import ContactDetailsModal from "./ContactDetailsModal";
 import ContactTable from "./ContactTable";
@@ -31,10 +33,12 @@ export default function ContactsPage() {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
+  const confirm = useConfirm();
+
   const handleDelete = async (record: any) => {
-    if (window.confirm("Are you sure?")) {
+    if (await confirm({ title: "Delete contact", message: "Are you sure you want to delete this contact?", destructive: true })) {
       try { await api.delete("/contacts/" + record.id_str); fetchData(); }
-      catch { alert("Delete failed"); }
+      catch { toastError("Delete failed"); }
     }
   };
 

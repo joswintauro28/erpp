@@ -10,19 +10,12 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { MultiStepDialog } from "@/components/multi-step-dialog";
-import { money } from "@/utils/format";
+import { money, statusVariant } from "@/utils/format";
 import { api } from "@/services/api";
 import type { ApiClient, PortalAccess } from "@/types/crm";
 import type { ApiInvoice, ApiPayment } from "@/types/billing";
 import ClientDetailLoading from "./loading";
 
-const statusVariant = (status: string) => {
-  const s = status.toLowerCase();
-  if (s === "paid" || s === "active" || s === "accepted") return "default" as const;
-  if (s === "overdue" || s === "revoked" || s === "disabled" || s === "suspended") return "destructive" as const;
-  if (s === "partially_paid" || s === "pending") return "secondary" as const;
-  return "outline" as const;
-};
 
 function PortalSection({
   portalAccess, clientEmail, onInvite,
@@ -44,13 +37,13 @@ function PortalSection({
             <div>
               <p className="text-xs text-[var(--shell-muted)]">Portal Status</p>
               <div className="mt-1">
-                <Badge variant={statusVariant(portalAccess.status)} className="uppercase">{portalAccess.status}</Badge>
+                <Badge variant={statusVariant("customer", portalAccess.status)} className="uppercase">{portalAccess.status}</Badge>
               </div>
             </div>
             <div>
               <p className="text-xs text-[var(--shell-muted)]">Invitation Status</p>
               <div className="mt-1">
-                <Badge variant={statusVariant(portalAccess.invitation_status)} className="uppercase">{portalAccess.invitation_status}</Badge>
+                <Badge variant={statusVariant("customer", portalAccess.invitation_status)} className="uppercase">{portalAccess.invitation_status}</Badge>
               </div>
             </div>
             <div>
@@ -312,7 +305,7 @@ export default function ClientDetail() {
                       <TableCell className="font-mono text-sm text-right">{money(inv.paid_amount)}</TableCell>
                       <TableCell className="font-mono text-sm text-right">{money(inv.balance_due)}</TableCell>
                       <TableCell>
-                        <Badge variant={statusVariant(inv.status)} className="capitalize">{inv.status.replace("_", " ")}</Badge>
+                        <Badge variant={statusVariant("invoice", inv.status)} className="capitalize">{inv.status.replace("_", " ")}</Badge>
                       </TableCell>
                       <TableCell className="text-[var(--shell-muted)]">{inv.due_date || "-"}</TableCell>
                     </TableRow>

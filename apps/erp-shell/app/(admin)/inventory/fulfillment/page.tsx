@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { api } from "@/services/api";
+import { toastError } from "@/utils/toast";
 import type { ApiProduct, ApiFulfillment } from "@/types/inventory";
 import FulfillmentWorkflowModal from "@/components/FulfillmentWorkflowModal";
 import FulfillmentLoading from "./loading";
@@ -59,13 +60,13 @@ export default function OrderFulfillmentPage() {
       setNewOrderCode(`SO-${Math.floor(1000 + Math.random() * 9000)}`);
       setNewCustomerName("");
       fetchOrders();
-    } catch { alert("Failed to create fulfillment order."); }
+    } catch { toastError("Failed to create fulfillment order."); }
   };
 
   const handleDeleteOrder = async () => {
     if (!orderToDelete) return;
     try { await api.delete(`/fulfillment/orders/${orderToDelete.id}`); setOrderToDelete(null); fetchOrders(); }
-    catch { alert("Failed to delete fulfillment order."); }
+    catch { toastError("Failed to delete fulfillment order."); }
   };
 
   const filteredOrders = orders.filter((o) => {

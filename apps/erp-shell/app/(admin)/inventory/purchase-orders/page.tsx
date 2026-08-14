@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { money } from "@/utils/format";
+import { toastError } from "@/utils/toast";
 import { api } from "@/services/api";
 import type { ApiPurchaseOrder, ApiSupplier, ApiProduct } from "@/types/inventory";
 import PurchaseOrdersLoading from "./loading";
@@ -73,12 +74,12 @@ export default function PurchaseOrders() {
   const handleDelete = async () => {
     if (!orderToDelete) return;
     try { await api.delete(`/purchase-orders/${orderToDelete.id}`); setOrderToDelete(null); fetchOrders(); }
-    catch { alert("Failed to delete PO."); }
+    catch { toastError("Failed to delete PO."); }
   };
 
   const handleStatusUpdate = async (po: ApiPurchaseOrder, status: string) => {
     try { await api.put(`/purchase-orders/${po.id}/status`, { status }); fetchOrders(); }
-    catch { alert("Failed to update status."); }
+    catch { toastError("Failed to update status."); }
   };
 
   const filtered = useMemo(() => {

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
-import { NotificationProvider } from "@datavex/ui-theme";
+import { NotificationProvider, Toaster } from "@datavex/ui-theme";
 
 const montserrat = localFont({
   src: "./fonts/montserrat-variable.woff2",
@@ -38,6 +38,7 @@ export default function RootLayout({
       <body className="min-h-full flex">
         <AuthProvider>
           <NotificationProvider>{children}</NotificationProvider>
+          <Toaster />
         </AuthProvider>
       </body>
     </html>

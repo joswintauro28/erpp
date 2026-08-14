@@ -5,7 +5,7 @@ import { BarChart3 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 
-const STAGE_COLORS = ["#8C1D24", "#E5B83C", "#6366f1", "#10b981", "#f43f5e"];
+const STAGE_COLORS = ["var(--shell-brand)", "#E5B83C", "#6366f1", "#10b981", "#f43f5e"];
 const STAGE_GRADIENTS = [
   "url(#colorDiscovery)",
   "url(#colorQuote)",
@@ -64,7 +64,7 @@ export default function PipelineChart({ stages, pipelineValue }: PipelineChartPr
                 <PieChart>
                   <defs>
                     <linearGradient id="colorDiscovery" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#8C1D24" stopOpacity={0.95}/>
+                      <stop offset="5%" stopColor="var(--shell-brand)" stopOpacity={0.95}/>
                       <stop offset="95%" stopColor="#3D1013" stopOpacity={0.95}/>
                     </linearGradient>
                     <linearGradient id="colorQuote" x1="0" y1="0" x2="0" y2="1">

@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/dialog";
 import { LoadingSpinner } from "@/components/shared/loading-spinner";
 import { api } from "@/services/api";
-import { money, formatDate, quotationStatusVariant as statusVariant } from "@/utils/format";
+import { money, formatDate, statusVariant } from "@/utils/format";
 import { useAuth } from "@/contexts/AuthContext";
 import type { QuotationDetailView } from "@/types/billing";
 
@@ -159,7 +159,7 @@ export default function QuotationDetail() {
               <h1 className="font-heading text-2xl font-bold tracking-tight text-[var(--shell-foreground)] truncate">
                 {quotation.quote_number}
               </h1>
-              <Badge variant={statusVariant(quotation.status)} className="capitalize shrink-0 px-2.5 py-0.5 font-semibold text-xs tracking-wider">
+              <Badge variant={statusVariant("quotation", quotation.status)} className="capitalize shrink-0 px-2.5 py-0.5 font-semibold text-xs tracking-wider">
                 {quotation.status}
               </Badge>
             </div>

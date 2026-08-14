@@ -12,6 +12,8 @@ import OpportunityKanban from "./OpportunityKanban";
 import OpportunityDetailModal from "./OpportunityDetailModal";
 import { Spinner } from "@/components/ui/spinner";
 import { api } from "@/services/api";
+import { toastError } from "@/utils/toast";
+import { useConfirm } from "@datavex/ui-theme";
 import OpportunityCreateModal from "./OpportunityCreateModal";
 
 
@@ -35,10 +37,12 @@ export default function OpportunitiesPage() {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
+  const confirm = useConfirm();
+
   const handleDelete = async (record: any) => {
-    if (window.confirm("Are you sure?")) {
+    if (await confirm({ title: "Delete opportunity", message: "Are you sure you want to delete this opportunity?", destructive: true })) {
       try { await api.delete("/opportunities/" + record.id_str); fetchData(); }
-      catch { alert("Delete failed"); }
+      catch { toastError("Delete failed"); }
     }
   };
 

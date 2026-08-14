@@ -10,6 +10,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/shared/empty-state";
 import { api } from "@/services/api";
+import { toastError } from "@/utils/toast";
+import { useConfirm } from "@datavex/ui-theme";
 
 const stageColors: Record<string, { bg: string; color: string }> = {
   Discovery:   { bg: "#dbeafe", color: "#1d4ed8" },
@@ -261,6 +263,7 @@ interface OpportunityDetailModalProps {
 }
 
 export default function OpportunityDetailModal({ record, isOpen, onClose, onSuccess }: OpportunityDetailModalProps) {
+  const confirm = useConfirm();
   const [tab, setTab] = useState("details");
 
   const [requirements, setRequirements] = useState<any[]>([]);
@@ -428,7 +431,7 @@ export default function OpportunityDetailModal({ record, isOpen, onClose, onSucc
   };
 
   const handleDeleteReq = async (req: any) => {
-    if (!window.confirm("Delete this requirement?")) return;
+    if (!(await confirm({ title: "Delete requirement", message: "Delete this requirement?", destructive: true }))) return;
     try {
       await api.delete(`/requirements/${req.id_str}`);
       fetchRequirements();
@@ -438,12 +441,12 @@ export default function OpportunityDetailModal({ record, isOpen, onClose, onSucc
   };
 
   const handleDeleteQuote = async (q: any) => {
-    if (!window.confirm("Delete this quotation?")) return;
+    if (!(await confirm({ title: "Delete quotation", message: "Delete this quotation?", destructive: true }))) return;
     try {
       await api.delete(`/quotations/${q.id}`);
       fetchQuotations();
     } catch (err: any) {
-      alert(err?.response?.data?.detail || err?.message || "Failed to delete quotation.");
+      toastError(err?.response?.data?.detail || err?.message || "Failed to delete quotation.");
     }
   };
 

@@ -25,6 +25,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { api } from "@/services/api";
+import { toastError, toastWarning } from "@/utils/toast";
 
 interface SerialNumber {
   id: number;
@@ -69,14 +70,14 @@ interface Warehouse {
 }
 
 const STATUS_META: Record<string, { label: string; dot: string; badge: string }> = {
-  in_stock: { label: "In Stock", dot: "bg-emerald-500", badge: "bg-emerald-600/15 text-emerald-700 dark:text-emerald-400 border-emerald-600/20" },
-  reserved: { label: "Reserved", dot: "bg-blue-500", badge: "bg-blue-600/15 text-blue-700 dark:text-blue-400 border-blue-600/20" },
-  sold: { label: "Sold", dot: "bg-slate-500", badge: "bg-slate-600/15 text-slate-700 dark:text-slate-300 border-slate-600/20" },
-  returned: { label: "Returned", dot: "bg-amber-500", badge: "bg-amber-600/15 text-amber-700 dark:text-amber-400 border-amber-600/20" },
-  repair: { label: "In Repair", dot: "bg-purple-500", badge: "bg-purple-600/15 text-purple-700 dark:text-purple-400 border-purple-600/20" },
-  damaged: { label: "Damaged", dot: "bg-red-500", badge: "bg-red-600/15 text-red-700 dark:text-red-400 border-red-600/20" },
-  retired: { label: "Retired", dot: "bg-zinc-400", badge: "bg-zinc-600/15 text-zinc-700 dark:text-zinc-300 border-zinc-600/20" },
-  in_transit: { label: "In Transit", dot: "bg-cyan-500", badge: "bg-cyan-600/15 text-cyan-700 dark:text-cyan-400 border-cyan-600/20" },
+  in_stock: { label: "In Stock", dot: "bg-emerald-500", badge: "bg-emerald-600/15 text-emerald-700  border-emerald-600/20" },
+  reserved: { label: "Reserved", dot: "bg-blue-500", badge: "bg-blue-600/15 text-blue-700  border-blue-600/20" },
+  sold: { label: "Sold", dot: "bg-slate-500", badge: "bg-slate-600/15 text-slate-700  border-slate-600/20" },
+  returned: { label: "Returned", dot: "bg-amber-500", badge: "bg-amber-600/15 text-amber-700  border-amber-600/20" },
+  repair: { label: "In Repair", dot: "bg-purple-500", badge: "bg-purple-600/15 text-purple-700  border-purple-600/20" },
+  damaged: { label: "Damaged", dot: "bg-red-500", badge: "bg-red-600/15 text-red-700  border-red-600/20" },
+  retired: { label: "Retired", dot: "bg-zinc-400", badge: "bg-zinc-600/15 text-zinc-700  border-zinc-600/20" },
+  in_transit: { label: "In Transit", dot: "bg-cyan-500", badge: "bg-cyan-600/15 text-cyan-700  border-cyan-600/20" },
 };
 
 const STATUS_ORDER = ["in_stock", "reserved", "in_transit", "sold", "returned", "repair", "damaged", "retired"];
@@ -187,7 +188,7 @@ export default function SerialRegistryPage() {
 
   const handleCreate = async () => {
     if (!form.serial_number || !form.product_id || !form.warehouse_id) {
-      alert("Serial tag, model, and warehouse are required.");
+      toastWarning("Serial tag, model, and warehouse are required.");
       return;
     }
     try {
@@ -206,7 +207,7 @@ export default function SerialRegistryPage() {
       fetchData();
     } catch (err) {
       console.error(err);
-      alert("Failed to register serial unit. Check backend logs.");
+      toastError("Failed to register serial unit", "Check backend logs.");
     }
   };
 
@@ -228,7 +229,7 @@ export default function SerialRegistryPage() {
       fetchData();
     } catch (err) {
       console.error(err);
-      alert("Failed to update serial unit.");
+      toastError("Failed to update serial unit.");
     }
   };
 
@@ -259,7 +260,7 @@ export default function SerialRegistryPage() {
   }, [serials, search, statusFilter]);
 
   const kpis = [
-    { label: "REGISTERED UNITS", value: stats.total, icon: ScanBarcode, tone: "text-[#8C1D24]" },
+    { label: "REGISTERED UNITS", value: stats.total, icon: ScanBarcode, tone: "text-[var(--shell-brand)]" },
     { label: "IN STOCK", value: stats.in_stock, icon: PackageOpen, tone: "text-emerald-600" },
     { label: "RESERVED", value: stats.reserved, icon: ShieldCheck, tone: "text-blue-600" },
     { label: "SOLD", value: stats.sold, icon: PackageCheck, tone: "text-slate-600" },
@@ -281,7 +282,7 @@ export default function SerialRegistryPage() {
             Every serial tag mapped to its model/SKU, tracked across its lifecycle from receipt to retirement.
           </p>
         </div>
-        <Button size="sm" onClick={openAdd} className="bg-[#8C1D24] text-white hover:bg-[#70171d]">
+        <Button size="sm" onClick={openAdd} className="bg-[var(--shell-brand)] text-white hover:bg-[var(--shell-action)]">
           <Plus className="h-4 w-4 mr-2" /> Register Unit
         </Button>
       </div>
@@ -305,7 +306,7 @@ export default function SerialRegistryPage() {
         <CardHeader>
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
             <CardTitle className="flex items-center gap-2 text-base">
-              <ScanBarcode className="h-4 w-4 text-[#8C1D24]" />
+              <ScanBarcode className="h-4 w-4 text-[var(--shell-brand)]" />
               Serial Tag Registry
             </CardTitle>
             <div className="flex flex-col sm:flex-row sm:items-center gap-2">
@@ -330,7 +331,7 @@ export default function SerialRegistryPage() {
               onClick={() => setStatusFilter("ALL")}
               className={`px-2.5 py-1 text-[11px] font-semibold rounded-md transition-colors border ${
                 statusFilter === "ALL"
-                  ? "bg-[#8C1D24] text-white border-[#8C1D24]"
+                  ? "bg-[var(--shell-brand)] text-white border-[var(--shell-brand)]"
                   : "border-border text-[--shell-muted] hover:bg-muted"
               }`}
             >
@@ -345,7 +346,7 @@ export default function SerialRegistryPage() {
                   onClick={() => setStatusFilter(active ? "ALL" : st)}
                   className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-semibold rounded-md transition-colors border ${
                     active
-                      ? "bg-[#8C1D24] text-white border-[#8C1D24]"
+                      ? "bg-[var(--shell-brand)] text-white border-[var(--shell-brand)]"
                       : "border-border text-[--shell-muted] hover:bg-muted"
                   }`}
                 >
@@ -396,7 +397,7 @@ export default function SerialRegistryPage() {
                       <TableRow key={s.id}>
                         <TableCell className="font-mono text-xs font-semibold text-foreground">{s.serial_number}</TableCell>
                         <TableCell>
-                          <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[#8C1D24]">
+                          <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[var(--shell-brand)]">
                             <Tag className="h-3 w-3" />
                             {s.sku || "—"}
                           </span>
@@ -432,7 +433,7 @@ export default function SerialRegistryPage() {
                         <TableCell className="text-right">
                           <div className="flex items-center justify-end gap-1">
                             <Button variant="ghost" size="xs" onClick={() => openEdit(s)}>
-                              <Edit3 className="h-3.5 w-3.5 text-muted-foreground hover:text-[#8C1D24]" />
+                              <Edit3 className="h-3.5 w-3.5 text-muted-foreground hover:text-[var(--shell-brand)]" />
                             </Button>
                             <Button variant="ghost" size="xs" onClick={() => setSerialToDelete(s)}>
                               <Trash2 className="h-3.5 w-3.5 text-muted-foreground hover:text-destructive" />
@@ -454,7 +455,7 @@ export default function SerialRegistryPage() {
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <ScanBarcode className="h-5 w-5 text-[#8C1D24]" /> Register Serial Unit
+              <ScanBarcode className="h-5 w-5 text-[var(--shell-brand)]" /> Register Serial Unit
             </DialogTitle>
             <DialogDescription>
               Register a unique hardware unit and bind it to its model/SKU. The SKU is mapped automatically from the selected product.
@@ -551,7 +552,7 @@ export default function SerialRegistryPage() {
           </div>
           <div className="flex justify-end gap-2 mt-4">
             <Button variant="outline" size="sm" onClick={() => setIsAddOpen(false)}>Cancel</Button>
-            <Button size="sm" onClick={handleCreate} className="bg-[#8C1D24] text-white">Register Unit</Button>
+            <Button size="sm" onClick={handleCreate} className="bg-[var(--shell-brand)] text-white">Register Unit</Button>
           </div>
         </DialogContent>
       </Dialog>
@@ -651,7 +652,7 @@ export default function SerialRegistryPage() {
             </div>
             <div className="flex justify-end gap-2 mt-4">
               <Button variant="outline" size="sm" onClick={() => setEditingSerial(null)}>Cancel</Button>
-              <Button size="sm" onClick={handleUpdate} className="bg-[#8C1D24] text-white">Save Changes</Button>
+              <Button size="sm" onClick={handleUpdate} className="bg-[var(--shell-brand)] text-white">Save Changes</Button>
             </div>
           </DialogContent>
         )}

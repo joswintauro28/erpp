@@ -521,7 +521,7 @@ export default function ReportsPage() {
                         <div className="flex flex-col justify-center items-center border-l border-border pl-6 bg-muted/10 rounded-xl p-6">
                           {detailedCf.reconciliation.difference === 0 ? (
                             <div className="text-center space-y-2">
-                              <div className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 dark:bg-emerald-950 dark:text-emerald-400">
+                              <div className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 text-emerald-600  ">
                                 <Badge className="bg-emerald-500 hover:bg-emerald-600 text-white border-none py-1 px-2.5 text-[10px] font-bold">OK</Badge>
                               </div>
                               <h4 className="text-sm font-semibold text-foreground">Zero Discrepancy</h4>
