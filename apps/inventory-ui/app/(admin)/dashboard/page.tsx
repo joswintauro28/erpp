@@ -153,7 +153,7 @@ export default function DashboardPage() {
           <Badge variant="outline" className="px-3 py-1 text-xs border-[var(--shell-brand)]/40 text-[var(--shell-brand)] bg-[var(--shell-brand)]/5 font-medium">
             Inventory Control & Fulfillment Center
           </Badge>
-          <Link href="/inventory/fulfillment">
+          <Link href="/fulfillment">
             <Button className="bg-[var(--shell-brand)] text-white hover:bg-[var(--shell-brand)]/90 gap-1.5 text-xs shadow-sm">
               <ClipboardList className="h-4 w-4" /> Open Fulfillment Queue <ArrowRight className="h-3.5 w-3.5" />
             </Button>
@@ -193,22 +193,22 @@ export default function DashboardPage() {
       <section>
         <SectionHeading label="Quick Actions" />
         <div className="flex flex-wrap gap-2">
-          <Link href="/inventory/fulfillment">
+          <Link href="/fulfillment">
             <Button size="sm" variant="outline" className="gap-1.5 text-xs">
               <ClipboardList className="h-3.5 w-3.5 text-[var(--shell-brand)]" /> Fulfill Sales Orders
             </Button>
           </Link>
-          <Link href="/inventory/stock">
+          <Link href="/stock">
             <Button size="sm" variant="outline" className="gap-1.5 text-xs">
               <Warehouse className="h-3.5 w-3.5 text-blue-600" /> Stock Levels & Locations
             </Button>
           </Link>
-          <Link href="/inventory/products">
+          <Link href="/products">
             <Button size="sm" variant="outline" className="gap-1.5 text-xs">
               <PackageOpen className="h-3.5 w-3.5 text-purple-600" /> Product Catalog
             </Button>
           </Link>
-          <Link href="/inventory/purchase-orders">
+          <Link href="/purchase-orders">
             <Button size="sm" variant="outline" className="gap-1.5 text-xs">
               <Truck className="h-3.5 w-3.5 text-emerald-600" /> Reorder Purchase Orders
             </Button>
@@ -231,7 +231,7 @@ export default function DashboardPage() {
                   </CardTitle>
                   <CardDescription>Products requiring purchase reorders to prevent stockouts</CardDescription>
                 </div>
-                <Link href="/inventory/purchase-orders">
+                <Link href="/purchase-orders">
                   <Button size="sm" variant="outline" className="text-xs">
                     Reorder Stock <ArrowRight className="h-3 w-3 ml-1" />
                   </Button>
@@ -283,7 +283,7 @@ export default function DashboardPage() {
                   </CardTitle>
                   <CardDescription>Latest customer dispatches, supplier receipts, and adjustments</CardDescription>
                 </div>
-                <Link href="/inventory/stock/movements">
+                <Link href="/stock/movements">
                   <Button size="sm" variant="outline" className="text-xs">
                     Full History <ArrowRight className="h-3 w-3 ml-1" />
                   </Button>

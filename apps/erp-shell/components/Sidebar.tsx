@@ -35,6 +35,12 @@ import {
   Bell,
   ArrowRightLeft,
   ClipboardCheck,
+  Factory,
+  ShieldCheck,
+  Building2,
+  ScrollText,
+  UserSquare2,
+  FolderKanban,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getAccessToken } from "@datavex/auth-middleware";
@@ -81,8 +87,8 @@ const navItems: NavItem[] = [
         name: "Core",
         children: [
           { name: "Customers", href: "/crm/customers", icon: Users },
-          { name: "Contacts", href: "/crm/contacts", icon: Users },
-          { name: "Documents", href: "/crm/documents", icon: FileText },
+          { name: "Contacts", href: "/crm/contacts", icon: UserSquare2 },
+          { name: "Documents", href: "/crm/documents", icon: FolderKanban },
         ],
       },
       {
@@ -101,34 +107,34 @@ const navItems: NavItem[] = [
     icon: Package,
     sections: [
       {
-        name: "Products",
-        children: [
-          { name: "Product Catalog", href: "/inventory/products", icon: Package },
-          { name: "Batch Tracking", href: "#", icon: Boxes, soon: true },
-          { name: "Serial Tracking", href: "/inventory/serials", icon: ScanBarcode },
-        ],
-      },
-      {
-        name: "Stock & Warehouses",
-        children: [
-          { name: "Stock Levels", href: "/inventory/stock", icon: Warehouse },
-          { name: "Stock Movements", href: "/inventory/stock/movements", icon: ArrowRightLeft },
-          { name: "Stock Adjustments", href: "/inventory/stock/adjustments", icon: SlidersHorizontal },
-          { name: "Inventory Valuation", href: "#", icon: BarChart2, soon: true },
-          { name: "Warehouses", href: "/inventory/warehouses", icon: Warehouse },
-        ],
-      },
-      {
-        name: "Fulfillment",
+        name: "Inventory Management",
         children: [
           { name: "Order Fulfillment", href: "/inventory/fulfillment", icon: ClipboardCheck },
+          { name: "Products", href: "/inventory/products", icon: Boxes },
+          { name: "Stock Levels", href: "/inventory/stock", icon: Warehouse },
+          { name: "Stock Movements", href: "/inventory/stock/movements", icon: ArrowRightLeft },
+          { name: "Serial Numbers", href: "/inventory/serial-numbers", icon: ScanBarcode },
+          { name: "Quality Checks", href: "/inventory/quality-checks", icon: ShieldCheck },
         ],
       },
       {
         name: "Procurement",
         children: [
-          { name: "Purchase Orders", href: "/inventory/purchase-orders", icon: ShoppingCart },
           { name: "Suppliers", href: "/inventory/suppliers", icon: Truck },
+          { name: "Purchase Requisitions", href: "/inventory/purchase-requisitions", icon: ClipboardCheck },
+          { name: "Purchase Orders", href: "/inventory/purchase-orders", icon: ShoppingCart },
+        ],
+      },
+      {
+        name: "Manufacturing",
+        children: [
+          { name: "Work Orders", href: "/inventory/work-orders", icon: Factory },
+        ],
+      },
+      {
+        name: "Locations",
+        children: [
+          { name: "Warehouses", href: "/inventory/warehouses", icon: Building2 },
         ],
       },
     ],
@@ -140,14 +146,14 @@ const navItems: NavItem[] = [
     icon: FileText,
     sections: [
       {
-        name: "Revenue",
+        name: "Billing Management",
         children: [
-          { name: "Quotations", href: "/billing/quotations", icon: ClipboardList },
           { name: "Invoices", href: "/billing/invoices", icon: FileText },
-          { name: "Recurring Invoices", href: "/billing/recurring-invoices", icon: Repeat },
+          { name: "Quotations", href: "/billing/quotations", icon: ClipboardList },
+          { name: "Payments", href: "/billing/payments", icon: CreditCard },
           { name: "Credit Notes", href: "/billing/credit-notes", icon: FileText },
           { name: "Debit Notes", href: "/billing/debit-notes", icon: FileText },
-          { name: "Payments", href: "/billing/payments", icon: CreditCard },
+          { name: "Recurring Invoices", href: "/billing/recurring-invoices", icon: Repeat },
         ],
       },
     ],
@@ -159,26 +165,16 @@ const navItems: NavItem[] = [
     icon: Calculator,
     sections: [
       {
-        name: "Ledger",
+        name: "Accounting & Ledger",
         children: [
-          { name: "Chart of Accounts", href: "/accounting/accounts", icon: SlidersHorizontal },
+          { name: "Accounts", href: "/accounting/accounts", icon: Receipt },
+          { name: "Expenses", href: "/accounting/expenses", icon: ScrollText },
           { name: "General Ledger", href: "/accounting/ledger", icon: BookOpen },
-          { name: "Expenses", href: "/accounting/expenses", icon: Receipt },
-        ],
-      },
-      {
-        name: "Operations",
-        children: [
+          { name: "Financial Reports", href: "/accounting/reports", icon: PieChart },
           { name: "Bank Reconciliation", href: "/accounting/reconciliation", icon: Repeat },
+          { name: "Fiscal Periods", href: "/accounting/periods", icon: Calendar },
           { name: "AR Aging", href: "/accounting/aging", icon: BarChart2 },
           { name: "Dunning & Collections", href: "/accounting/dunning", icon: Bell },
-          { name: "Fiscal Periods", href: "/accounting/periods", icon: Calendar },
-        ],
-      },
-      {
-        name: "Reporting",
-        children: [
-          { name: "Financial Reports", href: "/accounting/reports", icon: PieChart },
         ],
       },
     ],
@@ -211,7 +207,7 @@ const navItems: NavItem[] = [
   // 7. Team
   { name: "Team", href: "/team", icon: Users },
 
-  // 8. AI (Coming Soon)
+  // 8. AI Assistant
   { name: "AI Assistant", href: "/ai-assistant", icon: Sparkles, soon: true },
 ];
 

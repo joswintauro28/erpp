@@ -50,6 +50,8 @@ export * from "./components/shared/loading-spinner";
 export * from "./components/shared/page-header";
 export * from "./components/shared/kpi-card";
 export * from "./components/shared/section-heading";
+export * from "./components/shared/theme-provider";
+export * from "./components/shared/theme-toggle";
 
 // Export common utilities
 export { cn } from "./lib/utils";

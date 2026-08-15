@@ -129,7 +129,7 @@ export default function ProductsPage() {
         badge="Inventory Center"
         actions={
           <>
-            <Link href="/inventory/stock">
+            <Link href="/stock">
               <Button variant="outline" size="sm" className="gap-1.5 text-xs">
                 <Warehouse className="h-3.5 w-3.5" /> View Stock Levels
               </Button>

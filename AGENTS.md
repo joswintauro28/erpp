@@ -75,9 +75,7 @@ All tokens defined in `packages/ui-theme/src/globals.css` as CSS custom properti
 - **API Service (`services/api.ts`):** Re-exports `{ setAccessToken, getAccessToken, api }` from `@datavex/auth-middleware`.
 - **Routing Gateway Proxy (`proxy.ts`):** Next.js middleware intercepting `/api/:path*`:
   - `/api/auth/*` → core-iam on port `8002` (preserving `/api` prefix)
-  - `/api/invoices*`, `/api/payments*`, `/api/dashboard/billing` → billing-service on port `8003` (preserving `/api` prefix)
-  - `/api/products*`, `/api/warehouses*`, `/api/stock*`, `/api/suppliers*`, `/api/purchase-orders*`, `/api/serial-numbers*`, `/api/dashboard/inventory` → inventory-service on port `8004` (stripping `/api` prefix)
-  - All other `/api/*` → erp-service FastAPI on port `8000` (stripping `/api` prefix)
+  - All other `/api/*` (products, warehouses, stock, suppliers, purchase-orders, purchase-requisitions, serial-numbers, quality-checks, fulfillment, work-orders, invoices, payments, CRM, dashboard) → `erp-service` FastAPI on port `8000` (stripping `/api` prefix) acting as the central API Gateway & Aggregator.
 - **Imports & Path Aliases:** Shadcn primitives and `cn` utility from `@/components/ui/*` and `@/lib/utils`, mapped via tsconfig paths to `@datavex/ui-theme`.
 - **Multi-Step Modals:** All forms use `components/multi-step-dialog.tsx` with horizontal step wizard.
 
@@ -144,15 +142,19 @@ All tokens defined in `packages/ui-theme/src/globals.css` as CSS custom properti
 | Route | API Endpoint | Description |
 |-------|-------------|-------------|
 | `/dashboard` | `GET /api/dashboard/inventory` | Aggregated KPIs (products, warehouses, stock, low stock, pending POs) |
-| `/inventory/products` | `GET /api/products` | Product catalog with search, category badges |
-| `/inventory/warehouses` | `GET /api/warehouses` | Warehouse locations with status |
-| `/inventory/stock` | `GET /api/stock` | Stock levels per product/warehouse with availability |
-| `/inventory/stock/movements` | `GET /api/stock/movements` | Movement log with type badges (in/out/adjustment) |
-| `/inventory/suppliers` | `GET /api/suppliers` | Supplier list with contact info |
-| `/inventory/purchase-orders` | `GET /api/purchase-orders` | Purchase order list with status badges |
-| `/inventory/serial-numbers` | `GET /api/serial-numbers` | Serial tracking list with status filter |
+| `/products` | `GET /api/products` | Product catalog with search, category badges |
+| `/warehouses` | `GET /api/warehouses` | Warehouse locations with status |
+| `/stock` | `GET /api/stock` | Stock levels per product/warehouse with availability |
+| `/stock/movements` | `GET /api/stock/movements` | Movement log with type badges (in/out/adjustment) |
+| `/suppliers` | `GET /api/suppliers` | Supplier list with contact info |
+| `/purchase-orders` | `GET /api/purchase-orders` | Purchase order list with status badges |
+| `/purchase-requisitions` | `GET /api/purchase-requisitions` | Purchase requisition buy requests with status badges |
+| `/serial-numbers` | `GET /api/serial-numbers` | Serial tracking list with status filter |
+| `/quality-checks` | `GET /api/quality-checks` | Quality inspection logs & status chips |
+| `/fulfillment` | `GET /api/fulfillment/orders` | Sales order fulfillment pipeline Kanban |
+| `/work-orders` | `GET /api/work-orders` | Manufacturing production run routing & issues |
 
-**Sidebar:** Collapsible (260px/64px) with 4 groups: Dashboard (standalone), Inventory Management (Products, Stock Levels, Stock Movements, Serial Numbers), Procurement (Suppliers, Purchase Orders), Locations (Warehouses). Same Deep Maroon chassis as erp-shell.
+**Sidebar:** Collapsible (260px/64px) with 4 groups: Dashboard (standalone), Inventory Management (Fulfillment, Products, Stock Levels, Stock Movements, Serial Numbers, Quality Checks), Procurement (Suppliers, Purchase Requisitions, Purchase Orders), Manufacturing (Work Orders), Locations (Warehouses).
 
 ---
 

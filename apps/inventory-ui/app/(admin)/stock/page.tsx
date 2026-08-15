@@ -158,7 +158,7 @@ export default function StockPage() {
           <Button variant="outline" size="sm" onClick={() => setIsAdjustOpen(true)}>
             <SlidersHorizontal className="h-4 w-4 mr-2" /> Adjust Stock Count
           </Button>
-          <Link href="/inventory/fulfillment">
+          <Link href="/fulfillment">
             <Button size="sm" className="bg-[var(--shell-brand)] text-white hover:bg-[var(--shell-action)]">
               <ClipboardList className="h-4 w-4 mr-2" /> Fulfill Sales Orders <ArrowRight className="h-3.5 w-3.5 ml-1" />
             </Button>

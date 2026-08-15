@@ -14,8 +14,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { api } from "@/services/api";
 import { useAuth } from "@/contexts/AuthContext";
+import { KpiCard, SectionHeading } from "@datavex/ui-theme";
 import DashboardLoading from "./loading";
-import MetricCard from "./MetricCard";
 import PipelineChart from "./PipelineChart";
 import Recommendations from "./Recommendations";
 
@@ -129,19 +129,15 @@ export default function DashboardPage() {
 
       {/* Overview KPIs */}
       <section>
-        <div className="mb-5 flex items-center gap-2">
-          <h2 className="font-heading text-xs font-light uppercase tracking-[0.12em] text-[var(--shell-muted)]">Overview</h2>
-          <div className="h-px flex-1 bg-[var(--shell-border)]" />
-        </div>
+        <SectionHeading label="Overview" />
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
           {metrics.map((m: any, i: number) => {
             const trendDir = m.is_positive ? ("up" as const) : ("down" as const);
             return (
-              <MetricCard
+              <KpiCard
                 key={m.id}
                 label={m.name}
                 value={m.formatted_value}
-                // subtitle={m.trend}
                 icon={metricIcons[i] ?? TrendingUp}
                 trend={{ dir: trendDir, pct: m.trend }}
                 color={KPI_COLORS[i]}
@@ -149,7 +145,7 @@ export default function DashboardPage() {
               />
             );
           })}
-          <MetricCard
+          <KpiCard
             label="Pipeline Value"
             value={formatPipelineValue(pipelineValue)}
             subtitle={`${stages.length} stage${stages.length !== 1 ? "s" : ""} active`}
@@ -162,10 +158,7 @@ export default function DashboardPage() {
 
       {/* Quick Actions */}
       <section>
-        <div className="mb-5 flex items-center gap-2">
-          <h2 className="font-heading text-xs font-light uppercase tracking-[0.12em] text-[var(--shell-muted)]">Quick Actions</h2>
-          <div className="h-px flex-1 bg-[var(--shell-border)]" />
-        </div>
+        <SectionHeading label="Quick Actions" />
         <div className="flex flex-wrap gap-2">
           {quickActions.map((action) => (
             <Button key={action.label} size="sm" variant="outline" className="gap-1.5 text-xs" onClick={() => router.push(action.href)}>
@@ -177,10 +170,7 @@ export default function DashboardPage() {
 
       {/* Pipeline Analytics */}
       <section>
-        <div className="mb-5 flex items-center gap-2">
-          <h2 className="font-heading text-xs font-light uppercase tracking-[0.12em] text-[var(--shell-muted)]">Pipeline Analytics</h2>
-          <div className="h-px flex-1 bg-[var(--shell-border)]" />
-        </div>
+        <SectionHeading label="Pipeline Analytics" />
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           <PipelineChart stages={stages} pipelineValue={pipelineValue} />
           <Recommendations recommendations={recommendations} />
@@ -189,10 +179,7 @@ export default function DashboardPage() {
 
       {/* Activity & Insights */}
       <section>
-        <div className="mb-4 lg:mb-5 flex items-center gap-2">
-          <h2 className="font-heading text-xs font-light uppercase tracking-[0.12em] text-[var(--shell-muted)]">Activity & Insights</h2>
-          <div className="h-px flex-1 bg-[var(--shell-border)]" />
-        </div>
+        <SectionHeading label="Activity & Insights" />
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           {/* Stage Value Bar Chart */}
           <Card className="hover:shadow-engineered transition-shadow duration-200 border-[var(--shell-border)] bg-[var(--shell-surface)]">

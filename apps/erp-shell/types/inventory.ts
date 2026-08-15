@@ -138,6 +138,7 @@ export interface ApiFulfillment {
   shipping_carrier: string | null;
   tracking_number: string | null;
   dispatched_at: string | null;
+  batch_no: string | null;
   purchase_order_id: number | null;
   invoice_id: number | null;
   created_at: string;

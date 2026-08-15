@@ -3,7 +3,7 @@
 import { PanelLeftOpen, PanelLeftClose } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NotificationBell } from "@/components/ui/notification-bell";
-import { SearchInput } from "@datavex/ui-theme";
+import { SearchInput, ThemeToggle } from "@datavex/ui-theme";
 
 export default function Header({ collapsed, onToggleSidebar }: { collapsed: boolean; onToggleSidebar: () => void }) {
   return (
@@ -42,6 +42,7 @@ export default function Header({ collapsed, onToggleSidebar }: { collapsed: bool
         </div>
 
         <NotificationBell />
+        <ThemeToggle />
       </div>
     </header>
   );

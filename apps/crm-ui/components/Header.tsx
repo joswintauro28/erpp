@@ -3,6 +3,7 @@
 import { PanelLeftOpen, PanelLeftClose } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NotificationBell } from "@/components/ui/notification-bell";
+import { ThemeToggle } from "@datavex/ui-theme";
 
 export default function Header({
   collapsed,
@@ -43,6 +44,7 @@ export default function Header({
 
       <div className="flex items-center gap-3">
         <NotificationBell />
+        <ThemeToggle />
       </div>
     </header>
   );
