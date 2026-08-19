@@ -58,7 +58,7 @@ export default function Payments() {
   const [payStep, setPayStep] = useState(0);
   const [formInvoice, setFormInvoice] = useState("");
   const [formAmount, setFormAmount] = useState("");
-  const [formMethod, setFormMethod] = useState("Bank Transfer");
+  const [formMethod, setFormMethod] = useState("Bank_Transfer");
   const [formRef, setFormRef] = useState("");
   const [formNotes, setFormNotes] = useState("");
   const [invoices, setInvoices] = useState<{ id: number; number: string; client: string; balance: number }[]>([]);
@@ -109,20 +109,22 @@ export default function Payments() {
   const handleRecordPayment = async (e: React.FormEvent) => {
     e.preventDefault();
     const selected = invoices.find((i) => i.number === formInvoice);
-    if (!formAmount || !formInvoice) return;
+    if (!formAmount || !formInvoice || !selected) return;
     try {
+      // billing-service CreatePaymentDto expects camelCase fields and
+      // PaymentMethod enum values (Bank_Transfer, Credit_Card, ...).
       await api.post("/payments", {
-        invoice_id: selected?.id ?? formInvoice,
+        invoiceId: selected.id,
         amount: Number(formAmount),
-        method: formMethod,
-        reference: formRef || undefined,
+        paymentMethod: formMethod,
+        referenceId: formRef || undefined,
         notes: formNotes || undefined,
       });
       setRecordOpen(false);
       setPayStep(0);
       setFormInvoice("");
       setFormAmount("");
-      setFormMethod("Bank Transfer");
+      setFormMethod("Bank_Transfer");
       setFormRef("");
       setFormNotes("");
       loadData();
@@ -259,7 +261,7 @@ export default function Payments() {
                         <div className="flex items-center justify-end gap-1">
                           {p.refunded_amount === 0 && (
                             <Button variant="ghost" size="icon-sm" onClick={() => handleRefund(p.id)} title="Refund">
-                              <Ban className="h-3.5 w-3.5 text-amber-600" />
+                              <Ban className="h-3.5 w-3.5 text-[var(--shell-warning)]" />
                             </Button>
                           )}
                         </div>
@@ -342,9 +344,9 @@ export default function Payments() {
                   <Select value={formMethod} onValueChange={(v) => v !== null && setFormMethod(v)}>
                     <SelectTrigger id="payment-method"><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Bank Transfer">Bank Transfer</SelectItem>
+                      <SelectItem value="Bank_Transfer">Bank Transfer</SelectItem>
                       <SelectItem value="UPI">UPI</SelectItem>
-                      <SelectItem value="Credit Card">Credit Card</SelectItem>
+                      <SelectItem value="Credit_Card">Credit Card</SelectItem>
                       <SelectItem value="Cheque">Cheque</SelectItem>
                       <SelectItem value="Cash">Cash</SelectItem>
                     </SelectContent>

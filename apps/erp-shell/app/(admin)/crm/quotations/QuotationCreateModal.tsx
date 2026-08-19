@@ -99,18 +99,21 @@ export default function QuotationCreateModal({ isOpen, onClose, onSuccess, editR
     setSubmitting(true);
     setError('');
 
-    // Format fields specifically for quotation endpoint
+    // Format fields specifically for quotation endpoint.
+    // The CRM service maps these into the billing payload and handles the
+    // notes/file JSON encoding itself — sending plain fields here avoids
+    // double-encoding (which previously lost the attached file).
     const payload = {
       ...formData,
       quote_number: formData.quote_no, // backend supports quote_number or quote_no
       client_name: formData.account,
       total: formData.value ? Number(formData.value) : 0,
       discount_pct: formData.discount_pct ? Number(formData.discount_pct) : 0,
-      notes: JSON.stringify({
-        notes: '',
-        file_name: formData.file_name,
-        file_data: formData.file_data,
-      }),
+      discount: formData.discount_pct ? Number(formData.discount_pct) : 0,
+      discountType: 'percent',
+      notes: '',
+      file_name: formData.file_name,
+      file_data: formData.file_data,
     };
 
     try {
@@ -136,7 +139,7 @@ export default function QuotationCreateModal({ isOpen, onClose, onSuccess, editR
         </DialogHeader>
 
         {error && (
-          <div className="rounded-sm bg-red-100 px-3 py-2 text-xs text-red-700 mb-4">
+          <div className="rounded-sm bg-[var(--shell-danger-surface)] px-3 py-2 text-xs text-[var(--shell-danger)] mb-4">
             {error}
           </div>
         )}
@@ -207,7 +210,7 @@ export default function QuotationCreateModal({ isOpen, onClose, onSuccess, editR
               className="w-full rounded-md border border-[var(--shell-border)] bg-[var(--shell-bg)] px-2 py-1.5 text-xs text-[var(--shell-foreground)] file:mr-2 file:rounded file:border-0 file:bg-primary file:px-2 file:py-0.5 file:text-xs file:font-medium file:text-primary-foreground"
             />
             {formData.file_name && (
-              <div className="mt-1 text-xs text-green-600">
+              <div className="mt-1 text-xs text-[var(--shell-success)]">
                 Selected File: {formData.file_name}
               </div>
             )}

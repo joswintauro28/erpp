@@ -13,8 +13,6 @@ import { toastError, toastSuccess, toastInfo } from "@/utils/toast";
 import SearchCard from "./SearchCard";
 import ResultsCard from "./ResultsCard";
 
-const CRM_BASE = process.env.NEXT_PUBLIC_CRM_API_URL || "http://127.0.0.1:8001";
-
 function getAuthHeaders(): Record<string, string> {
   const token = getAccessToken();
   return token ? { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } : { "Content-Type": "application/json" };
@@ -67,7 +65,9 @@ export default function LeadDiscoveryPage() {
         ? { url: targetUrl }
         : { city: city || null, industry: industry || null, company_name: companyName || null, searchBy: "Employees", minEmployees: "200", refresh: false };
 
-      const res = await fetch(`${CRM_BASE}/api${endpoint}`, {
+      // Route through crm-ui's own Next proxy (same-origin /api → crm-service)
+      // instead of a hardcoded 127.0.0.1:8001 (which breaks in Docker).
+      const res = await fetch(`/api${endpoint}`, {
         method: "POST", headers: getAuthHeaders(), body: JSON.stringify(body), signal: controller.signal,
       });
 
@@ -192,10 +192,10 @@ export default function LeadDiscoveryPage() {
 
         <div className="flex gap-6 border-b border-[var(--shell-border)] mb-4">
           <button onClick={() => setActiveTab("search")} className={cn("pb-2 text-sm font-semibold border-b-2 transition-colors cursor-pointer", activeTab === "search" ? "border-[var(--shell-brand)] text-[var(--shell-brand)]" : "border-transparent text-[var(--shell-muted)]")}>
-            Search Results {results?.companies ? <Badge variant="secondary" className="ml-1.5">{results.companies.length}</Badge> : null}
+            Search Results {results?.companies ? <Badge variant="neutral" className="ml-1.5">{results.companies.length}</Badge> : null}
           </button>
           <button onClick={() => setActiveTab("pinned")} className={cn("pb-2 text-sm font-semibold border-b-2 transition-colors cursor-pointer", activeTab === "pinned" ? "border-[var(--shell-brand)] text-[var(--shell-brand)]" : "border-transparent text-[var(--shell-muted)]")}>
-            Pinned Pages {pinnedLeads.length > 0 ? <Badge variant="secondary" className="ml-1.5">{pinnedLeads.length}</Badge> : null}
+            Pinned Pages {pinnedLeads.length > 0 ? <Badge variant="neutral" className="ml-1.5">{pinnedLeads.length}</Badge> : null}
           </button>
         </div>
 

@@ -120,7 +120,7 @@ export default function DashboardPage() {
           </div>
           <span className="text-sm font-medium text-[var(--shell-accent-text)]">AI recommendations available</span>
           <div className="flex flex-wrap gap-2">
-            <Badge variant="secondary" className="text-xs">
+            <Badge variant="outline" className="border-[var(--shell-accent)]/40 text-[var(--shell-accent-text)] bg-[var(--shell-accent)]/10 text-xs">
               {recommendations.length} insight{recommendations.length !== 1 ? "s" : ""}
             </Badge>
           </div>

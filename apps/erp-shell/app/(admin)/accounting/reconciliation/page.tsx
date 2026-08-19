@@ -105,12 +105,15 @@ export default function ReconciliationPage() {
 
   const openMatchDialog = async (tx: any) => {
     try {
+      // /payments and /invoices return plain arrays (not wrapped objects).
       const [pmtRes, invRes] = await Promise.all([
-        api.get<{ payments: any[] }>("/payments"),
-        api.get<{ invoices: any[] }>("/invoices"),
+        api.get<any>("/payments"),
+        api.get<any>("/invoices"),
       ]);
-      setPaymentCandidates(pmtRes.payments ?? []);
-      setInvoiceCandidates((invRes.invoices ?? []).filter((i: any) => i.status !== "draft" && i.status !== "void"));
+      const payments = Array.isArray(pmtRes) ? pmtRes : (pmtRes?.payments ?? []);
+      const invoices = Array.isArray(invRes) ? invRes : (invRes?.invoices ?? []);
+      setPaymentCandidates(payments);
+      setInvoiceCandidates(invoices.filter((i: any) => i.status !== "draft" && i.status !== "void"));
       setMatchDialog({ tx, pairType: "payment", pairId: "", adjustmentAmount: 0, notes: "" });
     } catch { setError("Failed to fetch matching candidates"); }
   };
@@ -158,7 +161,7 @@ export default function ReconciliationPage() {
       case "Partial_Match": return <Badge className="bg-amber-600 hover:bg-amber-700 text-white border-0 text-xs">Partial Match</Badge>;
       case "Duplicate": return <Badge variant="destructive" className="bg-purple-600 hover:bg-purple-700 text-white border-0 text-xs">Duplicate</Badge>;
       case "Exception": return <Badge variant="destructive" className="text-xs">Exception</Badge>;
-      default: return <Badge variant="secondary" className="text-xs">Unmatched</Badge>;
+      default: return <Badge variant="neutral" className="text-xs">Unmatched</Badge>;
     }
   };
 
@@ -167,7 +170,7 @@ export default function ReconciliationPage() {
     : transactions;
 
   if (loading) {
-    return <div className="flex h-60 items-center justify-center"><Loader2 size={28} className="animate-spin text-amber-500" /></div>;
+    return <div className="flex h-60 items-center justify-center"><Loader2 size={28} className="animate-spin text-[var(--shell-warning)]" /></div>;
   }
 
   return (
@@ -195,9 +198,9 @@ export default function ReconciliationPage() {
       )}
 
       {successMsg && (
-        <div className="flex items-center gap-3 rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-5 py-3.5">
-          <CheckCircle2 className="h-5 w-5 text-emerald-600" />
-          <span className="text-sm font-semibold text-emerald-700">{successMsg}</span>
+        <div className="flex items-center gap-3 rounded-xl border border-[var(--shell-success)]/20 bg-[var(--shell-success)]/10 px-5 py-3.5">
+          <CheckCircle2 className="h-5 w-5 text-[var(--shell-success)]" />
+          <span className="text-sm font-semibold text-[var(--shell-success)]">{successMsg}</span>
         </div>
       )}
 
@@ -235,10 +238,10 @@ export default function ReconciliationPage() {
               <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--shell-muted)]">Uploaded statement batches</h3>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 {reports.map((r) => (
-                  <Card key={r.batch} className="cursor-pointer hover:border-amber-500/50 transition-all" onClick={() => setSelectedBatch(selectedBatch === r.batch ? "" : r.batch)}>
+                  <Card key={r.batch} className="cursor-pointer hover:border-[var(--shell-warning)]/50 transition-all" onClick={() => setSelectedBatch(selectedBatch === r.batch ? "" : r.batch)}>
                     <CardContent className="pt-5 pb-4 space-y-2">
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-mono font-medium text-amber-600">{r.batch}</span>
+                        <span className="text-xs font-mono font-medium text-[var(--shell-warning)]">{r.batch}</span>
                         <Badge variant={selectedBatch === r.batch ? "default" : "outline"} className={selectedBatch === r.batch ? "bg-amber-600 text-white" : ""}>
                           {selectedBatch === r.batch ? "Selected" : "Filter"}
                         </Badge>
@@ -292,7 +295,7 @@ export default function ReconciliationPage() {
                       <TableCell className="max-w-[200px] truncate text-xs font-medium text-[var(--shell-foreground)]">{tx.description || "-"}</TableCell>
                       <TableCell className="font-mono text-xs text-[var(--shell-muted)]">{tx.reference || "-"}</TableCell>
                       <TableCell className="text-right font-mono text-xs text-destructive font-semibold">{tx.debit > 0 ? money(tx.debit) : "-"}</TableCell>
-                      <TableCell className="text-right font-mono text-xs text-emerald-600 font-semibold">{tx.credit > 0 ? money(tx.credit) : "-"}</TableCell>
+                      <TableCell className="text-right font-mono text-xs text-[var(--shell-success)] font-semibold">{tx.credit > 0 ? money(tx.credit) : "-"}</TableCell>
                       <TableCell>
                         <div className="space-y-1">
                           {getStatusBadge(tx.classification)}
@@ -403,19 +406,19 @@ export default function ReconciliationPage() {
                 </div>
                 <div className="flex justify-between text-sm font-semibold border-t border-[var(--shell-border)] pt-2 mt-2">
                   <span>Net Unreconciled Variance</span>
-                  <span className={`font-mono ${varianceData.net_variance === 0 ? "text-emerald-600" : "text-destructive"}`}>
+                  <span className={`font-mono ${varianceData.net_variance === 0 ? "text-[var(--shell-success)]" : "text-destructive"}`}>
                     {money(varianceData.net_variance)}
                   </span>
                 </div>
               </div>
               {varianceData.net_variance === 0 ? (
-                <div className="flex items-center gap-2.5 bg-emerald-50 text-emerald-800 p-3 rounded-lg border border-emerald-200 text-xs">
-                  <Check className="h-4 w-4 text-emerald-600" />
+                <div className="flex items-center gap-2.5 bg-[var(--shell-success-surface)] text-[var(--shell-success)] p-3 rounded-lg border border-[var(--shell-success)]/30 text-xs">
+                  <Check className="h-4 w-4 text-[var(--shell-success)]" />
                   <span>Ledger and statements reconcile. Ready for month-end closure.</span>
                 </div>
               ) : (
-                <div className="flex items-center gap-2.5 bg-amber-50 text-amber-800 p-3 rounded-lg border border-amber-200 text-xs">
-                  <AlertTriangle className="h-4 w-4 text-amber-600" />
+                <div className="flex items-center gap-2.5 bg-[var(--shell-warning-surface)] text-[var(--shell-warning)] p-3 rounded-lg border border-[var(--shell-warning)]/30 text-xs">
+                  <AlertTriangle className="h-4 w-4 text-[var(--shell-warning)]" />
                   <span>Unreconciled variance exists. Run manual matching to clear exceptions.</span>
                 </div>
               )}
@@ -428,7 +431,7 @@ export default function ReconciliationPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between text-sm"><span>Total Imported Statement Records</span><span className="font-semibold">{varianceData.total_transactions}</span></div>
-              <div className="flex items-center justify-between text-sm"><span>Matched / Partially Matched</span><span className="font-semibold text-emerald-600">{varianceData.matched_transactions}</span></div>
+              <div className="flex items-center justify-between text-sm"><span>Matched / Partially Matched</span><span className="font-semibold text-[var(--shell-success)]">{varianceData.matched_transactions}</span></div>
               <div className="flex items-center justify-between text-sm"><span>Outstanding Unmatched Items</span><span className="font-semibold text-destructive">{varianceData.unmatched_transactions}</span></div>
               <div className="h-2.5 w-full bg-[var(--shell-border)] rounded-full overflow-hidden">
                 <div className="h-full bg-emerald-600" style={{ width: `${varianceData.total_transactions > 0 ? (varianceData.matched_transactions / varianceData.total_transactions) * 100 : 0}%` }} />

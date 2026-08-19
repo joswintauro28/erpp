@@ -57,11 +57,11 @@ export default function SalesOrderTable({ salesOrders, onView, onEdit, onDelete,
             <TableCell><Badge variant={statusVariant("sales_order", item.status)}>{item.status}</Badge></TableCell>
             <TableCell>
               {creditStatus === "Approved" ? (
-                <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-600">
+                <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[var(--shell-success)]">
                   <BadgeCheck className="h-3.5 w-3.5" /> Approved
                 </span>
               ) : creditStatus === "Rejected" ? (
-                <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-red-500">
+                <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[var(--shell-danger)]">
                   <Lock className="h-3 w-3" /> Rejected
                 </span>
               ) : (
@@ -75,14 +75,14 @@ export default function SalesOrderTable({ salesOrders, onView, onEdit, onDelete,
                   <Button
                     size="icon-sm"
                     title="Approve order — runs Billing credit check then publishes to Inventory (O2–O4)"
-                    className="hover:text-emerald-600 cursor-pointer"
+                    className="hover:text-[var(--shell-success)] cursor-pointer"
                     onClick={() => onApprove(item)}
                   >
                     <BadgeCheck size={14} />
                   </Button>
                 )}
                 <Button size="icon-sm" className="hover:text-[var(--shell-foreground)] cursor-pointer" onClick={() => onEdit(item)}><Edit2 size={14} /></Button>
-                <Button size="icon-sm" className="hover:text-red-500 cursor-pointer" onClick={() => onDelete(item)}><Trash2 size={14} /></Button>
+                <Button size="icon-sm" className="hover:text-[var(--shell-danger)] cursor-pointer" onClick={() => onDelete(item)}><Trash2 size={14} /></Button>
               </div>
             </TableCell>
           </TableRow>

@@ -115,7 +115,7 @@ export default function FulfillmentWorkflowModal({
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case "QUEUED": return <Badge variant="secondary">Order Queue</Badge>;
+      case "QUEUED": return <Badge variant="neutral">Order Queue</Badge>;
       case "RESERVED": return <Badge className="bg-blue-600 text-white">Stock Reserved</Badge>;
       case "PICKING": return <Badge className="bg-amber-600 text-white">Picking Items</Badge>;
       case "PACKED": return <Badge className="bg-purple-600 text-white">Packed & Ready</Badge>;
@@ -218,7 +218,7 @@ export default function FulfillmentWorkflowModal({
                     <div className="flex items-center justify-between font-bold">
                       <span>Stock Status:</span>
                       {stockCheck.overall_available ? (
-                        <span className="text-emerald-600 flex items-center gap-1"><CheckCircle2 className="h-4 w-4" /> Available</span>
+                        <span className="text-[var(--shell-success)] flex items-center gap-1"><CheckCircle2 className="h-4 w-4" /> Available</span>
                       ) : (
                         <span className="text-destructive flex items-center gap-1"><AlertTriangle className="h-4 w-4" /> Shortage</span>
                       )}
@@ -227,7 +227,7 @@ export default function FulfillmentWorkflowModal({
                       {stockCheck.items.map((item) => (
                         <div key={item.product_id} className="py-1 flex justify-between">
                           <span>{item.product_name} (Req: {item.ordered_quantity})</span>
-                          <span className={item.is_available ? "text-emerald-600 font-semibold" : "text-destructive font-semibold"}>
+                          <span className={item.is_available ? "text-[var(--shell-success)] font-semibold" : "text-destructive font-semibold"}>
                             Avail: {item.available_stock} {item.is_available ? "✓" : "✗"}
                           </span>
                         </div>
@@ -253,7 +253,7 @@ export default function FulfillmentWorkflowModal({
             {order.status === "RESERVED" && (
               <div className="flex items-center justify-between">
                 <div>
-                  <h5 className="font-semibold text-blue-600 flex items-center gap-2"><CheckCircle2 className="h-5 w-5" /> Stock Reserved</h5>
+                  <h5 className="font-semibold text-[var(--shell-info)] flex items-center gap-2"><CheckCircle2 className="h-5 w-5" /> Stock Reserved</h5>
                   <p className="text-xs text-[var(--shell-muted)]">Items locked. Generate Pick List for warehouse.</p>
                 </div>
                 <div className="flex gap-2">
@@ -267,7 +267,7 @@ export default function FulfillmentWorkflowModal({
             {order.status === "PICKING" && (
               <div className="flex items-center justify-between">
                 <div>
-                  <h5 className="font-semibold text-amber-600 flex items-center gap-2"><PackageCheck className="h-5 w-5" /> Items Being Picked</h5>
+                  <h5 className="font-semibold text-[var(--shell-warning)] flex items-center gap-2"><PackageCheck className="h-5 w-5" /> Items Being Picked</h5>
                   <p className="text-xs text-[var(--shell-muted)]">Gathering SKUs from bin locations.</p>
                 </div>
                 <div className="flex gap-2">
@@ -312,7 +312,7 @@ export default function FulfillmentWorkflowModal({
                   <h5 className="font-semibold text-emerald-300 flex items-center gap-2 text-sm">
                     <Truck className="h-5 w-5" /> Order Dispatched
                   </h5>
-                  <p className="text-xs text-emerald-400 mt-1">
+                  <p className="text-xs text-[var(--shell-success)] mt-1">
                     Carrier: <strong>{order.shipping_carrier || "N/A"}</strong> | Tracking: <strong>{order.tracking_number || "N/A"}</strong>
                   </p>
                 </div>
@@ -332,7 +332,7 @@ export default function FulfillmentWorkflowModal({
                     </div>
                   )}
                 </div>
-                {invoiceMessage && <p className="text-xs text-emerald-600 font-medium">{invoiceMessage}</p>}
+                {invoiceMessage && <p className="text-xs text-[var(--shell-success)] font-medium">{invoiceMessage}</p>}
               </div>
             )}
 

@@ -32,7 +32,7 @@ export default function DunningLoading() {
                 <Skeleton className="h-4 w-36" />
                 <Skeleton className="h-4 w-24 font-mono" />
                 <Skeleton className="h-4 w-20 font-bold" />
-                <Skeleton className="h-4 w-16 text-red-600" />
+                <Skeleton className="h-4 w-16 text-[var(--shell-danger)]" />
                 <Skeleton className="h-5 w-20 rounded-full" />
                 <Skeleton className="h-7 w-24 rounded-md" />
               </div>

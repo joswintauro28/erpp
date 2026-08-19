@@ -174,7 +174,7 @@ export default function DocumentCreateModal({
               className="w-full rounded-md border border-[var(--shell-border)] bg-[var(--shell-bg)] px-2.5 py-1.5 text-xs text-[var(--shell-foreground)] file:mr-2 file:rounded file:border-0 file:bg-[var(--shell-brand)] file:px-2.5 file:py-1 file:text-xs file:font-semibold file:text-white hover:file:bg-[var(--shell-action)] file:cursor-pointer"
             />
             {fileName && (
-              <div className="text-[10px] text-green-600 font-medium">
+              <div className="text-[10px] text-[var(--shell-success)] font-medium">
                 Active: {fileName} ({formData.size})
               </div>
             )}

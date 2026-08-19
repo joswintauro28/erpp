@@ -54,7 +54,7 @@ export default function OpportunityTable({ opportunities, onView, onEdit, onDele
             <TableCell>
               <div className="flex gap-2 text-[var(--shell-muted)]">
                 <Button size="icon-sm" className="hover:text-[var(--shell-foreground)] cursor-pointer" onClick={() => onEdit(item)}><Edit2 size={14} /></Button>
-                <Button size="icon-sm" className="hover:text-red-500 cursor-pointer" onClick={() => onDelete(item)}><Trash2 size={14} /></Button>
+                <Button size="icon-sm" className="hover:text-[var(--shell-danger)] cursor-pointer" onClick={() => onDelete(item)}><Trash2 size={14} /></Button>
               </div>
             </TableCell>
           </TableRow>

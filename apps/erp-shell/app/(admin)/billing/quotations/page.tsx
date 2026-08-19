@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import {
   Plus, Search, FileText, Edit, Trash2, CheckCircle, XCircle,
   Send, ClipboardList, Loader2,
@@ -9,13 +10,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { MultiStepDialog } from "@/components/multi-step-dialog";
 import { searchBilling, money, statusVariant } from "@/utils/format";
 import type { Quotation } from "@/types/billing";
 import { api } from "@/services/api";
@@ -24,33 +22,18 @@ import QuotationsLoading from "./loading";
 const statusOptions = ["", "draft", "sent", "accepted", "rejected", "expired"] as const;
 
 
-interface ClientRef {
-  id: number;
-  name: string;
-}
-
-const emptyForm = { client_id: 0, total: 0, notes: "" };
-
 export default function Quotations() {
+  const router = useRouter();
   const [quotes, setQuotes] = useState<Quotation[]>([]);
-  const [clients, setClients] = useState<ClientRef[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [step, setStep] = useState(0);
-  const [editing, setEditing] = useState<Quotation | null>(null);
-  const [form, setForm] = useState(emptyForm);
 
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [qData, cData] = await Promise.all([
-          api.get<Quotation[]>("/invoices/quotations"),
-          api.get<ClientRef[]>("/clients"),
-        ]);
+        const qData = await api.get<Quotation[]>("/invoices/quotations");
         setQuotes(qData);
-        setClients(cData);
       } catch (err) {
         console.error("Failed to load quotations data", err);
       } finally {
@@ -66,41 +49,11 @@ export default function Quotations() {
     return searched.filter((q) => q.status === statusFilter);
   }, [quotes, search, statusFilter]);
 
-  const openCreate = () => {
-    setEditing(null);
-    setForm({
-      client_id: clients[0]?.id || 0,
-      total: 0,
-      notes: "",
-    });
-    setStep(0);
-    setDialogOpen(true);
-  };
+  // Create/edit go through the dedicated QuotationForm pages, which send the
+  // billing-service DTO shape (clientId + clientName + items).
+  const openCreate = () => router.push("/billing/quotations/new");
 
-  const openEdit = (q: Quotation) => {
-    setEditing(q);
-    setForm({ client_id: q.client_id, total: q.total, notes: q.notes });
-    setStep(0);
-    setDialogOpen(true);
-  };
-
-  const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      if (editing) {
-        const updated = await api.put<Quotation>(`/invoices/quotations/${editing.id}`, form);
-        setQuotes((prev) =>
-          prev.map((q) => q.id === editing.id ? updated : q)
-        );
-      } else {
-        const created = await api.post<Quotation>("/invoices/quotations", form);
-        setQuotes((prev) => [created, ...prev]);
-      }
-      setDialogOpen(false);
-    } catch (err) {
-      console.error("Failed to save quotation", err);
-    }
-  };
+  const openEdit = (q: Quotation) => router.push(`/billing/quotations/${q.id}/edit`);
 
   const updateStatus = async (id: number, status: Quotation["status"]) => {
     try {
@@ -148,7 +101,7 @@ export default function Quotations() {
             Create and manage client quotations
           </p>
         </div>
-        <Button onClick={openCreate} disabled={clients.length === 0}>
+        <Button onClick={openCreate}>
           <Plus className="h-4 w-4" />
           Create Quotation
         </Button>
@@ -249,56 +202,6 @@ export default function Quotations() {
           </CardContent>
         </Card>
 
-      <MultiStepDialog
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
-        title={editing ? "Edit Quotation" : "Create Quotation"}
-        steps={[
-          { title: "Details", description: "Client and amount" },
-          { title: "Notes", description: "Additional information" },
-        ]}
-        currentStep={step}
-        onStepChange={setStep}
-        onSubmit={handleSave}
-        disableNext={step === 0 && (!form.client_id || form.total <= 0)}
-        submitLabel={editing ? "Update Quotation" : "Create Quotation"}
-      >
-        {step === 0 && (
-          <div className="space-y-5">
-            <div className="space-y-2">
-              <Label htmlFor="q-client" className="text-[var(--shell-muted)]">Client</Label>
-              <Select
-                value={String(form.client_id)}
-                onValueChange={(v) => setForm({ ...form, client_id: Number(v) })}
-              >
-                <SelectTrigger id="q-client" className="h-9">
-                  <SelectValue placeholder="Select client" />
-                </SelectTrigger>
-                <SelectContent>
-                  {clients.map((c) => (
-                    <SelectItem key={c.id} value={String(c.id)}>
-                      {c.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="q-total" className="text-[var(--shell-muted)]">Total Amount</Label>
-              <Input id="q-total" type="number" min={0} value={form.total}
-                onChange={(e) => setForm({ ...form, total: Number(e.target.value) })} required />
-            </div>
-          </div>
-        )}
-        {step === 1 && (
-          <div className="space-y-2">
-            <Label htmlFor="q-notes" className="text-[var(--shell-muted)]">Notes</Label>
-            <Textarea id="q-notes" value={form.notes}
-              onChange={(e) => setForm({ ...form, notes: e.target.value })}
-              rows={3} />
-          </div>
-        )}
-      </MultiStepDialog>
     </div>
   );
 }

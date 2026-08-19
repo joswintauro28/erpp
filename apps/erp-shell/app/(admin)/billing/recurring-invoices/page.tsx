@@ -70,16 +70,21 @@ export default function RecurringInvoices() {
     if (!formClientId || formItems.length === 0) return;
     setSaving(true);
     try {
+      // billing-service CreateRecurringInvoiceDto expects camelCase fields,
+      // a required clientName, and items with description/unitPrice/gstRate.
+      const clientName = clients.find((c) => c.id === Number(formClientId))?.name ?? `Client #${formClientId}`;
       await api.post("/invoices/recurring", {
-        client_id: Number(formClientId),
-        invoice_number: formTemplate || undefined,
+        clientId: Number(formClientId),
+        clientName,
+        invoiceNumber: formTemplate || undefined,
         interval: formInterval,
-        next_invoice_date: formNextRun || undefined,
-        end_date: formEndDate || undefined,
+        nextInvoiceDate: formNextRun || undefined,
+        endDate: formEndDate || undefined,
         items: formItems.map((item) => ({
-          product: item.product,
+          description: item.product,
           quantity: item.quantity,
-          unit_price: item.unit_price,
+          unitPrice: item.unit_price,
+          gstRate: 18,
         })),
       });
       setCreateOpen(false);

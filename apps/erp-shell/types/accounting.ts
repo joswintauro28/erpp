@@ -2,7 +2,7 @@ export interface Account {
   id: number;
   code: string;
   name: string;
-  type: "Asset" | "Liability" | "Equity" | "Income" | "Expense";
+  type: "Asset" | "Liability" | "Equity" | "Revenue" | "Expense";
   group: string;
   opening_balance: number;
   current_balance: number;

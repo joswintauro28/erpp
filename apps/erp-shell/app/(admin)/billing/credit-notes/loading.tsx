@@ -37,7 +37,7 @@ export default function CreditNotesLoading() {
                 <Skeleton className="h-4 w-28 font-mono" />
                 <Skeleton className="h-4 w-28 font-mono" />
                 <Skeleton className="h-4 w-40" />
-                <Skeleton className="h-4 w-20 font-bold text-red-600" />
+                <Skeleton className="h-4 w-20 font-bold text-[var(--shell-danger)]" />
                 <Skeleton className="h-4 w-24" />
                 <Skeleton className="h-7 w-20 rounded-md" />
               </div>

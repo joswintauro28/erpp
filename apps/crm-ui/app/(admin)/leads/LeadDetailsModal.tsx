@@ -221,7 +221,7 @@ export default function LeadDetailsModal({ lead, isOpen, onClose, onSuccess, onV
         </div>
 
         {error && (
-          <div className="flex items-center gap-2 p-3 mb-4 rounded-md bg-red-100 text-red-700 text-sm">
+          <div className="flex items-center gap-2 p-3 mb-4 rounded-md bg-[var(--shell-danger-surface)] text-[var(--shell-danger)] text-sm">
             <AlertCircle size={16} /> {error}
           </div>
         )}
@@ -232,7 +232,7 @@ export default function LeadDetailsModal({ lead, isOpen, onClose, onSuccess, onV
               <div className="mb-1.5 flex items-center justify-between">
                 <div className="text-[11px] font-semibold uppercase text-[var(--shell-muted)]">Lead Score</div>
                 {lead.is_mql && (
-                  <span className="inline-flex items-center gap-0.5 rounded-full bg-amber-100 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-amber-800 border border-amber-300">
+                  <span className="inline-flex items-center gap-0.5 rounded-full bg-[var(--shell-warning-surface)] px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-[var(--shell-warning)] border border-[var(--shell-warning)]/30">
                     <BadgeCheck className="h-2.5 w-2.5" /> MQL
                   </span>
                 )}
@@ -240,15 +240,15 @@ export default function LeadDetailsModal({ lead, isOpen, onClose, onSuccess, onV
               <div className="flex items-center gap-2">
                 <span className="text-lg font-bold text-[var(--shell-foreground)] tabular-nums">{lead.score ?? 0}</span>
                 <span className="text-[10px] font-semibold uppercase text-[var(--shell-muted)]">/ 100</span>
-                <div className="flex-1 h-2 rounded-full bg-[#e2e8f0] overflow-hidden">
+                <div className="flex-1 h-2 rounded-full bg-[var(--shell-border)] overflow-hidden">
                   <div
-                    className={`h-full rounded-full ${(lead.score ?? 0) >= 70 ? "bg-amber-500" : (lead.score ?? 0) >= 40 ? "bg-sky-500" : "bg-slate-400"}`}
+                    className={`h-full rounded-full ${(lead.score ?? 0) >= 70 ? "bg-[var(--shell-warning-surface)]0" : (lead.score ?? 0) >= 40 ? "bg-[var(--shell-info-surface)]0" : "bg-slate-400"}`}
                     style={{ width: `${lead.score ?? 0}%` }}
                   />
                 </div>
               </div>
               <div className="mt-1.5 flex items-center gap-1.5">
-                <span className={`rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider ${lead.tier === "Hot" ? "bg-red-100 text-red-700" : lead.tier === "Warm" ? "bg-sky-100 text-sky-700" : "bg-slate-100 text-slate-600"}`}>{lead.tier}</span>
+                <span className={`rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider ${lead.tier === "Hot" ? "bg-[var(--shell-danger-surface)] text-[var(--shell-danger)]" : lead.tier === "Warm" ? "bg-[var(--shell-info-surface)] text-[var(--shell-info)]" : "bg-muted text-muted-foreground"}`}>{lead.tier}</span>
                 <span className="text-[10px] text-[var(--shell-muted)]">nurture: {lead.nurture_status || "New"}</span>
               </div>
             </div>
@@ -318,7 +318,7 @@ export default function LeadDetailsModal({ lead, isOpen, onClose, onSuccess, onV
                       <div className="text-[10px] font-semibold uppercase text-[var(--shell-muted)] mb-1">AI Readiness Score</div>
                       <div className="flex items-center gap-2">
                         <span className="text-lg font-bold text-[var(--shell-accent)]">{pinnedDetail.ai_readiness_score}/100</span>
-                        <div className="flex-1 h-2 rounded-full bg-[#e2e8f0] overflow-hidden">
+                        <div className="flex-1 h-2 rounded-full bg-[var(--shell-border)] overflow-hidden">
                           <div className="h-full rounded-full bg-[var(--shell-accent)]" style={{ width: `${pinnedDetail.ai_readiness_score}%` }} />
                         </div>
                       </div>
@@ -333,7 +333,7 @@ export default function LeadDetailsModal({ lead, isOpen, onClose, onSuccess, onV
                       <div className="text-[10px] font-semibold uppercase text-[var(--shell-muted)] mb-1">Detected Technologies</div>
                       <div className="flex flex-wrap gap-1 mt-1">
                         {pinnedDetail.detected_technologies?.map((tech: string, idx: number) => (
-                          <span key={idx} className="text-[10px] px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200">{tech}</span>
+                          <span key={idx} className="text-[10px] px-2 py-0.5 rounded bg-[var(--shell-info-surface)] text-[var(--shell-info)] border border-[var(--shell-info)]/30">{tech}</span>
                         ))}
                       </div>
                     </div>

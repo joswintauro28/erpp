@@ -45,7 +45,7 @@ function StepIndicator({
               <div
                 className={cn(
                   "flex h-7 w-7 items-center justify-center rounded-full text-xs font-semibold transition-all duration-300",
-                  state === "done" && "bg-[var(--shell-accent)] text-[var(--shell-accent-text)] shadow-sm shadow-[var(--shell-accent)]/20",
+                  state === "done" && "bg-[var(--shell-accent)] text-[var(--shell-accent-foreground)] shadow-sm shadow-[var(--shell-accent)]/20",
                   state === "active" && "bg-[var(--shell-brand)] text-white ring-4 ring-[var(--shell-accent)]/30 shadow-sm shadow-[var(--shell-brand)]/20",
                   state === "pending" && "border border-[var(--shell-border)] bg-[var(--shell-surface-alt)]/50 text-[var(--shell-muted)]/50",
                 )}

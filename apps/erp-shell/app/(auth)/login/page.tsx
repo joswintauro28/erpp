@@ -110,7 +110,7 @@ export default function LoginPage() {
         {/* Brand Header */}
         <div className="mb-8 flex flex-col items-center gap-3">
           <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-[var(--shell-border)]/60 bg-[var(--shell-brand)]/10">
-            <span className="font-heading text-lg font-bold text-[#E5B83C] tracking-[0.05em]">
+            <span className="font-heading text-lg font-bold text-[var(--shell-accent)] tracking-[0.05em]">
               D
             </span>
           </div>
@@ -125,7 +125,7 @@ export default function LoginPage() {
         {/* Login Container */}
         <div className="relative w-full rounded-xl border border-[var(--shell-border)] bg-card/65 backdrop-blur-md p-6 shadow-xl">
           <div className="mb-6 flex items-center gap-2">
-            <div className="h-[2px] w-4 rounded-full bg-[#E5B83C]" />
+            <div className="h-[2px] w-4 rounded-full bg-[var(--shell-accent)]" />
             <span className="font-heading text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--shell-muted)]">
               Secure Authentication
             </span>
@@ -219,7 +219,7 @@ export default function LoginPage() {
           {/* Secure Footer */}
           <div className="mt-6 border-t border-[var(--shell-border)]/40 pt-4 flex flex-col items-center gap-2">
             <p className="flex items-center gap-1.5 text-[10px] text-[var(--shell-muted)]/70">
-              <Lock className="h-3 w-3 text-[#E5B83C]" />
+              <Lock className="h-3 w-3 text-[var(--shell-accent)]" />
               Secure 256-bit SSL encrypted connection
             </p>
           </div>

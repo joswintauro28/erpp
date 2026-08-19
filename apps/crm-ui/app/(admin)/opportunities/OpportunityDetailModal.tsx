@@ -40,7 +40,7 @@ function ReqRow({ req, onDelete, onEdit }: ReqRowProps) {
           <div className="font-semibold text-sm text-[var(--shell-foreground)] truncate">{req.name}</div>
           <div className="text-xs text-[var(--shell-muted)] mt-px">{req.category} &middot; {req.priority} priority &middot; {req.owner}</div>
         </div>
-        <Badge variant="secondary">{req.status}</Badge>
+        <Badge variant="neutral">{req.status}</Badge>
         {open ? <ChevronDown size={14} className="shrink-0 text-[var(--shell-muted)]" /> : <ChevronRight size={14} className="shrink-0 text-[var(--shell-muted)]" />}
       </div>
 
@@ -67,7 +67,7 @@ function ReqRow({ req, onDelete, onEdit }: ReqRowProps) {
           </div>
           <div className="flex justify-end gap-2 mt-3">
             <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); onEdit(req); }}><Edit2 size={12} className="mr-1" /> Edit</Button>
-            <Button variant="outline" size="sm" className="border-red-300 text-red-600 hover:bg-red-50" onClick={(e) => { e.stopPropagation(); onDelete(req); }}><Trash2 size={12} className="mr-1" /> Delete</Button>
+            <Button variant="outline" size="sm" className="border-[var(--shell-danger)]/30 text-[var(--shell-danger)] hover:bg-[var(--shell-danger-surface)]" onClick={(e) => { e.stopPropagation(); onDelete(req); }}><Trash2 size={12} className="mr-1" /> Delete</Button>
           </div>
         </div>
       )}
@@ -127,20 +127,20 @@ function QuoteRow({ quote, onDelete, onPreview, onConverted, onEdit }: QuoteRowP
   return (
     <div
       className={`rounded-xl border mb-2 overflow-hidden ${
-        isConverted ? "border-green-300 bg-green-50" : "border-[var(--shell-border)] bg-[var(--shell-surface)]"
+        isConverted ? "border-[var(--shell-success)]/30 bg-[var(--shell-success-surface)]" : "border-[var(--shell-border)] bg-[var(--shell-surface)]"
       }`}
     >
       <div
         onClick={() => setOpen((o) => !o)}
         className="flex items-center gap-3 p-3 cursor-pointer select-none"
       >
-        <FileSpreadsheet size={14} className={`shrink-0 ${isConverted ? "text-green-600" : "text-amber-600"}`} />
+        <FileSpreadsheet size={14} className={`shrink-0 ${isConverted ? "text-[var(--shell-success)]" : "text-[var(--shell-warning)]"}`} />
         <div className="flex-1 min-w-0">
           <div className="font-semibold text-sm text-[var(--shell-foreground)] flex items-center gap-1.5 flex-wrap">
             {quote.quote_no}
-            {quote.file_data && <Paperclip size={11} className="text-amber-600" />}
+            {quote.file_data && <Paperclip size={11} className="text-[var(--shell-warning)]" />}
             {isConverted && (
-              <span className="text-[10px] font-bold text-green-700 bg-green-100 px-1.5 py-0.5 rounded-full">
+              <span className="text-[10px] font-bold text-[var(--shell-success)] bg-[var(--shell-success-surface)] px-1.5 py-0.5 rounded-full">
                 &#10003; Converted to Sales Order
               </span>
             )}
@@ -175,12 +175,12 @@ function QuoteRow({ quote, onDelete, onPreview, onConverted, onEdit }: QuoteRowP
           {quote.file_data ? (
             <div className="border-t border-[var(--shell-border)] pt-3 mb-3">
               <div className="text-[11px] font-bold uppercase tracking-wider text-[var(--shell-muted)] mb-2">Attached File</div>
-              <div className="flex items-center gap-3 p-2.5 rounded-lg border border-amber-300 bg-amber-50">
-                <Paperclip size={13} className="text-amber-600 shrink-0" />
+              <div className="flex items-center gap-3 p-2.5 rounded-lg border border-[var(--shell-warning)]/30 bg-[var(--shell-warning-surface)]">
+                <Paperclip size={13} className="text-[var(--shell-warning)] shrink-0" />
                 <span className="flex-1 text-xs font-medium text-[var(--shell-foreground)] truncate">{quote.file_name || "attachment"}</span>
                 <Button variant="outline" size="sm" className="h-7 text-[11px]" onClick={(e) => { e.stopPropagation(); onPreview(quote); }}><Eye size={12} className="mr-1" /> View</Button>
                 <a href={quote.file_data} download={quote.file_name || "attachment"} onClick={(e) => e.stopPropagation()}>
-                  <Button variant="outline" size="sm" className="h-7 text-[11px] border-green-300 text-green-700"><Download size={12} className="mr-1" /> Download</Button>
+                  <Button variant="outline" size="sm" className="h-7 text-[11px] border-[var(--shell-success)]/30 text-[var(--shell-success)]"><Download size={12} className="mr-1" /> Download</Button>
                 </a>
               </div>
             </div>
@@ -190,7 +190,7 @@ function QuoteRow({ quote, onDelete, onPreview, onConverted, onEdit }: QuoteRowP
 
           <div className="border-t border-[var(--shell-border)] pt-3">
             {isConverted || saleSuccess ? (
-              <div className="flex items-center gap-2 p-2.5 rounded-lg bg-green-50 border border-green-300 text-green-700 text-xs font-semibold">
+              <div className="flex items-center gap-2 p-2.5 rounded-lg bg-[var(--shell-success-surface)] border border-[var(--shell-success)]/30 text-[var(--shell-success)] text-xs font-semibold">
                 <CheckCircle size={14} /> This quotation has been converted to a Sales Order.
               </div>
             ) : !showSaleForm ? (
@@ -210,14 +210,14 @@ function QuoteRow({ quote, onDelete, onPreview, onConverted, onEdit }: QuoteRowP
                 </Button>
               </div>
             ) : (
-              <form onSubmit={handleConvertSale} className="p-3 rounded-xl border border-green-300 bg-green-50">
-                <div className="font-bold text-xs text-green-700 flex items-center gap-1.5 mb-3">
+              <form onSubmit={handleConvertSale} className="p-3 rounded-xl border border-[var(--shell-success)]/30 bg-[var(--shell-success-surface)]">
+                <div className="font-bold text-xs text-[var(--shell-success)] flex items-center gap-1.5 mb-3">
                   <ShoppingCart size={14} /> Convert to Sales Order
                 </div>
-                <div className="text-[11px] text-green-800 mb-3 p-1.5 rounded-md bg-green-100">
+                <div className="text-[11px] text-[var(--shell-success)] mb-3 p-1.5 rounded-md bg-[var(--shell-success-surface)]">
                   Account: <strong>{quote.account}</strong> &nbsp;&middot;&nbsp; Amount: <strong>{quote.value}</strong>
                 </div>
-                {saleError && <div className="p-2 bg-red-100 text-red-700 rounded-md text-[11px] mb-3">{saleError}</div>}
+                {saleError && <div className="p-2 bg-[var(--shell-danger-surface)] text-[var(--shell-danger)] rounded-md text-[11px] mb-3">{saleError}</div>}
                 <div className="grid grid-cols-2 gap-3 mb-3">
                   <div>
                     <label className="block text-[10px] font-semibold uppercase text-[var(--shell-muted)] mb-1">Order Date *</label>
@@ -246,7 +246,7 @@ function QuoteRow({ quote, onDelete, onPreview, onConverted, onEdit }: QuoteRowP
           {!showSaleForm && !isConverted && !saleSuccess && (
             <div className="flex justify-end gap-2 mt-3">
               <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); onEdit(quote); }}><Edit2 size={12} className="mr-1" /> Edit</Button>
-              <Button variant="outline" size="sm" className="border-red-300 text-red-600 hover:bg-red-50" onClick={(e) => { e.stopPropagation(); onDelete(quote); }}><Trash2 size={12} className="mr-1" /> Delete</Button>
+              <Button variant="outline" size="sm" className="border-[var(--shell-danger)]/30 text-[var(--shell-danger)] hover:bg-[var(--shell-danger-surface)]" onClick={(e) => { e.stopPropagation(); onDelete(quote); }}><Trash2 size={12} className="mr-1" /> Delete</Button>
             </div>
           )}
         </div>
@@ -526,7 +526,7 @@ export default function OpportunityDetailModal({ record, isOpen, onClose, onSucc
                   ))}
                 </div>
 
-                <div className="mt-5 p-3 rounded-lg bg-sky-50 border border-sky-200 text-[11px] text-sky-700 flex items-center gap-2">
+                <div className="mt-5 p-3 rounded-lg bg-[var(--shell-info-surface)] border border-[var(--shell-info)]/30 text-[11px] text-[var(--shell-info)] flex items-center gap-2">
                   <ChevronRight size={14} />
                   Use the <strong className="mx-1">Requirements</strong> and <strong className="mx-1">Quotations</strong> tabs to attach linked records to this opportunity.
                 </div>
@@ -546,11 +546,11 @@ export default function OpportunityDetailModal({ record, isOpen, onClose, onSucc
                 </div>
 
                 {showReqForm && (
-                  <form onSubmit={handleReqSubmit} className="p-4 rounded-xl border border-blue-300 bg-blue-50 mb-4">
-                    <div className="text-xs font-bold text-blue-800 flex items-center gap-1.5 mb-3">
+                  <form onSubmit={handleReqSubmit} className="p-4 rounded-xl border border-blue-300 bg-[var(--shell-info-surface)] mb-4">
+                    <div className="text-xs font-bold text-[var(--shell-info)] flex items-center gap-1.5 mb-3">
                       <ClipboardList size={14} /> {editReq ? "Edit Requirement" : "New Requirement"}
                     </div>
-                    {reqError && <div className="p-2 bg-red-100 text-red-700 rounded-md text-[11px] mb-3">{reqError}</div>}
+                    {reqError && <div className="p-2 bg-[var(--shell-danger-surface)] text-[var(--shell-danger)] rounded-md text-[11px] mb-3">{reqError}</div>}
                     <div className="flex flex-col gap-3">
                       <div>
                         <label className="block text-[10px] font-semibold uppercase text-[var(--shell-muted)] mb-1">Description *</label>
@@ -623,11 +623,11 @@ export default function OpportunityDetailModal({ record, isOpen, onClose, onSucc
                 </div>
 
                 {showQuoteForm && (
-                  <form onSubmit={handleQuoteSubmit} className="p-4 rounded-xl border border-amber-300 bg-amber-50 mb-4">
-                    <div className="text-xs font-bold text-amber-800 flex items-center gap-1.5 mb-3">
+                  <form onSubmit={handleQuoteSubmit} className="p-4 rounded-xl border border-[var(--shell-warning)]/30 bg-[var(--shell-warning-surface)] mb-4">
+                    <div className="text-xs font-bold text-[var(--shell-warning)] flex items-center gap-1.5 mb-3">
                       <FileSpreadsheet size={14} /> {editQuote ? "Edit Quotation" : "New Quotation"}
                     </div>
-                    {quoteError && <div className="p-2 bg-red-100 text-red-700 rounded-md text-[11px] mb-3">{quoteError}</div>}
+                    {quoteError && <div className="p-2 bg-[var(--shell-danger-surface)] text-[var(--shell-danger)] rounded-md text-[11px] mb-3">{quoteError}</div>}
                     <div className="flex flex-col gap-3">
                       <div className="grid grid-cols-2 gap-3">
                         <div>
@@ -669,10 +669,10 @@ export default function OpportunityDetailModal({ record, isOpen, onClose, onSucc
                           Attach File <span className="font-normal lowercase text-[var(--shell-muted)]">(PDF or image, optional)</span>
                         </label>
                         <label className="flex items-center gap-2 p-2.5 rounded-md border border-dashed border-[var(--shell-border)] bg-[var(--shell-surface)] cursor-pointer text-xs text-[var(--shell-muted)]">
-                          <Paperclip size={14} className="text-amber-600 shrink-0" />
+                          <Paperclip size={14} className="text-[var(--shell-warning)] shrink-0" />
                           <span className="flex-1 truncate">{quoteFile ? quoteFile.name : "Click to choose PDF or image..."}</span>
                           {quoteFile && (
-                            <button type="button" onClick={() => { setQuoteFile(null); if (fileInputRef.current) fileInputRef.current.value = ""; }} className="text-red-600 hover:text-red-800 shrink-0">
+                            <button type="button" onClick={() => { setQuoteFile(null); if (fileInputRef.current) fileInputRef.current.value = ""; }} className="text-[var(--shell-danger)] hover:text-[var(--shell-danger)] shrink-0">
                               <X size={12} />
                             </button>
                           )}
@@ -724,7 +724,7 @@ export default function OpportunityDetailModal({ record, isOpen, onClose, onSucc
           <div className="bg-popover rounded-xl p-4 max-w-[860px] w-full max-h-[90vh] flex flex-col gap-3 shadow-2xl" onClick={(e) => e.stopPropagation()}>
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-2">
-                <Paperclip size={15} className="text-amber-600" />
+                <Paperclip size={15} className="text-[var(--shell-warning)]" />
                 <span className="text-sm font-bold text-[var(--shell-foreground)]">{previewQuote.file_name || "Attachment"}</span>
                 <span className="text-[11px] text-[var(--shell-muted)]">&middot; {previewQuote.quote_no}</span>
               </div>

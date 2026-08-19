@@ -13,7 +13,7 @@ import {
   FileSpreadsheet, Users, FileText, DollarSign, TrendingUp, History, ShieldCheck,
   ChevronLeft, ChevronRight,
 } from "lucide-react";
-import { api } from "@/services/api";
+import { api, getAccessToken } from "@/services/api";
 import { money } from "@/utils/format";
 
 
@@ -83,7 +83,7 @@ export default function AgingWorkstationPage() {
     setExporting(true);
     try {
       const res = await fetch(`/api/aging/export?view=${viewType}&asOfDate=${asOfDate}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("access_token") || ""}` },
+        headers: { Authorization: `Bearer ${getAccessToken() || ""}` },
       });
       const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
@@ -132,9 +132,9 @@ export default function AgingWorkstationPage() {
       </div>
 
       {/* Reconciliation Status Banner */}
-      <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border p-4 shadow-sm ${isReconciled ? "border-emerald-500/30 bg-emerald-50/50" : "border-amber-500/30 bg-amber-50/50"}`}>
+      <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border p-4 shadow-sm ${isReconciled ? "border-[var(--shell-success)]/30 bg-[var(--shell-success-surface)]/50" : "border-[var(--shell-warning)]/30 bg-[var(--shell-warning-surface)]/50"}`}>
         <div className="flex items-center gap-3">
-          {isReconciled ? <ShieldCheck className="h-6 w-6 text-emerald-600 shrink-0" /> : <AlertTriangle className="h-6 w-6 text-amber-600 shrink-0" />}
+          {isReconciled ? <ShieldCheck className="h-6 w-6 text-[var(--shell-success)] shrink-0" /> : <AlertTriangle className="h-6 w-6 text-[var(--shell-warning)] shrink-0" />}
           <div>
             <h4 className="text-sm font-semibold flex items-center gap-2">GL Accounts Receivable Control Account: {isReconciled ? "RECONCILED" : "DISCREPANCY DETECTED"}</h4>
             <p className="text-xs text-[var(--shell-muted)] mt-0.5">
@@ -153,8 +153,8 @@ export default function AgingWorkstationPage() {
           <p className="text-[11px] text-[var(--shell-muted)] mt-1">{summary?.kpis?.openInvoicesCount || 0} open invoices</p>
         </CardContent></Card>
         <Card className="shadow-sm"><CardContent className="pt-5">
-          <div className="flex items-center justify-between text-xs text-[var(--shell-muted)] mb-1"><span>Unapplied Credits</span><DollarSign className="h-4 w-4 text-emerald-600" /></div>
-          <p className="font-heading text-xl font-bold text-emerald-600">{money(summary?.kpis?.unappliedCredits || 0)}</p>
+          <div className="flex items-center justify-between text-xs text-[var(--shell-muted)] mb-1"><span>Unapplied Credits</span><DollarSign className="h-4 w-4 text-[var(--shell-success)]" /></div>
+          <p className="font-heading text-xl font-bold text-[var(--shell-success)]">{money(summary?.kpis?.unappliedCredits || 0)}</p>
           <p className="text-[11px] text-[var(--shell-muted)] mt-1">Advance customer credits</p>
         </CardContent></Card>
         <Card className="shadow-sm border-[var(--shell-brand)]/30 bg-[var(--shell-brand)]/5"><CardContent className="pt-5">
@@ -168,8 +168,8 @@ export default function AgingWorkstationPage() {
           <p className="text-[11px] text-[var(--shell-muted)] mt-1">Active debit accounts</p>
         </CardContent></Card>
         <Card className="shadow-sm"><CardContent className="pt-5">
-          <div className="flex items-center justify-between text-xs text-[var(--shell-muted)] mb-1"><span>Overdue &gt;30 Days</span><AlertTriangle className="h-4 w-4 text-amber-500" /></div>
-          <p className="font-heading text-xl font-bold text-amber-600">{summary?.kpis?.overdue30PlusRatio || 0}%</p>
+          <div className="flex items-center justify-between text-xs text-[var(--shell-muted)] mb-1"><span>Overdue &gt;30 Days</span><AlertTriangle className="h-4 w-4 text-[var(--shell-warning)]" /></div>
+          <p className="font-heading text-xl font-bold text-[var(--shell-warning)]">{summary?.kpis?.overdue30PlusRatio || 0}%</p>
           <p className="text-[11px] text-[var(--shell-muted)] mt-1">Overdue exposure ratio</p>
         </CardContent></Card>
       </div>
@@ -208,7 +208,7 @@ export default function AgingWorkstationPage() {
                 </div>
                 <p className="font-heading text-lg font-bold">{money(bucket.totalAmount)}</p>
                 <div className="w-full bg-[var(--shell-border)] h-1.5 rounded-full mt-3 overflow-hidden">
-                  <div className={`h-full ${bucket.bucket === "Over 90 Days" ? "bg-red-500" : bucket.bucket === "61–90 Days" ? "bg-amber-500" : "bg-[var(--shell-brand)]"}`}
+                  <div className={`h-full ${bucket.bucket === "Over 90 Days" ? "bg-[var(--shell-danger-surface)]0" : bucket.bucket === "61–90 Days" ? "bg-[var(--shell-warning-surface)]0" : "bg-[var(--shell-brand)]"}`}
                     style={{ width: `${Math.min(100, bucket.percentage)}%` }} />
                 </div>
                 <p className="text-[10px] text-[var(--shell-muted)] text-right mt-1">{bucket.percentage}% of total AR</p>
@@ -279,7 +279,7 @@ export default function AgingWorkstationPage() {
                     <TableCell className="text-right font-mono text-xs">{money(cust.days1_30)}</TableCell>
                     <TableCell className="text-right font-mono text-xs">{money(cust.days31_60)}</TableCell>
                     <TableCell className="text-right font-mono text-xs">{money(cust.days61_90)}</TableCell>
-                    <TableCell className="text-right font-mono text-xs text-red-600 font-semibold">{money(cust.daysOver90)}</TableCell>
+                    <TableCell className="text-right font-mono text-xs text-[var(--shell-danger)] font-semibold">{money(cust.daysOver90)}</TableCell>
                     <TableCell className="text-right font-mono text-sm font-bold text-[var(--shell-brand)]">{money(cust.totalOutstanding)}</TableCell>
                   </TableRow>
                 ))}
@@ -346,8 +346,8 @@ export default function AgingWorkstationPage() {
                     <TableCell className="font-mono text-xs">{inv.issueDate}</TableCell>
                     <TableCell className="font-mono text-xs">{inv.dueDate}</TableCell>
                     <TableCell className="text-right font-mono text-xs">{money(inv.originalTotal)}</TableCell>
-                    <TableCell className="text-right font-mono text-xs text-emerald-600">{money(inv.paidAmount)}</TableCell>
-                    <TableCell className="text-right font-mono text-xs text-red-600">{money(inv.creditNotesAmount)}</TableCell>
+                    <TableCell className="text-right font-mono text-xs text-[var(--shell-success)]">{money(inv.paidAmount)}</TableCell>
+                    <TableCell className="text-right font-mono text-xs text-[var(--shell-danger)]">{money(inv.creditNotesAmount)}</TableCell>
                     <TableCell className="text-right font-mono text-xs font-bold text-[var(--shell-brand)]">{money(inv.baseCurrencyBalanceDue)}</TableCell>
                     <TableCell className="font-mono text-xs">{inv.daysOverdue}d</TableCell>
                     <TableCell>
@@ -380,7 +380,7 @@ export default function AgingWorkstationPage() {
             <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="rounded-lg border border-[var(--shell-border)] p-4 bg-[var(--shell-bg)]/20"><span className="text-xs text-[var(--shell-muted)]">Subledger Gross AR Invoices</span><p className="font-heading text-xl font-bold mt-1">{money(reconciliation?.reconciliation?.subledgerGrossAR || 0)}</p></div>
-                <div className="rounded-lg border border-[var(--shell-border)] p-4 bg-[var(--shell-bg)]/20"><span className="text-xs text-[var(--shell-muted)]">Unapplied Customer Credits</span><p className="font-heading text-xl font-bold text-emerald-600 mt-1">-{money(reconciliation?.reconciliation?.unappliedCredits || 0)}</p></div>
+                <div className="rounded-lg border border-[var(--shell-border)] p-4 bg-[var(--shell-bg)]/20"><span className="text-xs text-[var(--shell-muted)]">Unapplied Customer Credits</span><p className="font-heading text-xl font-bold text-[var(--shell-success)] mt-1">-{money(reconciliation?.reconciliation?.unappliedCredits || 0)}</p></div>
                 <div className="rounded-lg border border-[var(--shell-brand)]/30 bg-[var(--shell-brand)]/5 p-4"><span className="text-xs text-[var(--shell-brand)] font-medium">Net Subledger AR Balance</span><p className="font-heading text-xl font-bold text-[var(--shell-brand)] mt-1">{money(reconciliation?.reconciliation?.subledgerBalance || 0)}</p></div>
               </div>
               <Table>
@@ -394,7 +394,7 @@ export default function AgingWorkstationPage() {
                   <TableRow><TableCell className="font-semibold text-xs">General Ledger (GL) Control Account Balance</TableCell><TableCell className="text-right font-mono text-sm font-bold">{money(reconciliation?.reconciliation?.glBalance || 0)}</TableCell><TableCell className="text-xs text-[var(--shell-muted)]">{reconciliation?.reconciliation?.arAccount ? `Account Code ${reconciliation.reconciliation.arAccount.code} (${reconciliation.reconciliation.arAccount.name})` : "Default AR Control Account"}</TableCell></TableRow>
                   <TableRow className="bg-[var(--shell-bg)]/40 font-bold">
                     <TableCell className="text-xs font-bold">Calculated Reconciliation Variance</TableCell>
-                    <TableCell className="text-right font-mono text-sm font-bold text-amber-600">{money(reconciliation?.reconciliation?.variance || 0)}</TableCell>
+                    <TableCell className="text-right font-mono text-sm font-bold text-[var(--shell-warning)]">{money(reconciliation?.reconciliation?.variance || 0)}</TableCell>
                     <TableCell className="text-xs"><Badge variant={reconciliation?.reconciliation?.isReconciled ? "default" : "destructive"} className="capitalize">{reconciliation?.reconciliation?.status || "RECONCILED"}</Badge></TableCell>
                   </TableRow>
                 </TableBody>
@@ -418,7 +418,7 @@ export default function AgingWorkstationPage() {
               <div className="grid grid-cols-4 gap-3 rounded-lg border border-[var(--shell-border)] bg-[var(--shell-bg)]/20 p-3 text-xs">
                 <div><span className="text-[var(--shell-muted)]">Customer:</span><p className="font-semibold">{timelineData.invoice.clientName}</p></div>
                 <div><span className="text-[var(--shell-muted)]">Total:</span><p className="font-mono font-semibold">{money(timelineData.invoice.total)}</p></div>
-                <div><span className="text-[var(--shell-muted)]">Paid:</span><p className="font-mono font-semibold text-emerald-600">{money(timelineData.invoice.paidAmount)}</p></div>
+                <div><span className="text-[var(--shell-muted)]">Paid:</span><p className="font-mono font-semibold text-[var(--shell-success)]">{money(timelineData.invoice.paidAmount)}</p></div>
                 <div><span className="text-[var(--shell-muted)]">Balance Due:</span><p className="font-mono font-bold text-[var(--shell-brand)]">{money(timelineData.invoice.balanceDue)}</p></div>
               </div>
               <div className="space-y-4">

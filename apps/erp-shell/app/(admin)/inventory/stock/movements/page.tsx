@@ -49,7 +49,7 @@ export default function StockMovementsPage() {
       );
     }
     return (
-      <Badge variant="secondary" className="flex items-center gap-1 text-[11px] w-fit">
+      <Badge variant="neutral" className="flex items-center gap-1 text-[11px] w-fit">
         <SlidersHorizontal className="h-3 w-3" /> Audit Adjustment
       </Badge>
     );
@@ -106,7 +106,7 @@ export default function StockMovementsPage() {
                     </TableCell>
                     <TableCell>{getTypeBadge(m.type)}</TableCell>
                     <TableCell className="text-right font-bold">
-                      <span className={m.quantity > 0 ? "text-emerald-600" : "text-destructive"}>
+                      <span className={m.quantity > 0 ? "text-[var(--shell-success)]" : "text-destructive"}>
                         {m.quantity > 0 ? `+${m.quantity}` : m.quantity}
                       </span>
                     </TableCell>

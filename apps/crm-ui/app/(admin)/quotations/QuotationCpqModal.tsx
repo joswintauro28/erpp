@@ -116,7 +116,7 @@ export default function QuotationCpqModal({ isOpen, onClose, onSuccess, defaultA
       <div className="rounded-xl border border-border bg-card w-full max-w-2xl max-h-[92vh] overflow-y-auto p-6 shadow-xl">
         <div className="flex justify-between items-center pb-4 mb-4 border-b border-border">
           <div className="flex items-center gap-2">
-            <FileSpreadsheet size={18} className="text-amber-600" />
+            <FileSpreadsheet size={18} className="text-[var(--shell-warning)]" />
             <h3 className="text-base font-bold text-foreground m-0">Configure, Price & Quote</h3>
           </div>
           <button className="p-1 rounded-md hover:bg-muted text-muted-foreground cursor-pointer" onClick={onClose}><X size={18} /></button>
@@ -180,7 +180,7 @@ export default function QuotationCpqModal({ isOpen, onClose, onSuccess, defaultA
                   </select>
                   <button
                     type="button"
-                    className="rounded p-1 text-[var(--shell-muted)] hover:text-red-500 transition-colors cursor-pointer"
+                    className="rounded p-1 text-[var(--shell-muted)] hover:text-[var(--shell-danger)] transition-colors cursor-pointer"
                     onClick={() => setItems((prev) => prev.filter((_, i) => i !== idx))}
                     disabled={items.length === 1}
                   >
@@ -235,11 +235,11 @@ export default function QuotationCpqModal({ isOpen, onClose, onSuccess, defaultA
           </div>
 
           {requiresApproval && (
-            <div className="flex items-start gap-2 rounded-lg border border-amber-300 bg-amber-50 p-3">
-              <Lock className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+            <div className="flex items-start gap-2 rounded-lg border border-[var(--shell-warning)]/30 bg-[var(--shell-warning-surface)] p-3">
+              <Lock className="mt-0.5 h-4 w-4 shrink-0 text-[var(--shell-warning)]" />
               <div>
-                <p className="m-0 text-xs font-semibold text-amber-800">Manager approval required (S5/S6)</p>
-                <p className="m-0 mt-0.5 text-[11px] text-amber-700">
+                <p className="m-0 text-xs font-semibold text-[var(--shell-warning)]">Manager approval required (S5/S6)</p>
+                <p className="m-0 mt-0.5 text-[11px] text-[var(--shell-warning)]">
                   This quote has a {discountPct.toFixed(1)}% discount — above the {APPROVAL_THRESHOLD}% threshold. It will be created as a
                   locked draft until a manager approves it.
                 </p>
@@ -253,7 +253,7 @@ export default function QuotationCpqModal({ isOpen, onClose, onSuccess, defaultA
             </div>
             <div className="flex justify-between py-0.5 text-[var(--shell-muted)]">
               <span>Discount ({discountPct.toFixed(1)}%)</span>
-              <span className={cn("tabular-nums", discountAmount > 0 ? "text-emerald-600" : "")}>− {formatINR(discountAmount)}</span>
+              <span className={cn("tabular-nums", discountAmount > 0 ? "text-[var(--shell-success)]" : "")}>− {formatINR(discountAmount)}</span>
             </div>
             <div className="flex justify-between py-0.5 text-[var(--shell-muted)]">
               <span>GST</span><span className="tabular-nums">{formatINR(gst)}</span>

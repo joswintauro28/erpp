@@ -255,10 +255,10 @@ export default function QualityChecksPage() {
                     className={`p-2.5 rounded-md border text-xs font-semibold transition-colors ${
                       qcResult === r
                         ? r === "PASS"
-                          ? "border-emerald-500 bg-emerald-50 text-emerald-700"
+                          ? "border-[var(--shell-success)] bg-[var(--shell-success-surface)] text-[var(--shell-success)]"
                           : r === "FAIL"
-                            ? "border-red-500 bg-red-50 text-red-700"
-                            : "border-blue-500 bg-blue-50 text-blue-700"
+                            ? "border-red-500 bg-[var(--shell-danger-surface)] text-[var(--shell-danger)]"
+                            : "border-blue-500 bg-[var(--shell-info-surface)] text-[var(--shell-info)]"
                         : "border-border text-muted-foreground hover:bg-muted"
                     }`}
                   >

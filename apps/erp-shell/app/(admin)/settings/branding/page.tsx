@@ -45,7 +45,7 @@ export default function Branding() {
             <div className="space-y-2">
               <Label className="text-xs text-[var(--shell-muted)] font-medium">Company Logo</Label>
               <div className="flex items-center gap-4">
-                <div className="flex h-14 w-14 items-center justify-center rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface-alt)] text-sm font-bold text-[#E5B83C]">
+                <div className="flex h-14 w-14 items-center justify-center rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface-alt)] text-sm font-bold text-[var(--shell-accent)]">
                   DV
                 </div>
                 <div className="flex gap-2">
@@ -117,7 +117,7 @@ export default function Branding() {
           <div className="space-y-1.5">
             <Label className="text-xs text-[var(--shell-muted)] font-medium">Email Logo</Label>
             <div className="flex items-center gap-4">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-[var(--shell-border)] bg-[var(--shell-surface-alt)] text-xs font-bold text-[#E5B83C]">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-[var(--shell-border)] bg-[var(--shell-surface-alt)] text-xs font-bold text-[var(--shell-accent)]">
                 DV
               </div>
               <Button variant="outline" size="sm" className="hover:bg-[var(--shell-surface-alt)]">Upload</Button>

@@ -52,7 +52,7 @@ export default function QuotationTable({ quotations, onView, onEdit, onDelete, o
                 <span className="flex items-center gap-1.5">
                   {quote.quote_no}
                   {approvalPending && (
-                    <span className="inline-flex items-center gap-0.5 rounded-full bg-amber-100 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-amber-800 border border-amber-300">
+                    <span className="inline-flex items-center gap-0.5 rounded-full bg-[var(--shell-warning-surface)] px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-[var(--shell-warning)] border border-[var(--shell-warning)]/30">
                       <Lock className="h-2.5 w-2.5" /> Approval
                     </span>
                   )}
@@ -62,7 +62,7 @@ export default function QuotationTable({ quotations, onView, onEdit, onDelete, o
               <TableCell>{formatCurrency(quote.value)}</TableCell>
               <TableCell>
                 {Number(quote.discount_pct || 0) > 0 ? (
-                  <span className={cn("text-xs font-semibold tabular-nums", Number(quote.discount_pct) > 15 ? "text-amber-700" : "text-emerald-600")}>
+                  <span className={cn("text-xs font-semibold tabular-nums", Number(quote.discount_pct) > 15 ? "text-[var(--shell-warning)]" : "text-[var(--shell-success)]")}>
                     {Number(quote.discount_pct).toFixed(1)}%
                   </span>
                 ) : (
@@ -79,7 +79,7 @@ export default function QuotationTable({ quotations, onView, onEdit, onDelete, o
                       <Button
                         size="icon-sm"
                         title="Approve quote (manager)"
-                        className="hover:text-emerald-600 cursor-pointer"
+                        className="hover:text-[var(--shell-success)] cursor-pointer"
                         onClick={() => onApprovalDecision(quote, true)}
                       >
                         <CheckCircle2 size={14} />
@@ -87,7 +87,7 @@ export default function QuotationTable({ quotations, onView, onEdit, onDelete, o
                       <Button
                         size="icon-sm"
                         title="Reject quote"
-                        className="hover:text-red-500 cursor-pointer"
+                        className="hover:text-[var(--shell-danger)] cursor-pointer"
                         onClick={() => onApprovalDecision(quote, false)}
                       >
                         <XCircle size={14} />

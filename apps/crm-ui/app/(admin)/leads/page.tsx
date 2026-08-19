@@ -88,7 +88,7 @@ export default function LeadsPage() {
           </div>
           <div className="rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface)] p-4 space-y-2 hover:shadow-engineered transition-shadow">
             <p className="text-xs font-medium uppercase tracking-[0.08em] text-[var(--shell-muted)]">MQL READY</p>
-            <p className="font-heading text-2xl font-semibold tracking-tight text-amber-600">{data.summary.mql}</p>
+            <p className="font-heading text-2xl font-semibold tracking-tight text-[var(--shell-warning)]">{data.summary.mql}</p>
             <p className="text-xs text-[var(--shell-muted)]">ready for handoff (score ≥ 70)</p>
           </div>
           <div className="rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface)] p-4 space-y-2 hover:shadow-engineered transition-shadow">
@@ -120,7 +120,7 @@ export default function LeadsPage() {
             </Button>
             <Button
               onClick={() => router.push("/lead-discovery")}
-              className="bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-slate-950 font-semibold border border-amber-400 shadow-[0_0_12px_rgba(245,158,11,0.25)] hover:shadow-[0_0_18px_rgba(245,158,11,0.5)] transition-all duration-300"
+              className="bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-slate-950 font-semibold border border-[var(--shell-warning)]/40 shadow-[0_0_12px_rgba(245,158,11,0.25)] hover:shadow-[0_0_18px_rgba(245,158,11,0.5)] transition-all duration-300"
               size="sm"
             >
               <Sparkles size={14} className="mr-1.5 fill-amber-950/20 text-slate-950" /> Discover Leads
@@ -143,8 +143,8 @@ export default function LeadsPage() {
               className={cn(
                 "inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition-all cursor-pointer",
                 mqlOnly
-                  ? "border-amber-400 bg-amber-100 text-amber-800 shadow-sm"
-                  : "border-[var(--shell-border)] text-[var(--shell-muted)] hover:border-amber-300 hover:text-amber-700"
+                  ? "border-[var(--shell-warning)]/40 bg-[var(--shell-warning-surface)] text-[var(--shell-warning)] shadow-sm"
+                  : "border-[var(--shell-border)] text-[var(--shell-muted)] hover:border-[var(--shell-warning)]/30 hover:text-[var(--shell-warning)]"
               )}
             >
               <BadgeCheck className="h-3.5 w-3.5" />

@@ -177,9 +177,9 @@ export default function QuotationDetailsModal({ record, isOpen, onClose, onSucce
 
         {showSalesOrderForm ? (
           <div className="flex flex-col gap-4 mt-2">
-            <div className="flex items-center gap-2 rounded-lg border border-emerald-300 bg-gradient-to-br from-emerald-50 to-emerald-100 p-4">
-              <PackageOpen className="size-4 text-emerald-600" />
-              <span className="text-sm font-semibold text-emerald-700">
+            <div className="flex items-center gap-2 rounded-lg border border-[var(--shell-success)]/30 bg-gradient-to-br from-[var(--shell-success-surface)] to-[var(--shell-success-surface)] p-4">
+              <PackageOpen className="size-4 text-[var(--shell-success)]" />
+              <span className="text-sm font-semibold text-[var(--shell-success)]">
                 Converting <strong>{record.quote_no || record.quote_number}</strong> to a Sales Order
               </span>
             </div>
@@ -190,7 +190,7 @@ export default function QuotationDetailsModal({ record, isOpen, onClose, onSucce
             </div>
 
             {salesOrderError && (
-              <div className="rounded-sm bg-red-100 px-3 py-2 text-xs text-red-700">
+              <div className="rounded-sm bg-[var(--shell-danger-surface)] px-3 py-2 text-xs text-[var(--shell-danger)]">
                 {salesOrderError}
               </div>
             )}
@@ -265,7 +265,7 @@ export default function QuotationDetailsModal({ record, isOpen, onClose, onSucce
                   className="w-full rounded-md border border-[var(--shell-border)] bg-[var(--shell-bg)] px-2 py-1.5 text-xs text-[var(--shell-foreground)] file:mr-2 file:rounded file:border-0 file:bg-primary file:px-2 file:py-0.5 file:text-xs file:font-medium file:text-primary-foreground"
                 />
                 {salesOrderData.file_name && (
-                  <div className="mt-1 text-xs text-green-600">
+                  <div className="mt-1 text-xs text-[var(--shell-success)]">
                     Selected File: {salesOrderData.file_name}
                   </div>
                 )}
@@ -295,7 +295,7 @@ export default function QuotationDetailsModal({ record, isOpen, onClose, onSucce
               ].map((f) => (
                 <div key={f.label}>
                   <div className="text-[10px] font-semibold uppercase text-[var(--shell-muted)] mb-0.5">{f.label}</div>
-                  <div className={`text-xs font-semibold ${f.accent ? "text-amber-600" : "text-[var(--shell-foreground)]"}`}>{f.value || '--'}</div>
+                  <div className={`text-xs font-semibold ${f.accent ? "text-[var(--shell-warning)]" : "text-[var(--shell-foreground)]"}`}>{f.value || '--'}</div>
                 </div>
               ))}
 

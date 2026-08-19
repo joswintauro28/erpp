@@ -310,7 +310,7 @@ export default function TeamManagement() {
         </div>
       )}
       {success && (
-        <div className="flex items-center gap-2.5 rounded-lg border border-emerald-500/20 bg-emerald-500/10 p-3.5 text-sm text-emerald-500 font-medium animate-kpi">
+        <div className="flex items-center gap-2.5 rounded-lg border border-[var(--shell-success)]/20 bg-[var(--shell-success)]/10 p-3.5 text-sm text-[var(--shell-success)] font-medium animate-kpi">
           <CheckCircle2 className="h-4 w-4 shrink-0" />
           <span>{success}</span>
         </div>
@@ -356,7 +356,7 @@ export default function TeamManagement() {
                 value: String(roles.length),
                 subtitle: "Configured access groups",
                 icon: Shield,
-                color: "#E5B83C",
+                color: "var(--shell-accent)",
                 index: 3,
               },
             ].map((kpi) => (
@@ -431,7 +431,7 @@ export default function TeamManagement() {
                           variant={m.status === "active" ? "default" : "outline"}
                           className={`text-[10px] font-semibold ${
                             m.status === "active"
-                              ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20"
+                              ? "bg-[var(--shell-success)]/10 text-[var(--shell-success)] border-[var(--shell-success)]/20"
                               : "bg-[var(--shell-brand)]/10 text-[var(--shell-brand)] border-[var(--shell-brand)]/20"
                           }`}
                         >
@@ -443,7 +443,7 @@ export default function TeamManagement() {
                           {m.permissions.length === 0 ? (
                             <span className="text-[10px] text-[var(--shell-muted)]">No permissions mapped</span>
                           ) : m.permissions.length === permissions.length ? (
-                            <Badge variant="outline" className="text-[9px] font-semibold text-[#E5B83C] border-[#E5B83C]/30 bg-[#E5B83C]/5">Full Access Admin</Badge>
+                            <Badge variant="outline" className="text-[9px] font-semibold text-[var(--shell-accent)] border-[var(--shell-accent)]/30 bg-[var(--shell-accent)]/5">Full Access Admin</Badge>
                           ) : (
                             m.permissions.map((p) => (
                               <Badge key={p} variant="outline" className="text-[9px] font-medium border-[var(--shell-border)]/60 text-[var(--shell-muted)]">{p}</Badge>
@@ -476,7 +476,7 @@ export default function TeamManagement() {
                             className="hover:bg-[var(--shell-surface-alt)]"
                           >
                             {m.status === "disabled" ? (
-                              <Power className="h-3.5 w-3.5 text-emerald-500" />
+                              <Power className="h-3.5 w-3.5 text-[var(--shell-success)]" />
                             ) : (
                               <PowerOff className="h-3.5 w-3.5 text-[var(--shell-muted)]" />
                             )}
@@ -552,7 +552,7 @@ export default function TeamManagement() {
             <CardContent className="p-6 space-y-6">
               {Object.entries(permissionsByModule).map(([moduleName, modulePerms]) => (
                 <div key={moduleName} className="space-y-3 pb-4 border-b border-[var(--shell-border)]/20 last:border-0">
-                  <h3 className="text-xs font-semibold uppercase tracking-wider text-[#E5B83C]">{moduleName}</h3>
+                  <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--shell-accent)]">{moduleName}</h3>
                   <div className="grid grid-cols-2 gap-4">
                     {modulePerms.map((p) => {
                       const isChecked = selectedRolePermIds.includes(p.id);

@@ -6,17 +6,17 @@ import { subscribeToasts, type ToastItem } from "@/utils/toast";
 import { cn } from "@/lib/utils";
 
 const ICONS: Record<ToastItem["type"], React.ReactNode> = {
-  success: <CheckCircle2 className="h-4 w-4 text-emerald-500" />,
-  error: <AlertCircle className="h-4 w-4 text-red-500" />,
-  info: <Info className="h-4 w-4 text-sky-500" />,
-  warning: <AlertTriangle className="h-4 w-4 text-amber-500" />,
+  success: <CheckCircle2 className="h-4 w-4 text-[var(--shell-success)]" />,
+  error: <AlertCircle className="h-4 w-4 text-[var(--shell-danger)]" />,
+  info: <Info className="h-4 w-4 text-[var(--shell-info)]" />,
+  warning: <AlertTriangle className="h-4 w-4 text-[var(--shell-warning)]" />,
 };
 
 const STYLES: Record<ToastItem["type"], string> = {
-  success: "border-emerald-200 bg-emerald-50",
-  error: "border-red-200 bg-red-50",
-  info: "border-sky-200 bg-sky-50",
-  warning: "border-amber-200 bg-amber-50",
+  success: "border-[var(--shell-success)]/30 bg-[var(--shell-success-surface)]",
+  error: "border-[var(--shell-danger)]/30 bg-[var(--shell-danger-surface)]",
+  info: "border-[var(--shell-info)]/30 bg-[var(--shell-info-surface)]",
+  warning: "border-[var(--shell-warning)]/30 bg-[var(--shell-warning-surface)]",
 };
 
 export default function ToastContainer() {

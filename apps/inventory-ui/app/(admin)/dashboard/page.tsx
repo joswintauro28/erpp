@@ -200,7 +200,7 @@ export default function DashboardPage() {
           </Link>
           <Link href="/stock">
             <Button size="sm" variant="outline" className="gap-1.5 text-xs">
-              <Warehouse className="h-3.5 w-3.5 text-blue-600" /> Stock Levels & Locations
+              <Warehouse className="h-3.5 w-3.5 text-[var(--shell-info)]" /> Stock Levels & Locations
             </Button>
           </Link>
           <Link href="/products">
@@ -210,7 +210,7 @@ export default function DashboardPage() {
           </Link>
           <Link href="/purchase-orders">
             <Button size="sm" variant="outline" className="gap-1.5 text-xs">
-              <Truck className="h-3.5 w-3.5 text-emerald-600" /> Reorder Purchase Orders
+              <Truck className="h-3.5 w-3.5 text-[var(--shell-success)]" /> Reorder Purchase Orders
             </Button>
           </Link>
         </div>
@@ -314,7 +314,7 @@ export default function DashboardPage() {
                                 ? "bg-[var(--shell-success)] text-white text-[10px]"
                                 : m.type.toLowerCase() === "out"
                                 ? "bg-[var(--shell-danger)] text-white text-[10px]"
-                                : "bg-secondary text-[var(--shell-foreground)] text-[10px]"
+                                : "bg-muted text-muted-foreground text-[10px]"
                             }
                           >
                             {m.type.toLowerCase() === "in" ? "Receipt (IN)" : m.type.toLowerCase() === "out" ? "Dispatch (OUT)" : "Audit"}

@@ -294,7 +294,7 @@ export default function SalesOrderDetailsModal({
                     {relatedQuotations.map((q, idx) => {
                       const isTarget = q.quote_no === record.from_quote;
                       return (
-                        <div key={`${q.id_str}-${idx}`} className={`rounded-lg border p-2.5 text-xs ${isTarget ? "border-amber-400 bg-amber-50" : "border-[var(--shell-border)] bg-[var(--shell-bg)]"}`}>
+                        <div key={`${q.id_str}-${idx}`} className={`rounded-lg border p-2.5 text-xs ${isTarget ? "border-[var(--shell-warning)]/40 bg-[var(--shell-warning-surface)]" : "border-[var(--shell-border)] bg-[var(--shell-bg)]"}`}>
                           <div className="mb-0.5 flex items-center justify-between">
                             <span className="font-semibold">{q.quote_no}</span>
                             <span className="rounded-full bg-[var(--shell-bg)] px-1.5 py-0.5 text-[0.7rem] font-semibold text-[var(--shell-muted)]">{q.status}</span>
@@ -357,7 +357,7 @@ export default function SalesOrderDetailsModal({
                 ) : (
                   <Button
                     onClick={() => setShowInvoiceForm(true)}
-                    className="flex items-center gap-1.5 bg-emerald-500 hover:bg-emerald-600 text-white"
+                    className="flex items-center gap-1.5 bg-[var(--shell-success-surface)]0 hover:bg-emerald-600 text-white"
                     size="sm"
                   >
                     <CheckCircle className="size-3.5" />
@@ -370,13 +370,13 @@ export default function SalesOrderDetailsModal({
           </div>
         ) : (
           <div className="space-y-4">
-            <div className="mb-4 flex items-center gap-2 rounded-lg border border-emerald-300 bg-gradient-to-br from-emerald-50 to-emerald-100 p-4">
-              <CheckCircle className="size-4 text-emerald-600" />
-              <span className="text-sm font-semibold text-emerald-700">
+            <div className="mb-4 flex items-center gap-2 rounded-lg border border-[var(--shell-success)]/30 bg-gradient-to-br from-[var(--shell-success-surface)] to-[var(--shell-success-surface)] p-4">
+              <CheckCircle className="size-4 text-[var(--shell-success)]" />
+              <span className="text-sm font-semibold text-[var(--shell-success)]">
                 Marking Sales Order <strong>{record.so_no}</strong> as Done / Paid
               </span>
             </div>
-            {invoiceError && <div className="mb-4 rounded-md bg-red-100 px-3 py-2 text-xs text-red-700">{invoiceError}</div>}
+            {invoiceError && <div className="mb-4 rounded-md bg-[var(--shell-danger-surface)] px-3 py-2 text-xs text-[var(--shell-danger)]">{invoiceError}</div>}
             <form onSubmit={handleInvoiceSubmit} className="flex flex-col gap-4">
               <div>
                 <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Status *</Label>
@@ -411,12 +411,12 @@ export default function SalesOrderDetailsModal({
                   className="w-full rounded-md border border-[var(--shell-border)] bg-[var(--shell-bg)] px-2 py-1.5 text-xs text-[var(--shell-foreground)] file:mr-2 file:rounded file:border-0 file:bg-primary file:px-2 file:py-0.5 file:text-xs file:font-medium file:text-primary-foreground"
                 />
                 {invoiceFile && (
-                  <div className="mt-1 text-xs text-green-600">Selected: {invoiceFile.name}</div>
+                  <div className="mt-1 text-xs text-[var(--shell-success)]">Selected: {invoiceFile.name}</div>
                 )}
               </div>
               <div className="flex justify-end gap-2 pt-2">
                 <Button type="button" variant="outline" onClick={() => setShowInvoiceForm(false)} size="sm">Cancel</Button>
-                <Button type="submit" className="bg-emerald-500 hover:bg-emerald-600 text-white" disabled={invoiceSubmitting} size="sm">
+                <Button type="submit" className="bg-[var(--shell-success-surface)]0 hover:bg-emerald-600 text-white" disabled={invoiceSubmitting} size="sm">
                   {invoiceSubmitting ? "Checking stock..." : "Check stock & confirm"}
                 </Button>
               </div>

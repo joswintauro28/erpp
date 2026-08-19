@@ -175,9 +175,9 @@ export default function RequirementDetailsModal({
           </div>
         ) : (
           <div>
-            <div className="mb-4 flex items-center gap-2 rounded-lg border border-amber-300 bg-amber-50 p-4">
-              <FileSpreadsheet className="size-4 text-amber-600" />
-              <span className="text-sm font-semibold text-amber-700">
+            <div className="mb-4 flex items-center gap-2 rounded-lg border border-[var(--shell-warning)]/30 bg-[var(--shell-warning-surface)] p-4">
+              <FileSpreadsheet className="size-4 text-[var(--shell-warning)]" />
+              <span className="text-sm font-semibold text-[var(--shell-warning)]">
                 Converting <strong>{record.name}</strong> to a Quotation
               </span>
             </div>
@@ -188,7 +188,7 @@ export default function RequirementDetailsModal({
             </div>
 
             {quotationError && (
-              <div className="mb-4 rounded-sm bg-red-100 px-3 py-2 text-xs text-red-700">
+              <div className="mb-4 rounded-sm bg-[var(--shell-danger-surface)] px-3 py-2 text-xs text-[var(--shell-danger)]">
                 {quotationError}
               </div>
             )}

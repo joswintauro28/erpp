@@ -196,8 +196,8 @@ export default function Dashboard() {
               </Badge>
             )}
             {hasRecommendations && (
-              <Badge variant="secondary" className="text-xs">
-                <Lightbulb className="h-3 w-3 mr-1 inline" />
+              <Badge variant="outline" className="border-[var(--shell-accent)]/40 text-[var(--shell-accent-text)] bg-[var(--shell-accent)]/10 text-xs">
+                <Lightbulb className="h-3 w-3 mr-1 inline text-[var(--shell-accent)]" />
                 {data.recommendations.length} AI insight{data.recommendations.length !== 1 ? "s" : ""}
               </Badge>
             )}

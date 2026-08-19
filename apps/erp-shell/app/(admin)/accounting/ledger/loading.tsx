@@ -37,8 +37,8 @@ export default function LedgerLoading() {
                 <Skeleton className="h-4 w-20" />
                 <Skeleton className="h-4 w-24 font-mono" />
                 <Skeleton className="h-4 w-44" />
-                <Skeleton className="h-4 w-20 font-mono text-emerald-600" />
-                <Skeleton className="h-4 w-20 font-mono text-red-600" />
+                <Skeleton className="h-4 w-20 font-mono text-[var(--shell-success)]" />
+                <Skeleton className="h-4 w-20 font-mono text-[var(--shell-danger)]" />
                 <Skeleton className="h-4 w-24 font-bold" />
               </div>
             ))}

@@ -136,7 +136,7 @@ export default function QuotationCreateModal({ isOpen, onClose, onSuccess, editR
         </DialogHeader>
 
         {error && (
-          <div className="rounded-sm bg-red-100 px-3 py-2 text-xs text-red-700 mb-4">
+          <div className="rounded-sm bg-[var(--shell-danger-surface)] px-3 py-2 text-xs text-[var(--shell-danger)] mb-4">
             {error}
           </div>
         )}
@@ -207,7 +207,7 @@ export default function QuotationCreateModal({ isOpen, onClose, onSuccess, editR
               className="w-full rounded-md border border-[var(--shell-border)] bg-[var(--shell-bg)] px-2 py-1.5 text-xs text-[var(--shell-foreground)] file:mr-2 file:rounded file:border-0 file:bg-primary file:px-2 file:py-0.5 file:text-xs file:font-medium file:text-primary-foreground"
             />
             {formData.file_name && (
-              <div className="mt-1 text-xs text-green-600">
+              <div className="mt-1 text-xs text-[var(--shell-success)]">
                 Selected File: {formData.file_name}
               </div>
             )}

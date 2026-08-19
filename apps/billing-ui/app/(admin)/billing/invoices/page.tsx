@@ -28,7 +28,7 @@ import { useConfirm, PageHeader, KpiCard, SectionHeading } from "@datavex/ui-the
 import type { ApiInvoice, InvoiceListView } from "@/types/billing";
 import InvoicesLoading from "./loading";
 
-const statusOptions = ["paid", "pending", "partially_paid", "overdue", "void"];
+const statusOptions = ["draft", "sent", "partially_paid", "paid", "overdue", "void"];
 
 const GST_RATES = [0, 5, 12, 18, 28];
 

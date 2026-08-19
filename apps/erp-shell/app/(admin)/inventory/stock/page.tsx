@@ -183,7 +183,7 @@ export default function StockPage() {
             <span className="text-xs font-medium uppercase text-muted-foreground">Reserved for Orders</span>
           </CardHeader>
           <CardContent className="p-4 pt-1">
-            <div className="text-2xl font-bold text-amber-600">{number(totalReserved)} units</div>
+            <div className="text-2xl font-bold text-[var(--shell-warning)]">{number(totalReserved)} units</div>
             <p className="text-xs text-muted-foreground">Locked in Order Fulfillment pipeline</p>
           </CardContent>
         </Card>
@@ -193,7 +193,7 @@ export default function StockPage() {
             <span className="text-xs font-medium uppercase text-muted-foreground">Available to Sell</span>
           </CardHeader>
           <CardContent className="p-4 pt-1">
-            <div className="text-2xl font-bold text-emerald-600">{number(totalAvailable)} units</div>
+            <div className="text-2xl font-bold text-[var(--shell-success)]">{number(totalAvailable)} units</div>
             <p className="text-xs text-muted-foreground font-medium">Ready for immediate sales</p>
           </CardContent>
         </Card>
@@ -249,8 +249,8 @@ export default function StockPage() {
                         {s.warehouse_name || `Warehouse #${s.warehouse_id}`}
                       </TableCell>
                       <TableCell className="text-right font-semibold">{number(s.quantity)}</TableCell>
-                      <TableCell className="text-right text-amber-600 font-medium">{number(s.reserved_quantity)}</TableCell>
-                      <TableCell className="text-right font-bold text-emerald-600">{number(avail)}</TableCell>
+                      <TableCell className="text-right text-[var(--shell-warning)] font-medium">{number(s.reserved_quantity)}</TableCell>
+                      <TableCell className="text-right font-bold text-[var(--shell-success)]">{number(avail)}</TableCell>
                       <TableCell className="text-center">
                         {isLow ? (
                           <Badge variant="destructive" className="text-[10px]">
@@ -394,7 +394,7 @@ export default function StockPage() {
                               Customer: <span className="font-semibold text-foreground">{order.customer_name}</span>
                             </div>
                             <div className="flex justify-between items-center text-[11px] pt-1">
-                              <span className="text-amber-600 font-medium">Qty: {itemDetail?.ordered_quantity || 0}</span>
+                              <span className="text-[var(--shell-warning)] font-medium">Qty: {itemDetail?.ordered_quantity || 0}</span>
                               <span className="text-muted-foreground">
                                 {order.created_at ? new Date(order.created_at).toLocaleDateString() : "N/A"}
                               </span>
@@ -421,13 +421,13 @@ export default function StockPage() {
                           <div key={po.id} className="p-3 border border-border rounded-lg bg-card space-y-1 hover:shadow-sm transition-all">
                             <div className="flex justify-between items-center">
                               <span className="font-bold text-foreground">PO #{po.order_number}</span>
-                              <Badge className="text-[10px] scale-90 bg-blue-50 text-blue-700 border-blue-200" variant="outline">{po.status}</Badge>
+                              <Badge className="text-[10px] scale-90 bg-[var(--shell-info-surface)] text-[var(--shell-info)] border-[var(--shell-info)]/30" variant="outline">{po.status}</Badge>
                             </div>
                             <div className="text-muted-foreground text-[11px]">
                               Supplier ID: <span className="font-semibold text-foreground">{po.supplier_id || "N/A"}</span>
                             </div>
                             <div className="flex justify-between items-center text-[11px] pt-1">
-                              <span className="text-blue-600 font-medium">Qty: {itemDetail?.quantity || 0}</span>
+                              <span className="text-[var(--shell-info)] font-medium">Qty: {itemDetail?.quantity || 0}</span>
                               <span className="text-muted-foreground">
                                 {po.created_at ? new Date(po.created_at).toLocaleDateString() : "N/A"}
                               </span>

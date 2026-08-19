@@ -122,7 +122,7 @@ export default function GeneralSettings() {
       {message && (
         <div className={`flex items-center gap-3 rounded-xl border px-5 py-3.5 ${
           message.type === "success" 
-            ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-600" 
+            ? "border-[var(--shell-success)]/30 bg-[var(--shell-success)]/10 text-[var(--shell-success)]" 
             : "border-destructive/30 bg-destructive/10 text-destructive"
         }`}>
           {message.type === "success" ? (

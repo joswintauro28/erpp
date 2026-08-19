@@ -70,13 +70,13 @@ interface Warehouse {
 }
 
 const STATUS_META: Record<string, { label: string; dot: string; badge: string }> = {
-  in_stock: { label: "In Stock", dot: "bg-emerald-500", badge: "bg-emerald-600/15 text-emerald-700  border-emerald-600/20" },
-  reserved: { label: "Reserved", dot: "bg-blue-500", badge: "bg-blue-600/15 text-blue-700  border-blue-600/20" },
-  sold: { label: "Sold", dot: "bg-slate-500", badge: "bg-slate-600/15 text-slate-700  border-slate-600/20" },
-  returned: { label: "Returned", dot: "bg-amber-500", badge: "bg-amber-600/15 text-amber-700  border-amber-600/20" },
+  in_stock: { label: "In Stock", dot: "bg-[var(--shell-success-surface)]0", badge: "bg-emerald-600/15 text-[var(--shell-success)]  border-emerald-600/20" },
+  reserved: { label: "Reserved", dot: "bg-[var(--shell-info-surface)]0", badge: "bg-blue-600/15 text-[var(--shell-info)]  border-blue-600/20" },
+  sold: { label: "Sold", dot: "bg-muted0", badge: "bg-slate-600/15 text-muted-foreground  border-slate-600/20" },
+  returned: { label: "Returned", dot: "bg-[var(--shell-warning-surface)]0", badge: "bg-amber-600/15 text-[var(--shell-warning)]  border-amber-600/20" },
   repair: { label: "In Repair", dot: "bg-purple-500", badge: "bg-purple-600/15 text-purple-700  border-purple-600/20" },
-  damaged: { label: "Damaged", dot: "bg-red-500", badge: "bg-red-600/15 text-red-700  border-red-600/20" },
-  retired: { label: "Retired", dot: "bg-zinc-400", badge: "bg-zinc-600/15 text-zinc-700  border-zinc-600/20" },
+  damaged: { label: "Damaged", dot: "bg-[var(--shell-danger-surface)]0", badge: "bg-red-600/15 text-[var(--shell-danger)]  border-red-600/20" },
+  retired: { label: "Retired", dot: "bg-zinc-400", badge: "bg-zinc-600/15 text-muted-foreground  border-zinc-600/20" },
   in_transit: { label: "In Transit", dot: "bg-cyan-500", badge: "bg-cyan-600/15 text-cyan-700  border-cyan-600/20" },
 };
 
@@ -261,10 +261,10 @@ export default function SerialRegistryPage() {
 
   const kpis = [
     { label: "REGISTERED UNITS", value: stats.total, icon: ScanBarcode, tone: "text-[var(--shell-brand)]" },
-    { label: "IN STOCK", value: stats.in_stock, icon: PackageOpen, tone: "text-emerald-600" },
-    { label: "RESERVED", value: stats.reserved, icon: ShieldCheck, tone: "text-blue-600" },
-    { label: "SOLD", value: stats.sold, icon: PackageCheck, tone: "text-slate-600" },
-    { label: "RETURNS & REPAIRS", value: (stats.returned || 0) + (stats.repair || 0) + (stats.damaged || 0), icon: Wrench, tone: "text-amber-600" },
+    { label: "IN STOCK", value: stats.in_stock, icon: PackageOpen, tone: "text-[var(--shell-success)]" },
+    { label: "RESERVED", value: stats.reserved, icon: ShieldCheck, tone: "text-[var(--shell-info)]" },
+    { label: "SOLD", value: stats.sold, icon: PackageCheck, tone: "text-muted-foreground" },
+    { label: "RETURNS & REPAIRS", value: (stats.returned || 0) + (stats.repair || 0) + (stats.damaged || 0), icon: Wrench, tone: "text-[var(--shell-warning)]" },
   ];
 
   const getStatusMeta = (status: string) => STATUS_META[status] || { label: status, dot: "bg-zinc-400", badge: "" };
@@ -274,7 +274,7 @@ export default function SerialRegistryPage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-4">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#E5B83C]">Hardware Unit Ledger</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--shell-accent)]">Hardware Unit Ledger</p>
           <h1 className="font-heading text-2xl font-semibold tracking-tight text-[--shell-foreground] flex items-center gap-2">
             Serial Registry
           </h1>
@@ -350,7 +350,7 @@ export default function SerialRegistryPage() {
                       : "border-border text-[--shell-muted] hover:bg-muted"
                   }`}
                 >
-                  <span className={`h-1.5 w-1.5 rounded-full ${meta.dot} ${active ? "bg-white" : ""}`} />
+                  <span className={`h-1.5 w-1.5 rounded-full ${meta.dot} ${active ? "bg-card" : ""}`} />
                   {meta.label} ({stats[st as keyof SerialStats] ?? 0})
                 </button>
               );
@@ -360,7 +360,7 @@ export default function SerialRegistryPage() {
 
         <CardContent>
           {loading ? (
-            <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-[#E5B83C]" /></div>
+            <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-[var(--shell-accent)]" /></div>
           ) : filtered.length === 0 ? (
             <div className="py-12 text-center space-y-2">
               <Archive className="h-8 w-8 mx-auto text-[--shell-muted]" />

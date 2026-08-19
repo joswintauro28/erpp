@@ -284,16 +284,16 @@ export default function PurchaseRequisitionsPage() {
                         </Button>
                         {r.status === "DRAFT" && (
                           <Button variant="ghost" size="xs" title="Submit for approval" onClick={() => runStatus(r.id, "submit")}>
-                            <Send className="h-3.5 w-3.5 text-blue-600" />
+                            <Send className="h-3.5 w-3.5 text-[var(--shell-info)]" />
                           </Button>
                         )}
                         {r.status === "SUBMITTED" && (
                           <>
                             <Button variant="ghost" size="xs" title="Approve" onClick={() => runStatus(r.id, "approve")}>
-                              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+                              <CheckCircle2 className="h-3.5 w-3.5 text-[var(--shell-success)]" />
                             </Button>
                             <Button variant="ghost" size="xs" title="Reject" onClick={() => runStatus(r.id, "reject")}>
-                              <XCircle className="h-3.5 w-3.5 text-red-600" />
+                              <XCircle className="h-3.5 w-3.5 text-[var(--shell-danger)]" />
                             </Button>
                           </>
                         )}
@@ -388,7 +388,7 @@ export default function PurchaseRequisitionsPage() {
                 <div className="flex justify-between"><span className="text-muted-foreground">Approved by</span><span className="font-medium">{selectedReq.approved_by}</span></div>
               )}
               {selectedReq.rejected_reason && (
-                <div className="flex justify-between"><span className="text-muted-foreground">Reject reason</span><span className="font-medium text-red-600">{selectedReq.rejected_reason}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Reject reason</span><span className="font-medium text-[var(--shell-danger)]">{selectedReq.rejected_reason}</span></div>
               )}
             </div>
 
@@ -402,7 +402,7 @@ export default function PurchaseRequisitionsPage() {
             </div>
 
             {selectedReq.status === "APPROVED" && (
-              <div className="p-3 bg-blue-50  border border-blue-200 rounded-md text-xs space-y-2">
+              <div className="p-3 bg-[var(--shell-info-surface)]  border border-[var(--shell-info)]/30 rounded-md text-xs space-y-2">
                 <p className="font-bold uppercase tracking-wide text-muted-foreground">Convert to Purchase Order</p>
                 <div className="grid grid-cols-2 gap-2">
                   <div>

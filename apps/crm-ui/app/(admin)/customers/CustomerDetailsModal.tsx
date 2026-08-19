@@ -97,7 +97,7 @@ export default function CustomerDetailsModal({
                 className={`text-sm font-semibold flex items-center gap-0.5 ${
                   record.credit_limit != null && record.credit_limit > 0
                     ? "text-[var(--shell-foreground)]"
-                    : "text-emerald-600"
+                    : "text-[var(--shell-success)]"
                 }`}
                 title={record.credit_limit ? "Enforced on sales order approval" : "No limit configured — orders are not blocked"}
               >

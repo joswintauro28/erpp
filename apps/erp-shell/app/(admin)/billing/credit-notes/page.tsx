@@ -58,7 +58,7 @@ export default function CreditNotes() {
     setSaving(true);
     try {
       await api.post("/invoices/credit-notes", {
-        invoice_id: Number(formInvoiceId),
+        invoiceId: Number(formInvoiceId),
         amount: Number(formAmount),
         reason: formReason || undefined,
       });

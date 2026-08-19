@@ -196,7 +196,7 @@ export default function FulfillmentWorkflowModal({
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "QUEUED":
-        return <Badge variant="secondary">Order Queue</Badge>;
+        return <Badge variant="neutral">Order Queue</Badge>;
       case "RESERVED":
         return <Badge className="bg-blue-600 text-white">Stock Reserved</Badge>;
       case "PICKING":
@@ -303,7 +303,7 @@ export default function FulfillmentWorkflowModal({
                     <div className="flex items-center justify-between font-bold">
                       <span>Stock Status Evaluation:</span>
                       {stockCheck.overall_available ? (
-                        <span className="text-emerald-600 flex items-center gap-1">
+                        <span className="text-[var(--shell-success)] flex items-center gap-1">
                           <CheckCircle2 className="h-4 w-4" /> Stock Available
                         </span>
                       ) : (
@@ -316,7 +316,7 @@ export default function FulfillmentWorkflowModal({
                       {stockCheck.items.map((item) => (
                         <div key={item.product_id} className="py-1 flex justify-between items-center">
                           <span>{item.product_name} (Req: {item.ordered_quantity})</span>
-                          <span className={item.is_available ? "text-emerald-600 font-semibold" : "text-destructive font-semibold"}>
+                          <span className={item.is_available ? "text-[var(--shell-success)] font-semibold" : "text-destructive font-semibold"}>
                             Avail: {item.available_stock} {item.is_available ? "✓" : "✗"}
                           </span>
                         </div>
@@ -343,7 +343,7 @@ export default function FulfillmentWorkflowModal({
             {order.status === "RESERVED" && (
               <div className="flex items-center justify-between">
                 <div>
-                  <h5 className="font-semibold text-blue-600 flex items-center gap-2">
+                  <h5 className="font-semibold text-[var(--shell-info)] flex items-center gap-2">
                     <CheckCircle2 className="h-5 w-5" /> Stock Allocated & Reserved
                   </h5>
                   <p className="text-xs text-muted-foreground">Items are locked for this order. Generate Pick List for warehouse team.</p>
@@ -363,7 +363,7 @@ export default function FulfillmentWorkflowModal({
             {order.status === "PICKING" && (
               <div className="flex items-center justify-between">
                 <div>
-                  <h5 className="font-semibold text-amber-600 flex items-center gap-2">
+                  <h5 className="font-semibold text-[var(--shell-warning)] flex items-center gap-2">
                     <PackageCheck className="h-5 w-5" /> Items Being Picked in Warehouse
                   </h5>
                   <p className="text-xs text-muted-foreground">Gathering SKU items from bin locations. Advance when items are packed.</p>
@@ -424,11 +424,11 @@ export default function FulfillmentWorkflowModal({
             {/* Step 5: Dispatched -> Trigger Billing */}
             {(order.status === "DISPATCHED" || order.status === "COMPLETED") && (
               <div className="space-y-3">
-                <div className="p-3 bg-emerald-50  border border-emerald-200  rounded-md">
-                  <h5 className="font-semibold text-emerald-700  flex items-center gap-2 text-sm">
+                <div className="p-3 bg-[var(--shell-success-surface)]  border border-[var(--shell-success)]/30  rounded-md">
+                  <h5 className="font-semibold text-[var(--shell-success)]  flex items-center gap-2 text-sm">
                     <Truck className="h-5 w-5" /> Order Dispatched Successfully
                   </h5>
-                  <p className="text-xs text-emerald-600  mt-1">
+                  <p className="text-xs text-[var(--shell-success)]  mt-1">
                     Carrier: <strong>{order.shipping_carrier || "FedEx"}</strong> | Tracking #: <strong>{order.tracking_number || "TRK-2026-991"}</strong>
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">Physical stock was automatically deducted and logged under Stock Movements.</p>
@@ -456,7 +456,7 @@ export default function FulfillmentWorkflowModal({
                 </div>
 
                 {invoiceMessage && (
-                  <p className="text-xs text-emerald-600 font-medium">{invoiceMessage}</p>
+                  <p className="text-xs text-[var(--shell-success)] font-medium">{invoiceMessage}</p>
                 )}
               </div>
             )}

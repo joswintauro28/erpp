@@ -225,7 +225,7 @@ export default function DocumentDetailsModal({
     return (
       <iframe
         srcDoc={getMockHtml(doc)}
-        className="w-full h-[420px] border border-[var(--shell-border)] rounded-lg bg-white"
+        className="w-full h-[420px] border border-[var(--shell-border)] rounded-lg bg-card"
         title={doc.title || doc.name}
       />
     );

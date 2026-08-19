@@ -55,13 +55,13 @@ export default function LeadTable({ leads, onView, onEdit, onDelete, onQualify }
           const score = Number(item.score ?? 0);
           const isMql = !!item.is_mql;
           return (
-            <TableRow key={item.id} className={cn(isMql && "bg-amber-50/40")}>
+            <TableRow key={item.id} className={cn(isMql && "bg-[var(--shell-warning-surface)]/40")}>
               <TableCell className="text-[var(--shell-muted)] cursor-pointer" onClick={() => onView(item)}>{item.id_str}</TableCell>
               <TableCell className="font-medium text-[var(--shell-foreground)] cursor-pointer" onClick={() => onView(item)}>
                 <span className="flex items-center gap-1.5">
                   {item.name}
                   {isMql && (
-                    <span className="inline-flex items-center gap-0.5 rounded-full bg-amber-100 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-amber-800 border border-amber-300">
+                    <span className="inline-flex items-center gap-0.5 rounded-full bg-[var(--shell-warning-surface)] px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-[var(--shell-warning)] border border-[var(--shell-warning)]/30">
                       <BadgeCheck className="h-2.5 w-2.5" /> MQL
                     </span>
                   )}
@@ -76,7 +76,7 @@ export default function LeadTable({ leads, onView, onEdit, onDelete, onQualify }
                     <div
                       className={cn(
                         "h-full rounded-full transition-all",
-                        score >= 70 ? "bg-amber-500" : score >= 40 ? "bg-sky-500" : "bg-slate-400"
+                        score >= 70 ? "bg-[var(--shell-warning-surface)]0" : score >= 40 ? "bg-[var(--shell-info-surface)]0" : "bg-slate-400"
                       )}
                       style={{ width: `${score}%` }}
                     />
@@ -93,14 +93,14 @@ export default function LeadTable({ leads, onView, onEdit, onDelete, onQualify }
                     <Button
                       size="icon-sm"
                       title="Qualify to SQL & create Opportunity"
-                      className="hover:text-amber-600 cursor-pointer"
+                      className="hover:text-[var(--shell-warning)] cursor-pointer"
                       onClick={() => onQualify(item)}
                     >
                       <BadgeCheck size={14} />
                     </Button>
                   )}
                   <Button size="icon-sm" className="hover:text-[var(--shell-foreground)] cursor-pointer" onClick={() => onEdit(item)}><Edit2 size={14} /></Button>
-                  <Button size="icon-sm" className="hover:text-red-500 cursor-pointer" onClick={() => onDelete(item)}><Trash2 size={14} /></Button>
+                  <Button size="icon-sm" className="hover:text-[var(--shell-danger)] cursor-pointer" onClick={() => onDelete(item)}><Trash2 size={14} /></Button>
                 </div>
               </TableCell>
             </TableRow>

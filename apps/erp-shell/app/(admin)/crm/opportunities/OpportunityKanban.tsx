@@ -11,11 +11,11 @@ export const PIPELINE_STAGES = ["Discovery", "Quote", "Negotiation", "Won", "Los
 export type PipelineStage = (typeof PIPELINE_STAGES)[number];
 
 const STAGE_META: Record<PipelineStage, { color: string; dot: string; label: string }> = {
-  Discovery: { color: "bg-slate-100 text-slate-700 border-slate-300", dot: "bg-slate-400", label: "Discovery" },
-  Quote: { color: "bg-sky-50 text-sky-700 border-sky-300", dot: "bg-sky-500", label: "Quote" },
+  Discovery: { color: "bg-muted text-muted-foreground border-border", dot: "bg-slate-400", label: "Discovery" },
+  Quote: { color: "bg-[var(--shell-info-surface)] text-[var(--shell-info)] border-sky-300", dot: "bg-[var(--shell-info-surface)]0", label: "Quote" },
   Negotiation: { color: "bg-violet-50 text-violet-700 border-violet-300", dot: "bg-violet-500", label: "Negotiation" },
-  Won: { color: "bg-emerald-50 text-emerald-700 border-emerald-300", dot: "bg-emerald-500", label: "Closed Won" },
-  Lost: { color: "bg-red-50 text-red-600 border-red-200", dot: "bg-red-500", label: "Lost" },
+  Won: { color: "bg-[var(--shell-success-surface)] text-[var(--shell-success)] border-[var(--shell-success)]/30", dot: "bg-[var(--shell-success-surface)]0", label: "Closed Won" },
+  Lost: { color: "bg-[var(--shell-danger-surface)] text-[var(--shell-danger)] border-[var(--shell-danger)]/30", dot: "bg-[var(--shell-danger-surface)]0", label: "Lost" },
 };
 
 const formatCurrency = (value: number) =>
@@ -67,14 +67,14 @@ export default function OpportunityKanban({ opportunities, onView, onStageChange
             onDrop={(e) => handleDrop(stage, e)}
             className={cn(
               "flex w-[240px] shrink-0 flex-col rounded-xl border bg-[var(--shell-surface)] transition-all duration-150",
-              isOver ? "border-amber-400 ring-2 ring-amber-200/60" : "border-[var(--shell-border)]"
+              isOver ? "border-[var(--shell-warning)]/40 ring-2 ring-[var(--shell-warning)]/60" : "border-[var(--shell-border)]"
             )}
           >
             <div className={cn("flex items-center justify-between rounded-t-xl border-b px-3 py-2.5", meta.color)}>
               <div className="flex items-center gap-2">
                 <span className={cn("h-2 w-2 rounded-full", meta.dot)} />
                 <span className="text-xs font-bold uppercase tracking-wide">{meta.label}</span>
-                <span className="rounded-full bg-white/70 px-1.5 py-0.5 text-[10px] font-bold tabular-nums">{cards.length}</span>
+                <span className="rounded-full bg-card/70 px-1.5 py-0.5 text-[10px] font-bold tabular-nums">{cards.length}</span>
               </div>
               <span className="text-[10px] font-semibold tabular-nums opacity-80">{formatCurrency(totalFor(stage))}</span>
             </div>
@@ -96,7 +96,7 @@ export default function OpportunityKanban({ opportunities, onView, onStageChange
                     onDragEnd={() => { setDragId(null); setOverStage(null); }}
                     onClick={() => onView(o)}
                     className={cn(
-                      "group cursor-grab rounded-lg border border-[var(--shell-border)] bg-white p-2.5 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5 active:cursor-grabbing",
+                      "group cursor-grab rounded-lg border border-[var(--shell-border)] bg-card p-2.5 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5 active:cursor-grabbing",
                       isDragging && "opacity-40",
                       isBusy && "opacity-60"
                     )}
@@ -112,7 +112,7 @@ export default function OpportunityKanban({ opportunities, onView, onStageChange
                       <div className="flex items-center gap-1">
                         <span className="text-[10px] text-[var(--shell-muted)]">{o.probability || "20%"}</span>
                         {stage === "Won" ? (
-                          <Unlock className="h-3 w-3 text-emerald-500" />
+                          <Unlock className="h-3 w-3 text-[var(--shell-success)]" />
                         ) : (
                           <Lock className="h-3 w-3 text-[var(--shell-muted)]/50" />
                         )}

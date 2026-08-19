@@ -146,7 +146,7 @@ export default function OrderFulfillmentPage() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "QUEUED":
-        return <Badge variant="secondary">Order Queue</Badge>;
+        return <Badge variant="neutral">Order Queue</Badge>;
       case "RESERVED":
         return <Badge className="bg-blue-600 text-white">Stock Reserved</Badge>;
       case "PICKING":
@@ -210,10 +210,10 @@ export default function OrderFulfillmentPage() {
         <Card className="border-border">
           <CardHeader className="p-4 flex flex-row items-center justify-between space-y-0 pb-2">
             <span className="text-xs font-semibold text-muted-foreground uppercase">Reserved</span>
-            <CheckCircle2 className="h-4 w-4 text-blue-600" />
+            <CheckCircle2 className="h-4 w-4 text-[var(--shell-info)]" />
           </CardHeader>
           <CardContent className="p-4 pt-0">
-            <div className="text-2xl font-bold text-blue-600">{reservedCount}</div>
+            <div className="text-2xl font-bold text-[var(--shell-info)]">{reservedCount}</div>
             <p className="text-xs text-muted-foreground mt-1">Stock Locked & Allocated</p>
           </CardContent>
         </Card>
@@ -221,10 +221,10 @@ export default function OrderFulfillmentPage() {
         <Card className="border-border">
           <CardHeader className="p-4 flex flex-row items-center justify-between space-y-0 pb-2">
             <span className="text-xs font-semibold text-muted-foreground uppercase">Pick & Pack</span>
-            <PackageCheck className="h-4 w-4 text-amber-600" />
+            <PackageCheck className="h-4 w-4 text-[var(--shell-warning)]" />
           </CardHeader>
           <CardContent className="p-4 pt-0">
-            <div className="text-2xl font-bold text-amber-600">{pickPackCount}</div>
+            <div className="text-2xl font-bold text-[var(--shell-warning)]">{pickPackCount}</div>
             <p className="text-xs text-muted-foreground mt-1">In Warehouse Process</p>
           </CardContent>
         </Card>
@@ -232,10 +232,10 @@ export default function OrderFulfillmentPage() {
         <Card className="border-border">
           <CardHeader className="p-4 flex flex-row items-center justify-between space-y-0 pb-2">
             <span className="text-xs font-semibold text-muted-foreground uppercase">Dispatched</span>
-            <Truck className="h-4 w-4 text-emerald-600" />
+            <Truck className="h-4 w-4 text-[var(--shell-success)]" />
           </CardHeader>
           <CardContent className="p-4 pt-0">
-            <div className="text-2xl font-bold text-emerald-600">{dispatchedCount}</div>
+            <div className="text-2xl font-bold text-[var(--shell-success)]">{dispatchedCount}</div>
             <p className="text-xs text-muted-foreground mt-1">Shipped & Stock Deducted</p>
           </CardContent>
         </Card>
@@ -486,7 +486,7 @@ export default function OrderFulfillmentPage() {
             </DialogDescription>
           </DialogHeader>
           {lastBatch && (
-            <div className="p-2.5 rounded-md bg-emerald-50 border border-emerald-200 text-xs text-emerald-700">
+            <div className="p-2.5 rounded-md bg-[var(--shell-success-surface)] border border-[var(--shell-success)]/30 text-xs text-[var(--shell-success)]">
               Created batch <span className="font-mono font-bold">{lastBatch}</span>.
             </div>
           )}

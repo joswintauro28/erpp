@@ -72,7 +72,7 @@ export default function InventoryDashboardLoading() {
                   <Skeleton className="h-4 w-40" />
                   <Skeleton className="h-3 w-24" />
                 </div>
-                <Skeleton className="h-4 w-16 text-amber-600 font-bold" />
+                <Skeleton className="h-4 w-16 text-[var(--shell-warning)] font-bold" />
               </div>
             ))}
           </CardContent>

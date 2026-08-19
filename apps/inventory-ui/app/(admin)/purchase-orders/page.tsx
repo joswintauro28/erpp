@@ -193,7 +193,7 @@ export default function PurchaseOrdersPage() {
     const st = s.toUpperCase();
     switch (st) {
       case "DRAFT":
-        return <Badge variant="secondary" className="text-[10px]">Draft</Badge>;
+        return <Badge variant="neutral" className="text-[10px]">Draft</Badge>;
       case "SUBMITTED":
         return <Badge className="bg-amber-600 text-white text-[10px]">Submitted</Badge>;
       case "APPROVED":
@@ -205,7 +205,7 @@ export default function PurchaseOrdersPage() {
       case "CANCELLED":
         return <Badge variant="destructive" className="text-[10px]">Cancelled</Badge>;
       default:
-        return <Badge variant="secondary" className="text-[10px]">{st}</Badge>;
+        return <Badge variant="neutral" className="text-[10px]">{st}</Badge>;
     }
   };
 
@@ -287,7 +287,7 @@ export default function PurchaseOrdersPage() {
                             title="Putaway (P5)"
                             onClick={() => openPutaway(po)}
                           >
-                            <MapPin className="h-3.5 w-3.5 text-muted-foreground hover:text-emerald-600" />
+                            <MapPin className="h-3.5 w-3.5 text-muted-foreground hover:text-[var(--shell-success)]" />
                           </Button>
                           <Button
                             variant="ghost"
@@ -455,7 +455,7 @@ export default function PurchaseOrdersPage() {
                 {["SUBMITTED", "APPROVED", "PARTIALLY_RECEIVED", "COMPLETED"].includes(selectedOrder.status) && (
                   <div className="relative">
                     <div className="absolute -left-[21px] mt-0.5 bg-background border border-border rounded-full p-0.5">
-                      <Truck className="h-3 w-3 text-amber-600" />
+                      <Truck className="h-3 w-3 text-[var(--shell-warning)]" />
                     </div>
                     <div>
                       <p className="font-semibold text-foreground">Sent to Supplier Vendor</p>
@@ -472,7 +472,7 @@ export default function PurchaseOrdersPage() {
                 {["APPROVED", "PARTIALLY_RECEIVED", "COMPLETED"].includes(selectedOrder.status) && (
                   <div className="relative">
                     <div className="absolute -left-[21px] mt-0.5 bg-background border border-border rounded-full p-0.5">
-                      <CheckCircle2 className="h-3 w-3 text-blue-600" />
+                      <CheckCircle2 className="h-3 w-3 text-[var(--shell-info)]" />
                     </div>
                     <div>
                       <p className="font-semibold text-foreground">Purchase Order Approved</p>
@@ -487,10 +487,10 @@ export default function PurchaseOrdersPage() {
                 {["PARTIALLY_RECEIVED", "COMPLETED"].includes(selectedOrder.status) && (
                   <div className="relative">
                     <div className="absolute -left-[21px] mt-0.5 bg-background border border-border rounded-full p-0.5">
-                      <CheckCircle2 className="h-3 w-3 text-emerald-600" />
+                      <CheckCircle2 className="h-3 w-3 text-[var(--shell-success)]" />
                     </div>
                     <div>
-                      <p className="font-bold text-emerald-600">
+                      <p className="font-bold text-[var(--shell-success)]">
                         {selectedOrder.status === "PARTIALLY_RECEIVED" ? "Partially Received & Stock Updated" : "Goods Received & Stock Incremented"}
                       </p>
                       <p className="text-[10px] text-muted-foreground">
@@ -530,7 +530,7 @@ export default function PurchaseOrdersPage() {
           <DialogContent className="max-w-md">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2 text-base">
-                <MapPin className="h-4 w-4 text-emerald-600" /> Putaway Received Goods
+                <MapPin className="h-4 w-4 text-[var(--shell-success)]" /> Putaway Received Goods
               </DialogTitle>
               <DialogDescription className="text-xs">
                 Assign warehouse locations to received quantities on <span className="font-mono font-bold">{putawayOrder.order_number}</span>.

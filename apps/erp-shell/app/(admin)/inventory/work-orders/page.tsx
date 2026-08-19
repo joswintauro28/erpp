@@ -274,7 +274,7 @@ export default function WorkOrdersPage() {
                       <Badge
                         variant="outline"
                         className={`text-[10px] ${
-                          wo.priority === "HIGH" ? "border-red-300 text-red-600" : wo.priority === "LOW" ? "border-green-300 text-green-600" : ""
+                          wo.priority === "HIGH" ? "border-[var(--shell-danger)]/30 text-[var(--shell-danger)]" : wo.priority === "LOW" ? "border-[var(--shell-success)]/30 text-[var(--shell-success)]" : ""
                         }`}
                       >
                         {wo.priority}
@@ -295,17 +295,17 @@ export default function WorkOrdersPage() {
                         </Button>
                         {wo.status === "DRAFT" && (
                           <Button variant="ghost" size="xs" title="Release (check raw material ATP)" onClick={() => runAction(wo.id, "release")}>
-                            <Send className="h-3.5 w-3.5 text-blue-600" />
+                            <Send className="h-3.5 w-3.5 text-[var(--shell-info)]" />
                           </Button>
                         )}
                         {wo.status === "RELEASED" && (
                           <Button variant="ghost" size="xs" title="Start production" onClick={() => runAction(wo.id, "start")}>
-                            <Play className="h-3.5 w-3.5 text-amber-600" />
+                            <Play className="h-3.5 w-3.5 text-[var(--shell-warning)]" />
                           </Button>
                         )}
                         {wo.status === "IN_PROGRESS" && (
                           <Button variant="ghost" size="xs" title="Complete work order (credit finished goods)" onClick={() => runAction(wo.id, "complete")}>
-                            <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+                            <CheckCircle2 className="h-3.5 w-3.5 text-[var(--shell-success)]" />
                           </Button>
                         )}
                         {!["COMPLETED", "CANCELLED"].includes(wo.status) && (
@@ -487,7 +487,7 @@ export default function WorkOrdersPage() {
             </div>
 
             {selectedOrder.status === "RELEASED" && (
-              <div className="p-3 bg-amber-50 border border-amber-200 rounded-md text-xs">
+              <div className="p-3 bg-[var(--shell-warning-surface)] border border-[var(--shell-warning)]/30 rounded-md text-xs">
                 Release succeeded. Start production to open routing operations and issue materials.
               </div>
             )}
