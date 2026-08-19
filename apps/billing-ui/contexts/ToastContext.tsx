@@ -91,19 +91,19 @@ function ToastBanner({
 }) {
   const styles: Record<ToastType, { bg: string; border: string; icon: React.ReactNode }> = {
     success: {
-      bg: "bg-emerald-50 dark:bg-emerald-950/60",
-      border: "border-emerald-200 dark:border-emerald-800",
-      icon: <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />,
+      bg: "bg-[var(--shell-success-surface)] dark:bg-emerald-950/60",
+      border: "border-[var(--shell-success)]/30 dark:border-emerald-800",
+      icon: <CheckCircle2 className="h-4 w-4 text-[var(--shell-success)] dark:text-[var(--shell-success)] shrink-0" />,
     },
     error: {
-      bg: "bg-red-50 dark:bg-red-950/60",
-      border: "border-red-200 dark:border-red-800",
-      icon: <XCircle className="h-4 w-4 text-red-600 dark:text-red-400 shrink-0" />,
+      bg: "bg-[var(--shell-danger-surface)] dark:bg-red-950/60",
+      border: "border-[var(--shell-danger)]/30 dark:border-red-800",
+      icon: <XCircle className="h-4 w-4 text-[var(--shell-danger)] dark:text-red-400 shrink-0" />,
     },
     info: {
-      bg: "bg-blue-50 dark:bg-blue-950/60",
-      border: "border-blue-200 dark:border-blue-800",
-      icon: <Info className="h-4 w-4 text-blue-600 dark:text-blue-400 shrink-0" />,
+      bg: "bg-[var(--shell-info-surface)] dark:bg-blue-950/60",
+      border: "border-[var(--shell-info)]/30 dark:border-blue-800",
+      icon: <Info className="h-4 w-4 text-[var(--shell-info)] dark:text-[var(--shell-info)] shrink-0" />,
     },
   };
 

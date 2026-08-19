@@ -142,7 +142,7 @@ export default function PeriodsPage() {
                         <Lock className="h-3 w-3" /> Closed
                       </Badge>
                     ) : (
-                      <Badge variant="secondary" className="text-xs gap-1">
+                      <Badge variant="neutral" className="text-xs gap-1">
                         <Unlock className="h-3 w-3" /> Open
                       </Badge>
                     )}

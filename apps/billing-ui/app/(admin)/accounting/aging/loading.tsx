@@ -44,7 +44,7 @@ export default function AgingLoading() {
                 <Skeleton className="h-4 w-16" />
                 <Skeleton className="h-4 w-16" />
                 <Skeleton className="h-4 w-16" />
-                <Skeleton className="h-4 w-16 text-red-600" />
+                <Skeleton className="h-4 w-16 text-[var(--shell-danger)]" />
                 <Skeleton className="h-4 w-20 font-bold" />
               </div>
             ))}
