@@ -17,10 +17,10 @@ export default function ErrorPage({
       <div className="relative z-10 m-auto flex w-full max-w-[420px] flex-col items-center px-6">
         <div className="mb-10 flex flex-col items-center gap-3">
           <div className="flex h-14 w-14 items-center justify-center rounded-lg border border-accent-foreground/20 bg-accent/10">
-            <span className="font-[family-name:var(--font-montserrat)] text-xl font-bold text-accent-foreground tracking-[0.05em]">D</span>
+            <span className="font-sans text-xl font-bold text-accent-foreground tracking-[0.05em]">D</span>
           </div>
           <div className="flex flex-col items-center gap-1">
-            <h1 className="font-[family-name:var(--font-montserrat)] text-xl font-semibold text-foreground tracking-[0.05em]">DATAVEX</h1>
+            <h1 className="font-sans text-xl font-semibold text-foreground tracking-[0.05em]">DATAVEX</h1>
             <p className="text-sm text-muted-foreground">Billing Center</p>
           </div>
         </div>
@@ -32,9 +32,9 @@ export default function ErrorPage({
             <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10">
               <AlertTriangle className="h-7 w-7 text-destructive" />
             </div>
-            <span className="font-[family-name:var(--font-montserrat)] text-6xl font-bold text-destructive tracking-tight">500</span>
+            <span className="font-sans text-6xl font-bold text-destructive tracking-tight">500</span>
             <div className="my-4 h-[2px] w-10 rounded-full bg-accent-foreground/40" />
-            <h2 className="font-[family-name:var(--font-montserrat)] text-lg font-semibold text-foreground">Internal server error</h2>
+            <h2 className="font-sans text-lg font-semibold text-foreground">Internal server error</h2>
             <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
               Something went wrong on our end. Try refreshing the page, and if the issue persists, contact support.
             </p>
