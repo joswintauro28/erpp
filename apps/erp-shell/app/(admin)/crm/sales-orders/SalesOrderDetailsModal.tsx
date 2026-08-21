@@ -8,6 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { FileUpload, type FileRecord } from "@datavex/ui-theme";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -35,7 +36,7 @@ export default function SalesOrderDetailsModal({
   const [showInvoiceForm, setShowInvoiceForm] = useState(false);
   const [invoiceSubmitting, setInvoiceSubmitting] = useState(false);
   const [invoiceError, setInvoiceError] = useState("");
-  const [invoiceFile, setInvoiceFile] = useState<{ name: string; base64: string } | null>(null);
+  const [invoiceFileId, setInvoiceFileId] = useState<number | null>(null);
   const [invoiceStatus, setInvoiceStatus] = useState("Paid");
 
   const [relatedRequirements, setRelatedRequirements] = useState<any[]>([]);
@@ -62,7 +63,7 @@ export default function SalesOrderDetailsModal({
   useEffect(() => {
     if (isOpen && record) {
       setShowInvoiceForm(false);
-      setInvoiceFile(null);
+      setInvoiceFileId(null);
       setInvoiceStatus("Paid");
       fetchRelatedData();
     }
@@ -81,8 +82,7 @@ export default function SalesOrderDetailsModal({
       const payload = {
         ...record,
         status: check.available ? invoiceStatus : "Stock Hold",
-        file_data: invoiceFile ? invoiceFile.base64 : record.file_data,
-        file_name: invoiceFile ? invoiceFile.name : record.file_name,
+        file_id: invoiceFileId || record.file_id,
       };
 
       await api.put(`/sales-orders/${record.id_str}`, payload);
@@ -398,21 +398,13 @@ export default function SalesOrderDetailsModal({
               </div>
               <div>
                 <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Upload Invoice (optional)</Label>
-                <input
-                  type="file"
+                <FileUpload
+                  bucket="crm-assets"
+                  ownerType="sales_order"
+                  ownerId={record?.id || 0}
+                  onUpload={(r: FileRecord) => setInvoiceFileId(r.id)}
                   accept="application/pdf,image/*"
-                  onChange={async (e) => {
-                    const file = e.target.files?.[0];
-                    if (!file) { setInvoiceFile(null); return; }
-                    const reader = new FileReader();
-                    reader.onload = () => setInvoiceFile({ name: file.name, base64: reader.result as string });
-                    reader.readAsDataURL(file);
-                  }}
-                  className="w-full rounded-md border border-[var(--shell-border)] bg-[var(--shell-bg)] px-2 py-1.5 text-xs text-[var(--shell-foreground)] file:mr-2 file:rounded file:border-0 file:bg-primary file:px-2 file:py-0.5 file:text-xs file:font-medium file:text-primary-foreground"
                 />
-                {invoiceFile && (
-                  <div className="mt-1 text-xs text-[var(--shell-success)]">Selected: {invoiceFile.name}</div>
-                )}
               </div>
               <div className="flex justify-end gap-2 pt-2">
                 <Button type="button" variant="outline" onClick={() => setShowInvoiceForm(false)} size="sm">Cancel</Button>

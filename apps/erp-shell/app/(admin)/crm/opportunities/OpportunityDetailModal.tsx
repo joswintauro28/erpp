@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   X, TrendingUp, ClipboardList, FileSpreadsheet, Plus,
   CheckCircle, Loader, Trash2, ChevronRight, ChevronDown,
@@ -12,6 +12,7 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { api } from "@/services/api";
 import { toastError } from "@/utils/toast";
 import { useConfirm } from "@datavex/ui-theme";
+import { FileUpload, type FileRecord } from "@datavex/ui-theme";
 
 const stageColors: Record<string, { bg: string; color: string }> = {
   Discovery:   { bg: "#dbeafe", color: "#1d4ed8" },
@@ -279,9 +280,8 @@ export default function OpportunityDetailModal({ record, isOpen, onClose, onSucc
   const [quoteSubmitting, setQuoteSubmitting] = useState(false);
   const [quoteError, setQuoteError] = useState("");
   const [quoteData, setQuoteData] = useState({ quote_no: "", value: "", valid_until: "", status: "Draft", owner: "" });
-  const [quoteFile, setQuoteFile] = useState<{ name: string; base64: string } | null>(null);
+  const [quoteFileId, setQuoteFileId] = useState<number | null>(null);
   const [previewQuote, setPreviewQuote] = useState<any>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [editReq, setEditReq] = useState<any>(null);
   const [editQuote, setEditQuote] = useState<any>(null);
@@ -324,7 +324,7 @@ export default function OpportunityDetailModal({ record, isOpen, onClose, onSucc
       setEditReq(null);
       setEditQuote(null);
       setPreviewQuote(null);
-      setQuoteFile(null);
+      setQuoteFileId(null);
       fetchRequirements();
       fetchQuotations();
     }
@@ -341,21 +341,6 @@ export default function OpportunityDetailModal({ record, isOpen, onClose, onSucc
     const n = parseFloat(String(v || "").replace(/[^0-9.]/g, ""));
     if (isNaN(n)) return v;
     return new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(n);
-  };
-
-  const readFileAsBase64 = (file: File): Promise<string> =>
-    new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
-
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) { setQuoteFile(null); return; }
-    const base64 = await readFileAsBase64(file);
-    setQuoteFile({ name: file.name, base64 });
   };
 
   const handleReqSubmit = async (e: React.FormEvent) => {
@@ -402,8 +387,7 @@ export default function OpportunityDetailModal({ record, isOpen, onClose, onSucc
         valid_until: quoteData.valid_until,
         status: quoteData.status,
         owner: quoteData.owner,
-        file_data: quoteFile ? quoteFile.base64 : (isEdit ? editQuote.file_data : null),
-        file_name: quoteFile ? quoteFile.name : (isEdit ? editQuote.file_name : null),
+        file_id: quoteFileId,
       };
       if (isEdit) {
         await api.put(`/quotations/${editQuote.id}`, body);
@@ -419,8 +403,7 @@ export default function OpportunityDetailModal({ record, isOpen, onClose, onSucc
       setShowQuoteForm(false);
       setEditQuote(null);
       setQuoteData({ quote_no: "", value: "", valid_until: "", status: "Draft", owner: "" });
-      setQuoteFile(null);
-      if (fileInputRef.current) fileInputRef.current.value = "";
+      setQuoteFileId(null);
       fetchQuotations();
       if (onSuccess) onSuccess();
     } catch {
@@ -668,20 +651,18 @@ export default function OpportunityDetailModal({ record, isOpen, onClose, onSucc
                         <label className="block text-[10px] font-semibold uppercase text-[var(--shell-muted)] mb-1">
                           Attach File <span className="font-normal lowercase text-[var(--shell-muted)]">(PDF or image, optional)</span>
                         </label>
-                        <label className="flex items-center gap-2 p-2.5 rounded-md border border-dashed border-[var(--shell-border)] bg-[var(--shell-surface)] cursor-pointer text-xs text-[var(--shell-muted)]">
-                          <Paperclip size={14} className="text-[var(--shell-warning)] shrink-0" />
-                          <span className="flex-1 truncate">{quoteFile ? quoteFile.name : "Click to choose PDF or image..."}</span>
-                          {quoteFile && (
-                            <button type="button" onClick={() => { setQuoteFile(null); if (fileInputRef.current) fileInputRef.current.value = ""; }} className="text-[var(--shell-danger)] hover:text-[var(--shell-danger)] shrink-0">
-                              <X size={12} />
-                            </button>
-                          )}
-                          <input ref={fileInputRef} type="file" accept="application/pdf,image/*" onChange={handleFileChange} className="hidden" />
-                        </label>
+                        <FileUpload
+                          bucket="crm-assets"
+                          ownerType="quotation"
+                          ownerId={editQuote?.id || 0}
+                          onUpload={(r: FileRecord) => setQuoteFileId(r.id)}
+                          accept="application/pdf,image/*"
+                          maxSize={10 * 1024 * 1024}
+                        />
                       </div>
                     </div>
                     <div className="flex gap-2 justify-end mt-3">
-                      <Button type="button" variant="outline" size="sm" onClick={() => { setShowQuoteForm(false); setEditQuote(null); setQuoteData({ quote_no: "", value: "", valid_until: "", status: "Draft", owner: "" }); setQuoteFile(null); if (fileInputRef.current) fileInputRef.current.value = ""; }}>Cancel</Button>
+                      <Button type="button" variant="outline" size="sm" onClick={() => { setShowQuoteForm(false); setEditQuote(null); setQuoteData({ quote_no: "", value: "", valid_until: "", status: "Draft", owner: "" }); setQuoteFileId(null); }}>Cancel</Button>
                       <Button type="submit" size="sm" disabled={quoteSubmitting}>
                         {quoteSubmitting ? <Loader size={13} className="mr-1 animate-spin" /> : <CheckCircle size={13} className="mr-1" />}
                         {quoteSubmitting ? "Saving..." : "Save Quotation"}

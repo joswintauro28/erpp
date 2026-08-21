@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { FileUpload, FileViewer, type FileRecord } from "@datavex/ui-theme";
 
 interface DocumentCreateModalProps {
   isOpen: boolean;
@@ -33,10 +34,10 @@ export default function DocumentCreateModal({
     status: "Draft",
     owner: "",
     summary: "",
-    file_data: "",
     size: "",
   });
-  const [fileName, setFileName] = useState("");
+  const [fileId, setFileId] = useState<number | null>(null);
+  const [existingFile, setExistingFile] = useState<FileRecord | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
@@ -50,10 +51,9 @@ export default function DocumentCreateModal({
           status: editRecord.status || "Draft",
           owner: editRecord.owner || "",
           summary: editRecord.summary || "",
-          file_data: editRecord.file_data || "",
           size: editRecord.size || "",
         });
-        setFileName(editRecord.name || "");
+        setFileId(editRecord.file_id || null);
       } else {
         setFormData({
           title: "",
@@ -62,11 +62,11 @@ export default function DocumentCreateModal({
           status: "Draft",
           owner: "",
           summary: "",
-          file_data: "",
           size: "",
         });
-        setFileName("");
+        setFileId(null);
       }
+      setExistingFile(null);
       setError("");
     }
   }, [isOpen, editRecord]);
@@ -81,25 +81,25 @@ export default function DocumentCreateModal({
     }));
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const sizeStr =
-          file.size >= 1048576
-            ? `${(file.size / 1048576).toFixed(1)} MB`
-            : `${(file.size / 1024).toFixed(0)} KB`;
-        
-        setFileName(file.name);
-        setFormData((prev) => ({
-          ...prev,
-          title: prev.title || file.name.split(".")[0],
-          size: sizeStr,
-          file_data: reader.result as string,
-        }));
-      };
-      reader.readAsDataURL(file);
+  const handleUploadComplete = (record: FileRecord) => {
+    setFileId(record.id);
+    setFormData((prev) => ({
+      ...prev,
+      title: prev.title || record.original_name.split(".")[0],
+      size: record.size_bytes >= 1048576
+        ? `${(record.size_bytes / 1048576).toFixed(1)} MB`
+        : `${(record.size_bytes / 1024).toFixed(0)} KB`,
+    }));
+  };
+
+  const handleDeleteFile = async () => {
+    if (!fileId) return;
+    try {
+      await api.delete(`/files/${fileId}`);
+      setFileId(null);
+      setExistingFile(null);
+    } catch {
+      // ignore
     }
   };
 
@@ -108,7 +108,7 @@ export default function DocumentCreateModal({
     setSubmitting(true);
     setError("");
 
-    if (!editRecord && !formData.file_data) {
+    if (!editRecord && !fileId) {
       setError("Please upload a document file.");
       setSubmitting(false);
       return;
@@ -120,11 +120,11 @@ export default function DocumentCreateModal({
       " " +
       now.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
 
-    // The backend uses item.name as well as item.title, so let's provide both
     const submissionData = {
       ...formData,
-      name: fileName || formData.title,
+      name: formData.title,
       updated_at: dateStr,
+      file_id: fileId,
     };
 
     try {
@@ -166,17 +166,17 @@ export default function DocumentCreateModal({
             <Label className="text-xs font-semibold uppercase tracking-wider text-[var(--shell-muted)]">
               Document File (PDF or Image)
             </Label>
-            <input
-              type="file"
-              accept="application/pdf,image/*"
-              onChange={handleFileChange}
-              required={!editRecord}
-              className="w-full rounded-md border border-[var(--shell-border)] bg-[var(--shell-bg)] px-2.5 py-1.5 text-xs text-[var(--shell-foreground)] file:mr-2 file:rounded file:border-0 file:bg-[var(--shell-brand)] file:px-2.5 file:py-1 file:text-xs file:font-semibold file:text-white hover:file:bg-[var(--shell-action)] file:cursor-pointer"
-            />
-            {fileName && (
-              <div className="text-[10px] text-[var(--shell-success)] font-medium">
-                Active: {fileName} ({formData.size})
-              </div>
+            {fileId && existingFile ? (
+              <FileViewer files={[existingFile]} onDelete={handleDeleteFile} />
+            ) : (
+              <FileUpload
+                bucket="crm-assets"
+                ownerType="document"
+                ownerId={editRecord?.id || 0}
+                onUpload={handleUploadComplete}
+                accept="application/pdf,image/*"
+                maxSize={10 * 1024 * 1024}
+              />
             )}
           </div>
 

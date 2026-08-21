@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { api } from "@/services/api";
+import { FileUpload, type FileRecord } from "@datavex/ui-theme";
 
 interface SalesOrderCreateModalProps {
   isOpen: boolean;
@@ -33,10 +34,9 @@ export default function SalesOrderCreateModal({
     eta: "",
     status: "Pending",
     owner: "",
-    file_data: "",
-    file_name: "",
     line_items: [] as any[],
   });
+  const [fileId, setFileId] = useState<number | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
@@ -51,10 +51,9 @@ export default function SalesOrderCreateModal({
           eta: editRecord.eta || "",
           status: editRecord.status || "Pending",
           owner: editRecord.owner || "",
-          file_data: editRecord.file_data || "",
-          file_name: editRecord.file_name || "",
           line_items: editRecord.line_items || [],
         });
+        setFileId(editRecord.file_id || null);
       } else {
         setFormData({
           so_no: "",
@@ -64,10 +63,9 @@ export default function SalesOrderCreateModal({
           eta: "",
           status: "Pending",
           owner: "",
-          file_data: "",
-          file_name: "",
           line_items: [],
         });
+        setFileId(null);
       }
       setError("");
     }
@@ -83,19 +81,8 @@ export default function SalesOrderCreateModal({
     }));
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData((prev) => ({
-          ...prev,
-          file_name: file.name,
-          file_data: reader.result as string,
-        }));
-      };
-      reader.readAsDataURL(file);
-    }
+  const handleUploadComplete = (record: FileRecord) => {
+    setFileId(record.id);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -104,10 +91,11 @@ export default function SalesOrderCreateModal({
     setError("");
 
     try {
+      const payload = { ...formData, file_id: fileId };
       if (editRecord) {
-        await api.put(`/sales-orders/${editRecord.id_str}`, formData);
+        await api.put(`/sales-orders/${editRecord.id_str}`, payload);
       } else {
-        await api.post("/sales-orders", formData);
+        await api.post("/sales-orders", payload);
       }
       onSuccess();
       onClose();
@@ -241,17 +229,13 @@ export default function SalesOrderCreateModal({
               <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">
                 Upload Invoice File (PDF or Image)
               </Label>
-              <input
-                type="file"
+              <FileUpload
+                bucket="crm-assets"
+                ownerType="sales_order"
+                ownerId={editRecord?.id || 0}
+                onUpload={handleUploadComplete}
                 accept="application/pdf,image/*"
-                onChange={handleFileChange}
-                className="w-full rounded-md border border-[var(--shell-border)] bg-[var(--shell-bg)] px-2 py-1.5 text-xs text-[var(--shell-foreground)] file:mr-2 file:rounded file:border-0 file:bg-primary file:px-2 file:py-0.5 file:text-xs file:font-medium file:text-primary-foreground"
               />
-              {formData.file_name && (
-                <div className="mt-1 text-xs text-[var(--shell-success)]">
-                  Selected File: {formData.file_name}
-                </div>
-              )}
             </div>
           </div>
 

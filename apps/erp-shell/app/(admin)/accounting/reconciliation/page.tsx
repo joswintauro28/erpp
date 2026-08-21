@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { api } from "@/services/api";
 import { money } from "@/utils/format";
+import { FileUpload, type FileRecord } from "@datavex/ui-theme";
 
 export default function ReconciliationPage() {
   const [activeTab, setActiveTab] = useState<"transactions" | "settings" | "variance" | "audit">("transactions");
@@ -36,6 +37,7 @@ export default function ReconciliationPage() {
   const [importOpen, setImportOpen] = useState(false);
   const [importing, setImporting] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploadFileId, setUploadFileId] = useState<number | null>(null);
 
   const [matchDialog, setMatchDialog] = useState<{
     tx: any; pairType: "payment" | "invoice" | "ledger";
@@ -78,29 +80,27 @@ export default function ReconciliationPage() {
     if (e.target.files && e.target.files.length > 0) setSelectedFile(e.target.files[0]);
   };
 
+  const handleUploadComplete = (record: FileRecord) => {
+    setUploadFileId(record.id);
+  };
+
   const handleImportSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedFile) return;
+    if (!uploadFileId) return;
     setImporting(true);
     setError("");
     try {
-      const reader = new FileReader();
-      reader.onload = async () => {
-        const base64 = (reader.result as string).split(",")[1];
-        try {
-          const res = await api.post<any>("/bank-reconciliation/import-file", { file: base64, fileName: selectedFile.name });
-          if (res.error) setError(res.error);
-          else {
-            setSuccessMsg(res.message || "File uploaded and processed successfully");
-            setImportOpen(false);
-            setSelectedFile(null);
-            load();
-          }
-        } catch (err: any) { setError(err.message || "Failed to process statement upload"); }
-        finally { setImporting(false); }
-      };
-      reader.readAsDataURL(selectedFile);
-    } catch { setError("Failed to read selected file"); setImporting(false); }
+      const res = await api.post<any>("/bank-reconciliation/import-file", { file_id: uploadFileId });
+      if (res.error) setError(res.error);
+      else {
+        setSuccessMsg(res.message || "File uploaded and processed successfully");
+        setImportOpen(false);
+        setSelectedFile(null);
+        setUploadFileId(null);
+        load();
+      }
+    } catch (err: any) { setError(err.message || "Failed to process statement upload"); }
+    finally { setImporting(false); }
   };
 
   const openMatchDialog = async (tx: any) => {
@@ -487,13 +487,19 @@ export default function ReconciliationPage() {
             <div className="space-y-4 py-4">
               <div className="space-y-2">
                 <Label className="text-xs font-semibold">Select File (CSV or XLSX)</Label>
-                <Input type="file" accept=".csv,.xlsx" className="text-xs" onChange={handleFileChange} />
+                <FileUpload
+                  bucket="crm-assets"
+                  ownerType="document"
+                  ownerId={0}
+                  onUpload={handleUploadComplete}
+                  accept=".csv,.xlsx"
+                />
                 <p className="text-[10px] text-[var(--shell-muted)]">Make sure your sheet contains columns: Date, Description, Reference (cheque/receipt number), Debit/Credit amounts, and Balance.</p>
               </div>
             </div>
             <DialogFooter>
-              <Button type="button" variant="outline" size="sm" onClick={() => setImportOpen(false)}>Cancel</Button>
-              <Button type="submit" size="sm" className="bg-[var(--shell-brand)] text-white hover:bg-[var(--shell-action)]" disabled={importing || !selectedFile}>
+              <Button type="button" variant="outline" size="sm" onClick={() => { setImportOpen(false); setUploadFileId(null); }}>Cancel</Button>
+              <Button type="submit" size="sm" className="bg-[var(--shell-brand)] text-white hover:bg-[var(--shell-action)]" disabled={importing || !uploadFileId}>
                 {importing ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : null}
                 {importing ? "Processing Statement..." : "Upload & Analyze"}
               </Button>

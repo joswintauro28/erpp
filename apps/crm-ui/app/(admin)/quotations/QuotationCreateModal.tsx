@@ -11,6 +11,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { FileUpload, type FileRecord } from '@datavex/ui-theme';
 
 interface QuotationCreateModalProps {
   isOpen: boolean;
@@ -28,9 +29,8 @@ export default function QuotationCreateModal({ isOpen, onClose, onSuccess, editR
     valid_until: '',
     status: 'Draft',
     owner: '',
-    file_name: '',
-    file_data: '',
   });
+  const [fileId, setFileId] = useState<number | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
@@ -45,9 +45,8 @@ export default function QuotationCreateModal({ isOpen, onClose, onSuccess, editR
           valid_until: editRecord.valid_until || '',
           status: editRecord.status || 'Draft',
           owner: editRecord.owner || '',
-          file_name: editRecord.file_name || '',
-          file_data: editRecord.file_data || '',
         });
+        setFileId(editRecord.file_id || null);
       } else {
         const futureDate = new Date();
         futureDate.setDate(futureDate.getDate() + 30);
@@ -63,9 +62,8 @@ export default function QuotationCreateModal({ isOpen, onClose, onSuccess, editR
           valid_until: `${yyyy}-${mm}-${dd}`,
           status: 'Draft',
           owner: '',
-          file_name: '',
-          file_data: '',
         });
+        setFileId(null);
       }
       setError('');
     }
@@ -79,19 +77,8 @@ export default function QuotationCreateModal({ isOpen, onClose, onSuccess, editR
     }));
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData(prev => ({
-          ...prev,
-          file_name: file.name,
-          file_data: reader.result as string
-        }));
-      };
-      reader.readAsDataURL(file);
-    }
+  const handleUploadComplete = (record: FileRecord) => {
+    setFileId(record.id);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -99,18 +86,14 @@ export default function QuotationCreateModal({ isOpen, onClose, onSuccess, editR
     setSubmitting(true);
     setError('');
 
-    // Format fields specifically for quotation endpoint
     const payload = {
       ...formData,
-      quote_number: formData.quote_no, // backend supports quote_number or quote_no
+      quote_number: formData.quote_no,
       client_name: formData.account,
       total: formData.value ? Number(formData.value) : 0,
       discount_pct: formData.discount_pct ? Number(formData.discount_pct) : 0,
-      notes: JSON.stringify({
-        notes: '',
-        file_name: formData.file_name,
-        file_data: formData.file_data,
-      }),
+      notes: '',
+      file_id: fileId,
     };
 
     try {
@@ -200,17 +183,13 @@ export default function QuotationCreateModal({ isOpen, onClose, onSuccess, editR
 
           <div>
             <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Upload Quotation File (PDF or Image)</Label>
-            <input
-              type="file"
+            <FileUpload
+              bucket="crm-assets"
+              ownerType="quotation"
+              ownerId={editRecord?.id || 0}
+              onUpload={handleUploadComplete}
               accept="application/pdf,image/*"
-              onChange={handleFileChange}
-              className="w-full rounded-md border border-[var(--shell-border)] bg-[var(--shell-bg)] px-2 py-1.5 text-xs text-[var(--shell-foreground)] file:mr-2 file:rounded file:border-0 file:bg-primary file:px-2 file:py-0.5 file:text-xs file:font-medium file:text-primary-foreground"
             />
-            {formData.file_name && (
-              <div className="mt-1 text-xs text-[var(--shell-success)]">
-                Selected File: {formData.file_name}
-              </div>
-            )}
           </div>
 
           <div className="flex justify-end gap-3 mt-4">

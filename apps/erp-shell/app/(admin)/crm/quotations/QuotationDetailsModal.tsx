@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, PackageOpen, FileText, Download } from 'lucide-react';
 import { api } from '@/services/api';
+import { FileUpload, type FileRecord } from '@datavex/ui-theme';
 import {
   Dialog,
   DialogContent,
@@ -36,9 +37,8 @@ export default function QuotationDetailsModal({ record, isOpen, onClose, onSucce
     eta: '',
     status: 'Pending',
     owner: '',
-    file_data: '',
-    file_name: ''
   });
+  const [soFileId, setSoFileId] = useState<number | null>(null);
 
   useEffect(() => {
     if (isOpen && record) {
@@ -49,9 +49,8 @@ export default function QuotationDetailsModal({ record, isOpen, onClose, onSucce
         eta: record.valid_until || '',
         status: 'Pending',
         owner: record.owner || '',
-        file_data: record.file_data || '',
-        file_name: record.file_name || ''
       });
+      setSoFileId(null);
     }
   }, [isOpen, initialShowForm, record]);
 
@@ -73,8 +72,7 @@ export default function QuotationDetailsModal({ record, isOpen, onClose, onSucce
         eta: salesOrderData.eta,
         status: salesOrderData.status,
         owner: salesOrderData.owner,
-        file_data: salesOrderData.file_data || '',
-        file_name: salesOrderData.file_name || '',
+        file_id: soFileId,
         line_items: (record.items || []).map((item: any) => ({
           product_name: item.description || item.product_name || 'Standard Consulting Package',
           sku: item.sku || 'SCP-CRM',
@@ -245,30 +243,13 @@ export default function QuotationDetailsModal({ record, isOpen, onClose, onSucce
               </div>
               <div>
                 <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Upload Invoice File (PDF or Image)</Label>
-                <input
-                  type="file"
+                <FileUpload
+                  bucket="crm-assets"
+                  ownerType="sales_order"
+                  ownerId={0}
+                  onUpload={(r: FileRecord) => setSoFileId(r.id)}
                   accept="application/pdf,image/*"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      const reader = new FileReader();
-                      reader.onloadend = () => {
-                        setSalesOrderData(p => ({
-                          ...p,
-                          file_name: file.name,
-                          file_data: reader.result as string
-                        }));
-                      };
-                      reader.readAsDataURL(file);
-                    }
-                  }}
-                  className="w-full rounded-md border border-[var(--shell-border)] bg-[var(--shell-bg)] px-2 py-1.5 text-xs text-[var(--shell-foreground)] file:mr-2 file:rounded file:border-0 file:bg-primary file:px-2 file:py-0.5 file:text-xs file:font-medium file:text-primary-foreground"
                 />
-                {salesOrderData.file_name && (
-                  <div className="mt-1 text-xs text-[var(--shell-success)]">
-                    Selected File: {salesOrderData.file_name}
-                  </div>
-                )}
               </div>
 
               <div className="flex justify-end gap-3 mt-4">
