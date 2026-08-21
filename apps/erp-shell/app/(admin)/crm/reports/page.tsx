@@ -8,10 +8,12 @@ import { Progress } from "@/components/ui/progress";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Spinner } from "@/components/ui/spinner";
 import { exportToCSV } from "@/utils/exportCsv";
+import { toastError } from "@/utils/toast";
+import { useConfirm } from "@datavex/ui-theme";
 import { api } from "@/services/api";
 import ReportTable from "./ReportTable";
-import GenericCreateModal from "@/components/GenericCreateModal";
-import GenericDetailsModal from "@/components/GenericDetailsModal";
+import ReportCreateModal from "./ReportCreateModal";
+import ReportDetailsModal from "./ReportDetailsModal";
 
 const formatCurrency = (val: number) => {
   if (val >= 1_000_000) return `$${(val / 1_000_000).toFixed(1)}M`;
@@ -46,8 +48,10 @@ export default function ReportsPage() {
 
   useEffect(() => { fetchReportData(); }, [fetchReportData]);
 
+  const confirm = useConfirm();
+
   const handleDelete = async (record: any) => {
-    if (!window.confirm("Are you sure you want to delete this report?")) return;
+    if (!(await confirm({ title: "Delete report", message: "Are you sure you want to delete this report?", destructive: true }))) return;
     try {
       await api.delete("/reports/" + record.id_str);
       fetchReportData();
@@ -227,8 +231,8 @@ export default function ReportsPage() {
         </Card>
       </div>
 
-      <GenericCreateModal entityType="reports" entityName="Report" isOpen={isModalOpen} onClose={() => { setIsModalOpen(false); setEditRecord(null); }} editRecord={editRecord} onSuccess={fetchReportData} />
-      <GenericDetailsModal record={selectedRecord} entityName="Report" isOpen={isDetailsOpen} onClose={() => { setIsDetailsOpen(false); setSelectedRecord(null); }} onSuccess={fetchReportData} />
+      <ReportCreateModal isOpen={isModalOpen} onClose={() => { setIsModalOpen(false); setEditRecord(null); }} editRecord={editRecord} onSuccess={fetchReportData} />
+      <ReportDetailsModal record={selectedRecord} isOpen={isDetailsOpen} onClose={() => { setIsDetailsOpen(false); setSelectedRecord(null); }} />
     </div>
   );
 }

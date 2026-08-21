@@ -18,17 +18,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { LoadingSpinner } from "@/components/shared/loading-spinner";
 import { api } from "@/services/api";
 import { useToast } from "@/contexts/ToastContext";
-import { money, formatDate } from "@/utils/format";
+import { money, formatDate, statusVariant } from "@/utils/format";
 import type { InvoiceDetailView } from "@/types/billing";
 
 const GST_RATES = [0, 5, 12, 18, 28];
 
-const statusVariant = (s: string) => {
-  if (s === "paid") return "default" as const;
-  if (s === "sent" || s === "pending") return "secondary" as const;
-  if (s === "overdue") return "destructive" as const;
-  return "outline" as const;
-};
 
 // Which status transitions are allowed from each state
 const statusActions: Record<string, string[]> = {
@@ -239,7 +233,7 @@ export default function InvoiceDetail() {
                 <h1 className="font-heading text-[34px] font-bold leading-tight tracking-tight text-[--shell-foreground] truncate">
                   {invoice.invoice_number}
                 </h1>
-                <Badge variant={statusVariant(invoice.status)} className="capitalize text-xs font-medium px-2.5 rounded-full shrink-0 leading-none inline-flex items-center h-[26px]">
+                <Badge variant={statusVariant("invoice", invoice.status)} className="capitalize text-xs font-medium px-2.5 shrink-0 leading-none inline-flex items-center h-[26px]">
                   {invoice.status.replace("_", " ")}
                 </Badge>
               </div>
@@ -270,7 +264,7 @@ export default function InvoiceDetail() {
             {/* Mark as Paid */}
             {actions.includes("paid") && (
               <Button size="sm" variant="outline" onClick={() => handleStatusChange("paid")} disabled={actionLoading === "paid"}
-                className="border-emerald-200 text-emerald-700 hover:bg-emerald-50">
+                className="border-[var(--shell-success)]/30 text-[var(--shell-success)] hover:bg-[var(--shell-success-surface)]">
                 {actionLoading === "paid" ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="mr-1.5 h-3.5 w-3.5" />}
                 Mark as Paid
               </Button>
@@ -279,7 +273,7 @@ export default function InvoiceDetail() {
             {/* Void — requires confirmation */}
             {actions.includes("void") && (
               <Button size="sm" variant="outline" onClick={() => setConfirmAction("void")} disabled={actionLoading === "void"}
-                className="border-red-200 text-red-600 hover:bg-red-50">
+                className="border-[var(--shell-danger)]/30 text-[var(--shell-danger)] hover:bg-[var(--shell-danger-surface)]">
                 {actionLoading === "void" ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <Ban className="mr-1.5 h-3.5 w-3.5" />}
                 Void
               </Button>
@@ -512,7 +506,7 @@ export default function InvoiceDetail() {
 
       {/* Print-Only Corporate Document Card */}
       <div className="hidden print:block space-y-8">
-        <Card className="border-[--shell-border] overflow-hidden relative border-t-4 border-t-[--shell-accent] bg-white">
+        <Card className="border-[--shell-border] overflow-hidden relative border-t-4 border-t-[--shell-accent] bg-card">
           <CardContent className="p-8 sm:p-10 space-y-8">
             {/* Top Banner Row */}
             <div className="flex justify-between items-start gap-4">
@@ -568,7 +562,7 @@ export default function InvoiceDetail() {
                 </TableHeader>
                 <TableBody>
                   {invoice.items.map((item, i) => (
-                    <TableRow key={i} className="border-b border-[--shell-border] hover:bg-slate-50/50">
+                    <TableRow key={i} className="border-b border-[--shell-border] hover:bg-muted/50">
                       <TableCell className="text-xs text-[--shell-muted] text-center">{i + 1}</TableCell>
                       <TableCell className="text-sm font-semibold text-[--shell-foreground]">{item.description}</TableCell>
                       <TableCell className="text-right font-medium text-sm">{item.quantity}</TableCell>
@@ -632,7 +626,7 @@ export default function InvoiceDetail() {
         </Card>
 
         {invoice.notes && (
-          <Card className="border-[--shell-border] shadow-engineered bg-white">
+          <Card className="border-[--shell-border] shadow-engineered bg-card">
             <CardContent className="p-6">
               <div className="flex items-center gap-2 mb-3">
                 <FileSignature className="h-4 w-4 text-[--shell-brand]" />
@@ -695,7 +689,7 @@ export default function InvoiceDetail() {
         <DialogContent>
           <DialogHeader>
             <div className="flex items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-red-100 text-red-600">
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--shell-danger-surface)] text-[var(--shell-danger)]">
                 <AlertTriangle className="h-5 w-5" />
               </div>
               <DialogTitle>Confirm {confirmAction ? (actionLabels[confirmAction] ?? confirmAction) : ""}</DialogTitle>

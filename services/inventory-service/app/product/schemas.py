@@ -18,6 +18,8 @@ class ProductCreate(BaseModel):
     uses_batch_tracking: bool = False
     uses_serial_tracking: bool = False
     costing_method: str = "fifo"
+    make_or_buy: str = "buy"
+    qc_required: bool = False
 
 
 class ProductUpdate(BaseModel):
@@ -36,6 +38,8 @@ class ProductUpdate(BaseModel):
     uses_serial_tracking: bool | None = None
     costing_method: str | None = None
     is_active: bool | None = None
+    make_or_buy: str | None = None
+    qc_required: bool | None = None
 
 
 class ProductOut(BaseModel):
@@ -56,6 +60,8 @@ class ProductOut(BaseModel):
     uses_serial_tracking: bool
     costing_method: str
     is_active: bool
+    make_or_buy: str
+    qc_required: bool
     created_at: datetime
     updated_at: datetime
 

@@ -1,8 +1,144 @@
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
+from datetime import timezone
+
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.integrations.billing_client import get_invoices, get_payments_metrics
 from app.integrations.crm_client import get_customers
 from app.integrations.inventory_client import get_low_stock_products as get_inv_low_stock
+from app.notification.models import Notification
+from app.notification.schemas import NotificationCreate
+
+
+class NotificationStore:
+    """DB-backed persistence + read model for user notifications."""
+
+    def __init__(self, db: AsyncSession):
+        self.db = db
+
+    async def create(self, data: NotificationCreate) -> Notification:
+        notif = Notification(
+            organization_id=data.organization_id,
+            user_id=data.user_id,
+            role=data.role,
+            permission=data.permission,
+            target_name=data.target_name,
+            title=data.title,
+            message=data.message,
+            type=data.type,
+            module_source=data.module_source,
+            event=data.event,
+            entity_ref=data.entity_ref,
+        )
+        self.db.add(notif)
+        await self.db.flush()
+        return notif
+
+    async def list_for_user(
+        self,
+        *,
+        organization_id: int,
+        user_id: int | None = None,
+        role: str | None = None,
+        permissions: list[str] | None = None,
+        name: str | None = None,
+        limit: int = 50,
+        only_unread: bool = False,
+    ) -> list[Notification]:
+        """Return notifications targeted at this user: their own, their role,
+        their permission codes (from the JWT), or a name match on their
+        full name/email."""
+        stmt = select(Notification).where(Notification.organization_id == organization_id)
+        or_conditions = []
+        if user_id is not None:
+            or_conditions.append(Notification.user_id == user_id)
+        if role:
+            if role.strip().lower() == "organization owner":
+                # Super-role: the Owner sees notifications targeted at ANY role
+                # (mirrors the WS gateway and require_permission bypass).
+                or_conditions.append(Notification.role.is_not(None))
+            else:
+                or_conditions.append(Notification.role == role)
+        if permissions:
+            or_conditions.append(Notification.permission.in_(permissions))
+        if name:
+            or_conditions.append(Notification.target_name.ilike(f"%{name}%"))
+            # JWTs carry emails; event payloads carry display names. Match the
+            # email local-part against the target name too (e.g. "maya" vs
+            # "Maya Patel") so the specific-rep notification is visible.
+            local_part = name.strip().lower().split("@")[0].replace(".", " ").replace("_", " ").strip()
+            if local_part:
+                or_conditions.append(Notification.target_name.ilike(f"%{local_part}%"))
+        if not or_conditions:
+            return []
+        from sqlalchemy import or_
+        stmt = stmt.where(or_(*or_conditions))
+        if only_unread:
+            stmt = stmt.where(Notification.read_status.is_(False))
+        stmt = stmt.order_by(Notification.created_at.desc()).limit(limit)
+        result = await self.db.execute(stmt)
+        return list(result.scalars().all())
+
+    async def unread_count(self, *, organization_id: int, **target) -> int:
+        items = await self.list_for_user(organization_id=organization_id, only_unread=True, **target)
+        return len(items)
+
+    async def mark_read(
+        self,
+        notification_id: int,
+        *,
+        organization_id: int,
+        user_id: int | None = None,
+        role: str | None = None,
+        permissions: list[str] | None = None,
+        name: str | None = None,
+    ) -> Notification | None:
+        """Mark one notification read, but only if it is targeted at the caller.
+
+        Prevents IDOR: a user in the same org must not mark another user's
+        notification read by guessing ids.
+        """
+        stmt = select(Notification).where(
+            Notification.id == notification_id,
+            Notification.organization_id == organization_id,
+        )
+        or_conditions = []
+        if user_id is not None:
+            or_conditions.append(Notification.user_id == user_id)
+        if role:
+            if role.strip().lower() == "organization owner":
+                # Super-role: the Owner can act on notifications targeted at
+                # ANY role.
+                or_conditions.append(Notification.role.is_not(None))
+            else:
+                or_conditions.append(Notification.role == role)
+        if permissions:
+            or_conditions.append(Notification.permission.in_(permissions))
+        if name:
+            or_conditions.append(Notification.target_name.ilike(f"%{name}%"))
+        if or_conditions:
+            from sqlalchemy import or_
+            stmt = stmt.where(or_(*or_conditions))
+        result = await self.db.execute(stmt)
+        notif = result.scalar_one_or_none()
+        if not notif:
+            return None
+        notif.read_status = True
+        notif.read_at = datetime.now(timezone.utc)
+        await self.db.flush()
+        return notif
+
+    async def mark_all_read(self, *, organization_id: int, **target) -> int:
+        items = await self.list_for_user(organization_id=organization_id, **target)
+        updated = 0
+        for notif in items:
+            if not notif.read_status:
+                notif.read_status = True
+                notif.read_at = datetime.now(timezone.utc)
+                updated += 1
+        await self.db.flush()
+        return updated
 
 
 class NotificationService:

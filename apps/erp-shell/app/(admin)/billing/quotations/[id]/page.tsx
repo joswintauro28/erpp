@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/dialog";
 import { LoadingSpinner } from "@/components/shared/loading-spinner";
 import { api } from "@/services/api";
-import { money, formatDate, quotationStatusVariant as statusVariant } from "@/utils/format";
+import { money, formatDate, statusVariant } from "@/utils/format";
 import { useAuth } from "@/contexts/AuthContext";
 import type { QuotationDetailView } from "@/types/billing";
 
@@ -159,7 +159,7 @@ export default function QuotationDetail() {
               <h1 className="font-heading text-2xl font-bold tracking-tight text-[var(--shell-foreground)] truncate">
                 {quotation.quote_number}
               </h1>
-              <Badge variant={statusVariant(quotation.status)} className="capitalize shrink-0 px-2.5 py-0.5 font-semibold text-xs tracking-wider">
+              <Badge variant={statusVariant("quotation", quotation.status)} className="capitalize shrink-0 px-2.5 py-0.5 font-semibold text-xs tracking-wider">
                 {quotation.status}
               </Badge>
             </div>
@@ -174,8 +174,8 @@ export default function QuotationDetail() {
       </div>
 
       {quotation.converted_invoice_id && (
-        <div className="flex items-center gap-3.5 rounded-xl border border-emerald-500/20 bg-gradient-to-r from-emerald-500/5 to-transparent px-5 py-4.5 shadow-sm animate-kpi print:hidden">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600">
+        <div className="flex items-center gap-3.5 rounded-xl border border-[var(--shell-success)]/20 bg-gradient-to-r from-[var(--shell-success-surface)]0/5 to-transparent px-5 py-4.5 shadow-sm animate-kpi print:hidden">
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--shell-success)]/10 text-[var(--shell-success)]">
             <FileCheck className="h-5 w-5" />
           </div>
           <div className="min-w-0 flex-1">
@@ -184,7 +184,7 @@ export default function QuotationDetail() {
               This quotation has been accepted and successfully converted into an active invoice.
             </p>
           </div>
-          <Button size="sm" variant="outline" className="border-emerald-500/20 text-emerald-600 hover:bg-emerald-500/10 ml-auto" onClick={() => router.push(`/billing/invoices/${quotation.converted_invoice_id}`)}>
+          <Button size="sm" variant="outline" className="border-[var(--shell-success)]/20 text-[var(--shell-success)] hover:bg-[var(--shell-success)]/10 ml-auto" onClick={() => router.push(`/billing/invoices/${quotation.converted_invoice_id}`)}>
             <ExternalLink className="mr-1.5 h-3.5 w-3.5" /> View Invoice
           </Button>
         </div>
@@ -251,7 +251,7 @@ export default function QuotationDetail() {
                         </TableCell>
                       </TableRow>
                     ) : quotation.items.map((item, i) => (
-                      <TableRow key={i} className="border-b border-[var(--shell-border)] hover:bg-slate-50/50">
+                      <TableRow key={i} className="border-b border-[var(--shell-border)] hover:bg-muted/50">
                         <TableCell className="text-xs text-[var(--shell-muted)] text-center">{i + 1}</TableCell>
                         <TableCell className="text-sm font-semibold text-[var(--shell-foreground)]">{item.description}</TableCell>
                         <TableCell className="text-right font-medium text-sm">{item.quantity}</TableCell>
@@ -334,11 +334,11 @@ export default function QuotationDetail() {
                       <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-[var(--shell-border)] bg-[var(--shell-bg)] shrink-0 group-hover:scale-105 transition-transform duration-200">
                         {actionLoading === act.action
                           ? <Loader2 className="h-4 w-4 animate-spin text-[var(--shell-brand)]" />
-                          : <act.icon className={`h-4 w-4 ${act.variant === "destructive" ? "text-red-600" : "text-[var(--shell-brand)]"}`} />
+                          : <act.icon className={`h-4 w-4 ${act.variant === "destructive" ? "text-[var(--shell-danger)]" : "text-[var(--shell-brand)]"}`} />
                         }
                       </div>
                       <div className="min-w-0">
-                        <p className={`text-sm font-semibold ${act.variant === "destructive" ? "text-red-600 font-bold" : "text-[var(--shell-foreground)]"}`}>
+                        <p className={`text-sm font-semibold ${act.variant === "destructive" ? "text-[var(--shell-danger)] font-bold" : "text-[var(--shell-foreground)]"}`}>
                           {act.label}
                         </p>
                         <p className="text-xs text-[var(--shell-muted)] mt-0.5">{act.description}</p>
@@ -351,10 +351,10 @@ export default function QuotationDetail() {
           )}
 
           {canEdit && quotation.status === "accepted" && !quotation.converted_invoice_id && (
-            <Card className="border-emerald-500/20 shadow-md bg-gradient-to-r from-emerald-500/5 to-transparent print:hidden">
+            <Card className="border-[var(--shell-success)]/20 shadow-md bg-gradient-to-r from-[var(--shell-success-surface)]0/5 to-transparent print:hidden">
               <CardContent className="p-6 flex flex-col sm:flex-row items-center gap-4 justify-between">
                 <div className="flex items-start gap-3.5">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 shrink-0">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--shell-success)]/10 text-[var(--shell-success)] border border-[var(--shell-success)]/20 shrink-0">
                     <FileCheck className="h-5 w-5" />
                   </div>
                   <div>
@@ -396,15 +396,15 @@ export default function QuotationDetail() {
                     <div key={step.key} className="flex items-start gap-3.5 pb-6 last:pb-0 relative">
                       {idx < STATUS_FLOW.length - 1 && (
                         <div className={`absolute left-[13.5px] top-7 w-0.5 h-6 -translate-x-1/2 ${
-                          isPast ? "bg-emerald-500" : "bg-[var(--shell-border)]"
+                          isPast ? "bg-[var(--shell-success-surface)]0" : "bg-[var(--shell-border)]"
                         }`} />
                       )}
                       <div className={`flex h-7 w-7 items-center justify-center rounded-full border-2 shrink-0 z-10 transition-colors duration-200 ${
                         isCurrent
                           ? "border-[var(--shell-brand)] bg-[var(--shell-brand)]/10 text-[var(--shell-brand)]"
                           : isPast
-                            ? "border-emerald-500 bg-emerald-500/10 text-emerald-600"
-                            : "border-[var(--shell-border)] bg-white text-muted-foreground/30"
+                            ? "border-[var(--shell-success)] bg-[var(--shell-success)]/10 text-[var(--shell-success)]"
+                            : "border-[var(--shell-border)] bg-card text-muted-foreground/30"
                       }`}>
                         <Icon className="h-3 w-3" />
                       </div>
@@ -453,10 +453,10 @@ export default function QuotationDetail() {
       </div>
 
       {canDelete && <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
-        <DialogContent className="border-[var(--shell-border)] bg-white">
+        <DialogContent className="border-[var(--shell-border)] bg-card">
           <DialogHeader>
             <div className="flex items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-red-100 text-red-600">
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--shell-danger-surface)] text-[var(--shell-danger)]">
                 <ShieldAlert className="h-5 w-5" />
               </div>
               <DialogTitle>Confirm Permanently Delete</DialogTitle>

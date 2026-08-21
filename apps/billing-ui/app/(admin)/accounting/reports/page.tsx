@@ -170,10 +170,10 @@ export default function ReportsPage() {
                 </CardContent></Card>
                 <Card><CardContent className="pt-6">
                   <div className="flex items-center gap-2 mb-1">
-                    <TrendingUp className="h-3.5 w-3.5 text-emerald-500" />
+                    <TrendingUp className="h-3.5 w-3.5 text-[var(--shell-success)]" />
                     <p className="text-xs text-muted-foreground">Gross Profit</p>
                   </div>
-                  <p className={`font-heading text-lg font-semibold ${plTotals!.grossProfit >= 0 ? "text-emerald-500" : "text-destructive"}`}>{money(plTotals!.grossProfit)}</p>
+                  <p className={`font-heading text-lg font-semibold ${plTotals!.grossProfit >= 0 ? "text-[var(--shell-success)]" : "text-destructive"}`}>{money(plTotals!.grossProfit)}</p>
                 </CardContent></Card>
                 <Card><CardContent className="pt-6">
                   <div className="flex items-center gap-2 mb-1">
@@ -184,7 +184,7 @@ export default function ReportsPage() {
                 </CardContent></Card>
                 <Card><CardContent className="pt-6">
                   <p className="text-xs text-muted-foreground mb-1">Net Income</p>
-                  <p className={`font-heading text-lg font-semibold ${plTotals!.netIncome >= 0 ? "text-emerald-500" : "text-destructive"}`}>{money(plTotals!.netIncome)}</p>
+                  <p className={`font-heading text-lg font-semibold ${plTotals!.netIncome >= 0 ? "text-[var(--shell-success)]" : "text-destructive"}`}>{money(plTotals!.netIncome)}</p>
                 </CardContent></Card>
               </div>
 
@@ -195,7 +195,7 @@ export default function ReportsPage() {
                       <CardTitle>Profit & Loss</CardTitle>
                       <CardDescription>Monthly breakdown</CardDescription>
                     </div>
-                    {plTotals!.netIncome >= 0 ? <TrendingUp className="h-5 w-5 text-emerald-500" /> : <TrendingDown className="h-5 w-5 text-destructive" />}
+                    {plTotals!.netIncome >= 0 ? <TrendingUp className="h-5 w-5 text-[var(--shell-success)]" /> : <TrendingDown className="h-5 w-5 text-destructive" />}
                   </div>
                 </CardHeader>
                 <CardContent className="p-0">
@@ -218,9 +218,9 @@ export default function ReportsPage() {
                           <TableCell className="font-medium text-xs">{row.month}</TableCell>
                           <TableCell className="text-right font-mono text-xs">{money(row.revenue)}</TableCell>
                           <TableCell className="text-right font-mono text-xs">{money(row.cost_of_goods)}</TableCell>
-                          <TableCell className={`text-right font-mono text-xs ${row.gross_profit >= 0 ? "text-emerald-600" : "text-destructive"}`}>{money(row.gross_profit)}</TableCell>
+                          <TableCell className={`text-right font-mono text-xs ${row.gross_profit >= 0 ? "text-[var(--shell-success)]" : "text-destructive"}`}>{money(row.gross_profit)}</TableCell>
                           <TableCell className="text-right font-mono text-xs text-destructive">{money(row.operating_expenses)}</TableCell>
-                          <TableCell className={`text-right font-mono text-xs font-semibold ${row.net_profit >= 0 ? "text-emerald-600" : "text-destructive"}`}>{money(row.net_profit)}</TableCell>
+                          <TableCell className={`text-right font-mono text-xs font-semibold ${row.net_profit >= 0 ? "text-[var(--shell-success)]" : "text-destructive"}`}>{money(row.net_profit)}</TableCell>
                         </TableRow>
                       ))}
                       {plTotals && (
@@ -228,9 +228,9 @@ export default function ReportsPage() {
                           <TableCell className="text-xs font-bold">Total</TableCell>
                           <TableCell className="text-right font-mono text-xs font-bold">{money(plTotals.revenue)}</TableCell>
                           <TableCell className="text-right font-mono text-xs font-bold">{money(plTotals.cogs)}</TableCell>
-                          <TableCell className={`text-right font-mono text-xs font-bold ${plTotals.grossProfit >= 0 ? "text-emerald-600" : "text-destructive"}`}>{money(plTotals.grossProfit)}</TableCell>
+                          <TableCell className={`text-right font-mono text-xs font-bold ${plTotals.grossProfit >= 0 ? "text-[var(--shell-success)]" : "text-destructive"}`}>{money(plTotals.grossProfit)}</TableCell>
                           <TableCell className="text-right font-mono text-xs font-bold text-destructive">{money(plTotals.expenses)}</TableCell>
-                          <TableCell className={`text-right font-mono text-xs font-bold ${plTotals.netIncome >= 0 ? "text-emerald-600" : "text-destructive"}`}>{money(plTotals.netIncome)}</TableCell>
+                          <TableCell className={`text-right font-mono text-xs font-bold ${plTotals.netIncome >= 0 ? "text-[var(--shell-success)]" : "text-destructive"}`}>{money(plTotals.netIncome)}</TableCell>
                         </TableRow>
                       )}
                     </TableBody>
@@ -353,7 +353,7 @@ export default function ReportsPage() {
                     <Card className="border-border/60 bg-muted/10 shadow-sm">
                       <CardContent className="pt-6">
                         <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">Net Cash Movement</p>
-                        <p className={`font-heading text-lg font-bold ${detailedCf.net_increase_decrease >= 0 ? "text-emerald-600" : "text-destructive"}`}>
+                        <p className={`font-heading text-lg font-bold ${detailedCf.net_increase_decrease >= 0 ? "text-[var(--shell-success)]" : "text-destructive"}`}>
                           {detailedCf.net_increase_decrease >= 0 ? "+" : ""}{money(detailedCf.net_increase_decrease)}
                         </p>
                         <p className="text-[10px] text-muted-foreground mt-1">From all activities</p>
@@ -366,10 +366,10 @@ export default function ReportsPage() {
                         <p className="text-[10px] text-muted-foreground mt-1">General Ledger balance</p>
                       </CardContent>
                     </Card>
-                    <Card className={`border-border/60 shadow-sm ${detailedCf.reconciliation.difference === 0 ? "bg-emerald-500/5 border-emerald-500/20" : "bg-destructive/5 border-destructive/20"}`}>
+                    <Card className={`border-border/60 shadow-sm ${detailedCf.reconciliation.difference === 0 ? "bg-[var(--shell-success-surface)]0/5 border-[var(--shell-success)]/20" : "bg-destructive/5 border-destructive/20"}`}>
                       <CardContent className="pt-6">
                         <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">Reconciliation Status</p>
-                        <p className={`font-heading text-lg font-bold ${detailedCf.reconciliation.difference === 0 ? "text-emerald-600" : "text-destructive"}`}>
+                        <p className={`font-heading text-lg font-bold ${detailedCf.reconciliation.difference === 0 ? "text-[var(--shell-success)]" : "text-destructive"}`}>
                           {detailedCf.reconciliation.difference === 0 ? "Fully Reconciled" : `${money(Math.abs(detailedCf.reconciliation.difference))} Diff`}
                         </p>
                         <p className="text-[10px] text-muted-foreground mt-1">GL vs Bank Statement</p>
@@ -397,7 +397,7 @@ export default function ReportsPage() {
                       <div className="space-y-3">
                         <div className="flex items-center justify-between border-b border-border/80 pb-2">
                           <h4 className="text-xs font-bold uppercase tracking-wider text-foreground">Cash Flows from Operating Activities</h4>
-                          <span className={`font-mono text-xs font-bold ${detailedCf.operating_activities.net_cash >= 0 ? "text-emerald-600" : "text-destructive"}`}>
+                          <span className={`font-mono text-xs font-bold ${detailedCf.operating_activities.net_cash >= 0 ? "text-[var(--shell-success)]" : "text-destructive"}`}>
                             {money(detailedCf.operating_activities.net_cash)}
                           </span>
                         </div>
@@ -405,7 +405,7 @@ export default function ReportsPage() {
                           {detailedCf.operating_activities.items.map((item: any) => (
                             <div key={item.label} className="flex justify-between text-xs py-1 hover:bg-muted/30 px-2 rounded-md transition-colors">
                               <span className="text-muted-foreground">{item.label}</span>
-                              <span className={`font-mono ${item.amount < 0 ? "text-destructive" : item.amount > 0 ? "text-emerald-600" : "text-muted-foreground"}`}>
+                              <span className={`font-mono ${item.amount < 0 ? "text-destructive" : item.amount > 0 ? "text-[var(--shell-success)]" : "text-muted-foreground"}`}>
                                 {money(item.amount)}
                               </span>
                             </div>
@@ -421,7 +421,7 @@ export default function ReportsPage() {
                       <div className="space-y-3">
                         <div className="flex items-center justify-between border-b border-border/80 pb-2">
                           <h4 className="text-xs font-bold uppercase tracking-wider text-foreground">Cash Flows from Investing Activities</h4>
-                          <span className={`font-mono text-xs font-bold ${detailedCf.investing_activities.net_cash >= 0 ? "text-emerald-600" : "text-destructive"}`}>
+                          <span className={`font-mono text-xs font-bold ${detailedCf.investing_activities.net_cash >= 0 ? "text-[var(--shell-success)]" : "text-destructive"}`}>
                             {money(detailedCf.investing_activities.net_cash)}
                           </span>
                         </div>
@@ -429,7 +429,7 @@ export default function ReportsPage() {
                           {detailedCf.investing_activities.items.map((item: any) => (
                             <div key={item.label} className="flex justify-between text-xs py-1 hover:bg-muted/30 px-2 rounded-md transition-colors">
                               <span className="text-muted-foreground">{item.label}</span>
-                              <span className={`font-mono ${item.amount < 0 ? "text-destructive" : item.amount > 0 ? "text-emerald-600" : "text-muted-foreground"}`}>
+                              <span className={`font-mono ${item.amount < 0 ? "text-destructive" : item.amount > 0 ? "text-[var(--shell-success)]" : "text-muted-foreground"}`}>
                                 {money(item.amount)}
                               </span>
                             </div>
@@ -445,7 +445,7 @@ export default function ReportsPage() {
                       <div className="space-y-3">
                         <div className="flex items-center justify-between border-b border-border/80 pb-2">
                           <h4 className="text-xs font-bold uppercase tracking-wider text-foreground">Cash Flows from Financing Activities</h4>
-                          <span className={`font-mono text-xs font-bold ${detailedCf.financing_activities.net_cash >= 0 ? "text-emerald-600" : "text-destructive"}`}>
+                          <span className={`font-mono text-xs font-bold ${detailedCf.financing_activities.net_cash >= 0 ? "text-[var(--shell-success)]" : "text-destructive"}`}>
                             {money(detailedCf.financing_activities.net_cash)}
                           </span>
                         </div>
@@ -453,7 +453,7 @@ export default function ReportsPage() {
                           {detailedCf.financing_activities.items.map((item: any) => (
                             <div key={item.label} className="flex justify-between text-xs py-1 hover:bg-muted/30 px-2 rounded-md transition-colors">
                               <span className="text-muted-foreground">{item.label}</span>
-                              <span className={`font-mono ${item.amount < 0 ? "text-destructive" : item.amount > 0 ? "text-emerald-600" : "text-muted-foreground"}`}>
+                              <span className={`font-mono ${item.amount < 0 ? "text-destructive" : item.amount > 0 ? "text-[var(--shell-success)]" : "text-muted-foreground"}`}>
                                 {money(item.amount)}
                               </span>
                             </div>
@@ -469,7 +469,7 @@ export default function ReportsPage() {
                       <div className="border-t-2 border-double border-border pt-4 space-y-2">
                         <div className="flex justify-between text-xs font-bold">
                           <span>Net Increase (Decrease) in Cash & Cash Equivalents</span>
-                          <span className={`font-mono ${detailedCf.net_increase_decrease >= 0 ? "text-emerald-600" : "text-destructive"}`}>
+                          <span className={`font-mono ${detailedCf.net_increase_decrease >= 0 ? "text-[var(--shell-success)]" : "text-destructive"}`}>
                             {money(detailedCf.net_increase_decrease)}
                           </span>
                         </div>
@@ -506,7 +506,7 @@ export default function ReportsPage() {
                             {detailedCf.reconciliation.reconciling_items.map((item: any) => (
                               <div key={item.label} className="flex justify-between text-xs pl-3 border-l-2 border-muted py-0.5">
                                 <span className="text-muted-foreground">{item.label}</span>
-                                <span className={`font-mono ${item.type === "deposits_in_transit" ? "text-destructive" : item.type === "outstanding_payments" ? "text-emerald-600" : "text-amber-600"}`}>
+                                <span className={`font-mono ${item.type === "deposits_in_transit" ? "text-destructive" : item.type === "outstanding_payments" ? "text-[var(--shell-success)]" : "text-[var(--shell-warning)]"}`}>
                                   {item.type === "deposits_in_transit" ? "-" : "+"}{money(item.amount)}
                                 </span>
                               </div>
@@ -521,8 +521,8 @@ export default function ReportsPage() {
                         <div className="flex flex-col justify-center items-center border-l border-border pl-6 bg-muted/10 rounded-xl p-6">
                           {detailedCf.reconciliation.difference === 0 ? (
                             <div className="text-center space-y-2">
-                              <div className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 dark:bg-emerald-950 dark:text-emerald-400">
-                                <Badge className="bg-emerald-500 hover:bg-emerald-600 text-white border-none py-1 px-2.5 text-[10px] font-bold">OK</Badge>
+                              <div className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 text-[var(--shell-success)]  ">
+                                <Badge className="bg-[var(--shell-success-surface)]0 hover:bg-emerald-600 text-white border-none py-1 px-2.5 text-[10px] font-bold">OK</Badge>
                               </div>
                               <h4 className="text-sm font-semibold text-foreground">Zero Discrepancy</h4>
                               <p className="text-xs text-muted-foreground max-w-[280px]">
@@ -601,8 +601,8 @@ export default function ReportsPage() {
                                 <TableCell className="text-xs font-semibold max-w-[200px] truncate">{tx.description}</TableCell>
                                 <TableCell className="text-xs">
                                   <Badge variant="outline" className={`text-[10px] font-bold capitalize border-none px-2 py-0.5 ${
-                                    tx.activity === "operating" ? "bg-emerald-500/10 text-emerald-700" :
-                                    tx.activity === "investing" ? "bg-blue-500/10 text-blue-700" :
+                                    tx.activity === "operating" ? "bg-[var(--shell-success)]/10 text-[var(--shell-success)]" :
+                                    tx.activity === "investing" ? "bg-[var(--shell-info)]/10 text-[var(--shell-info)]" :
                                     "bg-purple-500/10 text-purple-700"
                                   }`}>
                                     {tx.activity}
@@ -610,7 +610,7 @@ export default function ReportsPage() {
                                 </TableCell>
                                 <TableCell className="text-xs text-muted-foreground">{tx.counter_account.name} ({tx.counter_account.code})</TableCell>
                                 <TableCell className="text-xs text-muted-foreground">{tx.reference_type ? `${tx.reference_type} #${tx.reference_id}` : "Journal"}</TableCell>
-                                <TableCell className={`text-right font-mono text-xs font-bold ${tx.amount >= 0 ? "text-emerald-600" : "text-destructive"}`}>
+                                <TableCell className={`text-right font-mono text-xs font-bold ${tx.amount >= 0 ? "text-[var(--shell-success)]" : "text-destructive"}`}>
                                   {tx.amount >= 0 ? "+" : ""}{money(tx.amount)}
                                 </TableCell>
                               </TableRow>
@@ -645,7 +645,7 @@ export default function ReportsPage() {
                       </div>
                       <div>
                         <p className="text-muted-foreground">Amount</p>
-                        <p className={`font-semibold ${activeTx.amount >= 0 ? "text-emerald-600" : "text-destructive"}`}>{money(activeTx.amount)}</p>
+                        <p className={`font-semibold ${activeTx.amount >= 0 ? "text-[var(--shell-success)]" : "text-destructive"}`}>{money(activeTx.amount)}</p>
                       </div>
                       <div>
                         <p className="text-muted-foreground">Activity Classification</p>
@@ -703,8 +703,8 @@ export default function ReportsPage() {
                     <CardTitle className="text-xs text-muted-foreground">Gross Profit</CardTitle>
                   </CardHeader>
                   <CardContent className="pt-0">
-                    <p className="font-heading text-xl font-bold text-emerald-600">{money(cogsData?.summary?.gross_profit || 0)}</p>
-                    <p className="text-[11px] text-emerald-600 mt-1">{cogsData?.summary?.gross_margin_pct || 0}% Gross Margin</p>
+                    <p className="font-heading text-xl font-bold text-[var(--shell-success)]">{money(cogsData?.summary?.gross_profit || 0)}</p>
+                    <p className="text-[11px] text-[var(--shell-success)] mt-1">{cogsData?.summary?.gross_margin_pct || 0}% Gross Margin</p>
                   </CardContent>
                 </Card>
                 <Card>
@@ -712,7 +712,7 @@ export default function ReportsPage() {
                     <CardTitle className="text-xs text-muted-foreground">Operating Margin</CardTitle>
                   </CardHeader>
                   <CardContent className="pt-0">
-                    <p className="font-heading text-xl font-bold text-sky-600">{cogsData?.summary?.operating_margin_pct || 0}%</p>
+                    <p className="font-heading text-xl font-bold text-[var(--shell-info)]">{cogsData?.summary?.operating_margin_pct || 0}%</p>
                     <p className="text-[11px] text-muted-foreground mt-1">Net of operating expenses</p>
                   </CardContent>
                 </Card>
@@ -755,7 +755,7 @@ export default function ReportsPage() {
                             <TableCell className="text-xs text-muted-foreground">{inv.issue_date}</TableCell>
                             <TableCell className="text-right font-mono text-xs">{money(inv.revenue)}</TableCell>
                             <TableCell className="text-right font-mono text-xs text-destructive">{money(inv.cogs)}</TableCell>
-                            <TableCell className="text-right font-mono text-xs font-bold text-emerald-600">{money(inv.gross_profit)}</TableCell>
+                            <TableCell className="text-right font-mono text-xs font-bold text-[var(--shell-success)]">{money(inv.gross_profit)}</TableCell>
                             <TableCell className="text-right font-mono text-xs font-bold">{inv.margin_pct}%</TableCell>
                           </TableRow>
                         ))
@@ -801,7 +801,7 @@ export default function ReportsPage() {
                             <TableCell className="text-right font-mono text-xs">{money(prod.avg_selling_price)}</TableCell>
                             <TableCell className="text-right font-mono text-xs">{money(prod.total_revenue)}</TableCell>
                             <TableCell className="text-right font-mono text-xs text-destructive">{money(prod.total_cogs)}</TableCell>
-                            <TableCell className="text-right font-mono text-xs font-bold text-emerald-600">{money(prod.gross_profit)}</TableCell>
+                            <TableCell className="text-right font-mono text-xs font-bold text-[var(--shell-success)]">{money(prod.gross_profit)}</TableCell>
                             <TableCell className="text-right font-mono text-xs font-bold">{prod.margin_pct}%</TableCell>
                           </TableRow>
                         ))

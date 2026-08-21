@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Eye } from "lucide-react";
-import { money } from "@/utils/format";
+import { money, statusVariant } from "@/utils/format";
 
 export interface KanbanItem {
   id: number;
@@ -27,12 +27,6 @@ interface KanbanBoardProps {
   onStatusChange?: (itemId: number, newStatus: string) => void;
 }
 
-const statusVariant = (s: string) => {
-  if (s === "paid") return "default" as const;
-  if (s === "sent" || s === "pending") return "secondary" as const;
-  if (s === "overdue") return "destructive" as const;
-  return "outline" as const;
-};
 
 export function KanbanBoard({ columns, onItemClick, onStatusChange }: KanbanBoardProps) {
   const [dragId, setDragId] = useState<number | null>(null);
@@ -115,7 +109,7 @@ export function KanbanBoard({ columns, onItemClick, onStatusChange }: KanbanBoar
                   </div>
                   <div className="mt-2 flex items-center justify-between">
                     <span className="font-mono text-xs font-semibold text-foreground">{money(item.amount)}</span>
-                    <Badge variant={statusVariant(item.status)} className="capitalize text-[10px] px-1.5 py-0">
+                    <Badge variant={statusVariant("invoice", item.status)} className="capitalize text-[10px] px-1.5 py-0">
                       {item.status.replace("_", " ")}
                     </Badge>
                   </div>

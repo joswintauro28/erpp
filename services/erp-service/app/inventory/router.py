@@ -7,15 +7,22 @@ from app.integrations.inventory_client import (
     get_stock_movements, create_stock_movement,
     get_suppliers, get_supplier, create_supplier, update_supplier, delete_supplier,
     get_purchase_orders, get_purchase_order, create_purchase_order,
-    update_purchase_order_status, delete_purchase_order,
+    update_purchase_order_status, delete_purchase_order, putaway_purchase_order,
     get_serial_numbers, get_serial_number, create_serial_number,
-    update_serial_number, delete_serial_number,
+    update_serial_number, delete_serial_number, get_serial_numbers_stats,
     get_fulfillment_orders, get_fulfillment_order, create_fulfillment_order,
     check_fulfillment_stock, reserve_fulfillment_stock,
     pick_fulfillment_items, pack_fulfillment_items,
     dispatch_fulfillment_order, step_back_fulfillment_order,
     trigger_po_for_fulfillment_shortage, generate_invoice_for_fulfillment,
-    delete_fulfillment_order,
+    delete_fulfillment_order, create_fulfillment_batch,
+    get_purchase_requisitions, create_purchase_requisition, submit_purchase_requisition,
+    approve_purchase_requisition, reject_purchase_requisition, convert_purchase_requisition_to_po,
+    delete_purchase_requisition,
+    get_quality_checks, create_quality_check, record_quality_check_result,
+    get_work_orders, create_work_order, release_work_order, start_work_order,
+    complete_work_order, cancel_work_order, issue_work_order_material, delete_work_order,
+    start_work_order_operation, complete_work_order_operation,
 )
 
 router = APIRouter(tags=["inventory"])
@@ -361,3 +368,226 @@ async def delete_fulfillment_order_by_id(
 ):
     token = payload.get("_raw_token", "")
     await delete_fulfillment_order(token, fulfillment_id)
+
+
+@router.post("/fulfillment/batches", response_model=dict, status_code=201)
+async def create_fulfillment_batch_endpoint(
+    body: dict,
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await create_fulfillment_batch(token, body)
+
+
+# ─── Serial Numbers Stats ────────────────────────────────────
+
+@router.get("/serial-numbers/stats", response_model=dict)
+async def get_serial_numbers_stats_endpoint(
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await get_serial_numbers_stats(token)
+
+
+# ─── Purchase Orders Putaway ──────────────────────────────────
+
+@router.post("/purchase-orders/{po_id}/putaway", response_model=dict)
+async def putaway_purchase_order_endpoint(
+    po_id: int,
+    body: dict,
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await putaway_purchase_order(token, po_id, body)
+
+
+# ─── Purchase Requisitions ────────────────────────────────────
+
+@router.get("/purchase-requisitions", response_model=list[dict])
+async def list_purchase_requisitions(
+    status: str | None = None,
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await get_purchase_requisitions(token, status)
+
+
+@router.post("/purchase-requisitions", response_model=dict, status_code=201)
+async def create_new_purchase_requisition(
+    body: dict,
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await create_purchase_requisition(token, body)
+
+
+@router.post("/purchase-requisitions/{pr_id}/submit", response_model=dict)
+async def submit_purchase_requisition_endpoint(
+    pr_id: int,
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await submit_purchase_requisition(token, pr_id)
+
+
+@router.post("/purchase-requisitions/{pr_id}/approve", response_model=dict)
+async def approve_purchase_requisition_endpoint(
+    pr_id: int,
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await approve_purchase_requisition(token, pr_id)
+
+
+@router.post("/purchase-requisitions/{pr_id}/reject", response_model=dict)
+async def reject_purchase_requisition_endpoint(
+    pr_id: int,
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await reject_purchase_requisition(token, pr_id)
+
+
+@router.post("/purchase-requisitions/{pr_id}/convert", response_model=dict)
+async def convert_purchase_requisition_to_po_endpoint(
+    pr_id: int,
+    body: dict,
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await convert_purchase_requisition_to_po(token, pr_id, body)
+
+
+@router.delete("/purchase-requisitions/{pr_id}", status_code=204)
+async def delete_purchase_requisition_by_id(
+    pr_id: int,
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    await delete_purchase_requisition(token, pr_id)
+
+
+# ─── Quality Checks ───────────────────────────────────────────
+
+@router.get("/quality-checks", response_model=list[dict])
+async def list_quality_checks(
+    status: str | None = None,
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await get_quality_checks(token, status)
+
+
+@router.post("/quality-checks", response_model=dict, status_code=201)
+async def create_new_quality_check(
+    body: dict,
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await create_quality_check(token, body)
+
+
+@router.put("/quality-checks/{qc_id}/result", response_model=dict)
+async def record_quality_check_result_endpoint(
+    qc_id: int,
+    body: dict,
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await record_quality_check_result(token, qc_id, body)
+
+
+# ─── Work Orders ──────────────────────────────────────────────
+
+@router.get("/work-orders", response_model=list[dict])
+async def list_work_orders(
+    status: str | None = None,
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await get_work_orders(token, status)
+
+
+@router.post("/work-orders", response_model=dict, status_code=201)
+async def create_new_work_order(
+    body: dict,
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await create_work_order(token, body)
+
+
+@router.post("/work-orders/{wo_id}/release", response_model=dict)
+async def release_work_order_endpoint(
+    wo_id: int,
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await release_work_order(token, wo_id)
+
+
+@router.post("/work-orders/{wo_id}/start", response_model=dict)
+async def start_work_order_endpoint(
+    wo_id: int,
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await start_work_order(token, wo_id)
+
+
+@router.post("/work-orders/{wo_id}/complete", response_model=dict)
+async def complete_work_order_endpoint(
+    wo_id: int,
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await complete_work_order(token, wo_id)
+
+
+@router.post("/work-orders/{wo_id}/cancel", response_model=dict)
+async def cancel_work_order_endpoint(
+    wo_id: int,
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await cancel_work_order(token, wo_id)
+
+
+@router.post("/work-orders/{wo_id}/issue-material", response_model=dict)
+async def issue_work_order_material_endpoint(
+    wo_id: int,
+    body: dict,
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await issue_work_order_material(token, wo_id, body)
+
+
+@router.delete("/work-orders/{wo_id}", status_code=204)
+async def delete_work_order_by_id(
+    wo_id: int,
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    await delete_work_order(token, wo_id)
+
+
+@router.post("/work-orders/{wo_id}/operations/{op_id}/start", response_model=dict)
+async def start_work_order_operation_endpoint(
+    wo_id: int,
+    op_id: int,
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await start_work_order_operation(token, wo_id, op_id)
+
+
+@router.post("/work-orders/{wo_id}/operations/{op_id}/complete", response_model=dict)
+async def complete_work_order_operation_endpoint(
+    wo_id: int,
+    op_id: int,
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await complete_work_order_operation(token, wo_id, op_id)
+

@@ -25,6 +25,7 @@ export interface InvoiceCreatedEvent extends BaseEvent {
   invoiceNumber: string;
   clientName: string;
   total: number;
+  salesOrderCode?: string;
 }
 
 export interface InvoiceUpdatedEvent extends BaseEvent {
@@ -38,6 +39,7 @@ export interface InvoicePaidEvent extends BaseEvent {
   clientName: string;
   paymentId: number;
   amount: number;
+  salesOrderCode?: string;
 }
 
 export interface InvoiceStatusChangedEvent extends BaseEvent {
@@ -53,6 +55,7 @@ export interface PaymentRecordedEvent extends BaseEvent {
   invoiceNumber: string;
   amount: number;
   method: string;
+  salesOrderCode?: string;
 }
 
 export interface PaymentRefundedEvent extends BaseEvent {

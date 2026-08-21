@@ -14,10 +14,9 @@ import scrapling.engines.toolbelt.fingerprints
 from browserforge.headers import Browser, HeaderGenerator
 
 def custom_generate_headers(browser_mode = False):
-    os_name = scrapling.engines.toolbelt.fingerprints.get_os_name()
+    os_name = ("windows", "macos", "linux")
     browsers = [Browser(name="chrome", min_version=110, max_version=125)]
     if not browser_mode:
-        os_name = ("windows", "macos", "linux")
         browsers.extend(
             [
                 Browser(name="firefox", min_version=110),

@@ -1,10 +1,26 @@
 from datetime import datetime, timezone
+import logging
 
 import sqlalchemy as sa
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
+from fastapi import HTTPException, status
 
 from app.purchase_order.models import PurchaseOrder, PurchaseOrderItem
 from app.core.database import BaseRepository
+from app.core.events import publish_event, EVENT_PO_CREATED, EVENT_PO_APPROVED, EVENT_PO_RECEIVED
+
+logger = logging.getLogger("app.purchase_order")
+
+# Canonical PO lifecycle transitions.
+PO_STATUS_FLOW: dict[str, set[str]] = {
+    "DRAFT": {"SUBMITTED", "CANCELLED"},
+    "SUBMITTED": {"APPROVED", "CANCELLED"},
+    "APPROVED": {"PARTIALLY_RECEIVED", "COMPLETED", "CANCELLED"},
+    "PARTIALLY_RECEIVED": {"COMPLETED", "CANCELLED"},
+    "COMPLETED": set(),
+    "CANCELLED": set(),
+}
 
 
 class PurchaseOrderRepository(BaseRepository[PurchaseOrder]):
@@ -24,7 +40,12 @@ class PurchaseOrderService:
         self.item_repo = PurchaseOrderItemRepository(db)
 
     async def list_purchase_orders(self, organization_id: int) -> list[PurchaseOrder]:
-        stmt = sa.select(PurchaseOrder).where(PurchaseOrder.organization_id == organization_id).order_by(PurchaseOrder.created_at.desc())
+        stmt = (
+            sa.select(PurchaseOrder)
+            .options(selectinload(PurchaseOrder.items))
+            .where(PurchaseOrder.organization_id == organization_id)
+            .order_by(PurchaseOrder.created_at.desc())
+        )
         result = await self.db.execute(stmt)
         return list(result.scalars().all())
 
@@ -34,17 +55,17 @@ class PurchaseOrderService:
         return result.scalar_one_or_none()
 
     async def get_purchase_order_with_items(self, po_id: int, organization_id: int) -> PurchaseOrder | None:
-        po = await self.get_purchase_order(po_id, organization_id)
-        if not po:
-            return None
-        items_stmt = sa.select(PurchaseOrderItem).where(PurchaseOrderItem.purchase_order_id == po_id)
-        items_result = await self.db.execute(items_stmt)
-        po.items = list(items_result.scalars().all())
-        return po
+        stmt = (
+            sa.select(PurchaseOrder)
+            .options(selectinload(PurchaseOrder.items))
+            .where(PurchaseOrder.id == po_id, PurchaseOrder.organization_id == organization_id)
+        )
+        result = await self.db.execute(stmt)
+        return result.scalar_one_or_none()
 
     async def create_purchase_order(self, organization_id: int, order_number: str, items: list[dict], **data) -> PurchaseOrder:
         from app.product.models import Product
-        
+
         resolved_items = []
         for item in items:
             pid = item.get("product_id")
@@ -78,6 +99,7 @@ class PurchaseOrderService:
         po = await self.repo.create(
             organization_id=organization_id,
             order_number=order_number,
+            status="DRAFT",
             subtotal=subtotal,
             total=subtotal,
             **data,
@@ -87,152 +109,285 @@ class PurchaseOrderService:
                 purchase_order_id=po.id,
                 product_id=item["product_id"],
                 quantity=item["quantity"],
+                received_quantity=0,
                 unit_price=item["unit_price"],
                 subtotal=item["quantity"] * item["unit_price"],
             )
         await self.db.flush()
         items_stmt = sa.select(PurchaseOrderItem).where(PurchaseOrderItem.purchase_order_id == po.id)
         items_result = await self.db.execute(items_stmt)
-        po.items = list(items_result.scalars().all())
+        po_items = list(items_result.scalars().all())
 
-        # Publish RabbitMQ event
-        from app.core.amqp import get_exchange
-        import aio_pika
-        import json
-        from datetime import datetime, timezone
-        
-        exchange = await get_exchange()
-        if exchange:
-            try:
-                from app.supplier.models import Supplier
-                from app.product.models import Product
-
-                supplier_name = None
-                if po.supplier_id:
-                    sup_stmt = sa.select(Supplier).where(
-                        Supplier.id == po.supplier_id,
-                        Supplier.organization_id == organization_id,
-                    )
-                    sup_res = await self.db.execute(sup_stmt)
-                    supplier = sup_res.scalar_one_or_none()
-                    supplier_name = supplier.name if supplier else None
-
-                items_payload = []
-                for item in po.items:
-                    product_name = None
-                    gst_rate = 0.0
-                    prod_stmt = sa.select(Product).where(
-                        Product.id == item.product_id,
-                        Product.organization_id == organization_id,
-                    )
-                    prod_res = await self.db.execute(prod_stmt)
-                    product = prod_res.scalar_one_or_none()
-                    if product:
-                        product_name = product.name
-                        gst_rate = float(product.tax_rate or 0.0)
-                    items_payload.append({
-                        "product_id": item.product_id,
-                        "product_name": product_name or f"Product {item.product_id}",
-                        "quantity": item.quantity,
-                        "unit_price": float(item.unit_price or 0.0),
-                        "gst_rate": gst_rate,
-                    })
-
-                event_data = {
-                    "event": "inventory.po.created",
-                    "organization_id": organization_id,
-                    "po_id": po.id,
-                    "order_number": po.order_number,
-                    "supplier_id": po.supplier_id,
-                    "supplier_name": supplier_name,
-                    "subtotal": float(po.subtotal or 0.0),
-                    "total": float(po.total or 0.0),
-                    "items": items_payload,
-                    "timestamp": datetime.now(timezone.utc).isoformat()
+        publish_event(
+            EVENT_PO_CREATED,
+            organization_id=organization_id,
+            po_id=po.id,
+            order_number=po.order_number,
+            supplier_id=po.supplier_id,
+            subtotal=float(po.subtotal or 0.0),
+            total=float(po.total or 0.0),
+            items=[
+                {
+                    "product_id": item.product_id,
+                    "product_name": f"Product {item.product_id}",
+                    "quantity": item.quantity,
+                    "unit_price": float(item.unit_price or 0.0),
                 }
-                message = aio_pika.Message(
-                    body=json.dumps(event_data).encode(),
-                    delivery_mode=aio_pika.DeliveryMode.PERSISTENT
-                )
-                await exchange.publish(message, routing_key="inventory.po.created")
-            except Exception:
-                pass
+                for item in po_items
+            ],
+        )
 
         return po
 
-    async def update_purchase_order_status(self, po_id: int, organization_id: int, status: str) -> PurchaseOrder | None:
-        po = await self.get_purchase_order(po_id, organization_id)
+    async def update_purchase_order_status(
+        self,
+        po_id: int,
+        organization_id: int,
+        new_status: str,
+        received_items: list[dict] | None = None,
+    ) -> PurchaseOrder | None:
+        po = await self.get_purchase_order_with_items(po_id, organization_id)
         if not po:
             return None
-        
+
+        new_status = new_status.upper()
+        self._validate_transition(po.status, new_status)
+
         old_status = po.status
-        po.status = status
+        po.status = new_status
         now = datetime.now(timezone.utc)
-        if status == "ordered" and not po.ordered_at:
-            po.ordered_at = now
-        elif status == "received" and not po.received_at:
-            po.received_at = now
-            
-            # Automatically update stock levels and log IN movement
-            from app.stock.models import Stock, StockMovement
-            items_stmt = sa.select(PurchaseOrderItem).where(PurchaseOrderItem.purchase_order_id == po_id)
-            items_res = await self.db.execute(items_stmt)
-            po_items = list(items_res.scalars().all())
 
-            for item in po_items:
-                stock_stmt = sa.select(Stock).where(
-                    Stock.organization_id == organization_id,
-                    Stock.product_id == item.product_id,
-                    Stock.warehouse_id == po.warehouse_id
+        if new_status == "SUBMITTED":
+            po.ordered_at = po.ordered_at or now
+            po.submitted_at = po.submitted_at or now
+        elif new_status == "APPROVED":
+            po.approved_at = po.approved_at or now
+        elif new_status == "CANCELLED":
+            po.cancelled_at = po.cancelled_at or now
+        elif new_status in ("PARTIALLY_RECEIVED", "COMPLETED"):
+            await self._receive_items(po, organization_id, received_items or [], full_receipt=(new_status == "COMPLETED"))
+            po.status = "COMPLETED" if self._fully_received(po) else "PARTIALLY_RECEIVED"
+            if po.status == "COMPLETED":
+                po.received_at = po.received_at or now
+
+        await self.db.flush()
+
+        if new_status == "APPROVED":
+            publish_event(
+                EVENT_PO_APPROVED,
+                organization_id=organization_id,
+                po_id=po.id,
+                order_number=po.order_number,
+                supplier_id=po.supplier_id,
+                total=float(po.total or 0.0),
+            )
+        if new_status in ("PARTIALLY_RECEIVED", "COMPLETED"):
+            publish_event(
+                EVENT_PO_RECEIVED,
+                organization_id=organization_id,
+                po_id=po.id,
+                order_number=po.order_number,
+                status=po.status,
+            )
+
+        return po
+
+    async def _receive_items(self, po: PurchaseOrder, organization_id: int, received_items: list[dict], full_receipt: bool) -> None:
+        from app.stock.models import Stock, StockMovement
+
+        items_stmt = sa.select(PurchaseOrderItem).where(PurchaseOrderItem.purchase_order_id == po.id)
+        items_res = await self.db.execute(items_stmt)
+        po_items = list(items_res.scalars().all())
+        if not po_items:
+            raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Purchase order has no line items to receive")
+
+        receipts = {}
+        for r in received_items or []:
+            receipts[r.get("product_id")] = int(r.get("quantity") or 0)
+
+        for item in po_items:
+            if full_receipt:
+                qty_to_receive = item.quantity - item.received_quantity
+            else:
+                qty_to_receive = receipts.get(item.product_id, 0)
+
+            remaining = item.quantity - item.received_quantity
+            if qty_to_receive < 0 or qty_to_receive > remaining:
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail=f"Receipt quantity for product {item.product_id} exceeds remaining {remaining}",
                 )
-                stock_res = await self.db.execute(stock_stmt)
-                stock_rec = stock_res.scalar_one_or_none()
+            if qty_to_receive == 0:
+                continue
 
-                if stock_rec:
-                    stock_rec.quantity += item.quantity
-                else:
-                    stock_rec = Stock(
-                        organization_id=organization_id,
-                        product_id=item.product_id,
-                        warehouse_id=po.warehouse_id,
-                        quantity=item.quantity
-                    )
-                    self.db.add(stock_rec)
+            stock_stmt = sa.select(Stock).where(
+                Stock.organization_id == organization_id,
+                Stock.product_id == item.product_id,
+                Stock.warehouse_id == po.warehouse_id
+            )
+            stock_res = await self.db.execute(stock_stmt)
+            stock_rec = stock_res.scalar_one_or_none()
 
-                # Log stock movement IN
-                movement = StockMovement(
+            if stock_rec:
+                stock_rec.quantity += qty_to_receive
+            else:
+                stock_rec = Stock(
                     organization_id=organization_id,
                     product_id=item.product_id,
                     warehouse_id=po.warehouse_id,
-                    type="in",
-                    quantity=item.quantity,
-                    reference_type="PURCHASE_RECEIPT",
-                    reference_id=po.id,
-                    notes=f"Goods received from Purchase Order {po.order_number}"
+                    quantity=qty_to_receive
                 )
-                self.db.add(movement)
+                self.db.add(stock_rec)
 
-            # Auto-check associated fulfillments
-            from app.fulfillment.models import SalesOrderFulfillment
-            from app.fulfillment.services import FulfillmentService
-            ful_stmt = sa.select(SalesOrderFulfillment).where(
-                SalesOrderFulfillment.purchase_order_id == po_id,
-                SalesOrderFulfillment.organization_id == organization_id
+            item.received_quantity += qty_to_receive
+
+            movement = StockMovement(
+                organization_id=organization_id,
+                product_id=item.product_id,
+                warehouse_id=po.warehouse_id,
+                type="in",
+                quantity=qty_to_receive,
+                reference_type="PURCHASE_RECEIPT",
+                reference_id=po.id,
+                notes=f"Goods received from Purchase Order {po.order_number}"
             )
-            ful_res = await self.db.execute(ful_stmt)
-            fulfillments = list(ful_res.scalars().all())
-            
-            ful_service = FulfillmentService(self.db)
-            for f in fulfillments:
-                await ful_service.check_stock(organization_id, f.id)
+            self.db.add(movement)
 
-        await self.db.flush()
-        return po
+        # P4 gate: products flagged qc_required get a PENDING quality check row.
+        try:
+            from app.quality_check.services import QualityCheckService
+            await QualityCheckService(self.db).create_for_receipt(
+                organization_id, po.id, po_items
+            )
+        except Exception as exc:
+            logger.warning(f"Failed to auto-create quality checks for PO {po.id}: {exc}")
+
+        # Auto-check associated fulfillments so queued/shortage orders can resume.
+        await self._recheck_linked_fulfillments(po, organization_id)
+
+    async def _recheck_linked_fulfillments(self, po: PurchaseOrder, organization_id: int) -> None:
+        from app.fulfillment.services import FulfillmentService
+
+        # Resume every pending fulfillment that consumes a product received on this PO,
+        # not just the one directly linked to the PO.
+        product_ids = [item.product_id for item in (po.items or []) if item.product_id]
+        try:
+            resumed = await FulfillmentService(self.db).resume_pending_fulfillments(
+                organization_id, product_ids=product_ids or None, warehouse_id=po.warehouse_id
+            )
+            for f in resumed:
+                logger.info(f"Auto-reserved fulfillment {f.id} ({f.sales_order_code}) after stock arrived from PO {po.order_number}")
+        except Exception:
+            pass
+
+    async def putaway_items(
+        self,
+        po_id: int,
+        organization_id: int,
+        putaway_items: list[dict],
+    ) -> PurchaseOrder | None:
+        """P5: record physical placement of received goods to a warehouse location.
+
+        Stock is credited at GRN (goods arrive at the receiving dock); putaway
+        tracks the location hand-off and emits `inventory.stock.putaway` so
+        analytics/notifications can follow the goods through the warehouse.
+        """
+        po = await self.get_purchase_order_with_items(po_id, organization_id)
+        if not po:
+            return None
+        if po.status not in ("PARTIALLY_RECEIVED", "COMPLETED"):
+            raise HTTPException(
+                status_code=409,
+                detail="Putaway requires received goods (PARTIALLY_RECEIVED/COMPLETED)",
+            )
+
+        from app.stock.models import StockMovement
+
+        item_map = {item.product_id: item for item in po.items if item.product_id}
+        now = datetime.now(timezone.utc)
+        putaway_log = []
+
+        for req in putaway_items:
+            item = item_map.get(req.get("product_id"))
+            if not item:
+                raise HTTPException(
+                    status_code=404,
+                    detail=f"Product {req.get('product_id')} is not on this purchase order",
+                )
+            qty = int(req.get("quantity") or 0)
+            if qty <= 0:
+                raise HTTPException(status_code=422, detail="Putaway quantity must be positive")
+            outstanding = item.received_quantity - item.putaway_quantity
+            if qty > outstanding:
+                raise HTTPException(
+                    status_code=422,
+                    detail=f"Putaway quantity {qty} exceeds outstanding {outstanding} for item {item.product_id}",
+                )
+
+            item.putaway_quantity += qty
+            item.putaway_at = now
+            if req.get("location"):
+                item.location = req["location"]
+
+            # Distinct movement type (not "in") so the movement log does not
+            # double-count goods already credited at GRN.
+            self.db.add(
+                StockMovement(
+                    organization_id=organization_id,
+                    product_id=item.product_id,
+                    warehouse_id=po.warehouse_id,
+                    type="putaway",
+                    quantity=qty,
+                    reference_type="PUTAWAY",
+                    reference_id=po.id,
+                    notes=f"Put away {qty} to {item.location or 'default'} (PO {po.order_number})",
+                )
+            )
+            putaway_log.append(
+                {
+                    "product_id": item.product_id,
+                    "quantity": qty,
+                    "location": item.location,
+                }
+            )
+
+        await self.db.commit()
+
+        from app.core.events import publish_event, EVENT_STOCK_PUTAWAY
+        publish_event(
+            EVENT_STOCK_PUTAWAY,
+            organization_id=organization_id,
+            po_id=po.id,
+            order_number=po.order_number,
+            items=putaway_log,
+        )
+        return await self.get_purchase_order_with_items(po_id, organization_id)
+
+    def _fully_received(self, po: PurchaseOrder) -> bool:
+        return all(
+            item.received_quantity >= item.quantity
+            for item in getattr(po, "items", [])
+        ) if getattr(po, "items", None) else False
+
+    def _validate_transition(self, old_status: str, new_status: str) -> None:
+        allowed = PO_STATUS_FLOW.get(old_status, set())
+        if new_status not in PO_STATUS_FLOW:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=f"Invalid PO status '{new_status}'. Allowed: {', '.join(PO_STATUS_FLOW.keys())}",
+            )
+        if new_status != old_status and new_status not in allowed:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=f"Invalid PO status transition '{old_status}' → '{new_status}'",
+            )
 
     async def delete_purchase_order(self, po_id: int, organization_id: int) -> bool:
         po = await self.get_purchase_order(po_id, organization_id)
         if not po:
             return False
+        if po.status in ("COMPLETED", "CANCELLED"):
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=f"Cannot delete a {po.status} purchase order")
         del_stmt = sa.delete(PurchaseOrderItem).where(PurchaseOrderItem.purchase_order_id == po_id)
         await self.db.execute(del_stmt)
         return await self.repo.delete(po_id)

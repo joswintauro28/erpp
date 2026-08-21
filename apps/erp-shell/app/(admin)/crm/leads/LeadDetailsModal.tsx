@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X, Target, TrendingUp, Calendar, AlertCircle, Sparkles } from "lucide-react";
+import { X, Target, TrendingUp, Calendar, AlertCircle, Sparkles, BadgeCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { api } from "@/services/api";
+import { toastSuccess, toastError, errorMessage } from "@/utils/toast";
 
 const formatCurrency = (value: any) => {
   const n = Number(value);
@@ -16,14 +17,16 @@ interface LeadDetailsModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
+  onViewAIInsights?: (companyName: string) => void;
 }
 
-export default function LeadDetailsModal({ lead, isOpen, onClose, onSuccess }: LeadDetailsModalProps) {
+export default function LeadDetailsModal({ lead, isOpen, onClose, onSuccess, onViewAIInsights }: LeadDetailsModalProps) {
   const [isConverting, setIsConverting] = useState(false);
   const [probability, setProbability] = useState("60%");
   const [closeDate, setCloseDate] = useState("");
-  const [stage, setStage] = useState("RFQ / Inquiry");
+  const [stage, setStage] = useState("Discovery");
   const [submitting, setSubmitting] = useState(false);
+  const [qualifying, setQualifying] = useState(false);
   const [error, setError] = useState("");
 
   const [pinnedDetail, setPinnedDetail] = useState<any>(null);
@@ -33,7 +36,7 @@ export default function LeadDetailsModal({ lead, isOpen, onClose, onSuccess }: L
   const loadAIInsights = async () => {
     setLoadingInsights(true);
     try {
-      const data = await api.get<any>(`/crm/lead-discovery/pinned/${encodeURIComponent(lead.company)}`);
+      const data = await api.get<any>(`/lead-discovery/pinned/${encodeURIComponent(lead.company)}`);
       setPinnedDetail(data);
     } catch {
       /* silent */
@@ -66,7 +69,7 @@ export default function LeadDetailsModal({ lead, isOpen, onClose, onSuccess }: L
     setSubmitting(true);
     setError("");
     try {
-      await api.post("/crm/opportunities", {
+      await api.post("/opportunities", {
         name: lead.name,
         account: lead.company,
         value: lead.est_value,
@@ -74,9 +77,10 @@ export default function LeadDetailsModal({ lead, isOpen, onClose, onSuccess }: L
         close_date: closeDate,
         stage,
         owner: lead.owner,
+        discovery_notes: `Converted from lead ${lead.id_str}.`,
       });
 
-      await api.put(`/crm/leads/${lead.id_str}`, { status: "Converted" });
+      await api.put(`/leads/${lead.id_str}`, { status: "Converted" });
 
       if (onSuccess) onSuccess();
       onClose();
@@ -84,6 +88,21 @@ export default function LeadDetailsModal({ lead, isOpen, onClose, onSuccess }: L
       setError(err?.message || "Failed to convert lead to opportunity.");
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleQualify = async () => {
+    setQualifying(true);
+    setError("");
+    try {
+      const res = await api.post<any>(`/leads/${lead.id_str}/qualify`, {});
+      toastSuccess("Lead qualified (MQL → SQL)", res.message || `${res.opportunity?.id_str} created`);
+      if (onSuccess) onSuccess();
+      onClose();
+    } catch (err: any) {
+      setError(errorMessage(err, "Failed to qualify lead."));
+    } finally {
+      setQualifying(false);
     }
   };
 
@@ -202,13 +221,37 @@ export default function LeadDetailsModal({ lead, isOpen, onClose, onSuccess }: L
         </div>
 
         {error && (
-          <div className="flex items-center gap-2 p-3 mb-4 rounded-md bg-red-100 text-red-700 text-sm">
+          <div className="flex items-center gap-2 p-3 mb-4 rounded-md bg-[var(--shell-danger-surface)] text-[var(--shell-danger)] text-sm">
             <AlertCircle size={16} /> {error}
           </div>
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-[250px_1fr] gap-6 mb-6">
           <div className="flex flex-col gap-5 border-b md:border-b-0 md:border-r border-[var(--shell-border)] pb-6 md:pb-0 md:pr-6">
+            <div className="rounded-lg border border-[var(--shell-border)] bg-[var(--shell-bg)] p-3">
+              <div className="mb-1.5 flex items-center justify-between">
+                <div className="text-[11px] font-semibold uppercase text-[var(--shell-muted)]">Lead Score</div>
+                {lead.is_mql && (
+                  <span className="inline-flex items-center gap-0.5 rounded-full bg-[var(--shell-warning-surface)] px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-[var(--shell-warning)] border border-[var(--shell-warning)]/30">
+                    <BadgeCheck className="h-2.5 w-2.5" /> MQL
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-lg font-bold text-[var(--shell-foreground)] tabular-nums">{lead.score ?? 0}</span>
+                <span className="text-[10px] font-semibold uppercase text-[var(--shell-muted)]">/ 100</span>
+                <div className="flex-1 h-2 rounded-full bg-[var(--shell-border)] overflow-hidden">
+                  <div
+                    className={`h-full rounded-full ${(lead.score ?? 0) >= 70 ? "bg-[var(--shell-warning-surface)]0" : (lead.score ?? 0) >= 40 ? "bg-[var(--shell-info-surface)]0" : "bg-slate-400"}`}
+                    style={{ width: `${lead.score ?? 0}%` }}
+                  />
+                </div>
+              </div>
+              <div className="mt-1.5 flex items-center gap-1.5">
+                <span className={`rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider ${lead.tier === "Hot" ? "bg-[var(--shell-danger-surface)] text-[var(--shell-danger)]" : lead.tier === "Warm" ? "bg-[var(--shell-info-surface)] text-[var(--shell-info)]" : "bg-muted text-muted-foreground"}`}>{lead.tier}</span>
+                <span className="text-[10px] text-[var(--shell-muted)]">nurture: {lead.nurture_status || "New"}</span>
+              </div>
+            </div>
             {[
               { label: "Lead Name", value: lead.name },
               { label: "Company", value: lead.company },
@@ -290,7 +333,7 @@ export default function LeadDetailsModal({ lead, isOpen, onClose, onSuccess }: L
                       <div className="text-[10px] font-semibold uppercase text-[var(--shell-muted)] mb-1">Detected Technologies</div>
                       <div className="flex flex-wrap gap-1 mt-1">
                         {pinnedDetail.detected_technologies?.map((tech: string, idx: number) => (
-                          <span key={idx} className="text-[10px] px-2 py-0.5 rounded bg-[var(--shell-surface-alt)] text-[var(--shell-muted)] border border-[var(--shell-border)]">{tech}</span>
+                          <span key={idx} className="text-[10px] px-2 py-0.5 rounded bg-[var(--shell-info-surface)] text-[var(--shell-info)] border border-[var(--shell-info)]/30">{tech}</span>
                         ))}
                       </div>
                     </div>
@@ -355,7 +398,18 @@ export default function LeadDetailsModal({ lead, isOpen, onClose, onSuccess }: L
               <Sparkles size={14} className="mr-1" /> View AI Insights
             </Button>
           )}
-          {!isConverting && lead.status !== "Converted" && (
+          {lead.is_mql && lead.nurture_status !== "SQL" && lead.status !== "Converted" && !isConverting && (
+            <Button
+              size="sm"
+              disabled={qualifying}
+              onClick={handleQualify}
+              className="bg-amber-600 hover:bg-amber-700"
+            >
+              <BadgeCheck size={14} className="mr-1" />
+              {qualifying ? "Qualifying..." : "Qualify to SQL (1-click)"}
+            </Button>
+          )}
+          {!isConverting && lead.status !== "Converted" && !lead.is_mql && (
             <Button size="sm" onClick={() => setIsConverting(true)}>Convert to Opportunity</Button>
           )}
           <Button variant="outline" size="sm" onClick={onClose}>Close</Button>

@@ -11,8 +11,9 @@ This package provides the central styling directives, Tailwind configuration var
 - **Custom Animations:** Includes keyframe configurations for `kpi-enter` and `step-in` UI entries.
 
 ## 2. Exports & Components
-- **Utility:** Exposes the `cn` utility (combines `clsx` and `tailwind-merge`).
-- **Primitives (11 total):** `badge`, `button`, `card`, `dialog`, `input`, `label`, `progress`, `select`, `spinner`, `table`, and `textarea`.
+- **Utility:** Exposes the `cn` utility (combines `clsx` and `tailwind-merge`), plus `statusVariant(domain, status)` and toast helpers.
+- **UI Primitives (19):** `badge`, `button`, `card`, `dialog`, `input`, `label`, `progress`, `select`, `spinner`, `table`, `textarea`, `notification-provider`, `notification-bell`, `skeleton`, `tabs`, `toaster`, `confirm-dialog`, `tooltip`, `dropdown-menu`, `switch`, `checkbox`, `avatar`, `separator`, `pagination`, `breadcrumb`.
+- **Shared Composites (9):** `multi-step-dialog`, `empty-state`, `search-input`, `loading-spinner`, `page-header`, `kpi-card`, `section-heading`, `theme-provider`, `theme-toggle`.
 
 ## 3. Package Integration
 - **Package Name:** `@datavex/ui-theme`

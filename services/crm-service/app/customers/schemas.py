@@ -7,6 +7,7 @@ class CustomerBase(BaseModel):
     industry: Optional[str] = None
     tier: Optional[str] = None
     arr: Optional[int] = 0
+    credit_limit: Optional[float] = None
     status: Optional[str] = None
     owner: Optional[str] = None
     updated_at: Optional[str] = "Just now"

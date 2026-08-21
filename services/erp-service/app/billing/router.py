@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Response
 
 from app.core.deps import get_current_token_payload
 from app.integrations.billing_client import (
@@ -11,8 +11,9 @@ from app.integrations.billing_client import (
     get_payments, create_payment, refund_payment, get_payments_metrics,
     get_dashboard_billing,
     get_accounts, get_expenses, create_account, update_account, create_expense, delete_expense, create_expense_from_po, get_ledger, get_reports, get_aging, get_dunning,
-    import_bank_csv, get_bank_transactions, match_bank_transaction, get_bank_reports,
-    get_periods, close_period, reopen_period, get_periods_status,
+    get_aging_summary, get_aging_customers, get_aging_invoices, get_aging_reconciliation, get_aging_invoice, get_aging_export,
+    import_bank_csv, import_bank_file, get_bank_transactions, match_bank_transaction, reconcile_bank_transaction, unmatch_bank_transaction, get_bank_reports, get_bank_variance_report, get_bank_audit_logs, get_bank_config, update_bank_config,
+    get_periods, close_period, reopen_period_request, get_periods_status,
     get_cogs_summary, get_cogs_invoices, get_cogs_products, get_cogs_ledger, get_cogs_invoice_drilldown, get_cogs_dlq,
 )
 
@@ -392,6 +393,90 @@ async def list_aging(
     return await get_aging(token)
 
 
+@router.get("/aging/summary", response_model=dict)
+async def get_aging_summary_endpoint(
+    as_of_date: str | None = Query(None, alias="asOfDate"),
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await get_aging_summary(token, {"asOfDate": as_of_date} if as_of_date else None)
+
+
+@router.get("/aging/customers", response_model=dict)
+async def get_aging_customers_endpoint(
+    as_of_date: str | None = Query(None, alias="asOfDate"),
+    page: int | None = Query(None),
+    page_size: int | None = Query(None, alias="pageSize"),
+    search: str | None = Query(None),
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    params: dict = {}
+    if as_of_date: params["asOfDate"] = as_of_date
+    if page: params["page"] = str(page)
+    if page_size: params["pageSize"] = str(page_size)
+    if search: params["search"] = search
+    return await get_aging_customers(token, params or None)
+
+
+@router.get("/aging/invoices", response_model=dict)
+async def get_aging_invoices_endpoint(
+    as_of_date: str | None = Query(None, alias="asOfDate"),
+    page: int | None = Query(None),
+    page_size: int | None = Query(None, alias="pageSize"),
+    search: str | None = Query(None),
+    aging_bucket: str | None = Query(None, alias="agingBucket"),
+    validate: bool | None = Query(None),
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    params: dict = {}
+    if as_of_date: params["asOfDate"] = as_of_date
+    if page: params["page"] = str(page)
+    if page_size: params["pageSize"] = str(page_size)
+    if search: params["search"] = search
+    if aging_bucket: params["agingBucket"] = aging_bucket
+    if validate is not None: params["validate"] = "true" if validate else "false"
+    return await get_aging_invoices(token, params or None)
+
+
+@router.get("/aging/reconciliation", response_model=dict)
+async def get_aging_reconciliation_endpoint(
+    as_of_date: str | None = Query(None, alias="asOfDate"),
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await get_aging_reconciliation(token, {"asOfDate": as_of_date} if as_of_date else None)
+
+
+@router.get("/aging/invoice/{invoice_id}", response_model=dict)
+async def get_aging_invoice_endpoint(
+    invoice_id: int,
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await get_aging_invoice(token, invoice_id)
+
+
+@router.get("/aging/export")
+async def export_aging_report(
+    view: str | None = Query(None),
+    as_of_date: str | None = Query(None, alias="asOfDate"),
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    params: dict = {}
+    if view: params["view"] = view
+    if as_of_date: params["asOfDate"] = as_of_date
+    csv_content = await get_aging_export(token, params or None)
+    filename = f"AR_Aging_{view or 'summary'}_{(as_of_date or 'export')}.csv"
+    return Response(
+        content=csv_content,
+        media_type="text/csv",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
 @router.get("/dunning", response_model=dict)
 async def list_dunning(
     payload: dict = Depends(get_current_token_payload),
@@ -409,6 +494,15 @@ async def import_bank_csv_endpoint(
 ):
     token = payload.get("_raw_token", "")
     return await import_bank_csv(token, body)
+
+
+@router.post("/bank-reconciliation/import-file", response_model=dict, status_code=201)
+async def import_bank_file_endpoint(
+    body: dict,
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await import_bank_file(token, body)
 
 
 @router.get("/bank-reconciliation/transactions", response_model=dict)
@@ -429,12 +523,63 @@ async def match_bank_transaction_endpoint(
     return await match_bank_transaction(token, body)
 
 
+@router.post("/bank-reconciliation/reconcile-manual", response_model=dict)
+async def reconcile_bank_transaction_endpoint(
+    body: dict,
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await reconcile_bank_transaction(token, body)
+
+
+@router.post("/bank-reconciliation/unmatch", response_model=dict)
+async def unmatch_bank_transaction_endpoint(
+    body: dict,
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await unmatch_bank_transaction(token, body.get("transaction_id", 0))
+
+
 @router.get("/bank-reconciliation/reports", response_model=dict)
 async def list_bank_reports(
     payload: dict = Depends(get_current_token_payload),
 ):
     token = payload.get("_raw_token", "")
     return await get_bank_reports(token)
+
+
+@router.get("/bank-reconciliation/variance-report", response_model=dict)
+async def list_bank_variance_report(
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await get_bank_variance_report(token)
+
+
+@router.get("/bank-reconciliation/audit-logs", response_model=dict)
+async def list_bank_audit_logs(
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await get_bank_audit_logs(token)
+
+
+@router.get("/bank-reconciliation/config", response_model=dict)
+async def get_bank_config_endpoint(
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await get_bank_config(token)
+
+
+@router.post("/bank-reconciliation/config", response_model=dict)
+async def update_bank_config_endpoint(
+    body: dict,
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await update_bank_config(token, body)
 
 
 # ─── Month-End Close / Fiscal Periods ───────────────────────
@@ -456,13 +601,14 @@ async def close_period_endpoint(
     return await close_period(token, period_id)
 
 
-@router.post("/periods/{period_id}/reopen", response_model=dict)
+@router.post("/periods/{period_id}/reopen-request", response_model=dict)
 async def reopen_period_endpoint(
     period_id: int,
+    body: dict,
     payload: dict = Depends(get_current_token_payload),
 ):
     token = payload.get("_raw_token", "")
-    return await reopen_period(token, period_id)
+    return await reopen_period_request(token, period_id, body.get("reason", "Reopening period"))
 
 
 @router.get("/periods/status", response_model=dict)

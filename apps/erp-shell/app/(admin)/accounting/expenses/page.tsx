@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { Search, Plus, Receipt, Download, Trash2, AlertTriangle, Loader2, Wallet, Building2, CalendarDays } from "lucide-react";
+import { toastInfo } from "@/utils/toast";
 import { api } from "@/services/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
@@ -234,7 +235,7 @@ export default function Expenses() {
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center justify-end gap-1">
-                      <Button variant="ghost" size="icon-sm" title="Download receipt" onClick={() => alert("Receipt download not yet implemented")}>
+                      <Button variant="ghost" size="icon-sm" title="Download receipt" onClick={() => toastInfo("Receipt download not yet implemented")}>
                         <Download className="h-3 w-3" />
                       </Button>
                       <Button variant="ghost" size="icon-sm" onClick={() => handleDelete(e.id)} disabled={deleting === e.id}>

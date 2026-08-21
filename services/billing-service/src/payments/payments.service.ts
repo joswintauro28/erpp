@@ -28,6 +28,12 @@ export class PaymentsService {
     };
   }
 
+  private paymentNumber(p: { id: number; paymentDate?: Date | null; createdAt?: Date | null }): string {
+    const d = p.paymentDate ?? p.createdAt ?? new Date();
+    const month = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, "0")}`;
+    return `PAY-${month}-${String(p.id).padStart(4, "0")}`;
+  }
+
   async findAll(organizationId: number) {
     const payments = await this.prisma.payment.findMany({
       where: { organizationId },
@@ -44,7 +50,7 @@ export class PaymentsService {
 
     return payments.map((p) => ({
       id: p.id,
-      paymentId: `PAY-${String(p.id).padStart(4, "0")}`,
+      paymentId: this.paymentNumber(p),
       invoiceId: p.invoiceId,
       invoiceNumber: p.invoice?.invoiceNumber ?? (p.invoiceId ? `INV-${p.invoiceId}` : "—"),
       clientName: p.invoice?.clientName ?? (p.invoiceId ? "Unknown Client" : "—"),
@@ -73,7 +79,7 @@ export class PaymentsService {
 
     return payments.map((p) => ({
       id: p.id,
-      paymentId: `PAY-${String(p.id).padStart(4, "0")}`,
+      paymentId: this.paymentNumber(p),
       invoiceId: p.invoiceId,
       invoiceNumber: p.invoice?.invoiceNumber ?? (p.invoiceId ? `INV-${p.invoiceId}` : "—"),
       clientName: p.invoice?.clientName ?? (p.invoiceId ? "Unknown Client" : "—"),
@@ -164,6 +170,7 @@ export class PaymentsService {
             clientName: invoice.clientName ?? "Unknown",
             paymentId: id,
             amount: Number(payment.amount),
+            salesOrderCode: invoice.salesOrderCode ?? undefined,
             timestamp: new Date(),
           });
         }

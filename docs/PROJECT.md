@@ -70,14 +70,13 @@ graph TD
     %% ==========================================
     %% CENTRAL EVENT BUS (The Nervous System)
     %% ==========================================
-    Kafka((Central Event Bus\nKafka / RabbitMQ)):::eventbus
+    RabbitMQ((Central Event Bus\nRabbitMQ)):::eventbus
 
     %% ==========================================
     %% DOMAIN 1: CRM & SALES
     %% ==========================================
     subgraph CRM ["1. CRM & Order Management (Domain: Sales)"]
-        RouteRequest --> M1(Marketing Campaign)
-        M1 --> M2(Lead Capture)
+        RouteRequest --> M2(Lead Capture)
         M2 --> M3(Lead Scoring & Nurture)
         M3 --> M4{MQL Criteria Met?}
         M4 -- No --> M3
@@ -110,13 +109,13 @@ graph TD
     end
 
     %% Publish SO Created Event
-    O4 ===> |"Publish: Order.Approved"| Kafka
+    O4 ===> |"Publish: Order.Approved"| RabbitMQ
 
     %% ==========================================
     %% DOMAIN 2: INVENTORY & SCM
     %% ==========================================
     subgraph INV ["2. Supply Chain & Fulfillment (Domain: Operations)"]
-        Kafka ===> |"Subscribe: Order.Approved"| I1(Available to Promise - ATP Check)
+        RabbitMQ ===> |"Subscribe: Order.Approved"| I1(Available to Promise - ATP Check)
         
         I1 --> I2{In Stock?}
         
@@ -157,15 +156,15 @@ graph TD
     end
 
     %% Publish Dispatch & PO Events
-    I10 ===> |"Publish: Shipment.Dispatched"| Kafka
-    P2 ===> |"Publish: PurchaseOrder.Created"| Kafka
+    I10 ===> |"Publish: Shipment.Dispatched"| RabbitMQ
+    P2 ===> |"Publish: PurchaseOrder.Created"| RabbitMQ
 
     %% ==========================================
     %% DOMAIN 3: ACCOUNTS & BILLING
     %% ==========================================
     subgraph ACC ["3. Accounts, Billing & GL (Domain: Finance)"]
-        Kafka ===> |"Subscribe: Shipment.Dispatched"| A1(Auto-Generate Sales Invoice)
-        Kafka ===> |"Subscribe: PurchaseOrder.Created"| AP1(Create Accounts Payable - AP)
+        RabbitMQ ===> |"Subscribe: Shipment.Dispatched"| A1(Auto-Generate Sales Invoice)
+        RabbitMQ ===> |"Subscribe: PurchaseOrder.Created"| AP1(Create Accounts Payable - AP)
         
         %% Billing Flow
         A1 --> A2(Apply Taxes & Discounts)
@@ -180,7 +179,7 @@ graph TD
         
         %% General Ledger & Accounting Flow
         A3 -. "Trigger" .-> F2(Recognize Revenue)
-        Kafka ===> |"Subscribe: Shipment.Dispatched"| F1(Recognize COGS Expense)
+        RabbitMQ ===> |"Subscribe: Shipment.Dispatched"| F1(Recognize COGS Expense)
         A8 -. "Trigger" .-> F3(Decrease AR, Increase Cash)
         
         F1 & F2 & F3 --> F4(Bank Reconciliation)
@@ -199,7 +198,7 @@ graph TD
     %% Apply Classes
     class Client client;
     class APIGateway,AuthCheck,RouteRequest iam;
-    class M1,M2,M3,S1,S2,S3,S4,S6,S7,S9,O1 marketing;
+    class M2,M3,S1,S2,S3,S4,S6,S7,S9,O1 marketing;
     class O1,O3,O4 sales;
     class I1,I3,P1,P2,P3,P4,P5,M1_Prod,M2_Prod,M3_Prod,M4_Prod,I5,I6,I7,I8,I9,I10 inventory;
     class A1,AP1,A2,A3,A4,A6,A7,A8,F1,F2,F3,F4,F5,F6 finance;
@@ -229,13 +228,13 @@ graph TD
 
     %% ==========================================
 
-    %% PHASE 1: MARKETING & CRM (Acquisition)
+    %% PHASE 1: CRM (Acquisition)
 
     %% ==========================================
 
-    subgraph CRM ["1. Marketing & CRM (Lead to Opportunity)"]
+    subgraph CRM ["1. CRM (Lead to Opportunity)"]
 
-        M1([Marketing Campaign]) --> M2(Lead Capture)
+        M2(Lead Capture)
 
         M2 --> M3(Lead Scoring & Nurture)
 
@@ -433,7 +432,7 @@ graph TD
 
     %% Apply Classes
 
-    class M1,M2,M3,S1,S2,S3,S4,S6,S7,S9,O1 marketing;
+    class M2,M3,S1,S2,S3,S4,S6,S7,S9,O1 marketing;
 
     class O1,O3,O4 sales;
 
@@ -473,7 +472,7 @@ Each core domain folder in your project owns its own data store completely:
 You will need **5 separate logical databases** (which can be hosted on a single server engine locally, but split apart in production):
 
 1. `erp_iam` (Core IAM): Stores global users, password hashes, organizations, tenants, master roles, and global system metadata (PostgreSQL via Prisma).
-2. `erp_crm`: Stores leads, clients, sales pipelines, and customer interactions (PostgreSQL via SQLModel).
+2. `erp_crm`: Stores leads, clients, sales pipelines, opportunities, and sales orders (PostgreSQL via SQLAlchemy 2.0).
 3. `erp_billing`: Stores invoices, quotations, payments, receipts, and the general accounting ledger (PostgreSQL via Prisma).
 4. `erp_inventory`: Stores product catalogs, warehouse locations, stock levels, batches, and serial tracking numbers (PostgreSQL via SQLModel).
 5. `erp_hrms`: Stores employee files, payroll history, attendance logs, and internal department structures (PostgreSQL via Prisma).
@@ -559,7 +558,7 @@ The central gateway dynamically stitches these independent responses together in
 
 If your Super Admin dashboard needs to show complex historical data (like a chart of *Sales Closed vs. Inventory Used* over the last 12 months), making multiple live API calls will slow down your application.
 
-1. You introduce a lightweight event-streaming layer (like **RabbitMQ** or **Kafka**) or a simple webhook network.
+1. You introduce a lightweight event-streaming layer (like **RabbitMQ** or **RabbitMQ**) or a simple webhook network.
 2. Every time a transaction occurs (e.g., the Billing service generates an invoice, or the CRM team wins a lead), the service publishes a lightweight message packet like `{"event": "INVOICE_CREATED", "amount": 5000}` to the message pipeline.
 3. A small background utility process reads these messages and syncs them down to a dedicated read-only analytical database or data store owned exclusively by the Super Admin workspace. This gives your executives instant data visualization speeds without putting any read loads on your production operational databases.
 

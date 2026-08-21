@@ -8,12 +8,14 @@ import { QuotationStatus } from "@prisma/client";
 import { CreateQuotationDto } from "./dto/create-quotation.dto";
 import { EventBusService } from "../event-bus/event-bus.service";
 import { Events } from "../event-bus/event-types";
+import { DocumentNumberService } from "../common/document-number.service";
 
 @Injectable()
 export class QuotationsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly eventBus: EventBusService,
+    private readonly documentNumbers: DocumentNumberService,
   ) {}
 
   private flatten(q: any) {
@@ -57,17 +59,22 @@ export class QuotationsService {
   }
 
   async create(organizationId: number, dto: CreateQuotationDto) {
-    const total = dto.items.reduce(
+    const subtotal = dto.items.reduce(
       (sum, item) => sum + Number(item.quantity) * Number(item.unitPrice),
       0,
     );
+    const discountAmount =
+      dto.discountType === "percent"
+        ? subtotal * (Number(dto.discount ?? 0) / 100)
+        : Number(dto.discount ?? 0);
+    const total = Math.max(0, subtotal - discountAmount);
 
     const quotation = await this.prisma.quotation.create({
       data: {
         organizationId,
         clientId: dto.clientId,
         clientName: dto.clientName,
-        quoteNumber: dto.quotationNumber ?? `Q-${Date.now()}`,
+        quoteNumber: dto.quotationNumber ?? (await this.documentNumbers.nextQuotation(organizationId)),
         issueDate: dto.quotationDate ? new Date(dto.quotationDate) : undefined,
         validUntil: dto.validUntil ? new Date(dto.validUntil) : undefined,
         notes: dto.notes,
@@ -108,10 +115,15 @@ export class QuotationsService {
 
       if (dto.items && dto.items.length > 0) {
         await tx.quotationItem.deleteMany({ where: { quotationId: id } });
-        const total = dto.items.reduce(
+        const subtotal = dto.items.reduce(
           (sum, item) => sum + Number(item.quantity) * Number(item.unitPrice),
           0,
         );
+        const discountAmount =
+          dto.discountType === "percent"
+            ? subtotal * (Number(dto.discount ?? 0) / 100)
+            : Number(dto.discount ?? 0);
+        const total = Math.max(0, subtotal - discountAmount);
         const created = await tx.quotation.update({
           where: { id },
           data: {
@@ -180,7 +192,7 @@ export class QuotationsService {
           subtotal: quotation.total,
           balanceDue: quotation.total,
           notes: quotation.notes,
-          invoiceNumber: `INV-${Date.now()}`,
+          invoiceNumber: await this.documentNumbers.nextInvoice(organizationId),
           items: {
             create: [
               {

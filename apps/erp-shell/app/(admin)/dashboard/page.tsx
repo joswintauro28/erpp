@@ -17,6 +17,9 @@ import { Button } from "@/components/ui/button";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { api } from "@/services/api";
 import type { DashboardData } from "@/types/dashboard";
+import { statusVariant } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
+import { PageHeader, KpiCard, SectionHeading } from "@datavex/ui-theme";
 import DashboardLoading from "./loading";
 import PipelineChart from "./PipelineChart";
 import Recommendations from "./Recommendations";
@@ -53,45 +56,13 @@ const tooltipStyle = {
 
 const f = (v: number) => `₹${(v / 100000).toFixed(1)}L`;
 
-const statusVariant = (status: string) => {
-  const s = status.toLowerCase();
-  if (s === "paid") return "default" as const;
-  if (s === "pending" || s === "sent") return "secondary" as const;
-  if (s === "overdue") return "destructive" as const;
-  return "outline" as const;
-};
-
-function KpiCard({ label, value, subtitle, icon: Icon, trend, color, index }: {
-  label: string; value: string; subtitle?: string; icon: typeof Wallet; trend?: { dir: "up" | "down"; pct: string }; color: string; index: number;
-}) {
-  return (
-    <div
-      className="animate-kpi flex flex-col gap-1.5 rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface)] p-5 transition-all duration-200 hover:-translate-y-1 hover:shadow-engineered"
-      style={{ animationDelay: `${index * 0.05}s` }}
-    >
-      <div className="flex items-center justify-between">
-        <span className="text-xs font-medium uppercase tracking-[0.08em] text-[var(--shell-muted)]">
-          {label}
-        </span>
-        <div className="flex h-7 w-7 items-center justify-center rounded-md border border-[var(--shell-border)] bg-[var(--shell-bg)]">
-          <Icon className="h-3.5 w-3.5" style={{ color }} />
-        </div>
-      </div>
-      <span className="font-heading text-2xl font-semibold tracking-tight text-[var(--shell-foreground)]">
-        {value}
-      </span>
-      <div className="flex items-center gap-2">
-        {trend && (
-          <span className={`flex items-center gap-0.5 text-xs font-medium ${trend.dir === "up" ? "text-[var(--shell-success)]" : "text-[var(--shell-danger)]"}`}>
-            {trend.dir === "up" ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />}
-            {trend.pct}
-          </span>
-        )}
-        {subtitle && <span className="text-xs text-[var(--shell-muted)]">{subtitle}</span>}
-      </div>
-    </div>
-  );
+function getGreeting(): string {
+  const h = new Date().getHours();
+  if (h < 12) return "Good morning";
+  if (h < 17) return "Good afternoon";
+  return "Good evening";
 }
+
 
 function MiniStat({ icon: Icon, label, value, color }: { icon: typeof Package; label: string; value: string; color: string }) {
   return (
@@ -109,6 +80,7 @@ function MiniStat({ icon: Icon, label, value, color }: { icon: typeof Package; l
 
 export default function Dashboard() {
   const router = useRouter();
+  const { user } = useAuth();
   const [data, setData] = useState<DashboardData>({
     stats: null,
     revenueTrend: [],
@@ -188,6 +160,23 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-10 lg:space-y-12">
+      {/* Welcome Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[var(--shell-border)] pb-5">
+        <div className="flex flex-col gap-1">
+          <h1 className="font-heading text-2xl font-semibold tracking-tight text-[var(--shell-foreground)]">
+            {getGreeting()}, {user?.full_name || user?.email || "Executive"}
+          </h1>
+          <p className="text-sm text-[var(--shell-muted)]">
+            Here&apos;s a consolidated summary of your enterprise revenue, sales pipeline, and operations.
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Badge variant="outline" className="px-3 py-1 text-xs border-[var(--shell-brand)]/40 text-[var(--shell-brand)] bg-[var(--shell-brand)]/5 font-medium">
+            Executive Control Shell
+          </Badge>
+        </div>
+      </div>
+
       {/* Alert Banner */}
       {(hasAlerts || hasRecommendations) && (
         <div className="flex flex-wrap items-center gap-3 rounded-xl border border-[var(--shell-accent)]/20 bg-gradient-to-r from-[var(--shell-accent)]/5 to-transparent px-5 py-3.5">
@@ -207,8 +196,8 @@ export default function Dashboard() {
               </Badge>
             )}
             {hasRecommendations && (
-              <Badge variant="secondary" className="text-xs">
-                <Lightbulb className="h-3 w-3 mr-1 inline" />
+              <Badge variant="outline" className="border-[var(--shell-accent)]/40 text-[var(--shell-accent-text)] bg-[var(--shell-accent)]/10 text-xs">
+                <Lightbulb className="h-3 w-3 mr-1 inline text-[var(--shell-accent)]" />
                 {data.recommendations.length} AI insight{data.recommendations.length !== 1 ? "s" : ""}
               </Badge>
             )}
@@ -506,7 +495,7 @@ export default function Dashboard() {
                     <TableCell className="text-sm text-[var(--shell-muted)]">{inv.client_name}</TableCell>
                     <TableCell className="text-right font-mono text-sm font-medium">{f(inv.total)}</TableCell>
                     <TableCell>
-                      <Badge variant={statusVariant(inv.status)} className="capitalize text-xs">
+                      <Badge variant={statusVariant("invoice", inv.status)} className="capitalize text-xs">
                         {inv.status}
                       </Badge>
                     </TableCell>
@@ -690,7 +679,7 @@ export default function Dashboard() {
           <MiniStat icon={Layers} label="Pipeline Value" value={f(data.pipelineValue)} color="var(--chart-5)" />
           <MiniStat icon={Target} label="Open Opportunities" value={String(s?.open_opportunities ?? 0)} color="var(--chart-4)" />
           <MiniStat icon={Users} label="Total Customers" value={String(s?.total_customers ?? 0)} color="var(--chart-2)" />
-          <MiniStat icon={AlertTriangle} label="Open Complaints" value={String(s?.open_complaints ?? 0)} color={s?.open_complaints && s.open_complaints > 0 ? "var(--shell-warning)" : "var(--chart-2)"} />
+          <MiniStat icon={UserPlus} label="Total Leads" value={String(s?.total_leads ?? 0)} color={s?.total_leads && s.total_leads > 0 ? "var(--shell-info)" : "var(--chart-2)"} />
         </div>
       </section>
     </div>

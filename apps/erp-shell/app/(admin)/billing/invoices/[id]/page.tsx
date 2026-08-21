@@ -20,18 +20,11 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
 import { MultiStepDialog } from "@/components/multi-step-dialog";
-import { money } from "@/utils/format";
+import { money, statusVariant } from "@/utils/format";
 import { api } from "@/services/api";
 import type { ApiInvoice, InvoiceDetailView, InvoiceItemView, ApiPayment } from "@/types/billing";
 import InvoiceDetailLoading from "./loading";
 
-const statusVariant = (s: string) => {
-  if (s === "paid") return "default" as const;
-  if (s === "pending") return "secondary" as const;
-  if (s === "overdue" || s === "cancelled") return "destructive" as const;
-  if (s === "partially_paid") return "outline" as const;
-  return "outline" as const;
-};
 
 export default function InvoiceDetail() {
   const params = useParams();
@@ -194,7 +187,7 @@ export default function InvoiceDetail() {
           <div>
             <div className="flex items-center gap-3">
               <h1 className="font-heading text-xl font-semibold tracking-tight text-[var(--shell-foreground)]">{invoice.invoice_number}</h1>
-              <Badge variant={statusVariant(invoice.status)} className="capitalize">{invoice.status.replace("_", " ")}</Badge>
+              <Badge variant={statusVariant("invoice", invoice.status)} className="capitalize">{invoice.status.replace("_", " ")}</Badge>
             </div>
             <p className="text-sm text-[var(--shell-muted)]">{invoice.client_name} &middot; Due {invoice.due_date}</p>
           </div>

@@ -26,7 +26,9 @@ class Settings(BaseSettings):
     # App
     PORT: int = 8000
     FRONTEND_URL: str = "http://localhost:3000"
-    CORS_ORIGINS: str = "http://localhost:3000,http://localhost:3002"
+    CORS_ORIGINS: str = (
+        "http://localhost:3000,http://localhost:3001,http://localhost:3002,http://localhost:3004"
+    )
     ENV: str = "development"
 
 

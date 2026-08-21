@@ -22,7 +22,11 @@ This directory contains the CRM Workstation / Sales Hub of the DATAVEX ERP syste
 - `/api/auth/*` → core-iam (`http://localhost:8002`)
 - All other `/api/*` → crm-service (`http://localhost:8001`)
 
-## 4. Development Commands
+## 4. Document ID Contract
+- IDs are generated server-side by crm-service (`[PREFIX]-[YYYYMM]-[NNNN]`, customers `CUST-NNNN`). **Never fabricate IDs client-side** (no `Date.now()...slice(-6)` patterns).
+- Omit `id_str`, `so_no`, `quote_no` when creating records so the backend assigns them; `so_no`/`quote_no` may only be sent as user-entered canonical values (`SO-202608-0001` style).
+
+## 5. Development Commands
 Run the development server for CRM UI:
 ```bash
 bun nx serve crm-ui

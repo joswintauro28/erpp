@@ -1,54 +1,40 @@
-export default function LeadDiscoveryLoading() {
-  return (
-    <div className="relative space-y-6">
-      {/* Brand progress sweep bar */}
-      <span className="absolute -top-6 left-0 h-0.5 w-1/3 rounded-full bg-[var(--shell-brand)] shimmer-glow" />
+import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent } from "@/components/ui/card";
 
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="space-y-2">
-          <div className="h-6 w-28 rounded-md shimmer-glow" />
-          <div className="h-4 w-64 rounded shimmer-glow" />
+export default function CrmLeadDiscoveryLoading() {
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-4">
+        <div className="space-y-1.5">
+          <Skeleton className="h-7 w-48" />
+          <Skeleton className="h-4 w-96" />
         </div>
       </div>
 
-      <div className="space-y-6">
-        <div className="h-4 w-32 rounded shimmer-glow" />
-        <div className="rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface)] p-6 space-y-4">
-          <div className="flex gap-3">
-            <div className="h-10 flex-1 rounded-md border border-[var(--shell-border)] bg-[var(--shell-surface)] shimmer-glow" />
-            <div className="h-10 w-28 rounded-md shimmer-glow" />
-          </div>
-        </div>
+      <div className="flex gap-2">
+        <Skeleton className="h-10 flex-1" />
+        <Skeleton className="h-10 w-28" />
+      </div>
 
-        <div className="space-y-4">
-          <div className="flex justify-between items-center">
-            <div className="h-4.5 w-36 rounded shimmer-glow" />
-            <div className="h-9 w-40 rounded-lg shimmer-glow" />
-          </div>
-          <div className="grid gap-4">
-            {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface)] p-5 space-y-4">
-                <div className="flex justify-between items-start">
-                  <div className="space-y-2">
-                    <div className="h-5 w-48 rounded shimmer-glow" />
-                    <div className="h-3 w-32 rounded shimmer-glow" />
-                  </div>
-                  <div className="flex gap-2">
-                    <div className="h-5.5 w-16 rounded-full shimmer-glow" />
-                    <div className="h-9 w-28 rounded-lg shimmer-glow" />
-                  </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <Card key={i}>
+            <CardContent className="p-4 space-y-3">
+              <div className="flex justify-between items-start">
+                <div className="space-y-1">
+                  <Skeleton className="h-4 w-36" />
+                  <Skeleton className="h-3 w-24" />
                 </div>
-                <div className="grid grid-cols-2 gap-3 text-xs lg:grid-cols-4 pt-3 border-t border-[var(--shell-border)]/20">
-                  <div className="h-4 w-28 rounded shimmer-glow" />
-                  <div className="h-4 w-28 rounded shimmer-glow" />
-                  <div className="h-4 w-28 rounded shimmer-glow" />
-                  <div className="h-4 w-28 rounded shimmer-glow" />
-                </div>
+                <Skeleton className="h-5 w-16 rounded-full" />
               </div>
-            ))}
-          </div>
-        </div>
+              <Skeleton className="h-3.5 w-full" />
+              <div className="flex justify-between items-center pt-2">
+                <Skeleton className="h-3 w-20" />
+                <Skeleton className="h-7 w-20 rounded-md" />
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
     </div>
   );

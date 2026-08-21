@@ -5,6 +5,7 @@ import { CreateDebitNoteDto } from "./dto/create-debit-note.dto";
 import { EventBusService } from "../event-bus/event-bus.service";
 import { Events } from "../event-bus/event-types";
 import { PostingEngineService } from "../accounting/posting-engine.service";
+import { DocumentNumberService } from "../common/document-number.service";
 
 @Injectable()
 export class DebitNotesService {
@@ -12,6 +13,7 @@ export class DebitNotesService {
     private readonly prisma: PrismaService,
     private readonly eventBus: EventBusService,
     private readonly postingEngine: PostingEngineService,
+    private readonly documentNumbers: DocumentNumberService,
   ) {}
 
 
@@ -55,7 +57,7 @@ export class DebitNotesService {
           invoiceId: dto.invoiceId,
           amount: new Prisma.Decimal(dto.amount),
           reason: dto.reason,
-          debitNoteNumber: dto.debitNoteNumber ? String(dto.debitNoteNumber) : undefined,
+          debitNoteNumber: dto.debitNoteNumber ? String(dto.debitNoteNumber) : (await this.documentNumbers.nextDebitNote(organizationId)),
           status: "issued",
           issueDate: new Date(),
         },

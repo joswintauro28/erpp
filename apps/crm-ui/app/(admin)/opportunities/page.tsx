@@ -1,16 +1,20 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Plus, Download, Search, Filter, RotateCw } from "lucide-react";
+import { Plus, Download, Search, Filter, RotateCw, KanbanSquare, Table2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { exportToCSV } from "@/utils/exportCsv";
+import { cn } from "@/lib/utils";
 import OpportunityTable from "./OpportunityTable";
+import OpportunityKanban from "./OpportunityKanban";
 import OpportunityDetailModal from "./OpportunityDetailModal";
 import { Spinner } from "@/components/ui/spinner";
 import { api } from "@/services/api";
-import GenericCreateModal from "@/components/GenericCreateModal";
+import { toastError } from "@/utils/toast";
+import { useConfirm } from "@datavex/ui-theme";
+import OpportunityCreateModal from "./OpportunityCreateModal";
 
 
 export default function OpportunitiesPage() {
@@ -21,6 +25,7 @@ export default function OpportunitiesPage() {
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [selectedRecordForDetails, setSelectedRecordForDetails] = useState(null);
   const [editRecord, setEditRecord] = useState(null);
+  const [view, setView] = useState<"table" | "kanban">("kanban");
 
   const fetchData = useCallback(async () => {
     try {
@@ -32,10 +37,12 @@ export default function OpportunitiesPage() {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
+  const confirm = useConfirm();
+
   const handleDelete = async (record: any) => {
-    if (window.confirm("Are you sure?")) {
+    if (await confirm({ title: "Delete opportunity", message: "Are you sure you want to delete this opportunity?", destructive: true })) {
       try { await api.delete("/opportunities/" + record.id_str); fetchData(); }
-      catch { alert("Delete failed"); }
+      catch { toastError("Delete failed"); }
     }
   };
 
@@ -84,6 +91,28 @@ export default function OpportunitiesPage() {
             <Button variant="outline" size="sm" onClick={() => exportToCSV(items, "opportunities")}><Download className="h-4 w-4" /> Export</Button>
             <Button size="sm" onClick={() => setIsModalOpen(true)}><Plus className="h-4 w-4" /> New Opportunity</Button>
           </div>
+          <div className="flex items-center rounded-lg border border-[var(--shell-border)] bg-[var(--shell-surface)] p-0.5">
+            <button
+              type="button"
+              onClick={() => setView("kanban")}
+              className={cn(
+                "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition-all cursor-pointer",
+                view === "kanban" ? "bg-[var(--shell-brand)] text-white shadow-sm" : "text-[var(--shell-muted)] hover:text-[var(--shell-foreground)]"
+              )}
+            >
+              <KanbanSquare className="h-3.5 w-3.5" /> Pipeline
+            </button>
+            <button
+              type="button"
+              onClick={() => setView("table")}
+              className={cn(
+                "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition-all cursor-pointer",
+                view === "table" ? "bg-[var(--shell-brand)] text-white shadow-sm" : "text-[var(--shell-muted)] hover:text-[var(--shell-foreground)]"
+              )}
+            >
+              <Table2 className="h-3.5 w-3.5" /> Table
+            </button>
+          </div>
         </div>
 
         <Card className="hover:shadow-engineered transition-shadow duration-200 border-[var(--shell-border)] bg-[var(--shell-surface)]">
@@ -94,18 +123,28 @@ export default function OpportunitiesPage() {
             </div>
             <Filter className="h-4 w-4 text-[var(--shell-muted)]" />
           </div>
-          <div className="overflow-x-auto">
-            <OpportunityTable
-              opportunities={filtered}
-              onView={(rec) => { setSelectedRecordForDetails(rec); setIsDetailsOpen(true); }}
-              onEdit={(rec) => { setEditRecord(rec); setIsModalOpen(true); }}
-              onDelete={handleDelete}
-            />
-          </div>
+          {view === "kanban" ? (
+            <div className="p-4">
+              <OpportunityKanban
+                opportunities={filtered}
+                onView={(rec) => { setSelectedRecordForDetails(rec); setIsDetailsOpen(true); }}
+                onStageChange={fetchData}
+              />
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <OpportunityTable
+                opportunities={filtered}
+                onView={(rec) => { setSelectedRecordForDetails(rec); setIsDetailsOpen(true); }}
+                onEdit={(rec) => { setEditRecord(rec); setIsModalOpen(true); }}
+                onDelete={handleDelete}
+              />
+            </div>
+          )}
         </Card>
       </div>
 
-      <GenericCreateModal entityType="opportunities" entityName="Opportunity" isOpen={isModalOpen} onClose={() => { setIsModalOpen(false); setEditRecord(null); }} editRecord={editRecord} onSuccess={fetchData} />
+      <OpportunityCreateModal isOpen={isModalOpen} onClose={() => { setIsModalOpen(false); setEditRecord(null); }} editRecord={editRecord} onSuccess={fetchData} />
       <OpportunityDetailModal record={selectedRecordForDetails} isOpen={isDetailsOpen} onClose={() => { setIsDetailsOpen(false); setSelectedRecordForDetails(null); }} onSuccess={fetchData} />
     </div>
   );

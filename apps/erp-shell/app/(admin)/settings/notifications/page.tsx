@@ -35,7 +35,7 @@ export default function Notifications() {
   return (
     <div className="relative space-y-6">
       {/* Brand Sweep Line */}
-      <span className="absolute -top-6 left-0 h-0.5 w-1/3 rounded-full bg-[#8C1D24] shimmer-glow" />
+      <span className="absolute -top-6 left-0 h-0.5 w-1/3 rounded-full bg-[var(--shell-brand)] shimmer-glow" />
 
       <div className="flex items-center justify-between">
         <div>
@@ -52,20 +52,20 @@ export default function Notifications() {
         <Card className="border-[var(--shell-border)] bg-[var(--shell-surface)] hover:shadow-md transition-shadow duration-200">
           <CardHeader className="p-5 pb-3">
             <div className="flex items-center gap-2">
-              <Mail className="h-4 w-4 text-[#8C1D24]" />
+              <Mail className="h-4 w-4 text-[var(--shell-brand)]" />
               <CardTitle className="text-sm font-semibold text-[var(--shell-foreground)]">Email Notifications</CardTitle>
             </div>
             <CardDescription className="text-xs text-[var(--shell-muted)]">Configure automated email alerts</CardDescription>
           </CardHeader>
           <CardContent className="p-5 pt-0 space-y-2">
             {byChannel("email").map((c) => (
-              <label key={c.id} className="flex items-center justify-between py-2 border-b border-[var(--shell-border)]/20 last:border-0 cursor-pointer text-[var(--shell-foreground)] hover:text-[#8C1D24] transition-colors">
+              <label key={c.id} className="flex items-center justify-between py-2 border-b border-[var(--shell-border)]/20 last:border-0 cursor-pointer text-[var(--shell-foreground)] hover:text-[var(--shell-brand)] transition-colors">
                 <span className="text-sm font-medium">{c.label}</span>
                 <input
                   type="checkbox"
                   checked={c.enabled}
                   onChange={() => toggle(c.id)}
-                  className="h-4 w-4 rounded border-[var(--shell-border)] accent-[#8C1D24] cursor-pointer"
+                  className="h-4 w-4 rounded border-[var(--shell-border)] accent-[var(--shell-brand)] cursor-pointer"
                 />
               </label>
             ))}
@@ -75,20 +75,20 @@ export default function Notifications() {
         <Card className="border-[var(--shell-border)] bg-[var(--shell-surface)] hover:shadow-md transition-shadow duration-200">
           <CardHeader className="p-5 pb-3">
             <div className="flex items-center gap-2">
-              <Smartphone className="h-4 w-4 text-[#8C1D24]" />
+              <Smartphone className="h-4 w-4 text-[var(--shell-brand)]" />
               <CardTitle className="text-sm font-semibold text-[var(--shell-foreground)]">SMS Notifications</CardTitle>
             </div>
             <CardDescription className="text-xs text-[var(--shell-muted)]">Configure SMS alerts for critical events</CardDescription>
           </CardHeader>
           <CardContent className="p-5 pt-0 space-y-2">
             {byChannel("sms").map((c) => (
-              <label key={c.id} className="flex items-center justify-between py-2 border-b border-[var(--shell-border)]/20 last:border-0 cursor-pointer text-[var(--shell-foreground)] hover:text-[#8C1D24] transition-colors">
+              <label key={c.id} className="flex items-center justify-between py-2 border-b border-[var(--shell-border)]/20 last:border-0 cursor-pointer text-[var(--shell-foreground)] hover:text-[var(--shell-brand)] transition-colors">
                 <span className="text-sm font-medium">{c.label}</span>
                 <input
                   type="checkbox"
                   checked={c.enabled}
                   onChange={() => toggle(c.id)}
-                  className="h-4 w-4 rounded border-[var(--shell-border)] accent-[#8C1D24] cursor-pointer"
+                  className="h-4 w-4 rounded border-[var(--shell-border)] accent-[var(--shell-brand)] cursor-pointer"
                 />
               </label>
             ))}
@@ -98,20 +98,20 @@ export default function Notifications() {
         <Card className="border-[var(--shell-border)] bg-[var(--shell-surface)] hover:shadow-md transition-shadow duration-200">
           <CardHeader className="p-5 pb-3">
             <div className="flex items-center gap-2">
-              <Bell className="h-4 w-4 text-[#8C1D24]" />
+              <Bell className="h-4 w-4 text-[var(--shell-brand)]" />
               <CardTitle className="text-sm font-semibold text-[var(--shell-foreground)]">Push Notifications</CardTitle>
             </div>
             <CardDescription className="text-xs text-[var(--shell-muted)]">In-app and browser push alerts</CardDescription>
           </CardHeader>
           <CardContent className="p-5 pt-0 space-y-2">
             {byChannel("push").map((c) => (
-              <label key={c.id} className="flex items-center justify-between py-2 border-b border-[var(--shell-border)]/20 last:border-0 cursor-pointer text-[var(--shell-foreground)] hover:text-[#8C1D24] transition-colors">
+              <label key={c.id} className="flex items-center justify-between py-2 border-b border-[var(--shell-border)]/20 last:border-0 cursor-pointer text-[var(--shell-foreground)] hover:text-[var(--shell-brand)] transition-colors">
                 <span className="text-sm font-medium">{c.label}</span>
                 <input
                   type="checkbox"
                   checked={c.enabled}
                   onChange={() => toggle(c.id)}
-                  className="h-4 w-4 rounded border-[var(--shell-border)] accent-[#8C1D24] cursor-pointer"
+                  className="h-4 w-4 rounded border-[var(--shell-border)] accent-[var(--shell-brand)] cursor-pointer"
                 />
               </label>
             ))}
@@ -134,7 +134,7 @@ export default function Notifications() {
                   variant={d === 7 ? "default" : "outline"} 
                   className={`cursor-pointer text-xs font-semibold px-2.5 py-1 ${
                     d === 7 
-                      ? "bg-[#8C1D24]/10 text-[#8C1D24] border-[#8C1D24]/20 hover:bg-[#8C1D24]/20" 
+                      ? "bg-[var(--shell-brand)]/10 text-[var(--shell-brand)] border-[var(--shell-brand)]/20 hover:bg-[var(--shell-brand)]/20" 
                       : "border-[var(--shell-border)] hover:bg-[var(--shell-surface-alt)]"
                   }`}
                 >
@@ -152,7 +152,7 @@ export default function Notifications() {
                   variant={p === "20%" ? "default" : "outline"} 
                   className={`cursor-pointer text-xs font-semibold px-2.5 py-1 ${
                     p === "20%" 
-                      ? "bg-[#8C1D24]/10 text-[#8C1D24] border-[#8C1D24]/20 hover:bg-[#8C1D24]/20" 
+                      ? "bg-[var(--shell-brand)]/10 text-[var(--shell-brand)] border-[var(--shell-brand)]/20 hover:bg-[var(--shell-brand)]/20" 
                       : "border-[var(--shell-border)] hover:bg-[var(--shell-surface-alt)]"
                   }`}
                 >
@@ -170,7 +170,7 @@ export default function Notifications() {
                   variant={d === "3d" ? "default" : "outline"} 
                   className={`cursor-pointer text-xs font-semibold px-2.5 py-1 ${
                     d === "3d" 
-                      ? "bg-[#8C1D24]/10 text-[#8C1D24] border-[#8C1D24]/20 hover:bg-[#8C1D24]/20" 
+                      ? "bg-[var(--shell-brand)]/10 text-[var(--shell-brand)] border-[var(--shell-brand)]/20 hover:bg-[var(--shell-brand)]/20" 
                       : "border-[var(--shell-border)] hover:bg-[var(--shell-surface-alt)]"
                   }`}
                 >
@@ -184,7 +184,7 @@ export default function Notifications() {
 
       <div className="flex items-center justify-end gap-3 pt-2 border-t border-[var(--shell-border)]">
         <Button variant="outline" size="sm" className="hover:bg-[var(--shell-surface-alt)]">Cancel</Button>
-        <Button size="sm" className="bg-[#8C1D24] hover:bg-[#8C1D24]/90 text-white shadow">
+        <Button size="sm" className="bg-[var(--shell-brand)] hover:bg-[var(--shell-brand)]/90 text-white shadow">
           <Save className="mr-1.5 h-3.5 w-3.5" />
           Save Changes
         </Button>

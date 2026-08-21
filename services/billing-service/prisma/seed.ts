@@ -76,7 +76,7 @@ async function main() {
   const invoices: InvDef[] = [
     // ── RECEIVABLE INVOICES (19) ──
     // 1 - Meridian Foods (paid)
-    { organizationId: 1, type: "receivable", clientId: cid("Meridian Foods"), clientName: "Meridian Foods", invoiceNumber: "INV-2026-001",
+    { organizationId: 1, type: "receivable", clientId: cid("Meridian Foods"), clientName: "Meridian Foods", invoiceNumber: "INV-202608-0001",
       status: "paid", issueDate: ago(60), dueDate: ago(45),
       gstTreatment: "intrastate", placeOfSupply: "Karnataka",
       subtotal: 150000, discount: 0, cgst: 13500, sgst: 13500, igst: 0, taxTotal: 27000, total: 177000, paidAmount: 162000, balanceDue: 0,
@@ -85,7 +85,7 @@ async function main() {
         { productId: null, description: "Sensor Array Kit — Proximity (10 units)", quantity: 10, unitPrice: 2500, gstRate: 18, amount: 25000 },
       ]},
     // 2 - Cirrus Aviation (sent)
-    { organizationId: 1, type: "receivable", clientId: cid("Cirrus Aviation"), clientName: "Cirrus Aviation", invoiceNumber: "INV-2026-002",
+    { organizationId: 1, type: "receivable", clientId: cid("Cirrus Aviation"), clientName: "Cirrus Aviation", invoiceNumber: "INV-202608-0002",
       status: "sent", issueDate: ago(30), dueDate: later(0),
       gstTreatment: "interstate", placeOfSupply: "Maharashtra",
       subtotal: 420000, discount: 0, cgst: 0, sgst: 0, igst: 75600, taxTotal: 75600, total: 507600, paidAmount: 0, balanceDue: 507600,
@@ -94,7 +94,7 @@ async function main() {
         { productId: null, description: "Flight Data Recorder Interface (2 units)", quantity: 2, unitPrice: 30000, gstRate: 18, amount: 60000 },
       ]},
     // 3 - Halcyon Media (overdue)
-    { organizationId: 1, type: "receivable", clientId: cid("Halcyon Media"), clientName: "Halcyon Media", invoiceNumber: "INV-2026-003",
+    { organizationId: 1, type: "receivable", clientId: cid("Halcyon Media"), clientName: "Halcyon Media", invoiceNumber: "INV-202608-0003",
       status: "overdue", issueDate: ago(90), dueDate: ago(60),
       gstTreatment: "intrastate", placeOfSupply: "Karnataka",
       subtotal: 85000, discount: 0, cgst: 7650, sgst: 7650, igst: 0, taxTotal: 15300, total: 100300, paidAmount: 50000, balanceDue: 42000,
@@ -103,7 +103,7 @@ async function main() {
         { productId: null, description: "Media Asset Management License (annual)", quantity: 1, unitPrice: 30000, gstRate: 18, amount: 30000 },
       ]},
     // 4 - Orbit Health (draft)
-    { organizationId: 1, type: "receivable", clientId: cid("Orbit Health"), clientName: "Orbit Health", invoiceNumber: "INV-2026-004",
+    { organizationId: 1, type: "receivable", clientId: cid("Orbit Health"), clientName: "Orbit Health", invoiceNumber: "INV-202608-0004",
       status: "draft", issueDate: null, dueDate: null,
       gstTreatment: "intrastate", placeOfSupply: "Karnataka",
       subtotal: 230000, discount: 25000, discountType: "fixed", cgst: 18450, sgst: 18450, igst: 0, taxTotal: 36900, total: 241900, paidAmount: 0, balanceDue: 241900,
@@ -112,7 +112,7 @@ async function main() {
         { productId: null, description: "Patient Portal Integration Services", quantity: 1, unitPrice: 50000, gstRate: 18, amount: 50000 },
       ]},
     // 5 - Bristow Textiles (partially_paid)
-    { organizationId: 1, type: "receivable", clientId: cid("Bristow Textiles"), clientName: "Bristow Textiles", invoiceNumber: "INV-2026-005",
+    { organizationId: 1, type: "receivable", clientId: cid("Bristow Textiles"), clientName: "Bristow Textiles", invoiceNumber: "INV-202608-0005",
       status: "partially_paid", issueDate: ago(15), dueDate: later(15),
       gstTreatment: "interstate", placeOfSupply: "Tamil Nadu",
       subtotal: 310000, discount: 0, cgst: 0, sgst: 0, igst: 55800, taxTotal: 55800, total: 365800, paidAmount: 150000, balanceDue: 203300,
@@ -121,7 +121,7 @@ async function main() {
         { productId: null, description: "Implementation & Training (40 hours)", quantity: 40, unitPrice: 1500, gstRate: 18, amount: 60000 },
       ]},
     // 6 - Meridian Foods (void — was cancelled)
-    { organizationId: 1, type: "receivable", clientId: cid("Meridian Foods"), clientName: "Meridian Foods", invoiceNumber: "INV-2026-006",
+    { organizationId: 1, type: "receivable", clientId: cid("Meridian Foods"), clientName: "Meridian Foods", invoiceNumber: "INV-202608-0006",
       status: "void", issueDate: ago(120), dueDate: ago(105),
       gstTreatment: "intrastate", placeOfSupply: "Karnataka",
       subtotal: 75000, discount: 0, cgst: 6750, sgst: 6750, igst: 0, taxTotal: 13500, total: 88500, paidAmount: 0, balanceDue: 0,
@@ -129,7 +129,7 @@ async function main() {
         { productId: null, description: "Warehouse Automation Feasibility Study", quantity: 1, unitPrice: 75000, gstRate: 18, amount: 75000 },
       ]},
     // 7 - Nimbus Technologies (sent)
-    { organizationId: 1, type: "receivable", clientId: cid("Nimbus Technologies"), clientName: "Nimbus Technologies", invoiceNumber: "INV-2026-007",
+    { organizationId: 1, type: "receivable", clientId: cid("Nimbus Technologies"), clientName: "Nimbus Technologies", invoiceNumber: "INV-202608-0007",
       status: "sent", issueDate: ago(10), dueDate: later(20),
       gstTreatment: "intrastate", placeOfSupply: "Karnataka",
       subtotal: 346000, discount: 0, cgst: 31140, sgst: 31140, igst: 0, taxTotal: 62280, total: 408280, paidAmount: 0, balanceDue: 408280,
@@ -138,7 +138,7 @@ async function main() {
         { productId: null, description: "Data Migration Services (80 hours)", quantity: 80, unitPrice: 825, gstRate: 18, amount: 66000 },
       ]},
     // 8 - Solara Renewable (sent)
-    { organizationId: 1, type: "receivable", clientId: cid("Solara Renewable Energy"), clientName: "Solara Renewable Energy", invoiceNumber: "INV-2026-008",
+    { organizationId: 1, type: "receivable", clientId: cid("Solara Renewable Energy"), clientName: "Solara Renewable Energy", invoiceNumber: "INV-202608-0008",
       status: "sent", issueDate: ago(3), dueDate: later(27),
       gstTreatment: "intrastate", placeOfSupply: "Karnataka",
       subtotal: 525800, discount: 0, cgst: 47322, sgst: 47322, igst: 0, taxTotal: 94644, total: 620444, paidAmount: 0, balanceDue: 620444,
@@ -148,7 +148,7 @@ async function main() {
         { productId: null, description: "On-site Commissioning (40 hours)", quantity: 40, unitPrice: 1445, gstRate: 18, amount: 57800 },
       ]},
     // 9 - Titan Defence (sent)
-    { organizationId: 1, type: "receivable", clientId: cid("Titan Defence Systems"), clientName: "Titan Defence Systems", invoiceNumber: "INV-2026-009",
+    { organizationId: 1, type: "receivable", clientId: cid("Titan Defence Systems"), clientName: "Titan Defence Systems", invoiceNumber: "INV-202608-0009",
       status: "sent", issueDate: ago(20), dueDate: later(10),
       gstTreatment: "interstate", placeOfSupply: "Telangana",
       subtotal: 697500, discount: 0, cgst: 0, sgst: 0, igst: 125550, taxTotal: 125550, total: 848050, paidAmount: 0, balanceDue: 848050,
@@ -158,7 +158,7 @@ async function main() {
         { productId: null, description: "Security Audit & Penetration Testing", quantity: 1, unitPrice: 60000, gstRate: 18, amount: 60000 },
       ]},
     // 10 - Pinnacle Realty (sent)
-    { organizationId: 1, type: "receivable", clientId: cid("Pinnacle Realty Group"), clientName: "Pinnacle Realty Group", invoiceNumber: "INV-2026-010",
+    { organizationId: 1, type: "receivable", clientId: cid("Pinnacle Realty Group"), clientName: "Pinnacle Realty Group", invoiceNumber: "INV-202608-0010",
       status: "sent", issueDate: ago(7), dueDate: later(23),
       gstTreatment: "intrastate", placeOfSupply: "Karnataka",
       subtotal: 165400, discount: 10000, discountType: "fixed", cgst: 13986, sgst: 13986, igst: 0, taxTotal: 27972, total: 183372, paidAmount: 0, balanceDue: 183372,
@@ -168,7 +168,7 @@ async function main() {
         { productId: null, description: "CRM Data Migration Services", quantity: 20, unitPrice: 1020, gstRate: 18, amount: 20400 },
       ]},
     // 11 - Delta Automotive (sent)
-    { organizationId: 1, type: "receivable", clientId: cid("Delta Automotive"), clientName: "Delta Automotive", invoiceNumber: "INV-2026-011",
+    { organizationId: 1, type: "receivable", clientId: cid("Delta Automotive"), clientName: "Delta Automotive", invoiceNumber: "INV-202608-0011",
       status: "sent", issueDate: ago(2), dueDate: later(28),
       gstTreatment: "interstate", placeOfSupply: "Tamil Nadu",
       subtotal: 265000, discount: 0, cgst: 0, sgst: 0, igst: 47700, taxTotal: 47700, total: 312700, paidAmount: 0, balanceDue: 312700,
@@ -177,7 +177,7 @@ async function main() {
         { productId: null, description: "SAP Integration Adapter", quantity: 1, unitPrice: 45000, gstRate: 18, amount: 45000 },
       ]},
     // 12 - Oceanic Pharmaceuticals (draft)
-    { organizationId: 1, type: "receivable", clientId: cid("Oceanic Pharmaceuticals"), clientName: "Oceanic Pharmaceuticals", invoiceNumber: "INV-2026-012",
+    { organizationId: 1, type: "receivable", clientId: cid("Oceanic Pharmaceuticals"), clientName: "Oceanic Pharmaceuticals", invoiceNumber: "INV-202608-0012",
       status: "draft", issueDate: null, dueDate: null,
       gstTreatment: "intrastate", placeOfSupply: "Karnataka",
       subtotal: 753800, discount: 0, cgst: 67842, sgst: 67842, igst: 0, taxTotal: 135684, total: 889484, paidAmount: 0, balanceDue: 889484,
@@ -187,7 +187,7 @@ async function main() {
         { productId: null, description: "Electronic Signature Module", quantity: 1, unitPrice: 53800, gstRate: 18, amount: 53800 },
       ]},
     // 13 - Everest Logistics (sent)
-    { organizationId: 1, type: "receivable", clientId: cid("Everest Logistics"), clientName: "Everest Logistics", invoiceNumber: "INV-2026-013",
+    { organizationId: 1, type: "receivable", clientId: cid("Everest Logistics"), clientName: "Everest Logistics", invoiceNumber: "INV-202608-0013",
       status: "sent", issueDate: ago(12), dueDate: later(18),
       gstTreatment: "interstate", placeOfSupply: "Maharashtra",
       subtotal: 207600, discount: 0, cgst: 0, sgst: 0, igst: 37368, taxTotal: 37368, total: 244968, paidAmount: 0, balanceDue: 244968,
@@ -197,7 +197,7 @@ async function main() {
         { productId: null, description: "Mobile App — Warehouse Scanner", quantity: 1, unitPrice: 12600, gstRate: 18, amount: 12600 },
       ]},
     // 14 - Velora Hospitality (draft)
-    { organizationId: 1, type: "receivable", clientId: cid("Velora Hospitality"), clientName: "Velora Hospitality", invoiceNumber: "INV-2026-014",
+    { organizationId: 1, type: "receivable", clientId: cid("Velora Hospitality"), clientName: "Velora Hospitality", invoiceNumber: "INV-202608-0014",
       status: "draft", issueDate: null, dueDate: null,
       gstTreatment: "intrastate", placeOfSupply: "Karnataka",
       subtotal: 114000, discount: 0, cgst: 10260, sgst: 10260, igst: 0, taxTotal: 20520, total: 134520, paidAmount: 0, balanceDue: 134520,
@@ -206,7 +206,7 @@ async function main() {
         { productId: null, description: "Channel Manager Integration", quantity: 1, unitPrice: 29000, gstRate: 18, amount: 29000 },
       ]},
     // 15 - Meridian Foods (sent — additional)
-    { organizationId: 1, type: "receivable", clientId: cid("Meridian Foods"), clientName: "Meridian Foods", invoiceNumber: "INV-2026-015",
+    { organizationId: 1, type: "receivable", clientId: cid("Meridian Foods"), clientName: "Meridian Foods", invoiceNumber: "INV-202608-0015",
       status: "sent", issueDate: ago(4), dueDate: later(26),
       gstTreatment: "intrastate", placeOfSupply: "Karnataka",
       subtotal: 106000, discount: 0, cgst: 9540, sgst: 9540, igst: 0, taxTotal: 19080, total: 125080, paidAmount: 0, balanceDue: 125080,
@@ -215,7 +215,7 @@ async function main() {
         { productId: null, description: "Dashboards & Reports (10 custom)", quantity: 10, unitPrice: 3100, gstRate: 18, amount: 31000 },
       ]},
     // 16 - Starlight Entertainment (sent)
-    { organizationId: 1, type: "receivable", clientId: cid("Starlight Entertainment"), clientName: "Starlight Entertainment", invoiceNumber: "INV-2026-016",
+    { organizationId: 1, type: "receivable", clientId: cid("Starlight Entertainment"), clientName: "Starlight Entertainment", invoiceNumber: "INV-202608-0016",
       status: "sent", issueDate: ago(2), dueDate: later(28),
       gstTreatment: "intrastate", placeOfSupply: "Karnataka",
       subtotal: 66100, discount: 0, cgst: 5949, sgst: 5949, igst: 0, taxTotal: 11898, total: 77998, paidAmount: 0, balanceDue: 77998,
@@ -224,7 +224,7 @@ async function main() {
         { productId: null, description: "Media Encoding Pipeline Setup", quantity: 1, unitPrice: 18100, gstRate: 18, amount: 18100 },
       ]},
     // 17 - Apex Logistics (paid)
-    { organizationId: 1, type: "receivable", clientId: cid("Apex Logistics Group"), clientName: "Apex Logistics Group", invoiceNumber: "INV-2026-017",
+    { organizationId: 1, type: "receivable", clientId: cid("Apex Logistics Group"), clientName: "Apex Logistics Group", invoiceNumber: "INV-202608-0017",
       status: "paid", issueDate: ago(45), dueDate: ago(15),
       gstTreatment: "interstate", placeOfSupply: "Gujarat",
       subtotal: 85000, discount: 0, cgst: 0, sgst: 0, igst: 15300, taxTotal: 15300, total: 100300, paidAmount: 100300, balanceDue: 0,
@@ -233,7 +233,7 @@ async function main() {
         { productId: null, description: "GPS Tracking Integration", quantity: 1, unitPrice: 15000, gstRate: 18, amount: 15000 },
       ]},
     // 18 - Titan Defence (partially paid)
-    { organizationId: 1, type: "receivable", clientId: cid("Titan Defence Systems"), clientName: "Titan Defence Systems", invoiceNumber: "INV-2026-018",
+    { organizationId: 1, type: "receivable", clientId: cid("Titan Defence Systems"), clientName: "Titan Defence Systems", invoiceNumber: "INV-202608-0018",
       status: "partially_paid", issueDate: ago(40), dueDate: ago(10),
       gstTreatment: "interstate", placeOfSupply: "Telangana",
       subtotal: 380000, discount: 0, cgst: 0, sgst: 0, igst: 68400, taxTotal: 68400, total: 448400, paidAmount: 200000, balanceDue: 248400,
@@ -242,7 +242,7 @@ async function main() {
         { productId: null, description: "Hardware Security Module (HSM)", quantity: 2, unitPrice: 40000, gstRate: 18, amount: 80000 },
       ]},
     // 19 - Orbit Health (overdue — repeat)
-    { organizationId: 1, type: "receivable", clientId: cid("Orbit Health"), clientName: "Orbit Health", invoiceNumber: "INV-2026-019",
+    { organizationId: 1, type: "receivable", clientId: cid("Orbit Health"), clientName: "Orbit Health", invoiceNumber: "INV-202608-0019",
       status: "overdue", issueDate: ago(75), dueDate: ago(45),
       gstTreatment: "intrastate", placeOfSupply: "Karnataka",
       subtotal: 152000, discount: 0, cgst: 13680, sgst: 13680, igst: 0, taxTotal: 27360, total: 179360, paidAmount: 0, balanceDue: 159360,
@@ -251,7 +251,7 @@ async function main() {
         { productId: null, description: "Legacy System Integration — HL7", quantity: 1, unitPrice: 57000, gstRate: 18, amount: 57000 },
       ]},
     // 20 - Solara Renewable (partially_paid)
-    { organizationId: 1, type: "receivable", clientId: cid("Solara Renewable Energy"), clientName: "Solara Renewable Energy", invoiceNumber: "INV-2026-020",
+    { organizationId: 1, type: "receivable", clientId: cid("Solara Renewable Energy"), clientName: "Solara Renewable Energy", invoiceNumber: "INV-202608-0020",
       status: "partially_paid", issueDate: ago(25), dueDate: later(5),
       gstTreatment: "intrastate", placeOfSupply: "Karnataka",
       subtotal: 198000, discount: 5000, discountType: "percentage", cgst: 17370, sgst: 17370, igst: 0, taxTotal: 34740, total: 245740, paidAmount: 100000, balanceDue: 145740,
@@ -264,7 +264,7 @@ async function main() {
     // 21 - Siemens India Limited vendor bill (draft)
     { organizationId: 1, type: "payable",
       vendorId: vid("Siemens India Limited"), vendorName: "Siemens India Limited",
-      invoiceNumber: "BILL-2026-001",
+      invoiceNumber: "INV-202608-0021",
       status: "draft", issueDate: ago(5), dueDate: later(25),
       gstTreatment: "interstate", placeOfSupply: "Maharashtra",
       subtotal: 425000, discount: 0, cgst: 0, sgst: 0, igst: 76500, taxTotal: 76500, total: 501500, paidAmount: 0, balanceDue: 501500,
@@ -275,7 +275,7 @@ async function main() {
     // 22 - Schneider Electric India vendor bill (partially paid)
     { organizationId: 1, type: "payable",
       vendorId: vid("Schneider Electric India"), vendorName: "Schneider Electric India",
-      invoiceNumber: "BILL-2026-002",
+      invoiceNumber: "INV-202608-0022",
       status: "partially_paid", issueDate: ago(20), dueDate: later(10),
       gstTreatment: "intrastate", placeOfSupply: "Karnataka",
       subtotal: 180000, discount: 0, cgst: 8100, sgst: 8100, igst: 0, taxTotal: 16200, total: 196200, paidAmount: 100000, balanceDue: 96200,
@@ -285,7 +285,7 @@ async function main() {
     // 23 - Omron Automation Pvt Ltd vendor bill (sent)
     { organizationId: 1, type: "payable",
       vendorId: vid("Omron Automation Pvt Ltd"), vendorName: "Omron Automation Pvt Ltd",
-      invoiceNumber: "BILL-2026-003",
+      invoiceNumber: "INV-202608-0023",
       status: "sent", issueDate: ago(8), dueDate: later(22),
       gstTreatment: "intrastate", placeOfSupply: "Karnataka",
       subtotal: 168000, discount: 8000, discountType: "fixed", cgst: 14400, sgst: 14400, igst: 0, taxTotal: 28800, total: 188800, paidAmount: 0, balanceDue: 188800,
@@ -307,19 +307,19 @@ async function main() {
 
   // ── PAYMENTS (18) ────────────────────────────────────────────────
   const payments: PayDef[] = [
-    { organizationId: 1, invoiceId: createdInvoices[0].id, amount: 162000, paymentMethod: "Bank_Transfer", paymentDate: ago(50), referenceId: "NEFT-MF-001", notes: "Full payment INV-2026-001 (adjusted for credit note)", status: "cleared" },
-    { organizationId: 1, invoiceId: createdInvoices[2].id, amount: 50000, paymentMethod: "UPI", paymentDate: ago(55), referenceId: "UPI-HM-001", notes: "Partial payment INV-2026-003", status: "cleared" },
-    { organizationId: 1, invoiceId: createdInvoices[2].id, amount: 50300, paymentMethod: "Cheque", paymentDate: ago(5), referenceId: "CHQ-HM-002", notes: "Overdue payment INV-2026-003 — bounced", status: "failed" },
-    { organizationId: 1, invoiceId: createdInvoices[4].id, amount: 150000, paymentMethod: "Bank_Transfer", paymentDate: ago(5), referenceId: "NEFT-BT-001", notes: "Partial payment INV-2026-005", status: "cleared" },
-    { organizationId: 1, invoiceId: createdInvoices[16].id, amount: 100300, paymentMethod: "UPI", paymentDate: ago(20), referenceId: "UPI-AL-001", notes: "Full payment INV-2026-017", status: "cleared" },
-    { organizationId: 1, invoiceId: createdInvoices[17].id, amount: 200000, paymentMethod: "Bank_Transfer", paymentDate: ago(20), referenceId: "NEFT-TD-001", notes: "Partial payment INV-2026-018", status: "cleared" },
-    { organizationId: 1, invoiceId: createdInvoices[19].id, amount: 100000, paymentMethod: "Bank_Transfer", paymentDate: ago(10), referenceId: "NEFT-SR-001", notes: "Partial payment INV-2026-020", status: "cleared" },
+    { organizationId: 1, invoiceId: createdInvoices[0].id, amount: 162000, paymentMethod: "Bank_Transfer", paymentDate: ago(50), referenceId: "NEFT-MF-001", notes: "Full payment INV-202608-0001 (adjusted for credit note)", status: "cleared" },
+    { organizationId: 1, invoiceId: createdInvoices[2].id, amount: 50000, paymentMethod: "UPI", paymentDate: ago(55), referenceId: "UPI-HM-001", notes: "Partial payment INV-202608-0003", status: "cleared" },
+    { organizationId: 1, invoiceId: createdInvoices[2].id, amount: 50300, paymentMethod: "Cheque", paymentDate: ago(5), referenceId: "CHQ-HM-002", notes: "Overdue payment INV-202608-0003 — bounced", status: "failed" },
+    { organizationId: 1, invoiceId: createdInvoices[4].id, amount: 150000, paymentMethod: "Bank_Transfer", paymentDate: ago(5), referenceId: "NEFT-BT-001", notes: "Partial payment INV-202608-0005", status: "cleared" },
+    { organizationId: 1, invoiceId: createdInvoices[16].id, amount: 100300, paymentMethod: "UPI", paymentDate: ago(20), referenceId: "UPI-AL-001", notes: "Full payment INV-202608-0017", status: "cleared" },
+    { organizationId: 1, invoiceId: createdInvoices[17].id, amount: 200000, paymentMethod: "Bank_Transfer", paymentDate: ago(20), referenceId: "NEFT-TD-001", notes: "Partial payment INV-202608-0018", status: "cleared" },
+    { organizationId: 1, invoiceId: createdInvoices[19].id, amount: 100000, paymentMethod: "Bank_Transfer", paymentDate: ago(10), referenceId: "NEFT-SR-001", notes: "Partial payment INV-202608-0020", status: "cleared" },
     { organizationId: 1, invoiceId: createdInvoices[0].id, amount: 177000, paymentMethod: "Credit_Card", paymentDate: ago(48), referenceId: "CC-MF-001", notes: "Duplicate payment — refunded", status: "refunded" },
-    { organizationId: 1, invoiceId: createdInvoices[21].id, amount: 100000, paymentMethod: "Bank_Transfer", paymentDate: ago(10), referenceId: "NEFT-UC-001", notes: "Partial payment BILL-2026-002", status: "cleared" },
+    { organizationId: 1, invoiceId: createdInvoices[21].id, amount: 100000, paymentMethod: "Bank_Transfer", paymentDate: ago(10), referenceId: "NEFT-UC-001", notes: "Partial payment INV-202608-0022", status: "cleared" },
     // Standalone payments
     { organizationId: 1, invoiceId: null, amount: 25000, paymentMethod: "UPI", paymentDate: ago(3), referenceId: "UPI-ADV-001", notes: "Advance payment — new project", status: "cleared" },
     { organizationId: 1, invoiceId: null, amount: 50000, paymentMethod: "Credit_Card", paymentDate: ago(7), referenceId: "CC-ADV-001", notes: "Subscription renewal — annual", status: "cleared" },
-    { organizationId: 1, invoiceId: null, amount: 150000, paymentMethod: "Bank_Transfer", paymentDate: ago(2), referenceId: "NEFT-MISC-001", notes: "Invoice INV-2026-002 partial", status: "failed" },
+    { organizationId: 1, invoiceId: null, amount: 150000, paymentMethod: "Bank_Transfer", paymentDate: ago(2), referenceId: "NEFT-MISC-001", notes: "Invoice INV-202608-0002 partial", status: "failed" },
     { organizationId: 1, invoiceId: null, amount: 12000, paymentMethod: "Cash", paymentDate: ago(10), referenceId: "CASH-001", notes: "Walk-in — software license purchase", status: "refunded" },
     { organizationId: 1, invoiceId: null, amount: 75000, paymentMethod: "Bank_Transfer", paymentDate: ago(1), referenceId: "NEFT-RETAINER-001", notes: "Q3 retainer — Meridian Foods", status: "cleared" },
     { organizationId: 1, invoiceId: null, amount: 32000, paymentMethod: "UPI", paymentDate: ago(4), referenceId: "UPI-CONSULT-001", notes: "Consulting fees — Cirrus Aviation", status: "pending" },
@@ -333,151 +333,145 @@ async function main() {
   }
 
   // ── QUOTATIONS (20) ──────────────────────────────────────────────
+  // Product references (name/SKU/unit price) are bound strictly to the
+  // inventory-service seed catalog (services/inventory-service/scripts/seed.py).
   const quotations = [
     {
-      organizationId: 1, clientId: cid("Meridian Foods"), clientName: "Meridian Foods", quoteNumber: "QTN-2026-001", total: 245000, status: "accepted" as const, issueDate: ago(45), validUntil: ago(15), notes: "Q3 Expansion Contract",
+      organizationId: 1, clientId: cid("Meridian Foods"), clientName: "Meridian Foods", quoteNumber: "QT-202608-0001", total: 132000, status: "accepted" as const, issueDate: ago(45), validUntil: ago(15), notes: "Line automation — photoelectric sensors (converted to SO-202608-0103)",
       items: [
-        { description: "Industrial Automation Controller X200", quantity: 5, unitPrice: 25000, gstRate: 18, amount: 125000 },
-        { description: "Sensor Array Kit — Proximity", quantity: 10, unitPrice: 2500, gstRate: 18, amount: 25000 },
-        { description: "HMI Display Panel Touch 10inch", quantity: 3, unitPrice: 30000, gstRate: 18, amount: 90000 },
-        { description: "Automation Setup Support", quantity: 5, unitPrice: 1000, gstRate: 18, amount: 5000 },
+        { description: "Photoelectric Sensor — Omron E3Z (SEN-E3Z)", quantity: 30, unitPrice: 2800, gstRate: 18, amount: 84000 },
+        { description: "Inductive Proximity Sensor — Omron (SEN-PRX12)", quantity: 40, unitPrice: 1200, gstRate: 18, amount: 48000 },
       ]
     },
     {
-      organizationId: 1, clientId: cid("Cirrus Aviation"), clientName: "Cirrus Aviation", quoteNumber: "QTN-2026-002", total: 510000, status: "sent" as const, issueDate: ago(10), validUntil: later(20), notes: "Fleet-wide telemetry upgrade",
+      organizationId: 1, clientId: cid("Cirrus Aviation"), clientName: "Cirrus Aviation", quoteNumber: "QT-202608-0002", total: 300000, status: "accepted" as const, issueDate: ago(35), validUntil: ago(5), notes: "Fleet-wide telemetry upgrade (converted to SO-202608-0104)",
       items: [
-        { description: "Aviation-Grade Telemetry Module", quantity: 3, unitPrice: 120000, gstRate: 18, amount: 360000 },
-        { description: "Flight Data Recorder Interface", quantity: 2, unitPrice: 30000, gstRate: 18, amount: 60000 },
-        { description: "Custom Harness and Antenna Array", quantity: 3, unitPrice: 30000, gstRate: 18, amount: 90000 },
+        { description: "Aviation-Grade Telemetry Module (TEL-AV900)", quantity: 2, unitPrice: 120000, gstRate: 18, amount: 240000 },
+        { description: "Flight Data Recorder Interface (FDR-INT10)", quantity: 2, unitPrice: 30000, gstRate: 18, amount: 60000 },
       ]
     },
     {
-      organizationId: 1, clientId: cid("Orbit Health"), clientName: "Orbit Health", quoteNumber: "QTN-2026-003", total: 625000, status: "draft" as const, issueDate: null, validUntil: null, notes: "EHR Platform — Phase 2",
+      organizationId: 1, clientId: cid("Halcyon Media"), clientName: "Halcyon Media", quoteNumber: "QT-202608-0003", total: 182000, status: "accepted" as const, issueDate: ago(40), validUntil: ago(10), notes: "Control room HMI upgrade (converted to SO-202608-0101)",
       items: [
-        { description: "EHR Platform Base License — Phase 2", quantity: 1, unitPrice: 450000, gstRate: 18, amount: 450000 },
-        { description: "HL7 Integration Middleware Suite", quantity: 1, unitPrice: 125000, gstRate: 18, amount: 125000 },
-        { description: "Data Migration & Mapping (50 hours)", quantity: 50, unitPrice: 1000, gstRate: 18, amount: 50000 },
+        { description: "HMI Touch Panel 10-inch — Siemens KTP1000 (HMI-KTP1000)", quantity: 3, unitPrice: 42000, gstRate: 18, amount: 126000 },
+        { description: "HMI Graphic Terminal 7-inch — Schneider (HMI-GT7)", quantity: 2, unitPrice: 28000, gstRate: 18, amount: 56000 },
       ]
     },
     {
-      organizationId: 1, clientId: cid("Nimbus Technologies"), clientName: "Nimbus Technologies", quoteNumber: "QTN-2026-004", total: 350000, status: "sent" as const, issueDate: ago(8), validUntil: later(22), notes: "Cloud Migration Package",
+      organizationId: 1, clientId: cid("Orbit Health"), clientName: "Orbit Health", quoteNumber: "QT-202608-0004", total: 68500, status: "sent" as const, issueDate: ago(12), validUntil: later(18), notes: "Environmental monitoring transmitters",
       items: [
-        { description: "Cloud Migration Suite Enterprise", quantity: 1, unitPrice: 280000, gstRate: 18, amount: 280000 },
-        { description: "Cloud Security Architecture Advisory", quantity: 1, unitPrice: 70000, gstRate: 18, amount: 70000 },
+        { description: "Smart Temperature Transmitter — Honeywell (TX-TEMP)", quantity: 5, unitPrice: 6500, gstRate: 18, amount: 32500 },
+        { description: "Differential Pressure Transmitter (TX-DP900)", quantity: 2, unitPrice: 18000, gstRate: 18, amount: 36000 },
       ]
     },
     {
-      organizationId: 1, clientId: cid("Solara Renewable Energy"), clientName: "Solara Renewable Energy", quoteNumber: "QTN-2026-005", total: 480000, status: "draft" as const, issueDate: null, validUntil: null, notes: "Plant SCADA Overhaul",
+      organizationId: 1, clientId: cid("Nimbus Technologies"), clientName: "Nimbus Technologies", quoteNumber: "QT-202608-0005", total: 25500, status: "accepted" as const, issueDate: ago(20), validUntil: later(10), notes: "IoT edge gateway pilot (converted to SO-202608-0108)",
       items: [
-        { description: "SCADA Software Enterprise License", quantity: 1, unitPrice: 350000, gstRate: 18, amount: 350000 },
-        { description: "Modbus TCP/IP Master Controller", quantity: 10, unitPrice: 10000, gstRate: 18, amount: 100000 },
-        { description: "Integration Services (30 hours)", quantity: 30, unitPrice: 1000, gstRate: 18, amount: 30000 },
+        { description: "IoT Gateway Edge Controller (IOT-GW200)", quantity: 3, unitPrice: 8500, gstRate: 18, amount: 25500 },
       ]
     },
     {
-      organizationId: 1, clientId: cid("Pinnacle Realty Group"), clientName: "Pinnacle Realty Group", quoteNumber: "QTN-2026-006", total: 220000, status: "sent" as const, issueDate: ago(5), validUntil: later(25), notes: "PropTech Platform",
+      organizationId: 1, clientId: cid("Solara Renewable Energy"), clientName: "Solara Renewable Energy", quoteNumber: "QT-202608-0006", total: 507000, status: "accepted" as const, issueDate: ago(28), validUntil: ago(1), notes: "Pump control VFD package (converted to SO-202608-0106)",
       items: [
-        { description: "PropTech Portal White-label Setup", quantity: 1, unitPrice: 150000, gstRate: 18, amount: 150000 },
-        { description: "Real Estate API Integration Broker", quantity: 1, unitPrice: 50000, gstRate: 18, amount: 50000 },
-        { description: "Agent Training Material & Guides", quantity: 1, unitPrice: 20000, gstRate: 18, amount: 20000 },
+        { description: "Compact VFD Drive 1.5kW — Omron (VFD-1.5KW)", quantity: 30, unitPrice: 14500, gstRate: 18, amount: 435000 },
+        { description: "Overload Relay 18-25A — Siemens (REL-1825A)", quantity: 30, unitPrice: 2400, gstRate: 18, amount: 72000 },
       ]
     },
     {
-      organizationId: 1, clientId: cid("Delta Automotive"), clientName: "Delta Automotive", quoteNumber: "QTN-2026-007", total: 395000, status: "draft" as const, issueDate: null, validUntil: null, notes: "MES Implementation",
+      organizationId: 1, clientId: cid("Pinnacle Realty Group"), clientName: "Pinnacle Realty Group", quoteNumber: "QT-202608-0007", total: 14000, status: "accepted" as const, issueDate: ago(18), validUntil: later(12), notes: "Facility maintenance tools (converted to SO-202608-0109)",
       items: [
-        { description: "MES Integration Core Module", quantity: 1, unitPrice: 275000, gstRate: 18, amount: 275000 },
-        { description: "Automotive CAN-bus Reader Interface", quantity: 8, unitPrice: 15000, gstRate: 18, amount: 120000 },
+        { description: "Drill Machine 13mm — Bosch (DM-13MM)", quantity: 4, unitPrice: 3500, gstRate: 18, amount: 14000 },
       ]
     },
     {
-      organizationId: 1, clientId: cid("Oceanic Pharmaceuticals"), clientName: "Oceanic Pharmaceuticals", quoteNumber: "QTN-2026-008", total: 780000, status: "sent" as const, issueDate: ago(2), validUntil: later(45), notes: "GxP Compliance Suite",
+      organizationId: 1, clientId: cid("Titan Defence Systems"), clientName: "Titan Defence Systems", quoteNumber: "QT-202608-0008", total: 1340000, status: "accepted" as const, issueDate: ago(32), validUntil: ago(2), notes: "Redundant CPU safety panels (converted to SO-202608-0105)",
       items: [
-        { description: "GxP Compliance Tracker Suite License", quantity: 1, unitPrice: 600000, gstRate: 18, amount: 600000 },
-        { description: "Validation Protocol Run & Report", quantity: 1, unitPrice: 180000, gstRate: 18, amount: 180000 },
+        { description: "Redundant CPU Processor Panel (CPU-RED500)", quantity: 15, unitPrice: 85000, gstRate: 18, amount: 1275000 },
+        { description: "Power Supply 24V DC 10A — Siemens SITOP (PS-24V10A)", quantity: 10, unitPrice: 6500, gstRate: 18, amount: 65000 },
       ]
     },
     {
-      organizationId: 1, clientId: cid("Everest Logistics"), clientName: "Everest Logistics", quoteNumber: "QTN-2026-009", total: 210000, status: "sent" as const, issueDate: ago(6), validUntil: later(24), notes: "WMS Upgrade",
+      organizationId: 1, clientId: cid("Delta Automotive"), clientName: "Delta Automotive", quoteNumber: "QT-202608-0009", total: 86000, status: "accepted" as const, issueDate: ago(25), validUntil: ago(0), notes: "Plant cable trays & enclosures (converted to SO-202608-0107)",
       items: [
-        { description: "WMS Upgrade Core Engine License", quantity: 1, unitPrice: 160000, gstRate: 18, amount: 160000 },
-        { description: "Barcoding Integration Module API", quantity: 1, unitPrice: 50000, gstRate: 18, amount: 50000 },
+        { description: "Perforated Cable Tray 3m — Legrand (CT-3M-LEG)", quantity: 20, unitPrice: 1800, gstRate: 18, amount: 36000 },
+        { description: "IP65 Control Panel Enclosure 600x600 (ENC-IP65)", quantity: 4, unitPrice: 12500, gstRate: 18, amount: 50000 },
       ]
     },
     {
-      organizationId: 1, clientId: cid("Apex Logistics Group"), clientName: "Apex Logistics Group", quoteNumber: "QTN-2026-010", total: 98000, status: "rejected" as const, issueDate: ago(30), validUntil: ago(5), notes: "Budget constraints",
+      organizationId: 1, clientId: cid("Bristow Textiles"), clientName: "Bristow Textiles", quoteNumber: "QT-202608-0010", total: 42000, status: "accepted" as const, issueDate: ago(38), validUntil: ago(8), notes: "Panel wiring materials (converted to SO-202608-0102)",
       items: [
-        { description: "GPS Fleet Tracker Enterprise License", quantity: 1, unitPrice: 75000, gstRate: 18, amount: 75000 },
-        { description: "High-Gain Fleet Antennae", quantity: 23, unitPrice: 1000, gstRate: 18, amount: 23000 },
+        { description: "Industrial Control Cable 2.5mm² (50m Roll) (CAB-2.5MM)", quantity: 5, unitPrice: 6200, gstRate: 18, amount: 31000 },
+        { description: "Wire Crimping Tool Set — Bosch (WCT-8PC)", quantity: 5, unitPrice: 2200, gstRate: 18, amount: 11000 },
       ]
     },
     {
-      organizationId: 1, clientId: cid("Halcyon Media"), clientName: "Halcyon Media", quoteNumber: "QTN-2026-011", total: 310000, status: "accepted" as const, issueDate: ago(15), validUntil: ago(2), notes: "CDN Advanced Edge Cache Config",
+      organizationId: 1, clientId: cid("Halcyon Media"), clientName: "Halcyon Media", quoteNumber: "QT-202608-0011", total: 225000, status: "sent" as const, issueDate: ago(10), validUntil: later(20), notes: "Broadcast automation PLCs",
       items: [
-        { description: "CDN Advanced Edge Cache Config", quantity: 1, unitPrice: 200000, gstRate: 18, amount: 200000 },
-        { description: "Ad Server Integration Middleware", quantity: 1, unitPrice: 110000, gstRate: 18, amount: 110000 },
+        { description: "PLC CPU Module — Siemens S7-1200 (PLC-S71200)", quantity: 3, unitPrice: 25000, gstRate: 18, amount: 75000 },
+        { description: "Distributed I/O Interface — Siemens ET200 (IO-ET200)", quantity: 10, unitPrice: 15000, gstRate: 18, amount: 150000 },
       ]
     },
     {
-      organizationId: 1, clientId: cid("Bristow Textiles"), clientName: "Bristow Textiles", quoteNumber: "QTN-2026-012", total: 180000, status: "sent" as const, issueDate: ago(3), validUntil: later(10), notes: "Textile Design CAD Plugin Suite",
+      organizationId: 1, clientId: cid("Meridian Foods"), clientName: "Meridian Foods", quoteNumber: "QT-202608-0012", total: 224000, status: "sent" as const, issueDate: ago(8), validUntil: later(22), notes: "Process line drives & contactors",
       items: [
-        { description: "Textile Design CAD Plugin License", quantity: 5, unitPrice: 30000, gstRate: 18, amount: 150000 },
-        { description: "Fabric Shader Library Suite", quantity: 1, unitPrice: 30000, gstRate: 18, amount: 30000 },
+        { description: "Variable Frequency Drive 5.5kW — Siemens (VFD-5.5KW)", quantity: 5, unitPrice: 32000, gstRate: 18, amount: 160000 },
+        { description: "Magnetic Contactor 40A — Schneider LC1D (CON-40A)", quantity: 20, unitPrice: 3200, gstRate: 18, amount: 64000 },
       ]
     },
     {
-      organizationId: 1, clientId: cid("Vortex Energy Solutions"), clientName: "Vortex Energy Solutions", quoteNumber: "QTN-2026-013", total: 540000, status: "draft" as const, issueDate: null, validUntil: null, notes: "Wind Farm Telemetry Gateway Setup",
+      organizationId: 1, clientId: cid("Nimbus Technologies"), clientName: "Nimbus Technologies", quoteNumber: "QT-202608-0013", total: 189000, status: "draft" as const, issueDate: null, validUntil: null, notes: "Servo actuation suite",
       items: [
-        { description: "Wind Farm Telemetry Gateway", quantity: 2, unitPrice: 200000, gstRate: 18, amount: 400000 },
-        { description: "Grid SCADA Connector License", quantity: 1, unitPrice: 140000, gstRate: 18, amount: 140000 },
+        { description: "Servo Motor & Drive System — Schneider (SRV-DRV100)", quantity: 2, unitPrice: 75000, gstRate: 18, amount: 150000 },
+        { description: "Power Supply 24V DC 10A — Siemens SITOP (PS-24V10A)", quantity: 6, unitPrice: 6500, gstRate: 18, amount: 39000 },
       ]
     },
     {
-      organizationId: 1, clientId: cid("Cascade Water Solutions"), clientName: "Cascade Water Solutions", quoteNumber: "QTN-2026-014", total: 420000, status: "expired" as const, issueDate: ago(40), validUntil: ago(10), notes: "Water Flow Sensor Node Array",
+      organizationId: 1, clientId: cid("Solara Renewable Energy"), clientName: "Solara Renewable Energy", quoteNumber: "QT-202608-0014", total: 166000, status: "draft" as const, issueDate: null, validUntil: null, notes: "Substation pressure & level monitoring",
       items: [
-        { description: "Water Flow Sensor Node Array", quantity: 20, unitPrice: 15000, gstRate: 18, amount: 300000 },
-        { description: "Hydrological Analysis License", quantity: 1, unitPrice: 120000, gstRate: 18, amount: 120000 },
+        { description: "Differential Pressure Transmitter (TX-DP900)", quantity: 6, unitPrice: 18000, gstRate: 18, amount: 108000 },
+        { description: "Ultrasonic Level Sensor — Honeywell (SEN-USL30)", quantity: 4, unitPrice: 14500, gstRate: 18, amount: 58000 },
       ]
     },
     {
-      organizationId: 1, clientId: cid("Neuron AI Research"), clientName: "Neuron AI Research", quoteNumber: "QTN-2026-015", total: 950000, status: "accepted" as const, issueDate: ago(12), validUntil: later(18), notes: "GPU Cluster Management Core",
+      organizationId: 1, clientId: cid("Titan Defence Systems"), clientName: "Titan Defence Systems", quoteNumber: "QT-202608-0015", total: 240000, status: "sent" as const, issueDate: ago(7), validUntil: later(23), notes: "Flight data recorder interfaces",
       items: [
-        { description: "GPU Cluster Management Core", quantity: 1, unitPrice: 750000, gstRate: 18, amount: 750000 },
-        { description: "High-Performance Storage Mount", quantity: 2, unitPrice: 100000, gstRate: 18, amount: 200000 },
+        { description: "Flight Data Recorder Interface (FDR-INT10)", quantity: 4, unitPrice: 30000, gstRate: 18, amount: 120000 },
+        { description: "Aviation-Grade Telemetry Module (TEL-AV900)", quantity: 1, unitPrice: 120000, gstRate: 18, amount: 120000 },
       ]
     },
     {
-      organizationId: 1, clientId: cid("Gardenia Organic Farms"), clientName: "Gardenia Organic Farms", quoteNumber: "QTN-2026-016", total: 290000, status: "sent" as const, issueDate: ago(3), validUntil: later(25), notes: "Automated Irrigation Valve Master",
+      organizationId: 1, clientId: cid("Cirrus Aviation"), clientName: "Cirrus Aviation", quoteNumber: "QT-202608-0016", total: 159000, status: "draft" as const, issueDate: null, validUntil: null, notes: "Aviation HMI & servo package",
       items: [
-        { description: "Automated Irrigation Valve Master", quantity: 10, unitPrice: 20000, gstRate: 18, amount: 200000 },
-        { description: "Soil Moisture Probe Pro Array", quantity: 15, unitPrice: 6000, gstRate: 18, amount: 90000 },
+        { description: "HMI Graphic Terminal 7-inch — Schneider (HMI-GT7)", quantity: 3, unitPrice: 28000, gstRate: 18, amount: 84000 },
+        { description: "Servo Motor & Drive System — Schneider (SRV-DRV100)", quantity: 1, unitPrice: 75000, gstRate: 18, amount: 75000 },
       ]
     },
     {
-      organizationId: 1, clientId: cid("Titan Defence Systems"), clientName: "Titan Defence Systems", quoteNumber: "QTN-2026-017", total: 820000, status: "draft" as const, issueDate: null, validUntil: null, notes: "Radar Signal Processing Engine Design",
+      organizationId: 1, clientId: cid("Pinnacle Realty Group"), clientName: "Pinnacle Realty Group", quoteNumber: "QT-202608-0017", total: 165000, status: "rejected" as const, issueDate: ago(30), validUntil: ago(5), notes: "Switchgear for new tower",
       items: [
-        { description: "Radar Signal Processing Engine", quantity: 1, unitPrice: 650000, gstRate: 18, amount: 650000 },
-        { description: "Hardware-in-the-Loop Simulator", quantity: 1, unitPrice: 170000, gstRate: 18, amount: 170000 },
+        { description: "MCB 32A Triple Pole — Havells (MCB-33A)", quantity: 100, unitPrice: 850, gstRate: 18, amount: 85000 },
+        { description: "Magnetic Contactor 40A — Schneider LC1D (CON-40A)", quantity: 25, unitPrice: 3200, gstRate: 18, amount: 80000 },
       ]
     },
     {
-      organizationId: 1, clientId: cid("Velora Hospitality"), clientName: "Velora Hospitality", quoteNumber: "QTN-2026-018", total: 340000, status: "rejected" as const, issueDate: ago(25), validUntil: ago(5), notes: "PMS Integration API Gateway Proposal",
+      organizationId: 1, clientId: cid("Bristow Textiles"), clientName: "Bristow Textiles", quoteNumber: "QT-202608-0018", total: 71600, status: "expired" as const, issueDate: ago(40), validUntil: ago(10), notes: "Crimping & cabling kit",
       items: [
-        { description: "PMS Integration API Gateway", quantity: 1, unitPrice: 240000, gstRate: 18, amount: 240000 },
-        { description: "Guest Mobile App Portal Setup", quantity: 1, unitPrice: 100000, gstRate: 18, amount: 100000 },
+        { description: "Wire Crimping Tool Set — Bosch (WCT-8PC)", quantity: 10, unitPrice: 2200, gstRate: 18, amount: 22000 },
+        { description: "Industrial Control Cable 2.5mm² (50m Roll) (CAB-2.5MM)", quantity: 8, unitPrice: 6200, gstRate: 18, amount: 49600 },
       ]
     },
     {
-      organizationId: 1, clientId: cid("Bright Future Education"), clientName: "Bright Future Education", quoteNumber: "QTN-2026-019", total: 150000, status: "sent" as const, issueDate: ago(5), validUntil: later(15), notes: "LMS Platform Customization",
+      organizationId: 1, clientId: cid("Delta Automotive"), clientName: "Delta Automotive", quoteNumber: "QT-202608-0019", total: 132000, status: "sent" as const, issueDate: ago(5), validUntil: later(25), notes: "Assembly line PLCs & proximity sensors",
       items: [
-        { description: "LMS Platform Customization Fee", quantity: 1, unitPrice: 100000, gstRate: 18, amount: 100000 },
-        { description: "Teacher/Student Portal Training", quantity: 5, unitPrice: 10000, gstRate: 18, amount: 50000 },
+        { description: "Micro PLC Controller — Omron CP1E (PLC-CP1E)", quantity: 6, unitPrice: 12000, gstRate: 18, amount: 72000 },
+        { description: "Inductive Proximity Sensor — Omron (SEN-PRX12)", quantity: 50, unitPrice: 1200, gstRate: 18, amount: 60000 },
       ]
     },
     {
-      organizationId: 1, clientId: cid("Starlight Entertainment"), clientName: "Starlight Entertainment", quoteNumber: "QTN-2026-020", total: 620000, status: "accepted" as const, issueDate: ago(20), validUntil: ago(1), notes: "Event Ticketing Broker API Integration",
+      organizationId: 1, clientId: cid("Orbit Health"), clientName: "Orbit Health", quoteNumber: "QT-202608-0020", total: 114500, status: "draft" as const, issueDate: null, validUntil: null, notes: "Medical equipment enclosures",
       items: [
-        { description: "Event Ticketing Broker API", quantity: 1, unitPrice: 480000, gstRate: 18, amount: 480000 },
-        { description: "Venue Seating Layout Designer", quantity: 1, unitPrice: 140000, gstRate: 18, amount: 140000 },
+        { description: "IP65 Control Panel Enclosure 600x600 (ENC-IP65)", quantity: 5, unitPrice: 12500, gstRate: 18, amount: 62500 },
+        { description: "Power Supply 24V DC 10A — Siemens SITOP (PS-24V10A)", quantity: 8, unitPrice: 6500, gstRate: 18, amount: 52000 },
       ]
     },
   ];
@@ -504,11 +498,11 @@ async function main() {
 
   // ── CREDIT NOTES (5) ─────────────────────────────────────────────
   const creditNotes = [
-    { organizationId: 1, invoiceId: createdInvoices[0].id, creditNoteNumber: "CN-2026-001", amount: 15000, reason: "Damaged goods returned — Controller X200 unit replaced", status: "issued" as const, issueDate: ago(40) },
-    { organizationId: 1, invoiceId: createdInvoices[2].id, creditNoteNumber: "CN-2026-002", amount: 8300, reason: "Early payment discount (2% on overdue partial)", status: "issued" as const, issueDate: ago(50) },
-    { organizationId: 1, invoiceId: createdInvoices[4].id, creditNoteNumber: "CN-2026-003", amount: 12500, reason: "Service credit — delayed implementation milestone", status: "issued" as const, issueDate: ago(8) },
-    { organizationId: 1, invoiceId: createdInvoices[7].id, creditNoteNumber: "CN-2026-004", amount: 8500, reason: "Shipping damage — IoT sensor gateway (2 units)", status: "draft" as const, issueDate: ago(1) },
-    { organizationId: 1, invoiceId: createdInvoices[18].id, creditNoteNumber: "CN-2026-005", amount: 20000, reason: "Scope reduction — removed HL7 interface module", status: "issued" as const, issueDate: ago(30) },
+    { organizationId: 1, invoiceId: createdInvoices[0].id, creditNoteNumber: "CN-202608-0001", amount: 15000, reason: "Damaged goods returned — Controller X200 unit replaced", status: "issued" as const, issueDate: ago(40) },
+    { organizationId: 1, invoiceId: createdInvoices[2].id, creditNoteNumber: "CN-202608-0002", amount: 8300, reason: "Early payment discount (2% on overdue partial)", status: "issued" as const, issueDate: ago(50) },
+    { organizationId: 1, invoiceId: createdInvoices[4].id, creditNoteNumber: "CN-202608-0003", amount: 12500, reason: "Service credit — delayed implementation milestone", status: "issued" as const, issueDate: ago(8) },
+    { organizationId: 1, invoiceId: createdInvoices[7].id, creditNoteNumber: "CN-202608-0004", amount: 8500, reason: "Shipping damage — IoT sensor gateway (2 units)", status: "draft" as const, issueDate: ago(1) },
+    { organizationId: 1, invoiceId: createdInvoices[18].id, creditNoteNumber: "CN-202608-0005", amount: 20000, reason: "Scope reduction — removed HL7 interface module", status: "issued" as const, issueDate: ago(30) },
   ];
 
   for (const cn of creditNotes) {
@@ -518,10 +512,10 @@ async function main() {
 
   // ── DEBIT NOTES (4) ─────────────────────────────────────────────
   const debitNotes = [
-    { organizationId: 1, invoiceId: createdInvoices[1].id, debitNoteNumber: "DN-2026-001", amount: 12000, reason: "Price adjustment — additional integration modules", status: "issued" as const, issueDate: ago(20) },
-    { organizationId: 1, invoiceId: createdInvoices[8].id, debitNoteNumber: "DN-2026-002", amount: 25000, reason: "Change order — extended pen-testing scope", status: "issued" as const, issueDate: ago(15) },
-    { organizationId: 1, invoiceId: createdInvoices[6].id, debitNoteNumber: "DN-2026-003", amount: 15000, reason: "Additional data migration — extra 20 hrs", status: "draft" as const, issueDate: ago(2) },
-    { organizationId: 1, invoiceId: createdInvoices[19].id, debitNoteNumber: "DN-2026-004", amount: 18000, reason: "Late payment interest (45 days overdue)", status: "issued" as const, issueDate: ago(10) },
+    { organizationId: 1, invoiceId: createdInvoices[1].id, debitNoteNumber: "DN-202608-0001", amount: 12000, reason: "Price adjustment — additional integration modules", status: "issued" as const, issueDate: ago(20) },
+    { organizationId: 1, invoiceId: createdInvoices[8].id, debitNoteNumber: "DN-202608-0002", amount: 25000, reason: "Change order — extended pen-testing scope", status: "issued" as const, issueDate: ago(15) },
+    { organizationId: 1, invoiceId: createdInvoices[6].id, debitNoteNumber: "DN-202608-0003", amount: 15000, reason: "Additional data migration — extra 20 hrs", status: "draft" as const, issueDate: ago(2) },
+    { organizationId: 1, invoiceId: createdInvoices[19].id, debitNoteNumber: "DN-202608-0004", amount: 18000, reason: "Late payment interest (45 days overdue)", status: "issued" as const, issueDate: ago(10) },
   ];
 
   for (const dn of debitNotes) {
@@ -628,18 +622,18 @@ async function main() {
 
   const cashEntries = [
     // Cash received from customers (mirroring payments)
-    { accountId: cashAccountId, entryDate: ago(50), description: "NEFT — Meridian Foods payment INV-2026-001", debit: 162000, credit: 0, refType: "Payment", refId: 1 },
-    { accountId: arAccountId, entryDate: ago(50), description: "Reversal of AR — Meridian Foods INV-2026-001", debit: 0, credit: 162000, refType: "Payment", refId: 1 },
-    { accountId: cashAccountId, entryDate: ago(55), description: "UPI — Halcyon Media payment INV-2026-003", debit: 50000, credit: 0, refType: "Payment", refId: 2 },
-    { accountId: arAccountId, entryDate: ago(55), description: "Reversal of AR — Halcyon Media INV-2026-003", debit: 0, credit: 50000, refType: "Payment", refId: 2 },
-    { accountId: cashAccountId, entryDate: ago(5), description: "NEFT — Bristow Textiles payment INV-2026-005", debit: 150000, credit: 0, refType: "Payment", refId: 4 },
-    { accountId: arAccountId, entryDate: ago(5), description: "Reversal of AR — Bristow Textiles INV-2026-005", debit: 0, credit: 150000, refType: "Payment", refId: 4 },
-    { accountId: cashAccountId, entryDate: ago(20), description: "UPI — Apex Logistics payment INV-2026-017", debit: 100300, credit: 0, refType: "Payment", refId: 5 },
-    { accountId: arAccountId, entryDate: ago(20), description: "Reversal of AR — Apex Logistics INV-2026-017", debit: 0, credit: 100300, refType: "Payment", refId: 5 },
-    { accountId: cashAccountId, entryDate: ago(20), description: "NEFT — Titan Defence payment INV-2026-018", debit: 200000, credit: 0, refType: "Payment", refId: 6 },
-    { accountId: arAccountId, entryDate: ago(20), description: "Reversal of AR — Titan Defence INV-2026-018", debit: 0, credit: 200000, refType: "Payment", refId: 6 },
-    { accountId: cashAccountId, entryDate: ago(10), description: "NEFT — Solara Renewable payment INV-2026-020", debit: 100000, credit: 0, refType: "Payment", refId: 7 },
-    { accountId: arAccountId, entryDate: ago(10), description: "Reversal of AR — Solara Renewable INV-2026-020", debit: 0, credit: 100000, refType: "Payment", refId: 7 },
+    { accountId: cashAccountId, entryDate: ago(50), description: "NEFT — Meridian Foods payment INV-202608-0001", debit: 162000, credit: 0, refType: "Payment", refId: 1 },
+    { accountId: arAccountId, entryDate: ago(50), description: "Reversal of AR — Meridian Foods INV-202608-0001", debit: 0, credit: 162000, refType: "Payment", refId: 1 },
+    { accountId: cashAccountId, entryDate: ago(55), description: "UPI — Halcyon Media payment INV-202608-0003", debit: 50000, credit: 0, refType: "Payment", refId: 2 },
+    { accountId: arAccountId, entryDate: ago(55), description: "Reversal of AR — Halcyon Media INV-202608-0003", debit: 0, credit: 50000, refType: "Payment", refId: 2 },
+    { accountId: cashAccountId, entryDate: ago(5), description: "NEFT — Bristow Textiles payment INV-202608-0005", debit: 150000, credit: 0, refType: "Payment", refId: 4 },
+    { accountId: arAccountId, entryDate: ago(5), description: "Reversal of AR — Bristow Textiles INV-202608-0005", debit: 0, credit: 150000, refType: "Payment", refId: 4 },
+    { accountId: cashAccountId, entryDate: ago(20), description: "UPI — Apex Logistics payment INV-202608-0017", debit: 100300, credit: 0, refType: "Payment", refId: 5 },
+    { accountId: arAccountId, entryDate: ago(20), description: "Reversal of AR — Apex Logistics INV-202608-0017", debit: 0, credit: 100300, refType: "Payment", refId: 5 },
+    { accountId: cashAccountId, entryDate: ago(20), description: "NEFT — Titan Defence payment INV-202608-0018", debit: 200000, credit: 0, refType: "Payment", refId: 6 },
+    { accountId: arAccountId, entryDate: ago(20), description: "Reversal of AR — Titan Defence INV-202608-0018", debit: 0, credit: 200000, refType: "Payment", refId: 6 },
+    { accountId: cashAccountId, entryDate: ago(10), description: "NEFT — Solara Renewable payment INV-202608-0020", debit: 100000, credit: 0, refType: "Payment", refId: 7 },
+    { accountId: arAccountId, entryDate: ago(10), description: "Reversal of AR — Solara Renewable INV-202608-0020", debit: 0, credit: 100000, refType: "Payment", refId: 7 },
     // Cash paid for expenses
     { accountId: cashAccountId, entryDate: ago(25), description: "Bank Transfer — Office Rent July", debit: 0, credit: 30000, refType: "Expense", refId: 1 },
     { accountId: cashAccountId, entryDate: ago(20), description: "Credit Card — AWS hosting", debit: 0, credit: 42000, refType: "Expense", refId: 2 },
@@ -648,8 +642,8 @@ async function main() {
     { accountId: cashAccountId, entryDate: ago(12), description: "Bank Transfer — July salary", debit: 0, credit: 150000, refType: "Expense", refId: 5 },
     { accountId: cashAccountId, entryDate: ago(5), description: "Bank Transfer — August office rent", debit: 0, credit: 30000, refType: "Expense", refId: 7 },
     // Vendor bill payments
-    { accountId: cashAccountId, entryDate: ago(10), description: "NEFT — Schneider Electric India payment BILL-2026-002", debit: 0, credit: 100000, refType: "Payment", refId: 9 },
-    { accountId: apAccountId, entryDate: ago(10), description: "Reversal of AP — Schneider Electric India BILL-2026-002", debit: 100000, credit: 0, refType: "Payment", refId: 9 },
+    { accountId: cashAccountId, entryDate: ago(10), description: "NEFT — Schneider Electric India payment INV-202608-0022", debit: 0, credit: 100000, refType: "Payment", refId: 9 },
+    { accountId: apAccountId, entryDate: ago(10), description: "Reversal of AP — Schneider Electric India INV-202608-0022", debit: 100000, credit: 0, refType: "Payment", refId: 9 },
   ];
 
   for (const ce of cashEntries) {
@@ -744,11 +738,11 @@ async function main() {
   console.log("  Reconciliation tolerance rule (defaults)");
 
   // ── BANK RECONCILIATION: Transactions ──────────────────────────────
-  const inv3 = createdInvoices[2];  // INV-2026-003, overdue, Halcyon Media
-  const inv5 = createdInvoices[4];  // INV-2026-005, partially_paid, Bristow Textiles
-  const inv1 = createdInvoices[0];  // INV-2026-001, paid, Meridian Foods
-  const inv17 = createdInvoices[16]; // INV-2026-017, paid, Apex Logistics
-  const inv19 = createdInvoices[18]; // INV-2026-019, overdue, Orbit Health
+  const inv3 = createdInvoices[2];  // INV-202608-0003, overdue, Halcyon Media
+  const inv5 = createdInvoices[4];  // INV-202608-0005, partially_paid, Bristow Textiles
+  const inv1 = createdInvoices[0];  // INV-202608-0001, paid, Meridian Foods
+  const inv17 = createdInvoices[16]; // INV-202608-0017, paid, Apex Logistics
+  const inv19 = createdInvoices[18]; // INV-202608-0019, overdue, Orbit Health
 
   // Look up payment IDs by reference
   const payMf = await prisma.payment.findFirst({ where: { referenceId: "NEFT-MF-001" } });
@@ -757,16 +751,16 @@ async function main() {
   const payHm = await prisma.payment.findFirst({ where: { referenceId: "UPI-HM-001" } });
 
   const bankTxnData = [
-    { orgId: 1, date: new Date("2026-05-20"), desc: "NEFT — Meridian Foods INV-2026-001", ref: "NEFT-MF-001", debit: 0, credit: 162000, balance: 162000, matchPayId: payMf?.id ?? null, matchInvId: inv1.id, classification: "Matched", importBatch: "BATCH-2026-05" },
-    { orgId: 1, date: new Date("2026-05-15"), desc: "UPI — Halcyon Media INV-2026-003", ref: "UPI-HM-001", debit: 0, credit: 50000, balance: 212000, matchPayId: payHm?.id ?? null, matchInvId: inv3.id, classification: "Matched", importBatch: "BATCH-2026-05" },
-    { orgId: 1, date: new Date("2026-05-22"), desc: "NEFT — Bristow Textiles INV-2026-005", ref: "NEFT-BT-001", debit: 0, credit: 150000, balance: 362000, matchPayId: payBt?.id ?? null, matchInvId: inv5.id, classification: "Matched", importBatch: "BATCH-2026-05" },
-    { orgId: 1, date: new Date("2026-05-25"), desc: "UPI — Apex Logistics INV-2026-017", ref: "UPI-AL-001", debit: 0, credit: 100300, balance: 462300, matchPayId: payAl?.id ?? null, matchInvId: inv17.id, classification: "Matched", importBatch: "BATCH-2026-05" },
+    { orgId: 1, date: new Date("2026-05-20"), desc: "NEFT — Meridian Foods INV-202608-0001", ref: "NEFT-MF-001", debit: 0, credit: 162000, balance: 162000, matchPayId: payMf?.id ?? null, matchInvId: inv1.id, classification: "Matched", importBatch: "BATCH-2026-05" },
+    { orgId: 1, date: new Date("2026-05-15"), desc: "UPI — Halcyon Media INV-202608-0003", ref: "UPI-HM-001", debit: 0, credit: 50000, balance: 212000, matchPayId: payHm?.id ?? null, matchInvId: inv3.id, classification: "Matched", importBatch: "BATCH-2026-05" },
+    { orgId: 1, date: new Date("2026-05-22"), desc: "NEFT — Bristow Textiles INV-202608-0005", ref: "NEFT-BT-001", debit: 0, credit: 150000, balance: 362000, matchPayId: payBt?.id ?? null, matchInvId: inv5.id, classification: "Matched", importBatch: "BATCH-2026-05" },
+    { orgId: 1, date: new Date("2026-05-25"), desc: "UPI — Apex Logistics INV-202608-0017", ref: "UPI-AL-001", debit: 0, credit: 100300, balance: 462300, matchPayId: payAl?.id ?? null, matchInvId: inv17.id, classification: "Matched", importBatch: "BATCH-2026-05" },
     { orgId: 1, date: new Date("2026-05-28"), desc: "Bank Charges — May 2026", ref: "CHG-0526", debit: 250, credit: 0, balance: 462050, matchPayId: null, matchInvId: null, classification: "Exception", importBatch: "BATCH-2026-05" },
     { orgId: 1, date: new Date("2026-06-01"), desc: "Unidentified Deposit — Ref: UPI-CONSULT-001", ref: "UPI-CONSULT-001", debit: 0, credit: 32000, balance: 494050, matchPayId: null, matchInvId: null, classification: "Unmatched", importBatch: "BATCH-2026-06" },
     { orgId: 1, date: new Date("2026-06-02"), desc: "Cheque Deposit — Orbit Health", ref: "CHQ-ORBIT-001", debit: 0, credit: 88000, balance: 582050, matchPayId: null, matchInvId: inv19.id, classification: "Partial_Match", importBatch: "BATCH-2026-06" },
     { orgId: 1, date: new Date("2026-06-03"), desc: "NEFT — Retainer Meridian Foods Q3", ref: "NEFT-RETAINER-001", debit: 0, credit: 75000, balance: 657050, matchPayId: null, matchInvId: null, classification: "Unmatched", importBatch: "BATCH-2026-06" },
     { orgId: 1, date: new Date("2026-06-05"), desc: "UPI Refund — Duplicate Payment MF", ref: "CC-MF-001", debit: 177000, credit: 0, balance: 480050, matchPayId: null, matchInvId: inv1.id, classification: "Duplicate", importBatch: "BATCH-2026-06" },
-    { orgId: 1, date: new Date("2026-06-07"), desc: "NEFT — Titan Defence INV-2026-018", ref: "NEFT-TD-001", debit: 0, credit: 200000, balance: 680050, matchPayId: null, matchInvId: createdInvoices[17].id, classification: "Matched", importBatch: "BATCH-2026-06" },
+    { orgId: 1, date: new Date("2026-06-07"), desc: "NEFT — Titan Defence INV-202608-0018", ref: "NEFT-TD-001", debit: 0, credit: 200000, balance: 680050, matchPayId: null, matchInvId: createdInvoices[17].id, classification: "Matched", importBatch: "BATCH-2026-06" },
   ];
 
   for (const t of bankTxnData) {
@@ -791,12 +785,12 @@ async function main() {
   // ── BANK RECONCILIATION: Audit Logs ────────────────────────────────
   const allBankTxns = await prisma.bankTransaction.findMany({ where: { organizationId: 1 } });
   const auditActions = [
-    { actionType: "AUTO_MATCH", txnIdx: 0, payRef: "NEFT-MF-001", notes: "Auto-matched to payment NEFT-MF-001 (INV-2026-001)" },
-    { actionType: "AUTO_MATCH", txnIdx: 1, payRef: "UPI-HM-001", notes: "Auto-matched to payment UPI-HM-001 (INV-2026-003)" },
-    { actionType: "AUTO_MATCH", txnIdx: 2, payRef: "NEFT-BT-001", notes: "Auto-matched to payment NEFT-BT-001 (INV-2026-005)" },
-    { actionType: "MANUAL_RECONCILE", txnIdx: 3, payRef: "UPI-AL-001", notes: "Manually reconciled to payment UPI-AL-001 (INV-2026-017)" },
+    { actionType: "AUTO_MATCH", txnIdx: 0, payRef: "NEFT-MF-001", notes: "Auto-matched to payment NEFT-MF-001 (INV-202608-0001)" },
+    { actionType: "AUTO_MATCH", txnIdx: 1, payRef: "UPI-HM-001", notes: "Auto-matched to payment UPI-HM-001 (INV-202608-0003)" },
+    { actionType: "AUTO_MATCH", txnIdx: 2, payRef: "NEFT-BT-001", notes: "Auto-matched to payment NEFT-BT-001 (INV-202608-0005)" },
+    { actionType: "MANUAL_RECONCILE", txnIdx: 3, payRef: "UPI-AL-001", notes: "Manually reconciled to payment UPI-AL-001 (INV-202608-0017)" },
     { actionType: "MANUAL_ADJUSTMENT", txnIdx: 4, payRef: "CHG-0526", notes: "Bank charges — no matching invoice, classified as Exception", adjustedAmount: 250 },
-    { actionType: "AUTO_MATCH", txnIdx: 9, payRef: "NEFT-TD-001", notes: "Auto-matched to payment NEFT-TD-001 (INV-2026-018)" },
+    { actionType: "AUTO_MATCH", txnIdx: 9, payRef: "NEFT-TD-001", notes: "Auto-matched to payment NEFT-TD-001 (INV-202608-0018)" },
   ];
 
   for (const a of auditActions) {
@@ -819,8 +813,8 @@ async function main() {
 
   // ── DUNNING: Records for overdue invoices ──────────────────────────
   const overdueInvoices = [
-    { inv: createdInvoices[2], daysOverdue: 60, level: 3, notes: "Third reminder — INV-2026-003 (Halcyon Media). Outstanding: ₹42,000. Legal notice sent." },
-    { inv: createdInvoices[18], daysOverdue: 45, level: 2, notes: "Second reminder — INV-2026-019 (Orbit Health). Outstanding: ₹1,59,360. Late fee applicable." },
+    { inv: createdInvoices[2], daysOverdue: 60, level: 3, notes: "Third reminder — INV-202608-0003 (Halcyon Media). Outstanding: ₹42,000. Legal notice sent." },
+    { inv: createdInvoices[18], daysOverdue: 45, level: 2, notes: "Second reminder — INV-202608-0019 (Orbit Health). Outstanding: ₹1,59,360. Late fee applicable." },
   ];
 
   for (const di of overdueInvoices) {

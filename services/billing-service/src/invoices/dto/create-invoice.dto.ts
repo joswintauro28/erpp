@@ -7,9 +7,11 @@ import {
   Min,
   ValidateNested,
   IsDateString,
+  Matches,
 } from "class-validator";
 import { Type } from "class-transformer";
 import { GstTreatment } from "@prisma/client";
+import { DOCUMENT_ID_RE } from "../../common/document-number.service";
 
 export class CreateInvoiceItemDto {
   @IsOptional()
@@ -60,7 +62,16 @@ export class CreateInvoiceDto {
 
   @IsOptional()
   @IsString()
+  @Matches(DOCUMENT_ID_RE, { message: "invoiceNumber must match [PREFIX]-YYYYMM-NNNN (e.g. INV-202608-0001)" })
   invoiceNumber?: string;
+
+  @IsOptional()
+  @IsString()
+  salesOrderCode?: string;
+
+  @IsOptional()
+  @IsString()
+  poReference?: string;
 
   @IsOptional()
   @IsEnum(GstTreatment)

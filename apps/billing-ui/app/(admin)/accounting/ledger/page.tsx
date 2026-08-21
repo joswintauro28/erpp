@@ -167,7 +167,7 @@ export default function LedgerPage() {
                   <TableCell className="text-xs font-medium">{e.account_name}</TableCell>
                   <TableCell className="text-xs text-muted-foreground">{e.description}</TableCell>
                   <TableCell className="text-right font-mono text-xs text-destructive">{e.debit > 0 ? money(e.debit) : "-"}</TableCell>
-                  <TableCell className="text-right font-mono text-xs text-emerald-600">{e.credit > 0 ? money(e.credit) : "-"}</TableCell>
+                  <TableCell className="text-right font-mono text-xs text-[var(--shell-success)]">{e.credit > 0 ? money(e.credit) : "-"}</TableCell>
                   <TableCell className="text-xs text-muted-foreground">{e.reference_type ? `${e.reference_type}#${e.reference_id}` : "-"}</TableCell>
                   <TableCell className="text-right">
                     <Button variant="ghost" size="icon-sm" onClick={() => handleEditClick(e)} title="Edit">

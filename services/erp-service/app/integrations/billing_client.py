@@ -116,7 +116,9 @@ async def update_quotation(token: str, quotation_id: int, body: dict) -> dict:
 
 
 async def update_quotation_status(token: str, quotation_id: int, status: str) -> dict:
-    return await _put(f"/invoices/quotations/{quotation_id}/status", token, {"status": status})
+    # billing-service reads the status from the query string (@Query("status")),
+    # not the request body.
+    return await _put(f"/invoices/quotations/{quotation_id}/status?status={status}", token)
 
 
 async def convert_quotation(token: str, quotation_id: int) -> dict:
@@ -241,6 +243,36 @@ async def get_aging(token: str) -> dict:
     return await _get("/aging", token)
 
 
+# ─── Aging Workstation (detailed views) ─────────────────────
+
+async def get_aging_summary(token: str, params: dict | None = None) -> dict:
+    return await _get("/aging/summary", token, params)
+
+
+async def get_aging_customers(token: str, params: dict | None = None) -> dict:
+    return await _get("/aging/customers", token, params)
+
+
+async def get_aging_invoices(token: str, params: dict | None = None) -> dict:
+    return await _get("/aging/invoices", token, params)
+
+
+async def get_aging_reconciliation(token: str, params: dict | None = None) -> dict:
+    return await _get("/aging/reconciliation", token, params)
+
+
+async def get_aging_invoice(token: str, invoice_id: int) -> dict:
+    return await _get(f"/aging/invoice/{invoice_id}", token)
+
+
+async def get_aging_export(token: str, params: dict | None = None) -> str:
+    headers = {"Authorization": f"Bearer {token}"}
+    async with httpx.AsyncClient(timeout=10.0) as client:
+        resp = await client.get(f"{BILLING_SERVICE_URL}/aging/export", headers=headers, params=params)
+        resp.raise_for_status()
+        return resp.text
+
+
 async def get_dunning(token: str) -> dict:
     return await _get("/dunning", token)
 
@@ -249,6 +281,10 @@ async def get_dunning(token: str) -> dict:
 
 async def import_bank_csv(token: str, body: dict) -> dict:
     return await _post("/bank-reconciliation/import", token, body)
+
+
+async def import_bank_file(token: str, body: dict) -> dict:
+    return await _post("/bank-reconciliation/import-file", token, body)
 
 
 async def get_bank_transactions(token: str, batch: str | None = None) -> dict:
@@ -260,8 +296,32 @@ async def match_bank_transaction(token: str, body: dict) -> dict:
     return await _post("/bank-reconciliation/match", token, body)
 
 
+async def reconcile_bank_transaction(token: str, body: dict) -> dict:
+    return await _post("/bank-reconciliation/reconcile-manual", token, body)
+
+
+async def unmatch_bank_transaction(token: str, transaction_id: int) -> dict:
+    return await _post("/bank-reconciliation/unmatch", token, {"transaction_id": transaction_id})
+
+
 async def get_bank_reports(token: str) -> dict:
     return await _get("/bank-reconciliation/reports", token)
+
+
+async def get_bank_variance_report(token: str) -> dict:
+    return await _get("/bank-reconciliation/variance-report", token)
+
+
+async def get_bank_audit_logs(token: str) -> dict:
+    return await _get("/bank-reconciliation/audit-logs", token)
+
+
+async def get_bank_config(token: str) -> dict:
+    return await _get("/bank-reconciliation/config", token)
+
+
+async def update_bank_config(token: str, body: dict) -> dict:
+    return await _post("/bank-reconciliation/config", token, body)
 
 
 # ─── Month-End Close / Fiscal Periods ───────────────────────
@@ -274,8 +334,10 @@ async def close_period(token: str, period_id: int) -> dict:
     return await _post(f"/periods/{period_id}/close", token)
 
 
-async def reopen_period(token: str, period_id: int) -> dict:
-    return await _post(f"/periods/{period_id}/reopen", token)
+async def reopen_period_request(token: str, period_id: int, reason: str) -> dict:
+    # billing-service only exposes /periods/:id/reopen-request (a workflow request,
+    # not a direct reopen).
+    return await _post(f"/periods/{period_id}/reopen-request", token, {"reason": reason})
 
 
 async def get_periods_status(token: str) -> dict:

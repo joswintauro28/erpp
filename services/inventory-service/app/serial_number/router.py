@@ -3,7 +3,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.deps import get_db, get_current_org_id
 from app.core.exceptions import NotFoundException
-from app.serial_number.schemas import SerialNumberCreate, SerialNumberOut, SerialNumberUpdate
+from app.serial_number.schemas import (
+    SerialNumberCreate,
+    SerialNumberOut,
+    SerialNumberStats,
+    SerialNumberUpdate,
+)
 from app.serial_number.services import SerialNumberService
 
 router = APIRouter(prefix="/serial-numbers", tags=["serial-numbers"])
@@ -13,11 +18,24 @@ router = APIRouter(prefix="/serial-numbers", tags=["serial-numbers"])
 async def list_serial_numbers(
     product_id: int | None = Query(None),
     warehouse_id: int | None = Query(None),
+    status: str | None = Query(None),
+    search: str | None = Query(None),
     db: AsyncSession = Depends(get_db),
     org_id: int = Depends(get_current_org_id),
 ):
     service = SerialNumberService(db)
-    return await service.list_serial_numbers(org_id, product_id, warehouse_id)
+    return await service.list_serial_numbers(
+        org_id, product_id, warehouse_id, status, search
+    )
+
+
+@router.get("/stats", response_model=SerialNumberStats)
+async def serial_number_stats(
+    db: AsyncSession = Depends(get_db),
+    org_id: int = Depends(get_current_org_id),
+):
+    service = SerialNumberService(db)
+    return await service.get_stats(org_id)
 
 
 @router.post("", response_model=SerialNumberOut, status_code=201)

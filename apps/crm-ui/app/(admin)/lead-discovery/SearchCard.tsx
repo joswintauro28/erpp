@@ -261,7 +261,7 @@ function IndustrySelect({
                   onChange(inputValue);
                   setIsOpen(false);
                 }}
-                className="w-full text-left px-3 py-2 text-sm rounded-md hover:bg-[var(--shell-border)] text-emerald-600 font-medium transition-colors cursor-pointer"
+                className="w-full text-left px-3 py-2 text-sm rounded-md hover:bg-[var(--shell-border)] text-[var(--shell-success)] font-medium transition-colors cursor-pointer"
               >
                 Create "{inputValue}"
               </button>

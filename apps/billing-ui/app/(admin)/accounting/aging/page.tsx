@@ -30,12 +30,6 @@ import {
 import { api } from "@/services/api";
 import { money } from "@/utils/format";
 
-const statusVariant = (s: string) => {
-  if (s === "paid") return "default" as const;
-  if (s === "sent" || s === "pending") return "secondary" as const;
-  if (s === "overdue" || s === "DISCREPANCY") return "destructive" as const;
-  return "outline" as const;
-};
 
 export default function AgingWorkstationPage() {
   const [activeTab, setActiveTab] = useState<"summary" | "customers" | "invoices" | "reconciliation">("summary");
@@ -213,12 +207,12 @@ export default function AgingWorkstationPage() {
       </div>
 
       {/* Reconciliation Status Banner */}
-      <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border p-4 shadow-sm ${isReconciled ? "border-emerald-500/30 bg-emerald-50/50 dark:bg-emerald-950/20" : "border-amber-500/30 bg-amber-50/50 dark:bg-amber-950/20"}`}>
+      <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border p-4 shadow-sm ${isReconciled ? "border-[var(--shell-success)]/30 bg-[var(--shell-success-surface)]/50 " : "border-[var(--shell-warning)]/30 bg-[var(--shell-warning-surface)]/50 "}`}>
         <div className="flex items-center gap-3">
           {isReconciled ? (
-            <ShieldCheck className="h-6 w-6 text-emerald-600 dark:text-emerald-400 shrink-0" />
+            <ShieldCheck className="h-6 w-6 text-[var(--shell-success)]  shrink-0" />
           ) : (
-            <AlertTriangle className="h-6 w-6 text-amber-600 dark:text-amber-400 shrink-0" />
+            <AlertTriangle className="h-6 w-6 text-[var(--shell-warning)]  shrink-0" />
           )}
           <div>
             <h4 className="text-sm font-semibold flex items-center gap-2">
@@ -256,9 +250,9 @@ export default function AgingWorkstationPage() {
           <CardContent className="pt-5">
             <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
               <span>Unapplied Credits</span>
-              <DollarSign className="h-4 w-4 text-emerald-600" />
+              <DollarSign className="h-4 w-4 text-[var(--shell-success)]" />
             </div>
-            <p className="font-heading text-xl font-bold text-emerald-600 dark:text-emerald-400">
+            <p className="font-heading text-xl font-bold text-[var(--shell-success)] ">
               {money(summary?.kpis?.unappliedCredits || 0)}
             </p>
             <p className="text-[11px] text-muted-foreground mt-1">Advance customer credits</p>
@@ -293,9 +287,9 @@ export default function AgingWorkstationPage() {
           <CardContent className="pt-5">
             <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
               <span>Overdue &gt;30 Days</span>
-              <AlertTriangle className="h-4 w-4 text-amber-500" />
+              <AlertTriangle className="h-4 w-4 text-[var(--shell-warning)]" />
             </div>
-            <p className="font-heading text-xl font-bold text-amber-600 dark:text-amber-400">
+            <p className="font-heading text-xl font-bold text-[var(--shell-warning)] ">
               {summary?.kpis?.overdue30PlusRatio || 0}%
             </p>
             <p className="text-[11px] text-muted-foreground mt-1">Overdue exposure ratio</p>
@@ -349,7 +343,7 @@ export default function AgingWorkstationPage() {
                   <p className="font-heading text-lg font-bold">{money(bucket.totalAmount)}</p>
                   <div className="w-full bg-muted h-1.5 rounded-full mt-3 overflow-hidden">
                     <div
-                      className={`h-full ${bucket.bucket === "Over 90 Days" ? "bg-red-500" : bucket.bucket === "61–90 Days" ? "bg-amber-500" : "bg-primary"}`}
+                      className={`h-full ${bucket.bucket === "Over 90 Days" ? "bg-[var(--shell-danger-surface)]0" : bucket.bucket === "61–90 Days" ? "bg-[var(--shell-warning-surface)]0" : "bg-primary"}`}
                       style={{ width: `${Math.min(100, bucket.percentage)}%` }}
                     />
                   </div>
@@ -444,7 +438,7 @@ export default function AgingWorkstationPage() {
                       <TableCell className="text-right font-mono text-xs">{money(cust.days1_30)}</TableCell>
                       <TableCell className="text-right font-mono text-xs">{money(cust.days31_60)}</TableCell>
                       <TableCell className="text-right font-mono text-xs">{money(cust.days61_90)}</TableCell>
-                      <TableCell className="text-right font-mono text-xs text-red-600 font-semibold">{money(cust.daysOver90)}</TableCell>
+                      <TableCell className="text-right font-mono text-xs text-[var(--shell-danger)] font-semibold">{money(cust.daysOver90)}</TableCell>
                       <TableCell className="text-right font-mono text-sm font-bold text-primary">{money(cust.totalOutstanding)}</TableCell>
                     </TableRow>
                   ))}
@@ -550,8 +544,8 @@ export default function AgingWorkstationPage() {
                       <TableCell className="font-mono text-xs">{inv.issueDate}</TableCell>
                       <TableCell className="font-mono text-xs">{inv.dueDate}</TableCell>
                       <TableCell className="text-right font-mono text-xs">{money(inv.originalTotal)}</TableCell>
-                      <TableCell className="text-right font-mono text-xs text-emerald-600">{money(inv.paidAmount)}</TableCell>
-                      <TableCell className="text-right font-mono text-xs text-red-600">{money(inv.creditNotesAmount)}</TableCell>
+                      <TableCell className="text-right font-mono text-xs text-[var(--shell-success)]">{money(inv.paidAmount)}</TableCell>
+                      <TableCell className="text-right font-mono text-xs text-[var(--shell-danger)]">{money(inv.creditNotesAmount)}</TableCell>
                       <TableCell className="text-right font-mono text-xs font-bold text-primary">{money(inv.baseCurrencyBalanceDue)}</TableCell>
                       <TableCell className="font-mono text-xs">{inv.daysOverdue}d</TableCell>
                       <TableCell>
@@ -628,7 +622,7 @@ export default function AgingWorkstationPage() {
                 </div>
                 <div className="rounded-lg border p-4 bg-muted/20">
                   <span className="text-xs text-muted-foreground">Unapplied Customer Credits</span>
-                  <p className="font-heading text-xl font-bold text-emerald-600 mt-1">-{money(reconciliation?.reconciliation?.unappliedCredits || 0)}</p>
+                  <p className="font-heading text-xl font-bold text-[var(--shell-success)] mt-1">-{money(reconciliation?.reconciliation?.unappliedCredits || 0)}</p>
                 </div>
                 <div className="rounded-lg border p-4 border-primary/30 bg-primary/5">
                   <span className="text-xs text-primary font-medium">Net Subledger AR Balance</span>
@@ -659,7 +653,7 @@ export default function AgingWorkstationPage() {
                   </TableRow>
                   <TableRow className="bg-muted/40 font-bold">
                     <TableCell className="text-xs font-bold">Calculated Reconciliation Variance</TableCell>
-                    <TableCell className="text-right font-mono text-sm font-bold text-amber-600">{money(reconciliation?.reconciliation?.variance || 0)}</TableCell>
+                    <TableCell className="text-right font-mono text-sm font-bold text-[var(--shell-warning)]">{money(reconciliation?.reconciliation?.variance || 0)}</TableCell>
                     <TableCell className="text-xs">
                       <Badge variant={reconciliation?.reconciliation?.isReconciled ? "default" : "destructive"} className="capitalize">
                         {reconciliation?.reconciliation?.status || "RECONCILED"}
@@ -704,7 +698,7 @@ export default function AgingWorkstationPage() {
                 </div>
                 <div>
                   <span className="text-muted-foreground">Paid:</span>
-                  <p className="font-mono font-semibold text-emerald-600">{money(timelineData.invoice.paidAmount)}</p>
+                  <p className="font-mono font-semibold text-[var(--shell-success)]">{money(timelineData.invoice.paidAmount)}</p>
                 </div>
                 <div>
                   <span className="text-muted-foreground">Balance Due:</span>

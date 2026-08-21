@@ -2,6 +2,8 @@
 
 import { PanelLeftOpen, PanelLeftClose } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { NotificationBell } from "@/components/ui/notification-bell";
+import { ThemeToggle } from "@datavex/ui-theme";
 
 export default function Header({
   collapsed,
@@ -13,11 +15,10 @@ export default function Header({
   return (
     <header className="sticky top-0 z-30 flex h-20 shrink-0 items-center justify-between border-b border-border bg-background px-6 shadow-engineered">
       <span
-        className="pointer-events-none absolute bottom-0 left-0 h-[2px] w-[200%]"
+        className="pointer-events-none absolute bottom-0 left-0 h-[2px] w-[200%] pulse-sweep-line"
         style={{
           background:
             "linear-gradient(90deg, transparent 0%, var(--shell-accent) 25%, var(--shell-border) 50%, var(--shell-accent) 75%, transparent 100%)",
-          animation: "pulse-sweep 3s ease-in-out infinite",
         }}
       />
 
@@ -39,6 +40,11 @@ export default function Header({
         <span className="hidden rounded-full bg-accent/10 px-2.5 py-0.5 text-xs font-medium text-accent-foreground sm:inline-block">
           Live
         </span>
+      </div>
+
+      <div className="flex items-center gap-3">
+        <NotificationBell />
+        <ThemeToggle />
       </div>
     </header>
   );

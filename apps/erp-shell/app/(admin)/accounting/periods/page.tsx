@@ -121,7 +121,7 @@ export default function PeriodsPage() {
                     {p.is_closed ? (
                       <Badge variant="default" className="text-xs gap-1"><Lock className="h-3 w-3" /> Closed</Badge>
                     ) : (
-                      <Badge variant="secondary" className="text-xs gap-1"><Unlock className="h-3 w-3" /> Open</Badge>
+                      <Badge variant="neutral" className="text-xs gap-1"><Unlock className="h-3 w-3" /> Open</Badge>
                     )}
                   </TableCell>
                   <TableCell className="text-xs text-[var(--shell-muted)]">{p.closed_at ?? "-"}</TableCell>

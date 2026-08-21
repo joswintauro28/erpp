@@ -1,6 +1,6 @@
 # DATAVEX ERP — Enterprise Resource Planning Monorepo
 
-Welcome to the **DATAVEX ERP** ecosystem, a modern, polyglot monorepo engineered with an asynchronous FastAPI python backend, modular NestJS business domains, and next-generation Next.js 16 (Turbopack) workstations.
+Welcome to the **DATAVEX ERP** ecosystem, a modern, polyglot monorepo engineered with asynchronous FastAPI Python backends, NestJS business domains, and next-generation Next.js 16 (Turbopack) workstations.
 
 ---
 
@@ -12,7 +12,7 @@ The project is structured using **Nx monorepo workspace resolution**, which isol
 DATAVEX/ERP/ (Root)
 ├── apps/                                  # FRONTEND APPLICATIONS (Workstations)
 │   ├── erp-shell/                         # Next.js 16 (Port 3000) — Main Executive / Super Admin Shell
-│   ├── crm-shell/                         # Next.js 16 (Port 3001) — CRM Workstation / Sales Hub
+│   ├── crm-ui/                              # Next.js 16 (Port 3001) — CRM Workstation / Sales Hub
 │   ├── billing-ui/                        # Next.js 16 (Port 3002) — Billing Workstation for Accountant/Auditor
 │   └── inventory-ui/                      # Next.js 16 (Port 3004) — Inventory Workstation for Inventory Manager
 │
@@ -24,7 +24,7 @@ DATAVEX/ERP/ (Root)
 │   └── inventory-service/                 # FastAPI (Port 8004) — Products, Stock, Suppliers, and PO tracking
 │
 ├── packages/                              # CENTRAL SHAREABLE PACKAGES
-│   ├── auth-middleware/                   # Shared JWT types, Axios clients, and token refresh hooks
+│   ├── auth-middleware/                   # Shared JWT auth types, API client, and token management
 │   └── ui-theme/                          # Shared Tailwind v4 variables, globals, and Shadcn UI components
 │
 ├── infrastructure/                        # DOCKER & REVERSE PROXY
@@ -65,14 +65,13 @@ graph TD
     %% ==========================================
     %% CENTRAL EVENT BUS (The Nervous System)
     %% ==========================================
-    Kafka((Central Event Bus\nKafka / RabbitMQ)):::eventbus
+    RabbitMQ((Central Event Bus\nRabbitMQ)):::eventbus
 
     %% ==========================================
     %% DOMAIN 1: CRM & SALES
     %% ==========================================
     subgraph CRM ["1. CRM & Order Management (Domain: Sales)"]
-        RouteRequest --> M1(Marketing Campaign)
-        M1 --> M2(Lead Capture)
+        RouteRequest --> M2(Lead Capture)
         M2 --> M3(Lead Scoring & Nurture)
         M3 --> M4{MQL Criteria Met?}
         M4 -- No --> M3
@@ -105,13 +104,13 @@ graph TD
     end
 
     %% Publish SO Created Event
-    O4 ===> |"Publish: Order.Approved"| Kafka
+    O4 ===> |"Publish: Order.Approved"| RabbitMQ
 
     %% ==========================================
     %% DOMAIN 2: INVENTORY & SCM
     %% ==========================================
     subgraph INV ["2. Supply Chain & Fulfillment (Domain: Operations)"]
-        Kafka ===> |"Subscribe: Order.Approved"| I1(Available to Promise - ATP Check)
+        RabbitMQ ===> |"Subscribe: Order.Approved"| I1(Available to Promise - ATP Check)
         
         I1 --> I2{In Stock?}
         
@@ -152,15 +151,15 @@ graph TD
     end
 
     %% Publish Dispatch & PO Events
-    I10 ===> |"Publish: Shipment.Dispatched"| Kafka
-    P2 ===> |"Publish: PurchaseOrder.Created"| Kafka
+    I10 ===> |"Publish: Shipment.Dispatched"| RabbitMQ
+    P2 ===> |"Publish: PurchaseOrder.Created"| RabbitMQ
 
     %% ==========================================
     %% DOMAIN 3: ACCOUNTS & BILLING
     %% ==========================================
     subgraph ACC ["3. Accounts, Billing & GL (Domain: Finance)"]
-        Kafka ===> |"Subscribe: Shipment.Dispatched"| A1(Auto-Generate Sales Invoice)
-        Kafka ===> |"Subscribe: PurchaseOrder.Created"| AP1(Create Accounts Payable - AP)
+        RabbitMQ ===> |"Subscribe: Shipment.Dispatched"| A1(Auto-Generate Sales Invoice)
+        RabbitMQ ===> |"Subscribe: PurchaseOrder.Created"| AP1(Create Accounts Payable - AP)
         
         %% Billing Flow
         A1 --> A2(Apply Taxes & Discounts)
@@ -175,7 +174,7 @@ graph TD
         
         %% General Ledger & Accounting Flow
         A3 -. "Trigger" .-> F2(Recognize Revenue)
-        Kafka ===> |"Subscribe: Shipment.Dispatched"| F1(Recognize COGS Expense)
+        RabbitMQ ===> |"Subscribe: Shipment.Dispatched"| F1(Recognize COGS Expense)
         A8 -. "Trigger" .-> F3(Decrease AR, Increase Cash)
         
         F1 & F2 & F3 --> F4(Bank Reconciliation)
@@ -194,7 +193,7 @@ graph TD
     %% Apply Classes
     class Client client;
     class APIGateway,AuthCheck,RouteRequest iam;
-    class M1,M2,M3,S1,S2,S3,S4,S6,S7,S9,O1 marketing;
+    class M2,M3,S1,S2,S3,S4,S6,S7,S9,O1 marketing;
     class O1,O3,O4 sales;
     class I1,I3,P1,P2,P3,P4,P5,M1_Prod,M2_Prod,M3_Prod,M4_Prod,I5,I6,I7,I8,I9,I10 inventory;
     class A1,AP1,A2,A3,A4,A6,A7,A8,F1,F2,F3,F4,F5,F6 finance;
@@ -224,13 +223,13 @@ graph TD
 
     %% ==========================================
 
-    %% PHASE 1: MARKETING & CRM (Acquisition)
+    %% PHASE 1: CRM (Acquisition)
 
     %% ==========================================
 
-    subgraph CRM ["1. Marketing & CRM (Lead to Opportunity)"]
+    subgraph CRM ["1. CRM (Lead to Opportunity)"]
 
-        M1([Marketing Campaign]) --> M2(Lead Capture)
+        M2(Lead Capture)
 
         M2 --> M3(Lead Scoring & Nurture)
 
@@ -428,7 +427,7 @@ graph TD
 
     %% Apply Classes
 
-    class M1,M2,M3,S1,S2,S3,S4,S6,S7,S9,O1 marketing;
+    class M2,M3,S1,S2,S3,S4,S6,S7,S9,O1 marketing;
 
     class O1,O3,O4 sales;
 
@@ -479,7 +478,7 @@ Each service operates on its own dedicated PostgreSQL database target. In local 
 | `erp_iam` | `core-iam` | SSO user credentials, global roles, permissions mapping |
 | `erp_billing` | `billing-service` | Financial invoices, payments, credit/debit records, quotations |
 | `erp_inventory` | `inventory-service` | Product catalog items, stock records, warehouses, and PO listings |
-| `erp_crm` | `crm-service` | Sales leads, client accounts, interactions tracking |
+| `erp_crm` | `crm-service` | Sales leads, client accounts, opportunities, sales orders & quotations |
 | `erp_db` | `erp-service` | Central business gateway stats |
 
 ---
@@ -531,7 +530,10 @@ To run services in developer mode natively:
 # 1. Install workspace dependencies
 bun install
 
-# 2. Run everything simultaneously via Nx Task Runner
+# 2. Run the shell + all backends (recommended — avoids Turbopack resource contention)
+npm run dev:core
+
+# 3. Or run everything simultaneously via Nx Task Runner (may cause Turbopack hangs on slower machines)
 bun nx run-many --target=dev
 ```
 
@@ -541,5 +543,9 @@ bun nx run-many --target=dev
 
 - **[docs/SETUP_GUIDE.md](docs/SETUP_GUIDE.md)**: Detailed workspace setup guides, seeding references, and command instructions.
 - **[docs/PROJECT.md](docs/PROJECT.md)**: SSO architecture workflows and JWT wildcard cookie parameters.
+- **[docs/CONTEXT.md](docs/CONTEXT.md)**: Workspace context directory with links to all module-level AGENTS.md files and technical audits.
+- **[docs/PENDING_WORK.md](docs/PENDING_WORK.md)**: Known gaps, flow readiness audits, and prioritized backlog.
 - **[docs/FUTURE_PLAN.md](docs/FUTURE_PLAN.md)**: Deployment guidelines for Virtual Machines (Caddy) and enterprise scaling maps (Kubernetes).
+- **[DESIGN.md](DESIGN.md)**: Design system documentation (color tokens, typography, component specs, accessibility, conformance checklist).
+- **[CHANGELOG.md](CHANGELOG.md)**: All notable changes to the monorepo.
 - **[AGENTS.md](AGENTS.md)**: AI code generation parameters and directory design rules.

@@ -1,6 +1,16 @@
 from datetime import datetime
+from typing import Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+
+
+class ProductRef(BaseModel):
+    id: int
+    sku: str | None = None
+
+
+class WarehouseRef(BaseModel):
+    id: int
 
 
 class StockOut(BaseModel):
@@ -20,10 +30,10 @@ class StockOut(BaseModel):
 
 
 class StockMovementCreate(BaseModel):
-    product_id: int
-    warehouse_id: int
-    type: str
-    quantity: int
+    product: ProductRef
+    warehouse: WarehouseRef
+    type: Literal["in", "out", "adjustment"]
+    quantity: int = Field(gt=0)
     reference_type: str | None = None
     reference_id: int | None = None
     notes: str | None = None
@@ -48,21 +58,21 @@ class StockMovementOut(BaseModel):
 
 
 class StockAdjustment(BaseModel):
-    product_id: int
-    warehouse_id: int
-    new_quantity: int
+    product: ProductRef
+    warehouse: WarehouseRef
+    new_quantity: int = Field(ge=0)
     notes: str | None = None
 
 
 class StockCheckRequestItem(BaseModel):
     product_id: int | None = None
     sku: str | None = None
-    quantity: int = 1
+    quantity: int = Field(default=1, gt=0)
 
 
 class StockCheckRequest(BaseModel):
     warehouse_id: int | None = None
-    items: list[StockCheckRequestItem]
+    items: list[StockCheckRequestItem] = Field(min_length=1)
 
 
 class StockCheckItemResult(BaseModel):

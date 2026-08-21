@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, Integer, String, Text, JSON
 from app.database import Base
 
 class Opportunity(Base):
@@ -14,3 +14,9 @@ class Opportunity(Base):
     stage = Column(String)
     owner = Column(String)
     updated_at = Column(String, nullable=True)
+
+    # Pipeline intelligence
+    discovery_notes = Column(Text, nullable=True)
+    lead_id_str = Column(String, nullable=True, index=True)
+    # [{stage, at, by}] progression trail for the Kanban/table view
+    stage_history = Column(JSON, nullable=True)

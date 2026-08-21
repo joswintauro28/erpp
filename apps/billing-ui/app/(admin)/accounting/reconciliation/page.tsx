@@ -228,7 +228,7 @@ export default function ReconciliationPage() {
       case "Exception":
         return <Badge variant="destructive" className="text-xs">Exception</Badge>;
       default:
-        return <Badge variant="secondary" className="text-xs">Unmatched</Badge>;
+        return <Badge variant="neutral" className="text-xs">Unmatched</Badge>;
     }
   };
 
@@ -239,7 +239,7 @@ export default function ReconciliationPage() {
   if (loading) {
     return (
       <div className="flex h-60 items-center justify-center">
-        <Loader2 size={28} className="animate-spin text-amber-500" />
+        <Loader2 size={28} className="animate-spin text-[var(--shell-warning)]" />
       </div>
     );
   }
@@ -256,7 +256,7 @@ export default function ReconciliationPage() {
           <Button size="sm" variant="outline" className="gap-1.5" onClick={() => load()}>
             <RefreshCw className="h-4 w-4" /> Reload
           </Button>
-          <Button size="sm" className="gap-1.5 bg-[#8C1D24] text-white hover:bg-[#72161B]" onClick={() => setImportOpen(true)}>
+          <Button size="sm" className="gap-1.5 bg-[var(--shell-brand)] text-white hover:bg-[var(--shell-action)]" onClick={() => setImportOpen(true)}>
             <Upload className="h-4 w-4" /> Import Statement
           </Button>
         </div>
@@ -271,9 +271,9 @@ export default function ReconciliationPage() {
       )}
 
       {successMsg && (
-        <div className="flex items-center gap-3 rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-5 py-3.5">
-          <CheckCircle2 className="h-5 w-5 text-emerald-600" />
-          <span className="text-sm font-semibold text-emerald-700">{successMsg}</span>
+        <div className="flex items-center gap-3 rounded-xl border border-[var(--shell-success)]/20 bg-[var(--shell-success)]/10 px-5 py-3.5">
+          <CheckCircle2 className="h-5 w-5 text-[var(--shell-success)]" />
+          <span className="text-sm font-semibold text-[var(--shell-success)]">{successMsg}</span>
         </div>
       )}
 
@@ -283,7 +283,7 @@ export default function ReconciliationPage() {
           onClick={() => setActiveTab("transactions")}
           className={`px-5 py-3 text-sm font-medium border-b-2 transition-all ${
             activeTab === "transactions"
-              ? "border-[#8C1D24] text-[#8C1D24]"
+              ? "border-[var(--shell-brand)] text-[var(--shell-brand)]"
               : "border-transparent text-muted-foreground hover:text-foreground"
           }`}
         >
@@ -295,7 +295,7 @@ export default function ReconciliationPage() {
           onClick={() => setActiveTab("settings")}
           className={`px-5 py-3 text-sm font-medium border-b-2 transition-all ${
             activeTab === "settings"
-              ? "border-[#8C1D24] text-[#8C1D24]"
+              ? "border-[var(--shell-brand)] text-[var(--shell-brand)]"
               : "border-transparent text-muted-foreground hover:text-foreground"
           }`}
         >
@@ -307,7 +307,7 @@ export default function ReconciliationPage() {
           onClick={() => setActiveTab("variance")}
           className={`px-5 py-3 text-sm font-medium border-b-2 transition-all ${
             activeTab === "variance"
-              ? "border-[#8C1D24] text-[#8C1D24]"
+              ? "border-[var(--shell-brand)] text-[var(--shell-brand)]"
               : "border-transparent text-muted-foreground hover:text-foreground"
           }`}
         >
@@ -319,7 +319,7 @@ export default function ReconciliationPage() {
           onClick={() => setActiveTab("audit")}
           className={`px-5 py-3 text-sm font-medium border-b-2 transition-all ${
             activeTab === "audit"
-              ? "border-[#8C1D24] text-[#8C1D24]"
+              ? "border-[var(--shell-brand)] text-[var(--shell-brand)]"
               : "border-transparent text-muted-foreground hover:text-foreground"
           }`}
         >
@@ -338,10 +338,10 @@ export default function ReconciliationPage() {
               <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Uploaded statement batches</h3>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 {reports.map((r) => (
-                  <Card key={r.batch} className="cursor-pointer hover:border-amber-500/50 transition-all" onClick={() => setSelectedBatch(selectedBatch === r.batch ? "" : r.batch)}>
+                  <Card key={r.batch} className="cursor-pointer hover:border-[var(--shell-warning)]/50 transition-all" onClick={() => setSelectedBatch(selectedBatch === r.batch ? "" : r.batch)}>
                     <CardContent className="pt-5 pb-4 space-y-2">
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-mono font-medium text-amber-600">{r.batch}</span>
+                        <span className="text-xs font-mono font-medium text-[var(--shell-warning)]">{r.batch}</span>
                         <Badge variant={selectedBatch === r.batch ? "default" : "outline"} className={selectedBatch === r.batch ? "bg-amber-600 text-white" : ""}>
                           {selectedBatch === r.batch ? "Selected" : "Filter"}
                         </Badge>
@@ -399,7 +399,7 @@ export default function ReconciliationPage() {
                         <TableCell className="text-right font-mono text-xs text-destructive font-semibold">
                           {tx.debit > 0 ? money(tx.debit) : "-"}
                         </TableCell>
-                        <TableCell className="text-right font-mono text-xs text-emerald-600 font-semibold">
+                        <TableCell className="text-right font-mono text-xs text-[var(--shell-success)] font-semibold">
                           {tx.credit > 0 ? money(tx.credit) : "-"}
                         </TableCell>
                         <TableCell>
@@ -428,7 +428,7 @@ export default function ReconciliationPage() {
                             <Button
                               variant="outline"
                               size="sm"
-                              className="text-xs hover:border-[#8C1D24] hover:text-[#8C1D24]"
+                              className="text-xs hover:border-[var(--shell-brand)] hover:text-[var(--shell-brand)]"
                               onClick={() => openMatchDialog(tx)}
                             >
                               Match Manually
@@ -485,7 +485,7 @@ export default function ReconciliationPage() {
                     <input
                       id="match_by_reference"
                       type="checkbox"
-                      className="h-4 w-4 accent-[#8C1D24]"
+                      className="h-4 w-4 accent-[var(--shell-brand)]"
                       checked={toleranceRule.match_by_reference}
                       onChange={(e) => setToleranceRule({ ...toleranceRule, match_by_reference: e.target.checked })}
                     />
@@ -501,7 +501,7 @@ export default function ReconciliationPage() {
                     <input
                       id="match_by_ledger"
                       type="checkbox"
-                      className="h-4 w-4 accent-[#8C1D24]"
+                      className="h-4 w-4 accent-[var(--shell-brand)]"
                       checked={toleranceRule.match_by_ledger}
                       onChange={(e) => setToleranceRule({ ...toleranceRule, match_by_ledger: e.target.checked })}
                     />
@@ -515,7 +515,7 @@ export default function ReconciliationPage() {
                 </div>
               </div>
 
-              <Button type="submit" className="bg-[#8C1D24] text-white hover:bg-[#72161B]">
+              <Button type="submit" className="bg-[var(--shell-brand)] text-white hover:bg-[var(--shell-action)]">
                 Save Configurations
               </Button>
             </form>
@@ -549,20 +549,20 @@ export default function ReconciliationPage() {
                 </div>
                 <div className="flex justify-between text-sm font-semibold border-t pt-2 mt-2">
                   <span>Net Unreconciled Variance</span>
-                  <span className={`font-mono ${varianceData.net_variance === 0 ? "text-emerald-600" : "text-destructive"}`}>
+                  <span className={`font-mono ${varianceData.net_variance === 0 ? "text-[var(--shell-success)]" : "text-destructive"}`}>
                     {money(varianceData.net_variance)}
                   </span>
                 </div>
               </div>
 
               {varianceData.net_variance === 0 ? (
-                <div className="flex items-center gap-2.5 bg-emerald-50 text-emerald-800 p-3 rounded-lg border border-emerald-200 text-xs">
-                  <Check className="h-4 w-4 text-emerald-600" />
+                <div className="flex items-center gap-2.5 bg-[var(--shell-success-surface)] text-[var(--shell-success)] p-3 rounded-lg border border-[var(--shell-success)]/30 text-xs">
+                  <Check className="h-4 w-4 text-[var(--shell-success)]" />
                   <span>Ledger and statements reconcile. Ready for month-end closure.</span>
                 </div>
               ) : (
-                <div className="flex items-center gap-2.5 bg-amber-50 text-amber-800 p-3 rounded-lg border border-amber-200 text-xs">
-                  <AlertTriangle className="h-4 w-4 text-amber-600" />
+                <div className="flex items-center gap-2.5 bg-[var(--shell-warning-surface)] text-[var(--shell-warning)] p-3 rounded-lg border border-[var(--shell-warning)]/30 text-xs">
+                  <AlertTriangle className="h-4 w-4 text-[var(--shell-warning)]" />
                   <span>Unreconciled variance exists. Run manual matching to clear exceptions.</span>
                 </div>
               )}
@@ -581,7 +581,7 @@ export default function ReconciliationPage() {
               </div>
               <div className="flex items-center justify-between text-sm">
                 <span>Matched / Partially Matched</span>
-                <span className="font-semibold text-emerald-600">{varianceData.matched_transactions}</span>
+                <span className="font-semibold text-[var(--shell-success)]">{varianceData.matched_transactions}</span>
               </div>
               <div className="flex items-center justify-between text-sm">
                 <span>Outstanding Unmatched Items</span>
@@ -685,7 +685,7 @@ export default function ReconciliationPage() {
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" size="sm" onClick={() => setImportOpen(false)}>Cancel</Button>
-              <Button type="submit" size="sm" className="bg-[#8C1D24] text-white hover:bg-[#72161B]" disabled={importing || !selectedFile}>
+              <Button type="submit" size="sm" className="bg-[var(--shell-brand)] text-white hover:bg-[var(--shell-action)]" disabled={importing || !selectedFile}>
                 {importing ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : null}
                 {importing ? "Processing Statement..." : "Upload & Analyze"}
               </Button>
@@ -803,7 +803,7 @@ export default function ReconciliationPage() {
           )}
           <DialogFooter>
             <Button variant="outline" size="sm" onClick={() => setMatchDialog(null)}>Cancel</Button>
-            <Button size="sm" className="bg-[#8C1D24] text-white hover:bg-[#72161B]" onClick={handleManualMatch} disabled={!matchDialog?.pairId}>Reconcile Match</Button>
+            <Button size="sm" className="bg-[var(--shell-brand)] text-white hover:bg-[var(--shell-action)]" onClick={handleManualMatch} disabled={!matchDialog?.pairId}>Reconcile Match</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

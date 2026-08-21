@@ -83,8 +83,16 @@ app/
     ├── layout.tsx                # Sidebar + Header wrapper, auth guard, collapsed state
     ├── loading.tsx               # Skeleton loading (KPI cards, charts, table rows)
     ├── dashboard/                # Wired to API
-    ├── crm/leads/                # Wired to API (CRUD + convert)
-    ├── crm/clients/              # Wired to API
+    ├── crm/                      # Full CRM module ported from crm-ui (via erp-service /crm passthrough)
+    │   ├── leads/                # CRUD + MQL qualify
+    │   ├── opportunities/        # CRUD + kanban stage drag
+    │   ├── customers/            # CRUD (incl. credit limit driving the billing credit check)
+    │   ├── contacts/  documents/ # CRUD
+    │   ├── requirements/         # CRUD
+    │   ├── quotations/           # CPQ create + approval overlay
+    │   ├── sales-orders/         # CRUD + approve/credit-check release-hold flow
+    │   ├── reports/  lead-discovery/
+    │   └── clients/              # Legacy erp-service clients (kept)
     ├── billing/                  # 7 routes
     ├── accounting/               # 4 routes
     ├── inventory/                # 9 routes
@@ -130,7 +138,7 @@ Mirrors the erp-ui navigation exactly. Standalone links sit between labeled grou
 | Type | Item | Items |
 |------|------|-------|
 | **Link** | Dashboard | — |
-| **Group** | CRM | Leads, Clients |
+| **Group** | CRM | Leads, Opportunities, Requirements, Quotations, Sales Orders, Customers, Contacts, Documents, Reports, Lead Discovery |
 | **Group** | Billing | Quotations, Invoices, Recurring Invoices, Credit Notes, Debit Notes, Payments |
 | **Group** | Accounting | Chart of Accounts, General Ledger, Expenses, Reports |
 | **Group** | Inventory | Products, Stock Movements, Stock Adjustments, Inventory Valuation, Warehouses, Purchase Orders, Suppliers, Batches, Serials |
@@ -279,15 +287,17 @@ const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
 | Route | Page | Key Features |
 |-------|------|-------------|
-| `/inventory/products` | Products | 15 industrial products, 4 KPI cards, search + category filter, low-stock alerts, toggle active |
-| `/inventory/stock` | Stock Movements | 18 entries, In/Out type filter, date sort, search by product/ref/warehouse |
-| `/inventory/stock/adjustments` | Stock Adjustments | 8 adjustments with status workflow (draft→approved→rejected), addition/reduction badges |
-| `/inventory/valuation` | Inventory Valuation | WAC valuation, category breakdown cards, % of total column, footer totals |
-| `/inventory/warehouses` | Warehouses | 4 locations with capacity utilization progress bars, manager/contact info, card layout |
-| `/inventory/purchase-orders` | Purchase Orders | 10 POs with status lifecycle (draft→sent→confirmed→received→cancelled), color-coded |
-| `/inventory/suppliers` | Suppliers | 10 suppliers with contact info, GST, category tags, toggle active |
-| `/inventory/batches` | Batches | 12 batches with expiry tracking (Valid / Expiring Soon / Expired) |
-| `/inventory/serials` | Serials | 15 serialized items with lifecycle (In Stock → Sold → Warranty → Returned → Scrapped) |
+| `/inventory/fulfillment` | Order Fulfillment | SO fulfillment pipeline Kanban, auto-PO on shortage, SO status sync |
+| `/inventory/products` | Products | Product catalog with SKU, pricing, tax rates, batch/serial flags |
+| `/inventory/stock` | Stock Levels | Real-time stock per product x warehouse, adjustment modal |
+| `/inventory/stock/movements` | Stock Movements | In/Out/Adjustment movement log with reference tracking |
+| `/inventory/serial-numbers` | Serial Numbers | Serial tracking per product x warehouse with status filter |
+| `/inventory/quality-checks` | Quality Checks | Quality inspection logs and status chips |
+| `/inventory/suppliers` | Suppliers | Vendor registry with GST, payment terms |
+| `/inventory/purchase-requisitions` | Purchase Requisitions | Buy requests with status badges |
+| `/inventory/purchase-orders` | Purchase Orders | PO lifecycle (draft -> ordered -> received) with auto-totaling |
+| `/inventory/work-orders` | Work Orders | Manufacturing production run routing and issue tracking |
+| `/inventory/warehouses` | Warehouses | Multi-warehouse locations with capacity tracking |
 
 ## Settings Module
 
@@ -305,9 +315,18 @@ const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 /                          → Redirect to /dashboard
 /_not-found                → 404 (brand theme)
 /dashboard                 → Dashboard (KPIs, charts, wired to API)
-/crm/leads                 → Leads pipeline (wired to API: CRUD + convert)
-/crm/clients               → Client list (wired to API)
-/crm/clients/[id]          → Client detail (wired to API)
+/crm/leads                 → Leads (wired: CRUD + MQL qualify)
+/crm/opportunities         → Opportunities (wired: CRUD + kanban stage drag)
+/crm/customers             → Customers (wired: CRUD incl. credit limit)
+/crm/contacts              → Contacts (wired: CRUD)
+/crm/documents             → Documents (wired: CRUD)
+/crm/requirements          → Requirements (wired: CRUD)
+/crm/quotations            → Quotations (wired: CPQ + approval overlay + convert-to-SO)
+/crm/sales-orders          → Sales Orders (wired: CRUD + approve/credit-check + release-hold)
+/crm/reports               → Reports (wired: CRUD + dashboard)
+/crm/lead-discovery        → Lead Discovery (wired: search/scrape/import/pinned)
+/crm/clients               → Client list (legacy erp-service, kept)
+/crm/clients/[id]          → Client detail (legacy erp-service, kept)
 /billing/invoices          → Invoices list (wired to API)
 /billing/invoices/[id]     → Invoice detail (wired to API)
 /billing/quotations        → Quotations (API-ready)
@@ -319,15 +338,17 @@ const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 /accounting/ledger         → General Ledger (API-ready)
 /accounting/expenses       → Expenses (API-ready)
 /accounting/reports        → Financial Reports (API-ready)
+/inventory/fulfillment       → Order Fulfillment (API-ready)
 /inventory/products        → Products (API-ready)
-/inventory/stock           → Stock Movements (API-ready)
-/inventory/stock/adjustments → Stock Adjustments (API-ready)
-/inventory/valuation       → Inventory Valuation (API-ready)
-/inventory/warehouses      → Warehouses (API-ready)
-/inventory/purchase-orders → Purchase Orders (API-ready)
+/inventory/stock           → Stock Levels (API-ready)
+/inventory/stock/movements → Stock Movements (API-ready)
+/inventory/serial-numbers  → Serial Numbers (API-ready)
+/inventory/quality-checks  → Quality Checks (API-ready)
 /inventory/suppliers       → Suppliers (API-ready)
-/inventory/batches         → Batches (API-ready)
-/inventory/serials         → Serials (API-ready)
+/inventory/purchase-requisitions → Purchase Requisitions (API-ready)
+/inventory/purchase-orders → Purchase Orders (API-ready)
+/inventory/work-orders     → Work Orders (API-ready)
+/inventory/warehouses      → Warehouses (API-ready)
 /settings                  → General Settings (API-ready)
 /settings/branding         → Branding (API-ready)
 /settings/notifications    → Notifications (API-ready)
@@ -387,6 +408,14 @@ const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 4. **billing-service:** New NestJS microservice on port 8003 with 7 modules (Invoices, Payments, Quotations, Credit Notes, Debit Notes, Recurring Invoices, Dashboard) backed by `erp_billing` database.
 5. **Prisma Client Isolation:** core-iam now generates its Prisma client to `@prisma/client-iam` (custom output path) to prevent conflicts when multiple services use Prisma in the same monorepo.
 6. **Billing Pages Wired:** Invoices list + detail, quotations, payments, credit notes, debit notes, and recurring invoices all fetch from the billing-service API.
+
+### v11 — Full CRM module ported from crm-ui (crm-shell) into the shell
+
+1. **Complete port**: All crm-ui `(admin)` pages + components copied to `(admin)/crm/*` — leads, opportunities (incl. Kanban), customers (incl. credit-limit field), contacts, requirements, quotations (incl. CPQ modal + approval overlay), sales-orders (incl. approve/release-hold + credit toast), documents, reports, lead-discovery. **Dashboard excluded** — the exec `/dashboard` already aggregates pipeline value, open opportunities, clients, and recommendations, so the CRM dashboard would be redundant in the shell.
+2. **AI Assistant excluded** by design — the shell has its own `/ai-assistant`; the old `crm/ai-assistant` page + sidebar link were removed.
+3. **Gateway routes added** (`erp-service` `/crm` passthrough): `GET /crm/dashboard`, `POST /crm/opportunities/{id}/stage`, `POST /crm/sales-orders/{id}/approve`, `POST /crm/leads/{id}/qualify`, `GET /crm/quotations/{id}/approval`; removed the hard-coded empty quotations response (quotations now return real billing-backed data).
+4. **Toasts**: ported `utils/toast.ts` + `components/ToastContainer.tsx` from crm-ui and mounted in the admin layout.
+5. **Cleanup**: replaced the generic `GenericCreateModal`/`GenericDetailsModal` usage with the bespoke crm-ui modals; deleted both generic modals. Fixed 3 strict-mode implicit-any errors in copied modals. Fixed exec dashboard recommendation link to the shell's own `/ai-assistant`.
 
 ## What's Left
 

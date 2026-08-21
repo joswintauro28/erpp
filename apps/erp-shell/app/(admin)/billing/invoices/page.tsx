@@ -17,20 +17,13 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
 import { MultiStepDialog } from "@/components/multi-step-dialog";
-import { money } from "@/utils/format";
+import { money, statusVariant } from "@/utils/format";
 import { api } from "@/services/api";
 import type { ApiInvoice, ApiClientRef, InvoiceListView } from "@/types/billing";
 import InvoicesLoading from "./loading";
 
-const statusOptions = ["", "paid", "pending", "partially_paid", "overdue", "cancelled"] as const;
+const statusOptions = ["", "draft", "sent", "partially_paid", "paid", "overdue", "void"] as const;
 
-const statusVariant = (s: string) => {
-  if (s === "paid") return "default" as const;
-  if (s === "pending") return "secondary" as const;
-  if (s === "overdue" || s === "cancelled") return "destructive" as const;
-  if (s === "partially_paid") return "outline" as const;
-  return "outline" as const;
-};
 
 function SectionHeading({ label }: { label: string }) {
   return (
@@ -46,7 +39,7 @@ function SectionHeading({ label }: { label: string }) {
 const summaryCards = [
   { key: "taxable_value" as const, icon: Receipt, label: "Taxable Value", gradient: "from-[var(--shell-brand)]/5 to-transparent", idx: 0 },
   { key: "total_gst" as const, icon: BadgePercent, label: "Total GST", gradient: "from-[var(--shell-accent)]/5 to-transparent", idx: 1 },
-  { key: "total_cgst_sgst" as const, icon: DollarSign, label: "CGST + SGST", gradient: "from-emerald-500/5 to-transparent", idx: 2 },
+  { key: "total_cgst_sgst" as const, icon: DollarSign, label: "CGST + SGST", gradient: "from-[var(--shell-success-surface)]0/5 to-transparent", idx: 2 },
   { key: "total_igst" as const, icon: CreditCard, label: "IGST", gradient: "from-blue-500/5 to-transparent", idx: 3 },
   { key: "total_invoices" as const, icon: FileText, label: "Total Invoices", gradient: "from-purple-500/5 to-transparent", idx: 4 },
 ];
@@ -126,18 +119,19 @@ export default function Invoices() {
     if (!formClientId || formItems.length === 0) return;
     setSaving(true);
     try {
+      // billing-service CreateInvoiceDto expects camelCase fields and
+      // GstTreatment values intrastate/interstate.
       await api.post("/invoices", {
-        client_id: Number(formClientId),
-        due_date: formDueDate || undefined,
-        gst_treatment: formGstTreatment,
-        place_of_supply: formPlaceOfSupply || undefined,
+        clientId: Number(formClientId),
+        dueDate: formDueDate || undefined,
+        gstTreatment: formGstTreatment === "registered" ? "intrastate" : "interstate",
+        placeOfSupply: formPlaceOfSupply || undefined,
         notes: formNotes || undefined,
         items: formItems.map((item) => ({
-          product: item.product,
-          description: item.description,
+          description: item.description || item.product,
           quantity: item.quantity,
-          unit_price: item.unit_price,
-          gst_percent: item.gst_percent,
+          unitPrice: item.unit_price,
+          gstRate: item.gst_percent,
         })),
       });
       setCreateOpen(false);
@@ -299,7 +293,7 @@ export default function Invoices() {
                       <TableCell className="font-mono text-sm text-right">{money(inv.paid_amount)}</TableCell>
                       <TableCell className="font-mono text-sm text-right">{money(inv.balance_due)}</TableCell>
                       <TableCell>
-                        <Badge variant={statusVariant(inv.status)} className="capitalize">{inv.status.replace("_", " ")}</Badge>
+                        <Badge variant={statusVariant("invoice", inv.status)} className="capitalize">{inv.status.replace("_", " ")}</Badge>
                       </TableCell>
                       <TableCell className="text-xs text-muted-foreground">{inv.due_date}</TableCell>
                       <TableCell>

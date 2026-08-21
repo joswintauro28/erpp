@@ -14,7 +14,14 @@ This backend service manages invoices, payments, quotations, ledger entries, and
 - **Snake Case Conversion:** All responses are automatically converted from camelCase to snake_case via the global `SnakeCaseInterceptor`.
 - **Response Scope:** All query methods filter records using `ownerId` to enforce data isolation.
 
-## 3. Modules & Schema Models
+## 3. Document Numbering Standard
+- **Format:** `[PREFIX]-[YYYYMM]-[NNNN]` (regex `^[A-Z]{2,4}-\d{6}-\d{4}$`), e.g. `INV-202608-0001`.
+- **Prefixes:** Invoices/Vendor Bills `INV`, Quotations `QT`, Credit Notes `CN`, Debit Notes `DN`. Payments display as `PAY-YYYYMM-{id:04d}`.
+- **Generation:** `DocumentNumberService` (`src/common/document-number.service.ts`, global module) auto-generates numbers via `next(prefix, table, column, organizationId, date)` — MAX-based per prefix+month, scoped by `organization_id`, never reusing deleted numbers. Client-supplied numbers are honored only when they match `DOCUMENT_ID_RE`.
+- **DTO validation:** `invoiceNumber`, `quotationNumber`, `creditNoteNumber`, `debitNoteNumber` fields use `@Matches(DOCUMENT_ID_RE)`.
+- **Event consumers:** Dispatched/vendor-bill invoices no longer carry client-generated numbers; the Invoices service assigns them.
+
+## 4. Modules & Schema Models
 - **Models:** Invoice (with InvoiceItem), Payment, CreditNote, DebitNote, Quotation, RecurringInvoice.
 - **Endpoints:**
   - `GET/POST/PUT/DELETE /invoices` (with GST calculation CGST/SGST/IGST, balance enforcement)
@@ -24,7 +31,7 @@ This backend service manages invoices, payments, quotations, ledger entries, and
   - `GET/POST /invoices/debit-notes` (increases invoice balance)
   - `/dashboard/billing` (revenue trends, overdue metrics, recent activity)
 
-## 4. Database & Dev Commands
+## 5. Database & Dev Commands
 - **Database Push:**
   ```bash
   bunx prisma db push

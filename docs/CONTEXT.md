@@ -495,7 +495,7 @@ The DATAVEX Inventory Workspace manages multi-warehouse stock tracking, product 
 ### Routing Proxy Gateway Architecture (`proxy.ts`)
 - Next.js middleware intercepting `/api/:path*`:
   - `/api/auth/*` → Routes to `core-iam` (port 8002) preserving `/api` prefix.
-  - CRM paths (20 prefixes: customers, contacts, leads, documents, lead-discovery, ai-assistant, quotations, opportunities, sales, sales-orders, requirements, enquiries, site-visits, follow-ups, tasks, communications, visit-plans, complaints, feedback) → Routes to `erp-service` (port 8000) with `/crm` prepended (e.g. `/api/customers` → `/crm/customers` on erp-service).
+  - CRM paths (12 live entity prefixes: customers, contacts, leads, documents, lead-discovery, ai-assistant, quotations, opportunities, sales, sales-orders, requirements, reports; plus 8 reserved for the future **Service-Desk** module: enquiries, site-visits, follow-ups, tasks, communications, visit-plans, complaints, feedback) → Routes to `erp-service` (port 8000) with `/crm` prepended (e.g. `/api/customers` → `/crm/customers` on erp-service).
   - All other `/api/*` → Routes to `erp-service` (port 8000) without prefix transformation.
 
 ### Aggregated Executive Dashboard (`app/(admin)/dashboard/`)
@@ -560,7 +560,7 @@ The DATAVEX Inventory Workspace manages multi-warehouse stock tracking, product 
 | `product/router.py` | `/products` | Lightweight passthrough | inventory-service (8004) |
 
 #### CRM Passthrough Router (`app/crm/router.py`) — prefix `/crm`
-- **`VALID_ENTITIES`:** 20 approved entity types (customers, contacts, leads, documents, opportunities, sales, requirements, quotations, sales-orders, reports, ai-assistant, lead-discovery, enquiries, site-visits, follow-ups, tasks, communications, visit-plans, complaints, feedback).
+- **`VALID_ENTITIES`:** 20 approved entity types — 12 live (customers, contacts, leads, documents, opportunities, sales, requirements, quotations, sales-orders, reports, ai-assistant, lead-discovery) + 8 reserved for the future **Service-Desk** module (enquiries, site-visits, follow-ups, tasks, communications, visit-plans, complaints, feedback).
 - **Generic CRUD handlers:** `GET/POST /{entity_type}`, `GET/PUT/DELETE /{entity_type}/{id_str}` — proxies to `crm_client.get_entity_list/create/update/delete`.
 - **Lead-specific mapping:** `_map_lead()` transforms raw crm-service fields (`company`, `name`, `est_value`) to the erp-shell expected schema (`company_name`, `contact_person`, `expected_value`). `_reverse_map_lead()` converts form submissions back. Both applied automatically in generic handlers when `entity_type == "leads"`.
 - **`POST /crm/leads/{id}/convert`:** Lead conversion endpoint (formerly in dedicated `lead/router.py`).

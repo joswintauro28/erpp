@@ -109,8 +109,8 @@ export default function LoginPage() {
       <div className="relative z-10 w-full max-w-[400px] px-6 py-12 flex flex-col items-center">
         {/* Brand Header */}
         <div className="mb-8 flex flex-col items-center gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-[var(--shell-border)]/60 bg-[#8C1D24]/10">
-            <span className="font-heading text-lg font-bold text-[#E5B83C] tracking-[0.05em]">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-[var(--shell-border)]/60 bg-[var(--shell-brand)]/10">
+            <span className="font-heading text-lg font-bold text-[var(--shell-accent)] tracking-[0.05em]">
               D
             </span>
           </div>
@@ -125,7 +125,7 @@ export default function LoginPage() {
         {/* Login Container */}
         <div className="relative w-full rounded-xl border border-[var(--shell-border)] bg-card/65 backdrop-blur-md p-6 shadow-xl">
           <div className="mb-6 flex items-center gap-2">
-            <div className="h-[2px] w-4 rounded-full bg-[#E5B83C]" />
+            <div className="h-[2px] w-4 rounded-full bg-[var(--shell-accent)]" />
             <span className="font-heading text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--shell-muted)]">
               Secure Authentication
             </span>
@@ -158,7 +158,7 @@ export default function LoginPage() {
                   setEmail(e.target.value);
                   if (fieldErrors.email) setFieldErrors((p) => ({ ...p, email: undefined }));
                 }}
-                className={`h-10 rounded-lg border bg-muted/20 px-3 text-sm text-[var(--shell-foreground)] outline-none transition-all placeholder:text-[var(--shell-muted)]/40 focus:border-[#8C1D24]/60 focus:bg-muted/40 ${
+                className={`h-10 rounded-lg border bg-muted/20 px-3 text-sm text-[var(--shell-foreground)] outline-none transition-all placeholder:text-[var(--shell-muted)]/40 focus:border-[var(--shell-brand)]/60 focus:bg-muted/40 ${
                   fieldErrors.email ? "border-destructive/50" : "border-[var(--shell-border)]"
                 }`}
               />
@@ -184,7 +184,7 @@ export default function LoginPage() {
                     setPassword(e.target.value);
                     if (fieldErrors.password) setFieldErrors((p) => ({ ...p, password: undefined }));
                   }}
-                  className={`h-10 w-full rounded-lg border bg-muted/20 px-3 pr-10 text-sm text-[var(--shell-foreground)] outline-none transition-all placeholder:text-[var(--shell-muted)]/40 focus:border-[#8C1D24]/60 focus:bg-muted/40 ${
+                  className={`h-10 w-full rounded-lg border bg-muted/20 px-3 pr-10 text-sm text-[var(--shell-foreground)] outline-none transition-all placeholder:text-[var(--shell-muted)]/40 focus:border-[var(--shell-brand)]/60 focus:bg-muted/40 ${
                     fieldErrors.password ? "border-destructive/50" : "border-[var(--shell-border)]"
                   }`}
                 />
@@ -205,7 +205,7 @@ export default function LoginPage() {
             <Button
               type="submit"
               disabled={isLoading}
-              className="relative mt-2 flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-[#8C1D24] hover:bg-[#8C1D24]/90 text-white font-medium transition-all shadow-md active:scale-[0.99] disabled:opacity-50 disabled:pointer-events-none cursor-pointer"
+              className="relative mt-2 flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-[var(--shell-brand)] hover:bg-[var(--shell-brand)]/90 text-white font-medium transition-all shadow-md active:scale-[0.99] disabled:opacity-50 disabled:pointer-events-none cursor-pointer"
             >
               {isLoading ? (
                 <Loader2 size={15} className="animate-spin" />
@@ -219,7 +219,7 @@ export default function LoginPage() {
           {/* Secure Footer */}
           <div className="mt-6 border-t border-[var(--shell-border)]/40 pt-4 flex flex-col items-center gap-2">
             <p className="flex items-center gap-1.5 text-[10px] text-[var(--shell-muted)]/70">
-              <Lock className="h-3 w-3 text-[#E5B83C]" />
+              <Lock className="h-3 w-3 text-[var(--shell-accent)]" />
               Secure 256-bit SSL encrypted connection
             </p>
           </div>

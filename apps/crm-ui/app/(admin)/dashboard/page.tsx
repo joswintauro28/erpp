@@ -14,12 +14,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { api } from "@/services/api";
 import { useAuth } from "@/contexts/AuthContext";
+import { KpiCard, SectionHeading } from "@datavex/ui-theme";
 import DashboardLoading from "./loading";
-import MetricCard from "./MetricCard";
 import PipelineChart from "./PipelineChart";
 import Recommendations from "./Recommendations";
 
-const STAGE_COLORS = ["#6366f1", "#0ea5e9", "#14b8a6", "#f59e0b", "#10b981"];
+const STAGE_COLORS = ["var(--shell-brand)", "#E5B83C", "#6366f1", "#10b981", "#f43f5e"];
 const KPI_COLORS = ["var(--chart-1)", "var(--chart-2)", "var(--chart-4)", "var(--chart-3)"];
 
 const tooltipStyle = {
@@ -98,11 +98,18 @@ export default function DashboardPage() {
   return (
     <div className="space-y-10 lg:space-y-12">
       {/* Welcome Greeting */}
-      <div className="flex flex-col gap-1">
-        <h1 className="font-heading text-xl font-semibold tracking-tight text-[var(--shell-foreground)]">
-          {getGreeting()}, {user?.full_name || user?.email || "User"}
-        </h1>
-        <p className="text-sm text-[var(--shell-muted)]">Here&apos;s what&apos;s moving across your pipeline and accounts today.</p>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[var(--shell-border)] pb-5">
+        <div className="flex flex-col gap-1">
+          <h1 className="font-heading text-2xl font-semibold tracking-tight text-[var(--shell-foreground)]">
+            {getGreeting()}, {user?.full_name || user?.email || "Sales Executive"}
+          </h1>
+          <p className="text-sm text-[var(--shell-muted)]">Here&apos;s what&apos;s moving across your pipeline and accounts today.</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Badge variant="outline" className="px-3 py-1 text-xs border-[var(--shell-brand)]/40 text-[var(--shell-brand)] bg-[var(--shell-brand)]/5 font-medium">
+            CRM Sales Hub
+          </Badge>
+        </div>
       </div>
 
       {/* Alert Banner */}
@@ -113,7 +120,7 @@ export default function DashboardPage() {
           </div>
           <span className="text-sm font-medium text-[var(--shell-accent-text)]">AI recommendations available</span>
           <div className="flex flex-wrap gap-2">
-            <Badge variant="secondary" className="text-xs">
+            <Badge variant="outline" className="border-[var(--shell-accent)]/40 text-[var(--shell-accent-text)] bg-[var(--shell-accent)]/10 text-xs">
               {recommendations.length} insight{recommendations.length !== 1 ? "s" : ""}
             </Badge>
           </div>
@@ -122,19 +129,15 @@ export default function DashboardPage() {
 
       {/* Overview KPIs */}
       <section>
-        <div className="mb-5 flex items-center gap-2">
-          <h2 className="font-heading text-xs font-light uppercase tracking-[0.12em] text-[var(--shell-muted)]">Overview</h2>
-          <div className="h-px flex-1 bg-[var(--shell-border)]" />
-        </div>
+        <SectionHeading label="Overview" />
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
           {metrics.map((m: any, i: number) => {
             const trendDir = m.is_positive ? ("up" as const) : ("down" as const);
             return (
-              <MetricCard
+              <KpiCard
                 key={m.id}
                 label={m.name}
                 value={m.formatted_value}
-                // subtitle={m.trend}
                 icon={metricIcons[i] ?? TrendingUp}
                 trend={{ dir: trendDir, pct: m.trend }}
                 color={KPI_COLORS[i]}
@@ -142,7 +145,7 @@ export default function DashboardPage() {
               />
             );
           })}
-          <MetricCard
+          <KpiCard
             label="Pipeline Value"
             value={formatPipelineValue(pipelineValue)}
             subtitle={`${stages.length} stage${stages.length !== 1 ? "s" : ""} active`}
@@ -155,10 +158,7 @@ export default function DashboardPage() {
 
       {/* Quick Actions */}
       <section>
-        <div className="mb-5 flex items-center gap-2">
-          <h2 className="font-heading text-xs font-light uppercase tracking-[0.12em] text-[var(--shell-muted)]">Quick Actions</h2>
-          <div className="h-px flex-1 bg-[var(--shell-border)]" />
-        </div>
+        <SectionHeading label="Quick Actions" />
         <div className="flex flex-wrap gap-2">
           {quickActions.map((action) => (
             <Button key={action.label} size="sm" variant="outline" className="gap-1.5 text-xs" onClick={() => router.push(action.href)}>
@@ -170,10 +170,7 @@ export default function DashboardPage() {
 
       {/* Pipeline Analytics */}
       <section>
-        <div className="mb-5 flex items-center gap-2">
-          <h2 className="font-heading text-xs font-light uppercase tracking-[0.12em] text-[var(--shell-muted)]">Pipeline Analytics</h2>
-          <div className="h-px flex-1 bg-[var(--shell-border)]" />
-        </div>
+        <SectionHeading label="Pipeline Analytics" />
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           <PipelineChart stages={stages} pipelineValue={pipelineValue} />
           <Recommendations recommendations={recommendations} />
@@ -182,10 +179,7 @@ export default function DashboardPage() {
 
       {/* Activity & Insights */}
       <section>
-        <div className="mb-4 lg:mb-5 flex items-center gap-2">
-          <h2 className="font-heading text-xs font-light uppercase tracking-[0.12em] text-[var(--shell-muted)]">Activity & Insights</h2>
-          <div className="h-px flex-1 bg-[var(--shell-border)]" />
-        </div>
+        <SectionHeading label="Activity & Insights" />
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           {/* Stage Value Bar Chart */}
           <Card className="hover:shadow-engineered transition-shadow duration-200 border-[var(--shell-border)] bg-[var(--shell-surface)]">
@@ -209,12 +203,43 @@ export default function DashboardPage() {
                 {stages.length > 0 ? (
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={[...stages].sort((a: any, b: any) => b.value - a.value)} margin={{ top: 16, right: 8, bottom: 0, left: -16 }}>
+                      <defs>
+                        <linearGradient id="colorDiscoveryBar" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="var(--shell-brand)" stopOpacity={0.9}/>
+                          <stop offset="95%" stopColor="var(--shell-brand)" stopOpacity={0.4}/>
+                        </linearGradient>
+                        <linearGradient id="colorQuoteBar" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#E5B83C" stopOpacity={0.9}/>
+                          <stop offset="95%" stopColor="#E5B83C" stopOpacity={0.4}/>
+                        </linearGradient>
+                        <linearGradient id="colorNegotiationBar" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#6366f1" stopOpacity={0.9}/>
+                          <stop offset="95%" stopColor="#6366f1" stopOpacity={0.4}/>
+                        </linearGradient>
+                        <linearGradient id="colorWonBar" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#10b981" stopOpacity={0.9}/>
+                          <stop offset="95%" stopColor="#10b981" stopOpacity={0.4}/>
+                        </linearGradient>
+                        <linearGradient id="colorLostBar" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#f43f5e" stopOpacity={0.9}/>
+                          <stop offset="95%" stopColor="#f43f5e" stopOpacity={0.4}/>
+                        </linearGradient>
+                      </defs>
                       <CartesianGrid strokeDasharray="4 4" stroke="var(--shell-border)" strokeOpacity={0.4} />
                       <XAxis dataKey="name" tick={{ fontSize: 11, fill: "var(--shell-muted)" }} stroke="var(--shell-border)" axisLine={false} tickLine={false} />
                       <YAxis tick={{ fontSize: 11, fill: "var(--shell-muted)" }} stroke="var(--shell-border)" axisLine={false} tickLine={false} tickFormatter={(v) => formatPipelineValue(v)} />
                       <Tooltip contentStyle={tooltipStyle} formatter={(value) => [formatPipelineValue(Number(value)), "Stage Value"]} labelStyle={{ fontWeight: 600, marginBottom: 4, color: "var(--shell-foreground)" }} />
                       <Bar dataKey="value" radius={[4, 4, 0, 0]} maxBarSize={64}>
-                        {stages.map((_: any, i: number) => <Cell key={i} fill={STAGE_COLORS[i % STAGE_COLORS.length]} />)}
+                        {stages.map((_: any, i: number) => {
+                          const barGradients = [
+                            "url(#colorDiscoveryBar)",
+                            "url(#colorQuoteBar)",
+                            "url(#colorNegotiationBar)",
+                            "url(#colorWonBar)",
+                            "url(#colorLostBar)"
+                          ];
+                          return <Cell key={i} fill={barGradients[i % barGradients.length]} />;
+                        })}
                       </Bar>
                     </BarChart>
                   </ResponsiveContainer>

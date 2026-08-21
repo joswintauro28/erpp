@@ -13,11 +13,12 @@ export function proxy(request: NextRequest) {
 
   const path = pathname.slice("/api".length);
 
-  // Auth requests go directly to core-iam, all others flow through erp-service aggregation gateway (port 8000)
   let url: URL;
   if (path.startsWith("/auth/")) {
     url = new URL(`/api${path}${search}`, IAM_URL);
   } else {
+    // All domain requests (products, warehouses, stock, invoices, payments, CRM, etc.)
+    // flow through erp-service (port 8000) as the Central API Gateway & Aggregator
     url = new URL(`${path}${search}`, BACKEND_URL);
   }
 
