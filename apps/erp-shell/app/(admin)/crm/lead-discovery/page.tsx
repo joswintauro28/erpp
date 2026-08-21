@@ -9,10 +9,9 @@ import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
 import { api, getAccessToken } from "@/services/api";
 import { exportToCSV } from "@/utils/exportCsv";
+import { toastError, toastSuccess, toastInfo } from "@/utils/toast";
 import SearchCard from "./SearchCard";
 import ResultsCard from "./ResultsCard";
-
-const CRM_BASE = process.env.NEXT_PUBLIC_CRM_API_URL || "http://127.0.0.1:8001";
 
 function getAuthHeaders(): Record<string, string> {
   const token = getAccessToken();
@@ -39,7 +38,7 @@ export default function LeadDiscoveryPage() {
 
   const fetchPinnedLeads = useCallback(async () => {
     try {
-      const data = await api.get<any[]>("/crm/lead-discovery/pinned");
+      const data = await api.get<any[]>("/lead-discovery/pinned");
       setPinnedLeads(data);
     } catch {}
   }, []);
@@ -61,12 +60,14 @@ export default function LeadDiscoveryPage() {
 
     try {
       const isUrl = searchMode === "url" && targetUrl.trim().length > 0;
-      const endpoint = isUrl ? "/crm/lead-discovery/scrape-url" : "/crm/lead-discovery/search";
+      const endpoint = isUrl ? "/lead-discovery/scrape-url" : "/lead-discovery/search";
       const body = isUrl
         ? { url: targetUrl }
         : { city: city || null, industry: industry || null, company_name: companyName || null, searchBy: "Employees", minEmployees: "200", refresh: false };
 
-      const res = await fetch(`/api${endpoint}`, {
+      // Route through the erp-service gateway (same-origin /api/crm passthrough)
+      // so lead discovery works in Docker and keeps the auth/aggregation layer.
+      const res = await fetch(`/api/crm${endpoint}`, {
         method: "POST", headers: getAuthHeaders(), body: JSON.stringify(body), signal: controller.signal,
       });
 
@@ -81,7 +82,7 @@ export default function LeadDiscoveryPage() {
       setResults(data);
     } catch (err: any) {
       if (err.name === "AbortError") return;
-      alert("Failed to fetch leads: " + err.message);
+      toastError("Failed to fetch leads", err.message);
     } finally {
       setLoading(false);
     }
@@ -113,10 +114,10 @@ export default function LeadDiscoveryPage() {
   const togglePin = async (company: any) => {
     if (isPinned(company)) {
       setPinnedLeads(prev => prev.filter(c => c.company_name !== company.company_name));
-      try { await api.delete(`/crm/lead-discovery/pinned/${encodeURIComponent(company.company_name)}`); } catch {}
+      try { await api.delete(`/lead-discovery/pinned/${encodeURIComponent(company.company_name)}`); } catch {}
     } else {
       setPinnedLeads(prev => [...prev, company]);
-      try { await api.post("/crm/lead-discovery/pinned", company); } catch {}
+      try { await api.post("/lead-discovery/pinned", company); } catch {}
     }
   };
 
@@ -124,11 +125,11 @@ export default function LeadDiscoveryPage() {
     if (selectedLeads.length === 0) return;
     setImporting(true);
     try {
-      await api.post("/crm/lead-discovery/import", { companies: selectedLeads });
-      alert(`Successfully imported ${selectedLeads.length} leads!`);
+      await api.post("/lead-discovery/import", { companies: selectedLeads });
+      toastSuccess(`Successfully imported ${selectedLeads.length} leads!`);
       setSelectedLeads([]);
     } catch {
-      alert("Error importing leads. Ensure backend is running.");
+      toastError("Error importing leads", "Ensure backend is running.");
     } finally {
       setImporting(false);
     }
@@ -191,10 +192,10 @@ export default function LeadDiscoveryPage() {
 
         <div className="flex gap-6 border-b border-[var(--shell-border)] mb-4">
           <button onClick={() => setActiveTab("search")} className={cn("pb-2 text-sm font-semibold border-b-2 transition-colors cursor-pointer", activeTab === "search" ? "border-[var(--shell-brand)] text-[var(--shell-brand)]" : "border-transparent text-[var(--shell-muted)]")}>
-            Search Results {results?.companies ? <Badge variant="secondary" className="ml-1.5">{results.companies.length}</Badge> : null}
+            Search Results {results?.companies ? <Badge variant="neutral" className="ml-1.5">{results.companies.length}</Badge> : null}
           </button>
           <button onClick={() => setActiveTab("pinned")} className={cn("pb-2 text-sm font-semibold border-b-2 transition-colors cursor-pointer", activeTab === "pinned" ? "border-[var(--shell-brand)] text-[var(--shell-brand)]" : "border-transparent text-[var(--shell-muted)]")}>
-            Pinned Pages {pinnedLeads.length > 0 ? <Badge variant="secondary" className="ml-1.5">{pinnedLeads.length}</Badge> : null}
+            Pinned Pages {pinnedLeads.length > 0 ? <Badge variant="neutral" className="ml-1.5">{pinnedLeads.length}</Badge> : null}
           </button>
         </div>
 

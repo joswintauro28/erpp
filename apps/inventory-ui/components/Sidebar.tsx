@@ -18,6 +18,9 @@ import {
   Building2,
   SlidersHorizontal,
   BarChart2,
+  Factory,
+  ClipboardCheck,
+  ShieldCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
@@ -45,11 +48,12 @@ const navItems: NavItem[] = [
     name: "Inventory Management",
     icon: Package,
     children: [
-      { name: "Order Fulfillment", href: "/inventory/fulfillment", icon: ClipboardList },
-      { name: "Product Master", href: "/inventory/products", icon: Boxes },
-      { name: "Stock Levels", href: "/inventory/stock", icon: Warehouse },
-      { name: "Stock Movements", href: "/inventory/stock/movements", icon: ArrowRightLeft },
-      { name: "Serial Numbers", href: "/inventory/serial-numbers", icon: ScanBarcode },
+      { name: "Order Fulfillment", href: "/fulfillment", icon: ClipboardList },
+      { name: "Product Master", href: "/products", icon: Boxes },
+      { name: "Stock Levels", href: "/stock", icon: Warehouse },
+      { name: "Stock Movements", href: "/stock/movements", icon: ArrowRightLeft },
+      { name: "Serial Numbers", href: "/serial-numbers", icon: ScanBarcode },
+      { name: "Quality Checks", href: "/quality-checks", icon: ShieldCheck },
     ],
   },
 
@@ -57,8 +61,17 @@ const navItems: NavItem[] = [
     name: "Procurement",
     icon: ShoppingCart,
     children: [
-      { name: "Suppliers", href: "/inventory/suppliers", icon: Truck },
-      { name: "Purchase Orders", href: "/inventory/purchase-orders", icon: ClipboardList },
+      { name: "Suppliers", href: "/suppliers", icon: Truck },
+      { name: "Purchase Requisitions", href: "/purchase-requisitions", icon: ClipboardCheck },
+      { name: "Purchase Orders", href: "/purchase-orders", icon: ClipboardList },
+    ],
+  },
+
+  {
+    name: "Manufacturing",
+    icon: Factory,
+    children: [
+      { name: "Work Orders", href: "/work-orders", icon: Factory },
     ],
   },
 
@@ -66,7 +79,7 @@ const navItems: NavItem[] = [
     name: "Locations",
     icon: Building2,
     children: [
-      { name: "Warehouses", href: "/inventory/warehouses", icon: Building2 },
+      { name: "Warehouses", href: "/warehouses", icon: Building2 },
     ],
   },
 ];

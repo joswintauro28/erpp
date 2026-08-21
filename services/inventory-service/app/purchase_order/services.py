@@ -253,6 +253,15 @@ class PurchaseOrderService:
             )
             self.db.add(movement)
 
+        # P4 gate: products flagged qc_required get a PENDING quality check row.
+        try:
+            from app.quality_check.services import QualityCheckService
+            await QualityCheckService(self.db).create_for_receipt(
+                organization_id, po.id, po_items
+            )
+        except Exception as exc:
+            logger.warning(f"Failed to auto-create quality checks for PO {po.id}: {exc}")
+
         # Auto-check associated fulfillments so queued/shortage orders can resume.
         await self._recheck_linked_fulfillments(po, organization_id)
 
@@ -270,6 +279,89 @@ class PurchaseOrderService:
                 logger.info(f"Auto-reserved fulfillment {f.id} ({f.sales_order_code}) after stock arrived from PO {po.order_number}")
         except Exception:
             pass
+
+    async def putaway_items(
+        self,
+        po_id: int,
+        organization_id: int,
+        putaway_items: list[dict],
+    ) -> PurchaseOrder | None:
+        """P5: record physical placement of received goods to a warehouse location.
+
+        Stock is credited at GRN (goods arrive at the receiving dock); putaway
+        tracks the location hand-off and emits `inventory.stock.putaway` so
+        analytics/notifications can follow the goods through the warehouse.
+        """
+        po = await self.get_purchase_order_with_items(po_id, organization_id)
+        if not po:
+            return None
+        if po.status not in ("PARTIALLY_RECEIVED", "COMPLETED"):
+            raise HTTPException(
+                status_code=409,
+                detail="Putaway requires received goods (PARTIALLY_RECEIVED/COMPLETED)",
+            )
+
+        from app.stock.models import StockMovement
+
+        item_map = {item.product_id: item for item in po.items if item.product_id}
+        now = datetime.now(timezone.utc)
+        putaway_log = []
+
+        for req in putaway_items:
+            item = item_map.get(req.get("product_id"))
+            if not item:
+                raise HTTPException(
+                    status_code=404,
+                    detail=f"Product {req.get('product_id')} is not on this purchase order",
+                )
+            qty = int(req.get("quantity") or 0)
+            if qty <= 0:
+                raise HTTPException(status_code=422, detail="Putaway quantity must be positive")
+            outstanding = item.received_quantity - item.putaway_quantity
+            if qty > outstanding:
+                raise HTTPException(
+                    status_code=422,
+                    detail=f"Putaway quantity {qty} exceeds outstanding {outstanding} for item {item.product_id}",
+                )
+
+            item.putaway_quantity += qty
+            item.putaway_at = now
+            if req.get("location"):
+                item.location = req["location"]
+
+            # Distinct movement type (not "in") so the movement log does not
+            # double-count goods already credited at GRN.
+            self.db.add(
+                StockMovement(
+                    organization_id=organization_id,
+                    product_id=item.product_id,
+                    warehouse_id=po.warehouse_id,
+                    type="putaway",
+                    quantity=qty,
+                    reference_type="PUTAWAY",
+                    reference_id=po.id,
+                    notes=f"Put away {qty} to {item.location or 'default'} (PO {po.order_number})",
+                )
+            )
+            putaway_log.append(
+                {
+                    "product_id": item.product_id,
+                    "quantity": qty,
+                    "location": item.location,
+                }
+            )
+
+        await self.db.commit()
+
+        from app.core.events import publish_event, EVENT_STOCK_PUTAWAY
+        publish_event(
+            EVENT_STOCK_PUTAWAY,
+            organization_id=organization_id,
+            po_id=po.id,
+            order_number=po.order_number,
+            items=putaway_log,
+        )
+        return await self.get_purchase_order_with_items(po_id, organization_id)
 
     def _fully_received(self, po: PurchaseOrder) -> bool:
         return all(

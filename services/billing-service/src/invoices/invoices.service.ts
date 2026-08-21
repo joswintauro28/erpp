@@ -99,6 +99,18 @@ export class InvoicesService {
     return invoices.map((inv) => this.flattenInvoice(inv));
   }
 
+  async findBySalesOrderCode(organizationId: number, salesOrderCode: string): Promise<any | null> {
+    return this.prisma.invoice.findFirst({
+      where: { organizationId, salesOrderCode },
+    });
+  }
+
+  async findByPoReference(organizationId: number, poReference: string): Promise<any | null> {
+    return this.prisma.invoice.findFirst({
+      where: { organizationId, type: "payable", poReference },
+    });
+  }
+
   async findOne(id: number, organizationId: number): Promise<any> {
     this.logger.log(`Fetching invoice ${id} for org: ${organizationId}`);
     const invoice = await this.prisma.invoice.findFirst({
@@ -125,7 +137,19 @@ export class InvoicesService {
     options: { clientId?: number; clientName?: string; amount?: number; creditLimit?: number },
   ): Promise<any> {
     const amount = Number(options.amount ?? 0);
-    const creditLimit = Number(options.creditLimit ?? 100000);
+
+    // ERP credit-management convention: a credit limit is only enforced when
+    // one is explicitly configured on the customer record. Missing, zero or
+    // negative limits mean "unlimited credit" -> fail open (no block). This
+    // replaces the previous hard-coded 100000 default that rejected nearly
+    // every sales order regardless of the customer's actual limit.
+    const rawLimit = options.creditLimit != null ? Number(options.creditLimit) : NaN;
+    const hasLimit = Number.isFinite(rawLimit) && rawLimit > 0;
+    const creditLimit = hasLimit ? rawLimit : null;
+
+    // Credit exposure = outstanding balance on the customer's open receivable
+    // invoices (sent / overdue / partially_paid). Issued credit notes already
+    // net against invoice balanceDue, so they are reflected here automatically.
     const where: any = {
       organizationId,
       type: "receivable",
@@ -139,7 +163,8 @@ export class InvoicesService {
       select: { id: true, invoiceNumber: true, balanceDue: true },
     });
     const outstanding = invoices.reduce((sum, inv) => sum + Number(inv.balanceDue), 0);
-    const approved = outstanding + amount <= creditLimit;
+    const approved = creditLimit == null || outstanding + amount <= creditLimit;
+    const overLimitAmount = creditLimit == null ? 0 : Math.max(0, outstanding + amount - creditLimit);
 
     return {
       client_id: options.clientId,
@@ -147,7 +172,9 @@ export class InvoicesService {
       outstanding,
       credit_limit: creditLimit,
       requested_amount: amount,
-      available_credit: Math.max(0, creditLimit - outstanding),
+      available_credit: creditLimit == null ? null : Math.max(0, creditLimit - outstanding),
+      over_limit_amount: overLimitAmount,
+      unlimited: !hasLimit,
       approved,
     };
   }
@@ -201,6 +228,8 @@ export class InvoicesService {
         vendorId: dto.vendorId,
         vendorName: dto.vendorName,
         invoiceNumber: dto.invoiceNumber ?? (await this.documentNumbers.nextInvoice(organizationId)),
+        salesOrderCode: dto.salesOrderCode,
+        poReference: dto.poReference,
         gstTreatment,
         placeOfSupply: dto.placeOfSupply,
         issueDate: dto.issueDate ? new Date(dto.issueDate) : undefined,
@@ -233,6 +262,7 @@ export class InvoicesService {
       invoiceNumber: result.invoiceNumber ?? `INV-${raw.id}`,
       clientName: dto.clientName ?? "Unknown",
       total: result.total,
+      salesOrderCode: raw.salesOrderCode ?? undefined,
       timestamp: new Date(),
     });
 
@@ -491,6 +521,7 @@ export class InvoicesService {
           clientName: result.clientName ?? "Unknown",
           paymentId: 0,
           amount: result.paidAmount,
+          salesOrderCode: result.salesOrderCode ?? undefined,
           timestamp: new Date(),
         });
       }

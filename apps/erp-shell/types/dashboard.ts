@@ -9,7 +9,6 @@ export interface DashboardData {
     low_stock_count: number;
     pipeline_value: number;
     open_opportunities: number;
-    open_complaints: number;
     total_customers: number;
     total_leads: number;
   } | null;

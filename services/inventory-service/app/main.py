@@ -14,6 +14,9 @@ from app.warehouse.models import Warehouse
 from app.stock.models import Stock, StockMovement
 from app.supplier.models import Supplier
 from app.purchase_order.models import PurchaseOrder, PurchaseOrderItem
+from app.purchase_requisition.models import PurchaseRequisition, PurchaseRequisitionItem
+from app.quality_check.models import QualityCheck
+from app.work_order.models import WorkOrder, WorkOrderOperation, WorkOrderMaterial
 from app.serial_number.models import SerialNumber
 from app.fulfillment.models import SalesOrderFulfillment, FulfillmentItem
 
@@ -22,6 +25,9 @@ from app.warehouse.router import router as warehouses_router
 from app.stock.router import router as stock_router
 from app.supplier.router import router as suppliers_router
 from app.purchase_order.router import router as purchase_orders_router
+from app.purchase_requisition.router import router as purchase_requisitions_router
+from app.quality_check.router import router as quality_checks_router
+from app.work_order.router import router as work_orders_router
 from app.serial_number.router import router as serial_numbers_router
 from app.dashboard.router import router as dashboard_router
 from app.fulfillment.router import router as fulfillment_router
@@ -84,6 +90,9 @@ app.include_router(warehouses_router)
 app.include_router(stock_router)
 app.include_router(suppliers_router)
 app.include_router(purchase_orders_router)
+app.include_router(purchase_requisitions_router)
+app.include_router(quality_checks_router)
+app.include_router(work_orders_router)
 app.include_router(serial_numbers_router)
 app.include_router(dashboard_router)
 app.include_router(fulfillment_router)

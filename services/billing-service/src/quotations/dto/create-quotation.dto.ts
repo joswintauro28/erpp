@@ -62,6 +62,17 @@ export class CreateQuotationDto {
   @IsString()
   notes?: string;
 
+  // CPQ: discount applied to the quotation subtotal (CRM enforces the
+  // internal approval threshold; billing just prices it).
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  discount?: number;
+
+  @IsOptional()
+  @IsString()
+  discountType?: string;
+
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => CreateQuotationItemDto)

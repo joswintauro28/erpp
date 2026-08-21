@@ -6,6 +6,8 @@ from app.fulfillment.schemas import (
     FulfillmentCreate,
     FulfillmentDispatchAction,
     FulfillmentOut,
+    PickingBatchCreate,
+    PickingBatchOut,
     StockCheckResult,
 )
 from app.fulfillment.services import FulfillmentService
@@ -134,6 +136,26 @@ async def delete_fulfillment_order(
 ):
     service = FulfillmentService(db)
     await service.delete_fulfillment(org_id, fulfillment_id)
+
+
+@router.post("/batches", response_model=PickingBatchOut, status_code=201)
+async def create_picking_batch(
+    data: PickingBatchCreate,
+    db: AsyncSession = Depends(get_db),
+    org_id: int = Depends(get_current_org_id),
+):
+    """I7: create a picking wave/batch from reserved fulfillments."""
+    service = FulfillmentService(db)
+    return await service.create_picking_batch(org_id, data.fulfillment_ids)
+
+
+@router.get("/batches", response_model=list[PickingBatchOut])
+async def list_picking_batches(
+    db: AsyncSession = Depends(get_db),
+    org_id: int = Depends(get_current_org_id),
+):
+    service = FulfillmentService(db)
+    return await service.list_picking_batches(org_id)
 
 
 @router.post("/orders/{fulfillment_id}/step-back", response_model=FulfillmentOut)

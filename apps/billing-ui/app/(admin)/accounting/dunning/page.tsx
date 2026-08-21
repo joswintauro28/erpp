@@ -9,9 +9,9 @@ import { api } from "@/services/api";
 import { money } from "@/utils/format";
 
 const levelColors: Record<number, string> = {
-  1: "bg-amber-100 text-amber-800 border-amber-200",
+  1: "bg-[var(--shell-warning-surface)] text-[var(--shell-warning)] border-[var(--shell-warning)]/30",
   2: "bg-orange-100 text-orange-800 border-orange-200",
-  3: "bg-red-100 text-red-800 border-red-200",
+  3: "bg-[var(--shell-danger-surface)] text-[var(--shell-danger)] border-[var(--shell-danger)]/30",
 };
 
 const levelLabels: Record<number, string> = {
@@ -56,7 +56,7 @@ export default function DunningPage() {
           <h1 className="text-2xl font-semibold text-foreground">Dunning & Collections</h1>
           <p className="text-sm text-muted-foreground mt-1">Overdue invoice escalation tracking</p>
         </div>
-        <Badge variant="secondary" className="text-xs gap-1.5">
+        <Badge variant="neutral" className="text-xs gap-1.5">
           <Bell className="h-3 w-3" />
           Auto-escalated daily
         </Badge>
@@ -128,7 +128,7 @@ export default function DunningPage() {
                   <TableCell className="text-xs font-mono">{r.due_date}</TableCell>
                   <TableCell className="text-xs font-mono">{r.days_overdue}d</TableCell>
                   <TableCell>
-                    <span className={`inline-flex items-center rounded-md border px-2 py-0.5 text-[10px] font-semibold ${levelColors[r.level] ?? "bg-gray-100 text-gray-800"}`}>
+                    <span className={`inline-flex items-center rounded-md border px-2 py-0.5 text-[10px] font-semibold ${levelColors[r.level] ?? "bg-muted text-muted-foreground"}`}>
                       {levelLabels[r.level] ?? `Level ${r.level}`}
                     </span>
                   </TableCell>

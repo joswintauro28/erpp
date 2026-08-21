@@ -1,6 +1,8 @@
 # DATAVEX ERP — CRM Service (`services/crm-service`) Agent Context
 
-This backend service manages the sales pipelines, interactions, communications, leads, client lists, service feedback, and AI assistant query logs.
+This backend service manages the sales pipeline: leads, opportunities, requirements, quotations, sales orders, customer/account registry, contacts, documents, reports, lead discovery, and AI assistant logs.
+
+**Out of scope here:** Marketing campaigns (M1) are **not required** by the product requirements, so there is no campaign/email/landing-page functionality. Enquiries, site visits, follow-ups, tasks, communications, visit plans, complaints and feedback are **not implemented in this service** — they will be delivered as a separate **Service-Desk** module.
 
 ## 1. Tech Stack
 - **Framework:** FastAPI (Python 3.13+)
@@ -23,11 +25,11 @@ This backend service manages the sales pipelines, interactions, communications, 
 
 ## 4. Modules & Endpoints
 - **Dashboard (`GET /api/dashboard`):** Pipeline value, open opportunities, pipeline stages, hot leads, and recommendations.
-- **Customer:** Accounts, ARR tracking, and document links.
-- **Lead:** Lead scoring and status lifecycle (New -> Qualified -> Converted/Lost).
-- **Sales:** Requirements, quotes, and sales orders.
-- **Interaction:** Enquiries, site visits, follow-up logs, and tasks.
-- **Service:** Complaints and feedback scoring.
+- **Customer:** Accounts, ARR, tier, **credit limit** (drives the billing credit check on SO approval), status, owner.
+- **Lead:** Lead scoring / MQL qualification and status lifecycle (New -> Qualified -> Converted/Lost); 1-click MQL -> SQL handoff auto-creates an Opportunity.
+- **Sales:** Requirements, quotations (proxied to billing + CPQ discount-approval overlay), and sales orders (credit check -> stock check -> publish to inventory pipeline).
+- **Interaction *(planned — Service-Desk)*:** Enquiries, site visits, follow-up logs, and tasks — **not yet implemented**; will ship in the Service-Desk module.
+- **Service *(planned — Service-Desk)*:** Complaints and feedback scoring — **not yet implemented**; will ship in the Service-Desk module.
 - **AI:** Assistant logs and queries.
 
 ## 5. Run Commands

@@ -129,7 +129,7 @@ export default function QuotationForm({ mode, initialData, onSuccess }: Quotatio
                   done
                     ? "bg-[var(--shell-brand)] text-white cursor-pointer"
                     : active
-                      ? "bg-[var(--shell-accent)] text-[var(--shell-foreground)]"
+                      ? "bg-[var(--shell-accent)] text-[var(--shell-accent-foreground)]"
                       : "bg-[var(--shell-surface)] text-[var(--shell-muted)] border border-[var(--shell-border)] cursor-default"
                 }`}
               >
@@ -283,7 +283,7 @@ export default function QuotationForm({ mode, initialData, onSuccess }: Quotatio
           {step === 2 && (
             <div className="space-y-6">
               <div className="flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                <CheckCircle2 className="h-4 w-4 text-[var(--shell-success)]" />
                 <h3 className="font-heading text-sm font-semibold text-[var(--shell-foreground)]">Review & Confirm</h3>
               </div>
 

@@ -11,6 +11,10 @@ class OpportunityBase(BaseModel):
     stage: Optional[str] = None
     owner: Optional[str] = None
     updated_at: Optional[str] = None
+    # Pipeline intelligence
+    discovery_notes: Optional[str] = None
+    lead_id_str: Optional[str] = None
+    stage_history: Optional[List[dict]] = None
 
 class Opportunity(OpportunityBase):
     id: int

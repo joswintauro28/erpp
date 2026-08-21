@@ -7,8 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Save, Sparkles, Palette } from "lucide-react";
 
 const brandColors = [
-  { label: "Primary", hex: "#8C1D24", var: "--shell-brand" },
-  { label: "Action", hex: "#8C1D24", var: "--shell-action" },
+  { label: "Primary", hex: "var(--shell-brand)", var: "--shell-brand" },
+  { label: "Action", hex: "var(--shell-brand)", var: "--shell-action" },
   { label: "Accent", hex: "#E5B83C", var: "--shell-accent" },
   { label: "Surface", hex: "#1A1A1A", var: "--shell-surface" },
   { label: "Foreground", hex: "#FFFFFF", var: "--shell-foreground" },
@@ -19,7 +19,7 @@ export default function Branding() {
   return (
     <div className="relative space-y-6">
       {/* Brand Sweep Line */}
-      <span className="absolute -top-6 left-0 h-0.5 w-1/3 rounded-full bg-[#8C1D24] shimmer-glow" />
+      <span className="absolute -top-6 left-0 h-0.5 w-1/3 rounded-full bg-[var(--shell-brand)] shimmer-glow" />
 
       <div className="flex items-center justify-between">
         <div>
@@ -36,7 +36,7 @@ export default function Branding() {
         <Card className="border-[var(--shell-border)] bg-[var(--shell-surface)] hover:shadow-md transition-shadow duration-200">
           <CardHeader className="p-5 pb-3">
             <div className="flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-[#8C1D24]" />
+              <Sparkles className="h-4 w-4 text-[var(--shell-brand)]" />
               <CardTitle className="text-sm font-semibold text-[var(--shell-foreground)]">Logo &amp; Identity</CardTitle>
             </div>
             <CardDescription className="text-xs text-[var(--shell-muted)]">Upload your company logo and favicon</CardDescription>
@@ -45,7 +45,7 @@ export default function Branding() {
             <div className="space-y-2">
               <Label className="text-xs text-[var(--shell-muted)] font-medium">Company Logo</Label>
               <div className="flex items-center gap-4">
-                <div className="flex h-14 w-14 items-center justify-center rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface-alt)] text-sm font-bold text-[#E5B83C]">
+                <div className="flex h-14 w-14 items-center justify-center rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface-alt)] text-sm font-bold text-[var(--shell-accent)]">
                   DV
                 </div>
                 <div className="flex gap-2">
@@ -57,7 +57,7 @@ export default function Branding() {
             <div className="space-y-2">
               <Label className="text-xs text-[var(--shell-muted)] font-medium">Favicon</Label>
               <div className="flex items-center gap-4">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--shell-border)] bg-[#8C1D24] text-[10px] font-bold text-white">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--shell-border)] bg-[var(--shell-brand)] text-[10px] font-bold text-white">
                   D
                 </div>
                 <Button variant="outline" size="sm" className="hover:bg-[var(--shell-surface-alt)]">Upload</Button>
@@ -69,7 +69,7 @@ export default function Branding() {
         <Card className="border-[var(--shell-border)] bg-[var(--shell-surface)] hover:shadow-md transition-shadow duration-200">
           <CardHeader className="p-5 pb-3">
             <div className="flex items-center gap-2">
-              <Palette className="h-4 w-4 text-[#8C1D24]" />
+              <Palette className="h-4 w-4 text-[var(--shell-brand)]" />
               <CardTitle className="text-sm font-semibold text-[var(--shell-foreground)]">Brand Colors</CardTitle>
             </div>
             <CardDescription className="text-xs text-[var(--shell-muted)]">Define your brand colour palette</CardDescription>
@@ -117,7 +117,7 @@ export default function Branding() {
           <div className="space-y-1.5">
             <Label className="text-xs text-[var(--shell-muted)] font-medium">Email Logo</Label>
             <div className="flex items-center gap-4">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-[var(--shell-border)] bg-[var(--shell-surface-alt)] text-xs font-bold text-[#E5B83C]">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-[var(--shell-border)] bg-[var(--shell-surface-alt)] text-xs font-bold text-[var(--shell-accent)]">
                 DV
               </div>
               <Button variant="outline" size="sm" className="hover:bg-[var(--shell-surface-alt)]">Upload</Button>
@@ -128,7 +128,7 @@ export default function Branding() {
 
       <div className="flex items-center justify-end gap-3 pt-2 border-t border-[var(--shell-border)]">
         <Button variant="outline" size="sm" className="hover:bg-[var(--shell-surface-alt)]">Cancel</Button>
-        <Button size="sm" className="bg-[#8C1D24] hover:bg-[#8C1D24]/90 text-white">
+        <Button size="sm" className="bg-[var(--shell-brand)] hover:bg-[var(--shell-brand)]/90 text-white">
           <Save className="mr-1.5 h-3.5 w-3.5" />
           Save Changes
         </Button>

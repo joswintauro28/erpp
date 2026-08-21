@@ -1,16 +1,19 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Plus, Download, Search, Filter, RotateCw } from "lucide-react";
+import { Plus, Download, Search, Filter } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Spinner } from "@/components/ui/spinner";
 import { exportToCSV } from "@/utils/exportCsv";
+import { toastError } from "@/utils/toast";
+import { useConfirm } from "@datavex/ui-theme";
 import RequirementTable from "./RequirementTable";
+import { Spinner } from "@/components/ui/spinner";
 import { api } from "@/services/api";
-import GenericCreateModal from "@/components/GenericCreateModal";
-import GenericDetailsModal from "@/components/GenericDetailsModal";
+import RequirementCreateModal from "./RequirementCreateModal";
+import RequirementDetailsModal from "./RequirementDetailsModal";
+
 
 export default function RequirementsPage() {
   const [data, setData] = useState({ summary: { total_requirements: 0, open: 0, overdue_at_risk: 0, owners: 0 }, requirements: [] });
@@ -18,8 +21,8 @@ export default function RequirementsPage() {
   const [search, setSearch] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
-  const [selectedRecordForDetails, setSelectedRecordForDetails] = useState<any>(null);
-  const [editRecord, setEditRecord] = useState<any>(null);
+  const [selectedRecordForDetails, setSelectedRecordForDetails] = useState(null);
+  const [editRecord, setEditRecord] = useState(null);
 
   const fetchData = useCallback(async () => {
     try {
@@ -31,10 +34,12 @@ export default function RequirementsPage() {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
+  const confirm = useConfirm();
+
   const handleDelete = async (record: any) => {
-    if (window.confirm("Are you sure?")) {
+    if (await confirm({ title: "Delete requirement", message: "Are you sure you want to delete this requirement?", destructive: true })) {
       try { await api.delete("/requirements/" + record.id_str); fetchData(); }
-      catch { alert("Delete failed"); }
+      catch { toastError("Delete failed"); }
     }
   };
 
@@ -48,9 +53,6 @@ export default function RequirementsPage() {
   return (
     <div className="space-y-10 lg:space-y-12">
       <div className="flex items-center justify-end gap-3">
-        <Button variant="outline" size="sm" onClick={fetchData}>
-          <RotateCw className={"h-4 w-4" + (loading ? " animate-spin" : "")} /> Refresh
-        </Button>
         <Button variant="outline" size="sm" onClick={() => exportToCSV(items, "requirements")}><Download className="h-4 w-4" /> Export</Button>
         <Button size="sm" onClick={() => setIsModalOpen(true)}><Plus className="h-4 w-4" /> New Requirement</Button>
       </div>
@@ -90,18 +92,18 @@ export default function RequirementsPage() {
             <Filter className="h-4 w-4 text-[var(--shell-muted)]" />
           </div>
           <div className="overflow-x-auto">
-            <RequirementTable
-              requirements={filtered}
-              onView={(rec) => { setSelectedRecordForDetails(rec); setIsDetailsOpen(true); }}
-              onEdit={(rec) => { setEditRecord(rec); setIsModalOpen(true); }}
-              onDelete={handleDelete}
+            <RequirementTable 
+              requirements={filtered} 
+              onView={(rec) => { setSelectedRecordForDetails(rec); setIsDetailsOpen(true); }} 
+              onEdit={(rec) => { setEditRecord(rec); setIsModalOpen(true); }} 
+              onDelete={handleDelete} 
             />
           </div>
         </Card>
       </div>
 
-      <GenericCreateModal entityType="requirements" entityName="Requirement" isOpen={isModalOpen} onClose={() => { setIsModalOpen(false); setEditRecord(null); }} editRecord={editRecord} onSuccess={fetchData} />
-      <GenericDetailsModal record={selectedRecordForDetails} entityName="Requirement" isOpen={isDetailsOpen} onClose={() => { setIsDetailsOpen(false); setSelectedRecordForDetails(null); }} onSuccess={fetchData} />
+      <RequirementCreateModal isOpen={isModalOpen} onClose={() => { setIsModalOpen(false); setEditRecord(null); }} editRecord={editRecord} onSuccess={fetchData} />
+      <RequirementDetailsModal record={selectedRecordForDetails} isOpen={isDetailsOpen} onClose={() => { setIsDetailsOpen(false); setSelectedRecordForDetails(null); }} onSuccess={fetchData} />
     </div>
   );
 }

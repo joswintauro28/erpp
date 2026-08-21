@@ -2,15 +2,7 @@
 
 import { Badge } from "@/components/ui/badge";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
-
-const badgeVariant = (status: string): "default" | "secondary" | "outline" | "destructive" => {
-  switch (status) {
-    case "Success": case "Ready": case "Completed": return "default";
-    case "Generating": case "Processing": case "Pending": return "secondary";
-    case "Failed": case "Error": return "destructive";
-    default: return "outline";
-  }
-};
+import { statusVariant } from "@/lib/utils";
 
 interface AIAssistantTableProps {
   logs: any[];
@@ -44,7 +36,7 @@ export default function AIAssistantTable({ logs }: AIAssistantTableProps) {
             <TableCell className="max-w-[200px] truncate font-medium" title={log.query}>{log.query}</TableCell>
             <TableCell className="max-w-[250px] truncate text-[var(--shell-muted)]" title={log.response || ""}>{(log.response || "").substring(0, 100)}</TableCell>
             <TableCell>{log.category}</TableCell>
-            <TableCell><Badge variant={badgeVariant(log.status)}>{log.status}</Badge></TableCell>
+            <TableCell><Badge variant={statusVariant("ai_log", log.status)}>{log.status}</Badge></TableCell>
             <TableCell className="text-[var(--shell-muted)]">{log.created_at}</TableCell>
           </TableRow>
         ))}

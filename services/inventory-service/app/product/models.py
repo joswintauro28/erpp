@@ -26,6 +26,9 @@ class Product(Base):
     uses_serial_tracking: Mapped[bool] = mapped_column(sa.Boolean, default=False)
     costing_method: Mapped[str] = mapped_column(sa.String(50), default="fifo")
     is_active: Mapped[bool] = mapped_column(sa.Boolean, default=True)
+    # Supply-chain policy (blueprint I3/I4 + P4)
+    make_or_buy: Mapped[str] = mapped_column(sa.String(20), default="buy")  # make | buy | both
+    qc_required: Mapped[bool] = mapped_column(sa.Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(
         sa.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
     )

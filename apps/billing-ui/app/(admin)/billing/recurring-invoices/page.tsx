@@ -21,10 +21,10 @@ import type { RecurringInvoice } from "@/types/billing";
 import RecurringInvoicesLoading from "./loading";
 
 const frequencyColors: Record<string, string> = {
-  weekly: "bg-blue-500/10 text-blue-500 border-blue-500/20",
+  weekly: "bg-[var(--shell-info)]/10 text-[var(--shell-info)] border-blue-500/20",
   monthly: "bg-purple-500/10 text-purple-500 border-purple-500/20",
-  quarterly: "bg-amber-500/10 text-amber-500 border-amber-500/20",
-  yearly: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
+  quarterly: "bg-[var(--shell-warning)]/10 text-[var(--shell-warning)] border-[var(--shell-warning)]/20",
+  yearly: "bg-[var(--shell-success)]/10 text-[var(--shell-success)] border-[var(--shell-success)]/20",
 };
 
 const GST_RATES = [0, 5, 12, 18, 28];
@@ -423,7 +423,7 @@ export default function RecurringInvoices() {
         <DialogContent>
           <DialogHeader>
             <div className="flex items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-red-100 text-red-600">
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--shell-danger-surface)] text-[var(--shell-danger)]">
                 <AlertTriangle className="h-5 w-5" />
               </div>
               <DialogTitle>Delete Recurring Schedule</DialogTitle>

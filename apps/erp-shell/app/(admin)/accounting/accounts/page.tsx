@@ -22,14 +22,14 @@ import type { Account } from "@/types/accounting";
 import ChartOfAccountsLoading from "./loading";
 
 const typeConfig: Record<string, { color: string; bg: string; icon: any }> = {
-  Asset: { color: "#16a34a", bg: "from-emerald-500/5", icon: Banknote },
+  Asset: { color: "#16a34a", bg: "from-[var(--shell-success-surface)]0/5", icon: Banknote },
   Liability: { color: "#dc2626", bg: "from-red-500/5", icon: Landmark },
   Equity: { color: "#2563eb", bg: "from-blue-500/5", icon: Scale },
-  Income: { color: "#d97706", bg: "from-amber-500/5", icon: TrendingUp },
+  Revenue: { color: "#d97706", bg: "from-amber-500/5", icon: TrendingUp },
   Expense: { color: "#ea580c", bg: "from-orange-500/5", icon: ShoppingCart },
 };
 
-const typeOrder = ["Asset", "Liability", "Equity", "Income", "Expense"] as const;
+const typeOrder = ["Asset", "Liability", "Equity", "Revenue", "Expense"] as const;
 
 const typeBalances = (type: string, accounts: Account[]) => {
   const filtered = accounts.filter((a) => a.type === type && a.is_active);
@@ -194,7 +194,7 @@ export default function ChartOfAccounts() {
           />
         </div>
         {typeFilter && (
-          <Badge variant="secondary" className="gap-1">
+          <Badge variant="neutral" className="gap-1">
             {typeFilter}
             <button className="ml-1 text-[var(--shell-muted)] hover:text-[var(--shell-foreground)]" onClick={() => setTypeFilter("")}>×</button>
           </Badge>

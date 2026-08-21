@@ -147,6 +147,16 @@ async def pinned_lead_delete(company_name: str, payload: dict = Depends(get_curr
 
 # ─── Lead-specific endpoints ──────────────────────────────────
 
+@router.post("/leads/{id_str}/qualify")
+async def qualify_lead(
+    id_str: str,
+    body: dict | None = None,
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = _get_token(payload)
+    return await crm_client._post(f"/leads/{id_str}/qualify", token, body or {})
+
+
 @router.post("/leads/{lead_id}/convert")
 async def convert_lead(
     lead_id: str,
@@ -190,12 +200,6 @@ async def list_entities(
 ):
     if entity_type not in VALID_ENTITIES:
         raise HTTPException(status_code=404, detail=f"Unknown entity type: {entity_type}")
-
-    if entity_type == "quotations":
-        return {
-            "summary": {"total_quotations": 0, "open": 0, "overdue_at_risk": 0, "owners": 0},
-            "quotations": [],
-        }
 
     token = _get_token(payload)
     data = await crm_client.get_entity_list(entity_type, token)
@@ -251,6 +255,34 @@ async def update_quotation_status(
 ):
     token = _get_token(payload)
     return await crm_client.update_quotation_status(id, status, token)
+
+
+@router.get("/quotations/{id}/approval")
+async def get_quotation_approval(
+    id: int,
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = _get_token(payload)
+    return await crm_client._get(f"/quotations/{id}/approval", token)
+
+
+@router.post("/opportunities/{id_str}/stage")
+async def update_opportunity_stage(
+    id_str: str,
+    body: dict,
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = _get_token(payload)
+    return await crm_client._post(f"/opportunities/{id_str}/stage", token, body)
+
+
+@router.post("/sales-orders/{id_str}/approve")
+async def approve_sales_order(
+    id_str: str,
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = _get_token(payload)
+    return await crm_client._post(f"/sales-orders/{id_str}/approve", token, {})
 
 
 @router.post("/sales-orders/{id_str}/check-stock")

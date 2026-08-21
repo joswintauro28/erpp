@@ -88,6 +88,7 @@ export class AuthService {
       },
       include: {
         organization: true,
+        user: true,
         role: {
           include: {
             rolePermissions: {
@@ -109,6 +110,7 @@ export class AuthService {
 
     return {
       user_id: userId,
+      full_name: membership?.user?.fullName || null,
       role: roleName,
       organization_id: orgId,
       organization_name: orgName,

@@ -12,4 +12,8 @@ python-multipart>=0.0.12,<1
 SQLAlchemy>=2.0,<3
 starlette>=0.40,<1
 uvicorn>=0.30,<1
+# WebSocket support for the live notification gateway (/ws/notifications).
+# Plain uvicorn cannot serve upgrade requests without websockets/wsproto;
+# the container was returning 404 on every WS handshake without this.
+websockets>=13,<17
 aio-pika>=9.0.0,<10

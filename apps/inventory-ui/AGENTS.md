@@ -22,15 +22,19 @@ This directory contains the Inventory Workstation UI for Inventory Managers.
 - `/api/auth/*` → core-iam (8002)
 - All other `/api/*` → inventory-service (8004)
 
-## 4. Routes (8 Total)
-- `/dashboard`: `GET /api/dashboard/inventory` — aggregated KPIs.
-- `/inventory/products`: `GET /api/products` — product catalog.
-- `/inventory/warehouses`: `GET /api/warehouses` — warehouse locations.
-- `/inventory/stock`: `GET /api/stock` — stock levels.
-- `/inventory/stock/movements`: `GET /api/stock/movements` — stock movement log.
-- `/inventory/suppliers`: `GET /api/suppliers` — supplier list.
-- `/inventory/purchase-orders`: `GET /api/purchase-orders` — purchase order list.
-- `/inventory/serial-numbers`: `GET /api/serial-numbers` — serial tracking.
+## 4. Routes (12 Total)
+- `/dashboard`: `GET /api/dashboard/inventory` — aggregated KPIs (products, warehouses, stock, low stock, pending POs).
+- `/products`: `GET /api/products` — product catalog with search, category badges.
+- `/warehouses`: `GET /api/warehouses` — warehouse locations with status.
+- `/stock`: `GET /api/stock` — stock levels per product/warehouse with availability.
+- `/stock/movements`: `GET /api/stock/movements` — movement log with type badges (in/out/adjustment).
+- `/suppliers`: `GET /api/suppliers` — supplier list with contact info.
+- `/purchase-requisitions`: `GET /api/purchase-requisitions` — purchase requisition buy requests with status badges.
+- `/purchase-orders`: `GET /api/purchase-orders` — purchase order list with status badges.
+- `/serial-numbers`: `GET /api/serial-numbers` — serial tracking list with status filter.
+- `/quality-checks`: `GET /api/quality-checks` — quality inspection logs and status chips.
+- `/fulfillment`: `GET /api/fulfillment/orders` — sales order fulfillment pipeline Kanban.
+- `/work-orders`: `GET /api/work-orders` — manufacturing production run routing and issues.
 
 ## 5. Development Commands
 Run the development server for Inventory UI:

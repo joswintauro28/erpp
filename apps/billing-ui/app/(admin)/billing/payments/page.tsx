@@ -199,7 +199,7 @@ export default function Payments() {
                           disabled={refunding === p.id}
                           title="Refund"
                         >
-                          {refunding === p.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Ban className="h-3.5 w-3.5 text-amber-600" />}
+                          {refunding === p.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Ban className="h-3.5 w-3.5 text-[var(--shell-warning)]" />}
                         </Button>
                       </div>
                     </TableCell>
@@ -309,7 +309,7 @@ export default function Payments() {
         <DialogContent>
           <DialogHeader>
             <div className="flex items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-amber-100 text-amber-600">
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--shell-warning-surface)] text-[var(--shell-warning)]">
                 <AlertTriangle className="h-5 w-5" />
               </div>
               <DialogTitle>Confirm Refund</DialogTitle>

@@ -1,49 +1,67 @@
+import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+
 export default function SuppliersLoading() {
   return (
-    <div className="relative space-y-6 animate-pulse">
-      {/* Brand Sweep Loader */}
-      <span className="absolute -top-6 left-0 h-0.5 w-1/3 rounded-full bg-[var(--shell-brand)] shimmer-glow" />
-
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="space-y-2">
-          <div className="h-6 w-32 rounded-md shimmer-glow" />
-          <div className="h-4 w-64 rounded shimmer-glow" />
+    <div className="space-y-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-4">
+        <div className="space-y-1.5">
+          <Skeleton className="h-7 w-44" />
+          <Skeleton className="h-4 w-96" />
         </div>
-        <div className="h-9 w-32 rounded-lg shimmer-glow" />
+        <Skeleton className="h-9 w-32" />
       </div>
 
-      {/* Search Bar */}
-      <div className="h-9 w-full max-w-xs rounded-lg shimmer-glow" />
-
-      {/* Table Card container */}
-      <div className="overflow-hidden rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface)]">
-        <div className="border-b border-[var(--shell-border)] bg-[var(--shell-surface)] px-4 py-3">
-          <div className="flex items-center gap-4">
-            {Array.from({ length: 7 }).map((_, i) => (
-              <div
-                key={i}
-                className="h-3.5 rounded shimmer-glow"
-                style={{ width: `${[20, 16, 20, 14, 12, 10, 8][i]}%` }}
-              />
-            ))}
-          </div>
-        </div>
-        {Array.from({ length: 6 }).map((_, i) => (
-          <div
-            key={i}
-            className="flex items-center gap-4 border-b border-[var(--shell-border)] px-4 py-3.5 last:border-0"
-          >
-            {Array.from({ length: 7 }).map((_, j) => (
-              <div
-                key={j}
-                className="h-4 rounded shimmer-glow"
-                style={{ width: `${[20, 16, 20, 14, 12, 10, 8][j]}%` }}
-              />
-            ))}
-          </div>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <Card key={i}>
+            <CardContent className="p-4 flex items-center justify-between">
+              <div className="space-y-1">
+                <Skeleton className="h-3 w-24" />
+                <Skeleton className="h-6 w-16" />
+              </div>
+              <Skeleton className="h-8 w-8 rounded-full" />
+            </CardContent>
+          </Card>
         ))}
       </div>
+
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <Skeleton className="h-9 w-full sm:w-72" />
+        <Skeleton className="h-9 w-32" />
+      </div>
+
+      <Card>
+        <CardHeader className="pb-3 flex flex-row items-center justify-between">
+          <Skeleton className="h-4 w-36" />
+          <Skeleton className="h-4 w-20" />
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between border-b border-border pb-2">
+              <Skeleton className="h-3 w-36" />
+              <Skeleton className="h-3 w-32" />
+              <Skeleton className="h-3 w-28" />
+              <Skeleton className="h-3 w-24" />
+              <Skeleton className="h-3 w-16" />
+              <Skeleton className="h-3 w-20" />
+            </div>
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="flex items-center justify-between py-2.5 border-b border-border/50 last:border-0">
+                <div className="space-y-1">
+                  <Skeleton className="h-4 w-40" />
+                  <Skeleton className="h-3 w-24" />
+                </div>
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-4 w-28 font-mono" />
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-5 w-16 rounded-full" />
+                <Skeleton className="h-7 w-20 rounded-md" />
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

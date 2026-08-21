@@ -4,16 +4,7 @@ import { Edit2, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-
-const badgeVariant = (type: string) => {
-  switch (type) {
-    case "Primary": return "default";
-    case "Decision": return "secondary";
-    case "Influencer": return "outline";
-    case "Inactive": return "destructive";
-    default: return "default";
-  }
-};
+import { statusVariant } from "@/lib/utils";
 
 interface ContactTableProps {
   contacts: any[];
@@ -55,7 +46,7 @@ export default function ContactTable({ contacts, onView, onEdit, onDelete }: Con
             <TableCell>{item.account}</TableCell>
             <TableCell>{item.email}</TableCell>
             <TableCell>{item.phone}</TableCell>
-            <TableCell><Badge variant={badgeVariant(item.type)}>{item.type}</Badge></TableCell>
+            <TableCell><Badge variant={statusVariant("contact", item.type)}>{item.type}</Badge></TableCell>
             <TableCell className="text-[var(--shell-muted)]">{item.last_contact}</TableCell>
             <TableCell>
               <div className="flex gap-2 text-[var(--shell-muted)]">

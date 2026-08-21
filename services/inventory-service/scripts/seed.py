@@ -1,7 +1,9 @@
-"""Comprehensive inventory seed — 30 products, 5 warehouses, 8 suppliers, 15 POs, 28 serials.
+"""Comprehensive inventory seed — 30 products, 5 warehouses, 8 suppliers, 15 POs,
+28 serials, 6 purchase requisitions, 4 work orders, 7 quality checks.
 
-All business identifiers (PO order numbers, serial tags, sales order references) are
-auto-generated from consistent patterns so the dataset mirrors production behaviour.
+All business identifiers (PO order numbers, serial tags, sales order references, work
+order / requisition numbers) are auto-generated from consistent patterns so the
+dataset mirrors production behaviour.
 """
 import asyncio
 import sys
@@ -19,6 +21,9 @@ from app.stock.models import Stock, StockMovement
 from app.supplier.models import Supplier
 from app.purchase_order.models import PurchaseOrder, PurchaseOrderItem
 from app.serial_number.models import SerialNumber
+from app.purchase_requisition.models import PurchaseRequisition, PurchaseRequisitionItem
+from app.work_order.models import WorkOrder, WorkOrderOperation, WorkOrderMaterial
+from app.quality_check.models import QualityCheck
 
 
 now = datetime.now(timezone.utc)
@@ -48,7 +53,7 @@ async def seed():
 
             # Clean up existing data first (restart identity so auto-generated IDs are deterministic)
             from sqlalchemy import text
-            await db.execute(text("TRUNCATE TABLE serial_numbers, purchase_order_items, purchase_orders, stock_movements, stock, products, warehouses, suppliers RESTART IDENTITY CASCADE"))
+            await db.execute(text("TRUNCATE TABLE quality_checks, work_order_materials, work_order_operations, work_orders, purchase_requisition_items, purchase_requisitions, serial_numbers, purchase_order_items, purchase_orders, stock_movements, stock, products, warehouses, suppliers RESTART IDENTITY CASCADE"))
             await db.commit()
 
             # ── Warehouses (5) ─────────────────────────────────────────
@@ -74,7 +79,7 @@ async def seed():
                 # Controllers (6)
                 Product(organization_id=organization_id, name="PLC CPU Module — Siemens S7-1200", sku="PLC-S71200", barcode="8901234560011",
                         category="Controllers", unit="pcs", price=Decimal("25000.00"), cost_price=Decimal("18000.00"),
-                        tax_rate=Decimal("18.00"), low_stock_threshold=100),
+                        tax_rate=Decimal("18.00"), low_stock_threshold=100, qc_required=True),
                 Product(organization_id=organization_id, name="Industrial Controller X200 — Schneider Modicon", sku="IC-X200", barcode="8901234560028",
                         category="Controllers", unit="pcs", price=Decimal("35000.00"), cost_price=Decimal("26000.00"),
                         tax_rate=Decimal("18.00"), low_stock_threshold=50),
@@ -89,7 +94,7 @@ async def seed():
                         tax_rate=Decimal("18.00"), low_stock_threshold=5, uses_serial_tracking=True),
                 Product(organization_id=organization_id, name="Redundant CPU Processor Panel", sku="CPU-RED500", barcode="8901234560172",
                         category="Controllers", unit="pcs", price=Decimal("85000.00"), cost_price=Decimal("62000.00"),
-                        tax_rate=Decimal("18.00"), low_stock_threshold=30),
+                        tax_rate=Decimal("18.00"), low_stock_threshold=30, make_or_buy="make", qc_required=True),
 
                 # Sensors (5)
                 Product(organization_id=organization_id, name="Photoelectric Sensor — Omron E3Z", sku="SEN-E3Z", barcode="8901234560035",
@@ -148,13 +153,13 @@ async def seed():
                 # Hardware & Modules (4)
                 Product(organization_id=organization_id, name="IP65 Control Panel Enclosure 600x600", sku="ENC-IP65", barcode="8901234560233",
                         category="Hardware", unit="pcs", price=Decimal("12500.00"), cost_price=Decimal("9000.00"),
-                        tax_rate=Decimal("18.00"), low_stock_threshold=15),
+                        tax_rate=Decimal("18.00"), low_stock_threshold=15, make_or_buy="make"),
                 Product(organization_id=organization_id, name="Aviation-Grade Telemetry Module", sku="TEL-AV900", barcode="8901234560240",
                         category="Hardware", unit="pcs", price=Decimal("120000.00"), cost_price=Decimal("85000.00"),
-                        tax_rate=Decimal("18.00"), low_stock_threshold=5, uses_serial_tracking=True),
+                        tax_rate=Decimal("18.00"), low_stock_threshold=5, uses_serial_tracking=True, qc_required=True),
                 Product(organization_id=organization_id, name="Flight Data Recorder Interface", sku="FDR-INT10", barcode="8901234560257",
                         category="Hardware", unit="pcs", price=Decimal("30000.00"), cost_price=Decimal("22000.00"),
-                        tax_rate=Decimal("18.00"), low_stock_threshold=25, uses_serial_tracking=True),
+                        tax_rate=Decimal("18.00"), low_stock_threshold=25, uses_serial_tracking=True, qc_required=True),
                 Product(organization_id=organization_id, name="Perforated Cable Tray 3m — Legrand", sku="CT-3M-LEG", barcode="8901234560264",
                         category="Hardware", unit="pcs", price=Decimal("1800.00"), cost_price=Decimal("1300.00"),
                         tax_rate=Decimal("18.00"), low_stock_threshold=50),
@@ -422,9 +427,194 @@ async def seed():
             await db.flush()
             print(f"  {len(serials)} serial numbers created")
 
+            # ── Purchase Requisitions (6) ──────────────────────────────
+            # Lifecycle: DRAFT -> SUBMITTED -> APPROVED | REJECTED -> CONVERTED | CANCELLED
+            requisitions = [
+                {
+                    "pr_number": "PR-202608-0001", "title": "VFD replenishment for pump control skids",
+                    "dept": "Operations", "priority": "MEDIUM", "status": "DRAFT",
+                    "items": [(13, 20, 24000), (14, 30, 10500)],
+                },
+                {
+                    "pr_number": "PR-202608-0002", "title": "Transmitters for plant automation expansion",
+                    "dept": "Engineering", "priority": "HIGH", "status": "SUBMITTED", "need_in": 10,
+                    "items": [(8, 25, 4800), (9, 15, 13000)],
+                },
+                {
+                    "pr_number": "PR-202608-0003", "title": "Switchgear and cable for panel builds",
+                    "dept": "Operations", "priority": "HIGH", "status": "APPROVED", "need_in": 7,
+                    "items": [(19, 40, 2300), (20, 60, 1700), (17, 20, 4800)],
+                },
+                {
+                    "pr_number": "PR-202608-0004", "title": "Servo systems bulk buy",
+                    "dept": "Engineering", "priority": "LOW", "status": "REJECTED",
+                    "items": [(15, 5, 55000)],
+                },
+                {
+                    "pr_number": "PR-202608-0005", "title": "Distributed I/O modules for Noida hub",
+                    "dept": "Operations", "priority": "MEDIUM", "status": "CONVERTED",
+                    "items": [(2, 300, 11000)],
+                },
+                {
+                    "pr_number": "PR-202608-0006", "title": "Bosch tooling for service crew",
+                    "dept": "Service", "priority": "MEDIUM", "status": "SUBMITTED", "need_in": 15,
+                    "items": [(26, 10, 2600), (27, 20, 1600)],
+                },
+            ]
+            for idx, r in enumerate(requisitions):
+                status = r["status"]
+                approved_at = ago(6) if status in ("APPROVED", "CONVERTED") else None
+                pr = PurchaseRequisition(
+                    organization_id=organization_id,
+                    pr_number=r["pr_number"],
+                    title=r["title"],
+                    requested_by="Inventory Planner",
+                    department=r["dept"],
+                    priority=r["priority"],
+                    need_by_date=later(r.get("need_in", 21)) if status not in ("DRAFT", "REJECTED") else None,
+                    notes="Auto-seeded internal buy request",
+                    status=status,
+                    approved_by="4" if status in ("APPROVED", "CONVERTED") else None,
+                    approved_at=approved_at,
+                    rejected_reason="Budget not approved for this quarter" if status == "REJECTED" else None,
+                    purchase_order_id=po_objects[3].id if status == "CONVERTED" else None,
+                    created_at=ago(30 - idx * 3),
+                )
+                db.add(pr)
+                await db.flush()
+                for p_idx, qty, est in r["items"]:
+                    db.add(PurchaseRequisitionItem(
+                        requisition_id=pr.id,
+                        product_id=products[p_idx].id,
+                        product_name=products[p_idx].name,
+                        quantity=qty,
+                        estimated_price=Decimal(str(est)),
+                    ))
+            await db.flush()
+            print(f"  {len(requisitions)} purchase requisitions created")
+
+            # ── Manufacturing Work Orders (4) ──────────────────────────
+            # Lifecycle: DRAFT -> RELEASED -> IN_PROGRESS -> COMPLETED | CANCELLED
+            work_orders = [
+                {
+                    "wo_no": "WO-202608-0001", "product_idx": 5, "qty": 20, "priority": "MEDIUM",
+                    "status": "DRAFT", "due_in": 21, "notes": "Planned run for redundant CPU back-orders",
+                    "operations": [
+                        (1, "Solder PCB Assembly", "SMT Line", "PENDING"),
+                        (2, "Firmware Flashing & Burn-in", "Test Bay", "PENDING"),
+                        (3, "QA Calibration", "QC Lab", "PENDING"),
+                    ],
+                    "materials": [(2, 20, 0)],
+                },
+                {
+                    "wo_no": "WO-202608-0002", "product_idx": 22, "qty": 40, "priority": "HIGH",
+                    "status": "RELEASED", "due_in": 14, "released_at": ago(3),
+                    "notes": "Panel enclosures for Q3 switchgear contracts",
+                    "operations": [
+                        (1, "Cut & Prep Sheet Metal", "Fabrication", "PENDING"),
+                        (2, "Weld Frame", "Fabrication", "PENDING"),
+                        (3, "Powder Coat & Final Inspection", "Finishing", "PENDING"),
+                    ],
+                    "materials": [(18, 40, 0), (19, 40, 0)],
+                },
+                {
+                    "wo_no": "WO-202608-0003", "product_idx": 5, "qty": 15, "priority": "HIGH",
+                    "status": "IN_PROGRESS", "due_in": 7, "released_at": ago(5), "started_at": ago(4),
+                    "notes": "Rush order — safety panel CPUs for Delta Automotive",
+                    "operations": [
+                        (1, "Solder PCB Assembly", "SMT Line", "COMPLETED"),
+                        (2, "Firmware Flashing & Burn-in", "Test Bay", "IN_PROGRESS"),
+                        (3, "QA Calibration", "QC Lab", "PENDING"),
+                    ],
+                    "materials": [(2, 15, 15)],
+                },
+                {
+                    "wo_no": "WO-202608-0004", "product_idx": 5, "qty": 10, "priority": "MEDIUM",
+                    "status": "COMPLETED", "due_in": -2, "released_at": ago(20), "started_at": ago(19), "completed_at": ago(2),
+                    "notes": "Completed production run — credited 10 units to Main Warehouse",
+                    "operations": [
+                        (1, "Solder PCB Assembly", "SMT Line", "COMPLETED"),
+                        (2, "Firmware Flashing & Burn-in", "Test Bay", "COMPLETED"),
+                        (3, "QA Calibration", "QC Lab", "COMPLETED"),
+                    ],
+                    "materials": [(2, 10, 10)],
+                },
+            ]
+            for w in work_orders:
+                product = products[w["product_idx"]]
+                wo = WorkOrder(
+                    organization_id=organization_id,
+                    work_order_no=w["wo_no"],
+                    product_id=product.id,
+                    product_name=product.name,
+                    sku=product.sku,
+                    quantity=w["qty"],
+                    warehouse_id=warehouses[0].id,
+                    status=w["status"],
+                    priority=w["priority"],
+                    due_date=later(w["due_in"]),
+                    notes=w["notes"],
+                    created_by="4",
+                    released_at=w.get("released_at"),
+                    started_at=w.get("started_at"),
+                    completed_at=w.get("completed_at"),
+                )
+                db.add(wo)
+                await db.flush()
+                for seq, name, wc, op_status in w["operations"]:
+                    db.add(WorkOrderOperation(
+                        work_order_id=wo.id,
+                        sequence=seq,
+                        operation_name=name,
+                        workcenter=wc,
+                        status=op_status,
+                        completed_at=ago(2) if op_status == "COMPLETED" else None,
+                    ))
+                for mat_idx, req, issued in w["materials"]:
+                    mp = products[mat_idx]
+                    db.add(WorkOrderMaterial(
+                        work_order_id=wo.id,
+                        product_id=mp.id,
+                        product_name=mp.name,
+                        sku=mp.sku,
+                        quantity_required=req,
+                        quantity_issued=issued,
+                    ))
+            await db.flush()
+            print(f"  {len(work_orders)} work orders created")
+
+            # ── Quality Checks (7) ─────────────────────────────────────
+            # Auto-created as PENDING on GRN for qc_required products; the
+            # records below show the PENDING -> PASS | FAIL lifecycle.
+            qc_plan = [
+                # (product_idx, po_index, qty, status, inspected_at, notes)
+                (0, 0, 300, "PASS", ago(2), "All units within tolerance — batch release approved"),
+                (5, 0, 50, "PASS", ago(2), "Burned-in 48h, no faults detected"),
+                (12, 2, 80, "PASS", ago(1), "Panel alignment verified — ready for dispatch"),
+                (1, 1, 100, "PASS", ago(1), "Firmware version confirmed"),
+                (22, 11, 50, "PENDING", None, None),
+                (19, 11, 80, "PENDING", None, None),
+                (8, 12, 80, "FAIL", ago(2), "Calibration drift outside ±0.5% tolerance — quarantine lot"),
+            ]
+            for p_idx, po_idx, qty, status, inspected_at, notes in qc_plan:
+                db.add(QualityCheck(
+                    organization_id=organization_id,
+                    po_id=po_objects[po_idx].id,
+                    po_item_id=None,
+                    product_id=products[p_idx].id,
+                    product_name=products[p_idx].name,
+                    quantity=qty,
+                    status=status,
+                    inspected_by="4" if status in ("PASS", "FAIL", "HOLD") else None,
+                    inspected_at=inspected_at,
+                    notes=notes,
+                ))
+            await db.flush()
+            print(f"  {len(qc_plan)} quality checks created")
+
             await db.commit()
             print("\nInventory seeding completed successfully!")
-            print(f"Total records: {len(warehouses)+len(products)+len(stock_records)+len(movements)+len(suppliers)+len(pos)+len(serials)}")
+            print(f"Total records: {len(warehouses)+len(products)+len(stock_records)+len(movements)+len(suppliers)+len(pos)+len(serials)+len(requisitions)+len(work_orders)+len(qc_plan)}")
 
         except Exception as e:
             print(f"Error: {e}")

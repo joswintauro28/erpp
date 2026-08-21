@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, Float, Integer, String
 from app.database import Base
 
 class Customer(Base):
@@ -10,6 +10,10 @@ class Customer(Base):
     industry = Column(String)
     tier = Column(String)
     arr = Column(Integer)
+    # Credit limit in INR for the ERP credit check. NULL/0 means "no limit
+    # configured" -> the customer is treated as having unlimited credit
+    # (standard ERP convention: you only block when a limit is set).
+    credit_limit = Column(Float, nullable=True)
     status = Column(String)
     owner = Column(String)
     updated_at = Column(String)

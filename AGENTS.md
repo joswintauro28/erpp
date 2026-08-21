@@ -75,9 +75,7 @@ All tokens defined in `packages/ui-theme/src/globals.css` as CSS custom properti
 - **API Service (`services/api.ts`):** Re-exports `{ setAccessToken, getAccessToken, api }` from `@datavex/auth-middleware`.
 - **Routing Gateway Proxy (`proxy.ts`):** Next.js middleware intercepting `/api/:path*`:
   - `/api/auth/*` → core-iam on port `8002` (preserving `/api` prefix)
-  - `/api/invoices*`, `/api/payments*`, `/api/dashboard/billing` → billing-service on port `8003` (preserving `/api` prefix)
-  - `/api/products*`, `/api/warehouses*`, `/api/stock*`, `/api/suppliers*`, `/api/purchase-orders*`, `/api/serial-numbers*`, `/api/dashboard/inventory` → inventory-service on port `8004` (stripping `/api` prefix)
-  - All other `/api/*` → erp-service FastAPI on port `8000` (stripping `/api` prefix)
+  - All other `/api/*` (products, warehouses, stock, suppliers, purchase-orders, purchase-requisitions, serial-numbers, quality-checks, fulfillment, work-orders, invoices, payments, CRM, dashboard) → `erp-service` FastAPI on port `8000` (stripping `/api` prefix) acting as the central API Gateway & Aggregator.
 - **Imports & Path Aliases:** Shadcn primitives and `cn` utility from `@/components/ui/*` and `@/lib/utils`, mapped via tsconfig paths to `@datavex/ui-theme`.
 - **Multi-Step Modals:** All forms use `components/multi-step-dialog.tsx` with horizontal step wizard.
 
@@ -139,20 +137,24 @@ All tokens defined in `packages/ui-theme/src/globals.css` as CSS custom properti
 - `useAuth()` returns `{ user, isAuthenticated, loading, logout }` — no `login()` function.
 - **Proxy** (`proxy.ts`): Routes `/api/auth/*` → core-iam (8002), all other `/api/*` → inventory-service (8004).
 
-**Routes (8 total)**
+**Routes (12 total)**
 
 | Route | API Endpoint | Description |
 |-------|-------------|-------------|
 | `/dashboard` | `GET /api/dashboard/inventory` | Aggregated KPIs (products, warehouses, stock, low stock, pending POs) |
-| `/inventory/products` | `GET /api/products` | Product catalog with search, category badges |
-| `/inventory/warehouses` | `GET /api/warehouses` | Warehouse locations with status |
-| `/inventory/stock` | `GET /api/stock` | Stock levels per product/warehouse with availability |
-| `/inventory/stock/movements` | `GET /api/stock/movements` | Movement log with type badges (in/out/adjustment) |
-| `/inventory/suppliers` | `GET /api/suppliers` | Supplier list with contact info |
-| `/inventory/purchase-orders` | `GET /api/purchase-orders` | Purchase order list with status badges |
-| `/inventory/serial-numbers` | `GET /api/serial-numbers` | Serial tracking list with status filter |
+| `/products` | `GET /api/products` | Product catalog with search, category badges |
+| `/warehouses` | `GET /api/warehouses` | Warehouse locations with status |
+| `/stock` | `GET /api/stock` | Stock levels per product/warehouse with availability |
+| `/stock/movements` | `GET /api/stock/movements` | Movement log with type badges (in/out/adjustment) |
+| `/suppliers` | `GET /api/suppliers` | Supplier list with contact info |
+| `/purchase-orders` | `GET /api/purchase-orders` | Purchase order list with status badges |
+| `/purchase-requisitions` | `GET /api/purchase-requisitions` | Purchase requisition buy requests with status badges |
+| `/serial-numbers` | `GET /api/serial-numbers` | Serial tracking list with status filter |
+| `/quality-checks` | `GET /api/quality-checks` | Quality inspection logs & status chips |
+| `/fulfillment` | `GET /api/fulfillment/orders` | Sales order fulfillment pipeline Kanban |
+| `/work-orders` | `GET /api/work-orders` | Manufacturing production run routing & issues |
 
-**Sidebar:** Collapsible (260px/64px) with 4 groups: Dashboard (standalone), Inventory Management (Products, Stock Levels, Stock Movements, Serial Numbers), Procurement (Suppliers, Purchase Orders), Locations (Warehouses). Same Deep Maroon chassis as erp-shell.
+**Sidebar:** Collapsible (260px/64px) with 4 groups: Dashboard (standalone), Inventory Management (Fulfillment, Products, Stock Levels, Stock Movements, Serial Numbers, Quality Checks), Procurement (Suppliers, Purchase Requisitions, Purchase Orders), Manufacturing (Work Orders), Locations (Warehouses).
 
 ---
 
@@ -254,12 +256,12 @@ DATAVEX ERP utilizes a decoupled backend architecture where each business domain
 
 | Module | Endpoints | Key Features |
 |--------|-----------|-------------|
-| **Dashboard** | `GET /api/dashboard` | Aggregated KPIs: pipeline value, open opps, active customers, open complaints, pipeline stages, recommendations, hot leads |
-| **Customer** | `GET /api/customers`, `POST /api/customers`, `PUT /api/customers/:id_str`, `DELETE /api/customers/:id_str` (via generic CRUD) | Account, industry, tier, ARR tracking, contacts, documents |
+| **Dashboard** | `GET /api/dashboard` | Aggregated KPIs: pipeline value, open opps, active customers, pipeline stages, recommendations, hot leads |
+| **Customer** | `GET /api/customers`, `POST /api/customers`, `PUT /api/customers/:id_str`, `DELETE /api/customers/:id_str` (via generic CRUD) | Account, industry, tier, ARR, **credit limit** (enforced by the billing credit check on SO approval), status, contacts, documents |
 | **Lead** | `GET /api/leads`, `POST /api/leads`, etc. (via generic CRUD) | Lead scoring, source tracking, status lifecycle (New→Qualified→Converted/Lost) |
 | **Sales** | `GET /api/sales`, `POST /api/quotations`, `POST /api/sales-orders`, etc. | Requirements, quotations, sales orders with status lifecycle |
-| **Interaction** | `GET /api/enquiries`, `POST /api/site-visits`, etc. | Enquiries, site visits, follow-ups, tasks, communications, visit plans |
-| **Service** | `GET /api/complaints`, `POST /api/feedback` | Complaint tracking, feedback scoring |
+| **Interaction** *(planned — Service-Desk)* | — | Enquiries, site visits, follow-ups, tasks, communications, visit plans — **not in this service**; will ship as part of the future Service-Desk module |
+| **Service** *(planned — Service-Desk)* | — | Complaint tracking, feedback scoring — **not in this service**; will ship as part of the future Service-Desk module |
 | **AI** | `GET /api/ai-assistant` | AI assistant query log |
 | **Generic CRUD** | `GET /api/:entity_type/fields`, `POST /api/:entity_type`, `PUT /api/:entity_type/:id_str`, `DELETE /api/:entity_type/:id_str` | Dynamic CRUD for all entity types with auto-generated ID strings |
 
@@ -386,7 +388,7 @@ All FastAPI microservices expose interactive OpenAPI 3.0 documentation with buil
 The application contains a production-optimized local Docker sandbox configured in `infrastructure/local/`.
 
 ### Docker Architecture Details:
-- **Consistent Alpine Builders**: Node/Bun services compile natively on Alpine-based Node layers (`node:24-alpine`) with Bun copied inside, avoiding glibc vs musl runtime crashes.
+- **Consistent Alpine Builders**: Node/Bun services compile natively on Alpine-based Node layers (`node:22-alpine`) with Bun copied inside, avoiding glibc vs musl runtime crashes.
 - **Next.js Standalone Mode**: Configured to compile to minimal standalone node targets, reducing container image size by ~95% (~100MB instead of ~2GB).
 - **Python Isolation & Auto-Migrations**: FastAPI backends run in virtualenvs (`/opt/venv`), run under non-root permissions, and perform Alembic db migrations (`alembic upgrade head`) automatically on startup.
 - **Consolidated Healthchecks**: All containers run custom, lightweight healthchecks (via Node `http` or Python `urllib`) to track container status inside Compose.

@@ -5,205 +5,263 @@
 
 @custom-variant dark (&:is(.dark *));
 
+:root {
+  --background: #f4f5f8;
+  --foreground: #09090b;
+  --card: #ffffff;
+  --card-foreground: #09090b;
+  --popover: #ffffff;
+  --popover-foreground: #09090b;
+  --primary: #f2470c;
+  --primary-foreground: #ffffff;
+  --secondary: #eef0f5;
+  --secondary-foreground: #18181b;
+  --muted: #eef0f5;
+  --muted-foreground: #52525b;
+  --accent: #fff0eb;
+  --accent-foreground: #c23000;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --border: #e2e8f0;
+  --input: #e2e8f0;
+  --ring: #f2470c;
+  --chart-1: #f2470c;
+  --chart-2: #ea580c;
+  --chart-3: #f97316;
+  --chart-4: #2563eb;
+  --chart-5: #eab308;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #18181b;
+  --sidebar-primary: #f2470c;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #fff0eb;
+  --sidebar-accent-foreground: #c23000;
+  --sidebar-border: #e2e8f0;
+  --sidebar-ring: #f2470c;
+  --font-sans: "Plus Jakarta Sans", sans-serif;
+  --font-serif: "Lora", serif;
+  --font-mono: "IBM Plex Mono", monospace;
+  --radius: 1.4rem;
+  --shadow-x: 0;
+  --shadow-y: 1px;
+  --shadow-blur: 3px;
+  --shadow-spread: 0px;
+  --shadow-opacity: 0.1;
+  --shadow-color: oklch(0 0 0);
+  --shadow-2xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
+  --shadow-xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
+  --shadow-sm: 0 1px 3px 0px hsl(0 0% 0% / 0.08), 0 1px 2px -1px hsl(0 0% 0% / 0.08);
+  --shadow: 0 1px 3px 0px hsl(0 0% 0% / 0.10), 0 1px 2px -1px hsl(0 0% 0% / 0.10);
+  --shadow-md: 0 2px 4px 0px hsl(0 0% 0% / 0.06), 0 4px 6px -1px hsl(0 0% 0% / 0.10);
+  --shadow-lg: 0 4px 6px -1px hsl(0 0% 0% / 0.08), 0 10px 15px -3px hsl(0 0% 0% / 0.10);
+  --shadow-xl: 0 10px 25px -5px hsl(0 0% 0% / 0.10);
+  --shadow-2xl: 0 20px 30px -10px hsl(0 0% 0% / 0.15);
+  --tracking-normal: 0em;
+  --spacing: 0.27rem;
+
+  /* Layout Constraints */
+  --header-height: 80px;
+  --sidebar-width: 260px;
+
+  /* Datavex Legacy Variable Compatibility Mappings */
+  --shell-bg: var(--background);
+  --shell-surface: var(--card);
+  --shell-surface-alt: var(--secondary);
+  --shell-card: var(--card);
+  --shell-popover: var(--popover);
+  --shell-foreground: var(--foreground);
+  --shell-muted: var(--muted-foreground);
+  --shell-border: var(--border);
+  --shell-brand: var(--primary);
+  --shell-accent: #f2470c;
+  --shell-accent-surface: #fff0eb;
+  --shell-accent-text: #c23000;
+  --shell-action: var(--primary);
+  --shell-ring: var(--ring);
+  --shell-success: #10b981;
+  --shell-success-surface: #ecfdf5;
+  --shell-warning: #d97706;
+  --shell-warning-surface: #fffbe8;
+  --shell-danger: #ef4444;
+  --shell-danger-surface: #fef2f2;
+  --shell-info: #2563eb;
+  --shell-info-surface: #eff6ff;
+  --shell-header: #ffffff;
+
+  --sidebar-bg: var(--sidebar);
+  --sidebar-fg: var(--sidebar-foreground);
+  --sidebar-active-bg: var(--sidebar-primary);
+  --sidebar-active-fg: var(--sidebar-primary-foreground);
+  --sidebar-hover-bg: var(--sidebar-accent);
+  --sidebar-hover-fg: var(--sidebar-accent-foreground);
+  --sidebar-edge: var(--sidebar-border);
+}
+
+.dark {
+  --background: #0a0a0a;
+  --foreground: #f0f0f0;
+  --card: #121212;
+  --card-foreground: #f0f0f0;
+  --popover: #19191a;
+  --popover-foreground: #f0f0f0;
+  --primary: #f2470c;
+  --primary-foreground: #ffffff;
+  --secondary: #1f1f23;
+  --secondary-foreground: #f0f0f0;
+  --muted: #232325;
+  --muted-foreground: #969696;
+  --accent: #741e02;
+  --accent-foreground: #fefefe;
+  --destructive: #fb6a6a;
+  --destructive-foreground: #ffffff;
+  --border: #1f1f1f;
+  --input: #3b3b3b;
+  --ring: #f2470c;
+  --chart-1: #f2470c;
+  --chart-2: #f4cd0b;
+  --chart-3: #fca5a5;
+  --chart-4: #5993f4;
+  --chart-5: #ffd375;
+  --sidebar: #121212;
+  --sidebar-foreground: #f0f0f0;
+  --sidebar-primary: #f2470c;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #401202;
+  --sidebar-accent-foreground: #db3b06;
+  --sidebar-border: #33353a;
+  --sidebar-ring: #f2470c;
+  --font-sans: "Plus Jakarta Sans", sans-serif;
+  --font-serif: "Lora", serif;
+  --font-mono: "IBM Plex Mono", monospace;
+  --radius: 1.4rem;
+  --shadow-x: 0;
+  --shadow-y: 1px;
+  --shadow-blur: 3px;
+  --shadow-spread: 0px;
+  --shadow-opacity: 0.1;
+  --shadow-color: oklch(0 0 0);
+  --shadow-2xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
+  --shadow-xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
+  --shadow-sm: 0 1px 3px 0px hsl(0 0% 0% / 0.10), 0 1px 2px -1px hsl(0 0% 0% / 0.10);
+  --shadow: 0 1px 3px 0px hsl(0 0% 0% / 0.10), 0 1px 2px -1px hsl(0 0% 0% / 0.10);
+  --shadow-md: 0 1px 3px 0px hsl(0 0% 0% / 0.10), 0 2px 4px -1px hsl(0 0% 0% / 0.10);
+  --shadow-lg: 0 1px 3px 0px hsl(0 0% 0% / 0.10), 0 4px 6px -1px hsl(0 0% 0% / 0.10);
+  --shadow-xl: 0 1px 3px 0px hsl(0 0% 0% / 0.10), 0 8px 10px -1px hsl(0 0% 0% / 0.10);
+  --shadow-2xl: 0 1px 3px 0px hsl(0 0% 0% / 0.25);
+
+  /* Layout Constraints */
+  --header-height: 80px;
+  --sidebar-width: 260px;
+
+  /* Datavex Legacy Variable Compatibility Mappings */
+  --shell-bg: var(--background);
+  --shell-surface: var(--card);
+  --shell-surface-alt: var(--secondary);
+  --shell-card: var(--card);
+  --shell-popover: var(--popover);
+  --shell-foreground: var(--foreground);
+  --shell-muted: var(--muted-foreground);
+  --shell-border: var(--border);
+  --shell-brand: var(--primary);
+  --shell-accent: var(--accent);
+  --shell-accent-surface: var(--accent);
+  --shell-accent-text: var(--accent-foreground);
+  --shell-action: var(--primary);
+  --shell-ring: var(--ring);
+  --shell-success: #10b981;
+  --shell-success-surface: #064e3b;
+  --shell-warning: #f59e0b;
+  --shell-warning-surface: #78350f;
+  --shell-danger: var(--destructive);
+  --shell-danger-surface: #7f1d1d;
+  --shell-info: #3b82f6;
+  --shell-info-surface: #1e3a8a;
+  --shell-header: var(--sidebar);
+
+  --sidebar-bg: var(--sidebar);
+  --sidebar-fg: var(--sidebar-foreground);
+  --sidebar-active-bg: var(--sidebar-primary);
+  --sidebar-active-fg: var(--sidebar-primary-foreground);
+  --sidebar-hover-bg: var(--sidebar-accent);
+  --sidebar-hover-fg: var(--sidebar-accent-foreground);
+  --sidebar-edge: var(--sidebar-border);
+}
+
 @theme inline {
-  /* Screen Presentation Base */
-  --color-background: var(--shell-bg);
-  --color-foreground: var(--shell-foreground);
-  
-  /* Precision Typographic Infrastructure */
-  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
-  --font-mono: "JetBrains Mono Variable", "Fira Code", monospace;
-  --font-heading: "Montserrat", system-ui, sans-serif;
-  
-  /* Core Semantic UI Mappings */
-  --color-primary: var(--shell-brand);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
-  --color-secondary: var(--shell-surface-alt);
-  --color-secondary-foreground: var(--shell-foreground);
-  
-  /* Feedback and Notification Tiers */
-  --color-destructive: var(--shell-danger);
-  --color-destructive-foreground: #FFFFFF;
-  --color-success: var(--shell-success);
-  --color-warning: var(--shell-warning);
-  
-  /* Surfacing, Overlays & Structural Boxes */
-  --color-card: var(--shell-card);
-  --color-card-foreground: var(--shell-foreground);
-  --color-popover: var(--shell-popover);
-  --color-popover-foreground: var(--shell-foreground);
-  --color-muted: var(--shell-surface-alt);
-  --color-muted-foreground: var(--shell-muted);
-  --color-accent: var(--shell-accent-surface);
-  --color-accent-foreground: var(--shell-accent-text);
-  
-  /* Form Inputs and Interactive Outlines */
-  --color-border: var(--shell-border);
-  --color-input: var(--shell-border);
-  --color-ring: var(--shell-ring);
-  --color-action: var(--shell-action);
-
-  /* Enterprise Shell Navigation Sidebar */
-  --color-sidebar: var(--sidebar-bg);
-  --color-sidebar-foreground: var(--sidebar-fg);
-  --color-sidebar-primary: var(--sidebar-active-bg);
-  --color-sidebar-primary-foreground: var(--sidebar-active-fg);
-  --color-sidebar-accent: var(--sidebar-hover-bg);
-  --color-sidebar-accent-foreground: var(--sidebar-hover-fg);
-  --color-sidebar-border: var(--sidebar-edge);
-  --color-sidebar-ring: var(--shell-ring);
-
-  /* Analytical Chart Tiers */
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-action: var(--primary);
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
 
-  /* Rigid Industrial Corner Metrics */
-  --radius-sm: 4px;
-  --radius-md: 6px;
-  --radius-lg: 8px;
-  --radius-xl: 12px;
-  --radius-2xl: 16px;
-  
-  /* Modern High-End Drop Shadows */
-  --shadow-engineered: 0 1px 3px rgba(17, 24, 37, 0.04), 0 4px 12px rgba(17, 24, 37, 0.06);
-  --shadow-overlay: 0 12px 32px rgba(17, 24, 37, 0.12), 0 4px 8px rgba(17, 24, 37, 0.04);
-}
+  --color-shell-bg: var(--background);
+  --color-shell-surface: var(--card);
+  --color-shell-card: var(--card);
+  --color-shell-border: var(--border);
+  --color-shell-brand: var(--primary);
+  --color-shell-accent: var(--accent);
+  --color-shell-accent-text: var(--accent-foreground);
+  --color-shell-foreground: var(--foreground);
+  --color-shell-muted: var(--muted-foreground);
 
-:root {
-  /* Light Mode Vector Topology — Refined Oxide Crimson & Milled Brass */
-  --shell-bg: #FAFAFA;                 /* Ultra-clean page background canvas */
-  --shell-surface: #FFFFFF;            /* Pure white crisp layout elements */
-  --shell-surface-alt: #F3F4F6;        /* Slate-tinted structural alternating rails */
-  --shell-card: #FFFFFF;               /* Content block base */
-  --shell-popover: #FFFFFF;            /* Floating layer context */
-  
-  --shell-foreground: #111827;         /* Deep Ink primary text (High Contrast AAA) */
-  --shell-muted: #4B5563;              /* Darkened slate secondary information */
-  --shell-border: #E5E7EB;             /* Soft, predictable container gridlines */
-  
-  --shell-brand: #8C1D24;              /* Calibrated Crimson Red brand anchor */
-  --shell-accent: #E5B83C;             /* Milled Brass deep gold anchor */
-  --shell-accent-surface: #FEF9E7;     /* High-comfort light cream background for gold text context */
-  --shell-accent-text: #785808;        /* Contrast-safe darkened brass text */
-  --shell-action: #B32428;             /* Bright, clickable button action vector */
-  --shell-ring: #8C1D24;               /* Focus boundaries */
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+  --font-serif: var(--font-serif);
+  --font-heading: var(--font-sans);
 
-  /* Functional Status Indicators */
-  --shell-success: #166534;            /* Dark emerald forest safe text */
-  --shell-warning: #9A3412;            /* Highly readable safety orange */
-  --shell-danger: #991B1B;             /* Pure crisis notification red */
-  --shell-header: #3D1013;             /* Darkened premium header context */
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
 
-  /* Sidebar Architecture — Deep Chassis Shell */
-  --sidebar-bg: #3D1013;               /* Solid structural oxide dark chassis */
-  --sidebar-fg: #F3F4F6;               /* Crisp high-contrast menu labels */
-  --sidebar-active-bg: #8C1D24;        /* Crimson block highlight state */
-  --sidebar-active-fg: #FFFFFF;        /* Active icon highlight white */
-  --sidebar-hover-bg: rgba(255, 255, 255, 0.06);
-  --sidebar-hover-fg: #FFFFFF;
-  --sidebar-edge: rgba(255, 255, 255, 0.08);
-
-  /* Mapping Constants */
-  --primary-foreground: #FFFFFF;
-  
-  /* Dataviz System */
-  --chart-1: #8C1D24;
-  --chart-2: #E5B83C;
-  --chart-3: #3D1013;
-  --chart-4: #4B5563;
-  --chart-5: #111827;
-
-  /* Sizing Constraints */
-  --header-height: 80px;
-  --sidebar-width: 260px;
-}
-
-.dark {
-  /* Dark Mode Vector Topology — High Contrast Engineering Spec */
-  --shell-bg: #0F1115;                 /* Industrial matte dark canvas background */
-  --shell-surface: #151922;            /* Deep steel UI card panels */
-  --shell-surface-alt: #1F242F;        /* Secondary track panels */
-  --shell-card: #151922;
-  --shell-popover: #1C212D;            /* Floating layout container stack */
-  
-  --shell-foreground: #F9FAFB;         /* Pure crisp off-white typography */
-  --shell-muted: #9CA3AF;              /* Medium grey meta information */
-  --shell-border: rgba(255, 255, 255, 0.08); /* High-visibility subtle line grid */
-  
-  --shell-brand: #A82E35;              /* Luminance-boosted crimson for deep background visibility */
-  --shell-accent: #F1C423;             /* Sharp gold focus vector */
-  --shell-accent-surface: #2E2502;     /* Dark obsidian gold background */
-  --shell-accent-text: #FCD34D;        /* Fluorescent text highlight */
-  --shell-action: #C82D35;             /* High-energy button action element */
-  --shell-ring: #A82E35;
-
-  /* Functional Status Indicators (Dark Mode Balanced) */
-  --shell-success: #4ADE80;
-  --shell-warning: #F97316;
-  --shell-danger: #F87171;
-  --shell-header: #270A0C;
-
-  /* Sidebar Architecture — Dark Chassis */
-  --sidebar-bg: #0B0D10;               /* Solid deep dark frame */
-  --sidebar-fg: #9CA3AF;
-  --sidebar-active-bg: #A82E35;
-  --sidebar-active-fg: #FFFFFF;
-  --sidebar-hover-bg: rgba(255, 255, 255, 0.04);
-  --sidebar-hover-fg: #F9FAFB;
-  --sidebar-edge: rgba(255, 255, 255, 0.04);
-
-  /* Dataviz System */
-  --chart-1: #A82E35;
-  --chart-2: #F1C423;
-  --chart-3: #4ADE80;
-  --chart-4: #374151;
-  --chart-5: #F9FAFB;
+  --shadow-2xs: var(--shadow-2xs);
+  --shadow-xs: var(--shadow-xs);
+  --shadow-sm: var(--shadow-sm);
+  --shadow: var(--shadow);
+  --shadow-md: var(--shadow-md);
+  --shadow-lg: var(--shadow-lg);
+  --shadow-xl: var(--shadow-xl);
+  --shadow-2xl: var(--shadow-2xl);
 }
 
 @layer base {
   * {
-    @apply border-border outline-none transition-colors duration-200;
+    @apply border-border outline-ring/50 transition-colors duration-200;
   }
-  
-  /* Focus Indicator Ring Rules */
-  *:focus-visible {
-    @apply ring-2 ring-ring ring-offset-2 ring-offset-background;
-  }
-  
   body {
     @apply bg-background text-foreground font-sans text-base antialiased;
-    letter-spacing: -0.011em; /* Modern tracking calibration for low-blur display layout */
-  }
-
-  /* Micro-Typography Scale Controls */
-  h1 { @apply text-4xl font-bold tracking-tight mb-6; }
-  h2 { @apply text-2xl font-semibold tracking-tight mb-4; }
-  h3 { @apply text-xl font-semibold tracking-tight mb-2; }
-  h4 { @apply text-lg font-semibold mb-2; }
-  
-  h1, h2, h3, h4, h5, h6 {
-    @apply font-heading text-foreground;
-  }
-
-  /* Interactive Data Components */
-  p {
-    @apply text-muted-foreground leading-relaxed;
   }
 }
 
-/* Structural Layout Extensions */
-.shadow-engineered {
-  box-shadow: var(--shadow-engineered);
-}
-
-.shadow-overlay {
-  box-shadow: var(--shadow-overlay);
-}
-
-/* Premium KPI Micro-Animations */
+/* Animations */
 @keyframes kpi-enter {
   from { 
     opacity: 0; 
@@ -219,85 +277,6 @@
   animation: kpi-enter 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-/* Multi-step dialog step transition */
-@keyframes step-in {
-  from {
-    opacity: 0;
-    transform: translateX(16px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-.animate-step-in {
-  animation: step-in 0.2s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-/* ── Multi-Step Dialog Form Styling ── */
-.step-form {
-  .space-y-2 {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem !important; /* Milled industrial tight gap (4px) */
-    margin-bottom: 0.25rem;
-  }
-
-  label {
-    font-size: 0.725rem !important;
-    font-weight: 650 !important;
-    color: var(--shell-muted) !important;
-    letter-spacing: 0.04em;
-    text-transform: uppercase; /* Industrial micro-caps look */
-  }
-
-  input,
-  textarea,
-  button[role="combobox"] {
-    background-color: var(--shell-surface) !important;
-    color: var(--shell-foreground) !important;
-    border: 1px solid var(--shell-border) !important;
-    font-size: 0.8125rem !important; /* Compact, highly readable text size */
-    padding: 0.45rem 0.75rem !important; /* Tighter padding for structural control */
-    border-radius: 6px !important;
-    transition: border-color 0.15s ease, box-shadow 0.15s ease;
-  }
-
-  input,
-  button[role="combobox"] {
-    height: 2.25rem !important; /* Guarantees matching h-9 (36px) height for all fields */
-  }
-
-  input:focus,
-  textarea:focus,
-  button[role="combobox"]:focus {
-    border-color: var(--shell-brand) !important;
-    outline: none !important;
-    box-shadow: 0 0 0 3px rgba(140, 29, 36, 0.12) !important; /* Calibrated brand aura */
-  }
-}
-
-::-webkit-scrollbar {
-  width: 8px;
-  height: 7px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background-color: var(--shell-border, #E2E8F0);
-  border: 1.5px solid transparent;
-  background-clip: padding-box;
-  border-radius: 9999px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background-color: var(--shell-brand, #9a3412);
-}
-
 @keyframes shimmer-swipe {
   100% {
     transform: translateX(100%);
@@ -307,7 +286,7 @@
 .shimmer-glow {
   position: relative;
   overflow: hidden;
-  background-color: var(--shell-surface-alt);
+  background-color: var(--muted);
 }
 
 .shimmer-glow::after {
@@ -324,15 +303,4 @@
   );
   content: "";
   animation: shimmer-swipe 1.6s infinite ease-in-out;
-}
-
-.dark .shimmer-glow::after {
-  background-image: linear-gradient(
-    90deg,
-    rgba(255, 255, 255, 0) 0%,
-    rgba(255, 255, 255, 0.01) 25%,
-    rgba(255, 255, 255, 0.04) 50%,
-    rgba(255, 255, 255, 0.01) 75%,
-    rgba(255, 255, 255, 0) 100%
-  );
 }

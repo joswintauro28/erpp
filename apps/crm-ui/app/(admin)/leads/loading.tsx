@@ -1,56 +1,67 @@
-export default function LeadsLoading() {
-  return (
-    <div className="relative space-y-6">
-      {/* Brand progress sweep bar */}
-      <span className="absolute -top-6 left-0 h-0.5 w-1/3 rounded-full bg-[var(--shell-brand)] shimmer-glow" />
+import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="space-y-2">
-          <div className="h-6 w-28 rounded-md shimmer-glow" />
-          <div className="h-4 w-64 rounded shimmer-glow" />
+export default function CrmLeadsLoading() {
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-4">
+        <div className="space-y-1.5">
+          <Skeleton className="h-7 w-40" />
+          <Skeleton className="h-4 w-80" />
         </div>
-        <div className="h-9 w-32 rounded-lg shimmer-glow" />
+        <Skeleton className="h-9 w-32" />
       </div>
 
-      {/* KPI Mini Cards */}
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface)] p-4.5">
-            <div className="h-3 w-16 rounded shimmer-glow" />
-            <div className="h-5 w-24 rounded shimmer-glow mt-2" />
-          </div>
+          <Card key={i}>
+            <CardContent className="p-4 flex items-center justify-between">
+              <div className="space-y-1">
+                <Skeleton className="h-3 w-20" />
+                <Skeleton className="h-6 w-16" />
+              </div>
+              <Skeleton className="h-8 w-8 rounded-full" />
+            </CardContent>
+          </Card>
         ))}
       </div>
 
-      {/* Search Bar & Filters */}
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="h-9 w-64 rounded-lg border border-[var(--shell-border)] bg-[var(--shell-surface)] shimmer-glow" />
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <Skeleton className="h-9 w-full sm:w-72" />
+        <Skeleton className="h-9 w-36" />
       </div>
 
-      {/* Table Mock Layout */}
-      <div className="rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface)] overflow-hidden shadow-engineered">
-        {/* Table Header */}
-        <div className="grid grid-cols-12 gap-4 border-b border-[var(--shell-border)] bg-[var(--shell-surface-alt)]/50 px-6 py-3">
-          <div className="col-span-3"><div className="h-3.5 w-16 rounded shimmer-glow" /></div>
-          <div className="col-span-3"><div className="h-3.5 w-24 rounded shimmer-glow" /></div>
-          <div className="col-span-2"><div className="h-3.5 w-16 rounded shimmer-glow" /></div>
-          <div className="col-span-2"><div className="h-3.5 w-16 rounded shimmer-glow" /></div>
-          <div className="col-span-2 text-right flex justify-end"><div className="h-3.5 w-8 rounded shimmer-glow" /></div>
-        </div>
-        {/* Table Rows */}
-        <div className="divide-y divide-[var(--shell-border)]/40">
-          {Array.from({ length: 5 }).map((_, idx) => (
-            <div key={idx} className="grid grid-cols-12 gap-4 px-6 py-4 items-center">
-              <div className="col-span-3"><div className="h-4 w-24 rounded shimmer-glow" /></div>
-              <div className="col-span-3"><div className="h-4 w-36 rounded shimmer-glow" /></div>
-              <div className="col-span-2"><div className="h-4 w-20 rounded shimmer-glow" /></div>
-              <div className="col-span-2"><div className="h-5 w-14 rounded-full shimmer-glow" /></div>
-              <div className="col-span-2 flex justify-end"><div className="h-6 w-6 rounded-md shimmer-glow" /></div>
+      <Card>
+        <CardHeader className="pb-3 flex flex-row items-center justify-between">
+          <Skeleton className="h-4 w-32" />
+          <Skeleton className="h-4 w-20" />
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between border-b border-border pb-2">
+              <Skeleton className="h-3 w-32" />
+              <Skeleton className="h-3 w-36" />
+              <Skeleton className="h-3 w-24" />
+              <Skeleton className="h-3 w-20" />
+              <Skeleton className="h-3 w-20" />
+              <Skeleton className="h-3 w-20" />
             </div>
-          ))}
-        </div>
-      </div>
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="flex items-center justify-between py-2.5 border-b border-border/50 last:border-0">
+                <div className="space-y-1">
+                  <Skeleton className="h-4 w-36" />
+                  <Skeleton className="h-3 w-24" />
+                </div>
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-5 w-16 rounded-full" />
+                <Skeleton className="h-4 w-16" />
+                <Skeleton className="h-7 w-20 rounded-md" />
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

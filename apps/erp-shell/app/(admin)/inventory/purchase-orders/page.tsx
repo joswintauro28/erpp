@@ -1,227 +1,306 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
-import { Search, Plus, ShoppingCart, Eye, Trash2, AlertTriangle } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { useEffect, useState } from "react";
+import { Plus, ClipboardList, Loader2, Truck, Warehouse as WarehouseIcon, Edit3, Trash2, Calendar, CheckCircle2, AlertTriangle, ArrowRight, MapPin } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { money } from "@/utils/format";
 import { api } from "@/services/api";
-import type { ApiPurchaseOrder, ApiSupplier, ApiProduct } from "@/types/inventory";
-import PurchaseOrdersLoading from "./loading";
+import { toastError, toastWarning } from "@/utils/toast";
+import { money } from "@/utils/format";
 
-const statusColors: Record<string, string> = {
-  draft: "var(--chart-4)",
-  ordered: "var(--chart-3)",
-  received: "var(--shell-success)",
-};
+interface PurchaseOrder {
+  id: number;
+  order_number: string;
+  supplier_id: number;
+  warehouse_id: number;
+  status: string;
+  total: number;
+  notes?: string | null;
+  ordered_at?: string | null;
+  submitted_at?: string | null;
+  approved_at?: string | null;
+  expected_at?: string | null;
+  received_at?: string | null;
+  cancelled_at?: string | null;
+  created_at: string;
+  items?: { id: number; product_id: number; quantity: number; received_quantity: number; putaway_quantity?: number; location?: string | null; unit_price: number }[];
+}
 
-export default function PurchaseOrders() {
-  const [orders, setOrders] = useState<ApiPurchaseOrder[]>([]);
-  const [suppliers, setSuppliers] = useState<ApiSupplier[]>([]);
-  const [products, setProducts] = useState<ApiProduct[]>([]);
-  const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("");
-  const [ready, setReady] = useState(false);
+interface Supplier {
+  id: number;
+  name: string;
+}
+
+interface Warehouse {
+  id: number;
+  name: string;
+}
+
+export default function PurchaseOrdersPage() {
+  const [orders, setOrders] = useState<PurchaseOrder[]>([]);
+  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+  const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
+  const [loading, setLoading] = useState(true);
+  
+  // Modals
   const [isAddOpen, setIsAddOpen] = useState(false);
-  const [orderToDelete, setOrderToDelete] = useState<ApiPurchaseOrder | null>(null);
-  const [viewingOrder, setViewingOrder] = useState<ApiPurchaseOrder | null>(null);
-  const [formSupplierId, setFormSupplierId] = useState(0);
-  const [formWarehouseId, setFormWarehouseId] = useState(1);
-  const [formNotes, setFormNotes] = useState("");
-  const [formItems, setFormItems] = useState<{ product_id: number; quantity: number; unit_price: number }[]>([
-    { product_id: 1, quantity: 10, unit_price: 500 },
-  ]);
+  const [selectedOrder, setSelectedOrder] = useState<PurchaseOrder | null>(null);
+  const [orderToDelete, setOrderToDelete] = useState<PurchaseOrder | null>(null);
 
-  const fetchOrders = () => {
-    api.get<ApiPurchaseOrder[]>("/purchase-orders")
-      .then((data) => setOrders(data))
-      .catch(() => setOrders([]));
+  // New PO Form
+  const [selectedSupplierId, setSelectedSupplierId] = useState<number>(1);
+  const [selectedWarehouseId, setSelectedWarehouseId] = useState<number>(1);
+  const [itemProductName, setItemProductName] = useState("Industrial Hydraulic Pump Parts");
+  const [itemQty, setItemQty] = useState(25);
+  const [itemPrice, setItemPrice] = useState(4500);
+  const [poNotes, setPoNotes] = useState("Reorder stock for inventory replenishment");
+
+  // Edit PO Status Form
+  const [editStatus, setEditStatus] = useState("DRAFT");
+  const [editReceivedQty, setEditReceivedQty] = useState<number>(0);
+  const [editReceivedProductId, setEditReceivedProductId] = useState<number | null>(null);
+
+  // Putaway (P5)
+  const [putawayOrder, setPutawayOrder] = useState<PurchaseOrder | null>(null);
+  const [putawayRows, setPutawayRows] = useState<Record<number, { quantity: number; location: string }>>({});
+
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const [poData, supData, whData] = await Promise.all([
+        api.get<PurchaseOrder[]>("/purchase-orders"),
+        api.get<Supplier[]>("/suppliers"),
+        api.get<Warehouse[]>("/warehouses"),
+      ]);
+      setOrders(poData || []);
+      setSuppliers(supData || []);
+      setWarehouses(whData || []);
+      if (supData && supData.length > 0) setSelectedSupplierId(supData[0].id);
+      if (whData && whData.length > 0) setSelectedWarehouseId(whData[0].id);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
-    let cancelled = false;
-    Promise.all([
-      api.get<ApiPurchaseOrder[]>("/purchase-orders"),
-      api.get<ApiSupplier[]>("/suppliers"),
-      api.get<ApiProduct[]>("/products"),
-    ]).then(([o, s, p]) => {
-      if (!cancelled) { setOrders(o); setSuppliers(s); setProducts(p); }
-    }).catch(() => { if (!cancelled) { setOrders([]); setSuppliers([]); setProducts([]); } })
-    .finally(() => { if (!cancelled) setReady(true); });
-    return () => { cancelled = true; };
+    fetchData();
   }, []);
 
-  const handleCreate = async () => {
-    if (!formSupplierId) return;
+  const handleCreatePurchaseOrder = async () => {
     try {
+      let supId = selectedSupplierId;
+      if (!supId && suppliers.length > 0) supId = suppliers[0].id;
+      let whId = selectedWarehouseId;
+      if (!whId && warehouses.length > 0) whId = warehouses[0].id;
+
       await api.post("/purchase-orders", {
-        supplier_id: formSupplierId,
-        warehouse_id: formWarehouseId,
-        notes: formNotes,
-        items: formItems,
+        supplier_id: Number(supId),
+        warehouse_id: Number(whId),
+        notes: poNotes,
+        items: [
+          {
+            product_name: itemProductName,
+            quantity: Number(itemQty),
+            unit_price: Number(itemPrice),
+          },
+        ],
       });
       setIsAddOpen(false);
-      setFormSupplierId(0); setFormItems([{ product_id: 1, quantity: 10, unit_price: 500 }]);
-      fetchOrders();
-    } catch (err) { console.error(err); }
-  };
-
-  const handleDelete = async () => {
-    if (!orderToDelete) return;
-    try { await api.delete(`/purchase-orders/${orderToDelete.id}`); setOrderToDelete(null); fetchOrders(); }
-    catch { alert("Failed to delete PO."); }
-  };
-
-  const handleStatusUpdate = async (po: ApiPurchaseOrder, status: string) => {
-    try { await api.put(`/purchase-orders/${po.id}/status`, { status }); fetchOrders(); }
-    catch { alert("Failed to update status."); }
-  };
-
-  const filtered = useMemo(() => {
-    let res = orders;
-    if (statusFilter) res = res.filter((o) => o.status === statusFilter);
-    if (search.trim()) {
-      const q = search.toLowerCase();
-      res = res.filter(
-        (o) => o.order_number.toLowerCase().includes(q) || `#${o.supplier_id}`.includes(q) || (o.notes ?? "").toLowerCase().includes(q)
-      );
+      fetchData();
+    } catch (err) {
+      console.error(err);
+      toastError("Failed to create Purchase Order.");
     }
-    return res;
-  }, [orders, search, statusFilter]);
+  };
 
-  if (!ready) {
-    return <PurchaseOrdersLoading />;
-  }
+  const handleUpdateStatus = async () => {
+    if (!selectedOrder) return;
+    try {
+      const payload: Record<string, unknown> = { status: editStatus };
+      if (editStatus === "PARTIALLY_RECEIVED" || editStatus === "COMPLETED") {
+        const items =
+          selectedOrder.items && selectedOrder.items.length > 0
+            ? selectedOrder.items
+            : [{ id: 0, product_id: editReceivedProductId ?? 0, quantity: 0, received_quantity: 0, unit_price: 0 }];
+        payload.received_items = items.map((it) => ({
+          product_id: it.product_id,
+          quantity: it.quantity,
+        }));
+      }
+      await api.put(`/purchase-orders/${selectedOrder.id}/status`, payload);
+      setSelectedOrder(null);
+      fetchData();
+    } catch (err) {
+      console.error(err);
+      toastError("Failed to update status.");
+    }
+  };
 
-  if (ready && orders.length === 0) {
-    return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="font-heading text-xl font-semibold tracking-tight text-[var(--shell-foreground)]">Purchase Orders</h1>
-            <p className="mt-0.5 text-sm text-[var(--shell-muted)]">Manage purchase orders and supplier deliveries</p>
-          </div>
-          <Button size="sm" onClick={() => setIsAddOpen(true)}><Plus className="mr-1.5 h-3.5 w-3.5" />New PO</Button>
-        </div>
-        <div className="flex flex-col items-center gap-3 py-20 text-[var(--shell-muted)]">
-          <ShoppingCart className="h-12 w-12" />
-          <p className="text-base font-medium text-[var(--shell-foreground)]">No purchase orders yet</p>
-          <p className="text-sm">Create your first purchase order to start tracking procurement.</p>
-        </div>
-      </div>
-    );
-  }
+  const handleDeletePO = async () => {
+    if (!orderToDelete) return;
+    try {
+      await api.delete(`/purchase-orders/${orderToDelete.id}`);
+      setOrderToDelete(null);
+      fetchData();
+    } catch (err) {
+      console.error(err);
+      toastError("Failed to delete purchase order.");
+    }
+  };
+
+  const openPutaway = (po: PurchaseOrder) => {
+    setPutawayOrder(po);
+    const rows: Record<number, { quantity: number; location: string }> = {};
+    (po.items || []).forEach((it) => {
+      const outstanding = it.received_quantity - (it.putaway_quantity || 0);
+      rows[it.product_id] = {
+        quantity: Math.max(0, outstanding),
+        location: it.location || "Aisle-A",
+      };
+    });
+    setPutawayRows(rows);
+  };
+
+  const handlePutaway = async () => {
+    if (!putawayOrder) return;
+    const items = Object.entries(putawayRows)
+      .filter(([, v]) => v.quantity > 0)
+      .map(([productId, v]) => ({
+        product_id: Number(productId),
+        quantity: Number(v.quantity),
+        location: v.location,
+      }));
+    if (items.length === 0) {
+      toastWarning("Enter at least one putaway quantity.");
+      return;
+    }
+    try {
+      await api.post(`/purchase-orders/${putawayOrder.id}/putaway`, { items });
+      setPutawayOrder(null);
+      fetchData();
+    } catch (err) {
+      console.error(err);
+      toastError("Putaway failed", "Verify quantities against received goods.");
+    }
+  };
+
+  const getStatusBadge = (s: string) => {
+    const st = s.toUpperCase();
+    switch (st) {
+      case "DRAFT":
+        return <Badge variant="neutral" className="text-[10px]">Draft</Badge>;
+      case "SUBMITTED":
+        return <Badge className="bg-amber-600 text-white text-[10px]">Submitted</Badge>;
+      case "APPROVED":
+        return <Badge className="bg-blue-600 text-white text-[10px]">Approved</Badge>;
+      case "PARTIALLY_RECEIVED":
+        return <Badge className="bg-violet-600 text-white text-[10px]">Partially Received</Badge>;
+      case "COMPLETED":
+        return <Badge className="bg-emerald-600 text-white text-[10px]">Completed</Badge>;
+      case "CANCELLED":
+        return <Badge variant="destructive" className="text-[10px]">Cancelled</Badge>;
+      default:
+        return <Badge variant="neutral" className="text-[10px]">{st}</Badge>;
+    }
+  };
 
   return (
-    <div className="relative space-y-8">
-      <span className="absolute -top-6 left-0 h-0.5 w-1/3 rounded-full bg-[var(--shell-brand)] shimmer-glow" />
-
-      <div className="flex items-center justify-between">
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-4">
         <div>
-          <h1 className="font-heading text-xl font-semibold tracking-tight text-[var(--shell-foreground)]">
-            Purchase Orders
+          <h1 className="font-heading text-2xl font-semibold tracking-tight text-[--shell-foreground] flex items-center gap-2">
+            <ClipboardList className="h-6 w-6 text-[var(--shell-brand)]" />
+            Purchase Orders & Reordering
           </h1>
-          <p className="mt-0.5 text-sm text-[var(--shell-muted)]">
-            Manage purchase orders and supplier deliveries
+          <p className="mt-1 text-sm text-[--shell-muted]">
+            Procure stock from approved suppliers, track receipts, and update stock counts automatically.
           </p>
         </div>
-        <Button size="sm" onClick={() => setIsAddOpen(true)} className="bg-[var(--shell-brand)] hover:bg-[var(--shell-brand)]/90 text-white">
-          <Plus className="mr-1.5 h-3.5 w-3.5" />
-          New PO
+        <Button onClick={() => setIsAddOpen(true)} className="bg-[var(--shell-brand)] text-white hover:bg-[var(--shell-action)]">
+          <Plus className="h-4 w-4 mr-2" /> Create Purchase Order
         </Button>
       </div>
 
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="relative flex-1 max-w-xs">
-          <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--shell-muted)]" />
-          <Input placeholder="Search POs..." className="pl-8" value={search} onChange={(e) => setSearch(e.target.value)} />
-        </div>
-        <div className="flex gap-1">
-          {["", "draft", "ordered", "received"].map((s) => (
-            <Button key={s} variant={statusFilter === s ? "default" : "outline"} size="sm" className="text-xs capitalize"
-              onClick={() => setStatusFilter(s)}>{s || "All"}</Button>
-          ))}
-        </div>
-      </div>
-
-      <Card className="hover:shadow-md transition-shadow duration-200 border-[var(--shell-border)] bg-[var(--shell-surface)]">
-        <CardContent className="p-0">
-          {filtered.length === 0 ? (
-            <div className="flex flex-col items-center gap-2 py-16 text-[var(--shell-muted)]">
-              <p className="text-sm">No purchase orders match your filters</p>
+      {/* Table */}
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold uppercase text-muted-foreground">Purchase Orders Registry</span>
+            <span className="text-xs text-muted-foreground font-medium">Total Orders: {orders.length}</span>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <div className="flex justify-center py-12">
+              <Loader2 className="h-6 w-6 animate-spin text-accent" />
             </div>
+          ) : orders.length === 0 ? (
+            <p className="py-8 text-center text-sm text-muted-foreground">No purchase orders created yet.</p>
           ) : (
             <Table>
               <TableHeader>
-                <TableRow>
-                  <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--shell-muted)]">PO #</TableHead>
-                  <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--shell-muted)]">Supplier</TableHead>
-                  <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--shell-muted)]">Order Date</TableHead>
-                  <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--shell-muted)]">Expected</TableHead>
-                  <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--shell-muted)] text-right">Items</TableHead>
-                  <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--shell-muted)] text-right">Total</TableHead>
-                  <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--shell-muted)]">Status</TableHead>
-                  <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--shell-muted)] text-right w-24">Actions</TableHead>
+                <TableRow className="text-xs uppercase">
+                  <TableHead>PO Reference</TableHead>
+                  <TableHead>Supplier</TableHead>
+                  <TableHead>Destination Warehouse</TableHead>
+                  <TableHead className="text-center">Status</TableHead>
+                  <TableHead className="text-right">Total Value</TableHead>
+                  <TableHead className="text-right">Order Date</TableHead>
+                  <TableHead className="text-center">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filtered.map((o) => (
-                  <TableRow key={o.id} className="hover:bg-[var(--shell-surface-alt)]/30 transition-colors">
-                    <TableCell className="font-mono text-xs font-medium text-[var(--shell-foreground)]">{o.order_number}</TableCell>
-                    <TableCell className="text-xs text-[var(--shell-muted)]">
-                      {suppliers.find((s) => s.id === o.supplier_id)?.name || `#${o.supplier_id}`}
-                    </TableCell>
-                    <TableCell className="font-mono text-xs text-[var(--shell-muted)]">
-                      {o.ordered_at ? o.ordered_at.split("T")[0] : o.created_at.split("T")[0]}
-                    </TableCell>
-                    <TableCell className="font-mono text-xs text-[var(--shell-muted)]">
-                      {o.expected_at ? o.expected_at.split("T")[0] : "-"}
-                    </TableCell>
-                    <TableCell className="font-mono text-sm text-right">{o.items.length}</TableCell>
-                    <TableCell className="font-mono text-sm text-right">{money(o.total)}</TableCell>
-                    <TableCell>
-                      {o.status === "draft" ? (
-                        <div className="flex gap-1">
-                          <Badge variant="outline" className="text-xs capitalize" style={{ borderColor: statusColors[o.status], color: statusColors[o.status] }}>
-                            {o.status}
-                          </Badge>
-                          <Button variant="ghost" size="xs" className="text-[10px] h-5 px-1"
-                            onClick={() => handleStatusUpdate(o, "ordered")}>
-                            Order
+                {orders.map((po) => {
+                  const supName = suppliers.find((s) => s.id === po.supplier_id)?.name || `Supplier #${po.supplier_id}`;
+                  const whName = warehouses.find((w) => w.id === po.warehouse_id)?.name || `Warehouse #${po.warehouse_id}`;
+                  return (
+                    <TableRow key={po.id}>
+                      <TableCell className="font-mono text-xs font-bold text-[var(--shell-brand)]">{po.order_number}</TableCell>
+                      <TableCell className="font-medium text-foreground text-xs">{supName}</TableCell>
+                      <TableCell className="text-xs text-muted-foreground">{whName}</TableCell>
+                      <TableCell className="text-center">{getStatusBadge(po.status)}</TableCell>
+                      <TableCell className="text-right font-bold text-foreground">{money(po.total)}</TableCell>
+                      <TableCell className="text-xs text-muted-foreground text-right">
+                        {new Date(po.created_at).toLocaleDateString()}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <div className="flex items-center justify-center gap-1.5">
+                          <Button
+                            variant="ghost"
+                            size="xs"
+                            onClick={() => {
+                              setSelectedOrder(po);
+                              setEditStatus(po.status);
+                            }}
+                          >
+                            <Edit3 className="h-3.5 w-3.5 text-muted-foreground hover:text-[var(--shell-brand)]" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="xs"
+                            title="Putaway (P5)"
+                            onClick={() => openPutaway(po)}
+                          >
+                            <MapPin className="h-3.5 w-3.5 text-muted-foreground hover:text-[var(--shell-success)]" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="xs"
+                            onClick={() => setOrderToDelete(po)}
+                          >
+                            <Trash2 className="h-3.5 w-3.5 text-muted-foreground hover:text-destructive" />
                           </Button>
                         </div>
-                      ) : o.status === "ordered" ? (
-                        <div className="flex gap-1">
-                          <Badge variant="outline" className="text-xs capitalize" style={{ borderColor: statusColors[o.status], color: statusColors[o.status] }}>
-                            {o.status}
-                          </Badge>
-                          <Button variant="ghost" size="xs" className="text-[10px] h-5 px-1"
-                            onClick={() => handleStatusUpdate(o, "received")}>
-                            Receive
-                          </Button>
-                        </div>
-                      ) : (
-                        <Badge variant="outline" className="text-xs capitalize" style={{ borderColor: statusColors[o.status], color: statusColors[o.status] }}>
-                          {o.status}
-                        </Badge>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-1">
-                        <Button variant="ghost" size="icon-sm" onClick={() => setViewingOrder(o)}>
-                          <Eye className="h-3.5 w-3.5" />
-                        </Button>
-                        <Button variant="ghost" size="icon-sm" onClick={() => setOrderToDelete(o)}>
-                          <Trash2 className="h-3.5 w-3.5 text-[var(--shell-muted)] hover:text-destructive" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           )}
@@ -230,154 +309,312 @@ export default function PurchaseOrders() {
 
       {/* Create PO Modal */}
       <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
-        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>New Purchase Order</DialogTitle>
-            <DialogDescription>Create a purchase order for supplier replenishment.</DialogDescription>
+            <DialogTitle>Create New Purchase Order</DialogTitle>
+            <DialogDescription>Issue a formal purchase order to a vendor for inventory replenishment.</DialogDescription>
           </DialogHeader>
           <div className="space-y-3 my-2 text-xs">
             <div>
-              <label className="font-medium block mb-1">Supplier</label>
-              <select value={formSupplierId} onChange={(e) => setFormSupplierId(Number(e.target.value))}
-                className="w-full p-2 border border-border rounded bg-background text-xs font-semibold">
-                <option value={0}>Select supplier...</option>
-                {suppliers.map((s) => (
-                  <option key={s.id} value={s.id}>{s.name}</option>
-                ))}
+              <label className="font-medium block mb-1">Select Supplier Vendor</label>
+              <select
+                value={selectedSupplierId}
+                onChange={(e) => setSelectedSupplierId(Number(e.target.value))}
+                className="w-full p-2 border border-border rounded bg-background"
+              >
+                {suppliers.length === 0 ? (
+                  <option value={1}>Primary Industrial Supplier (Auto-created)</option>
+                ) : (
+                  suppliers.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.name}
+                    </option>
+                  ))
+                )}
               </select>
             </div>
             <div>
-              <label className="font-medium block mb-1">Warehouse ID</label>
-              <input type="number" value={formWarehouseId} onChange={(e) => setFormWarehouseId(Number(e.target.value))}
-                className="w-full p-2 border border-border rounded bg-background" />
+              <label className="font-medium block mb-1">Destination Warehouse Facility</label>
+              <select
+                value={selectedWarehouseId}
+                onChange={(e) => setSelectedWarehouseId(Number(e.target.value))}
+                className="w-full p-2 border border-border rounded bg-background"
+              >
+                {warehouses.length === 0 ? (
+                  <option value={1}>Main Distribution Center (Auto-created)</option>
+                ) : (
+                  warehouses.map((w) => (
+                    <option key={w.id} value={w.id}>
+                      {w.name}
+                    </option>
+                  ))
+                )}
+              </select>
             </div>
             <div>
-              <label className="font-medium block mb-1">Notes</label>
-              <input type="text" value={formNotes} onChange={(e) => setFormNotes(e.target.value)}
-                className="w-full p-2 border border-border rounded bg-background" />
+              <label className="font-medium block mb-1">Item Description / Product Name</label>
+              <input
+                type="text"
+                value={itemProductName}
+                onChange={(e) => setItemProductName(e.target.value)}
+                className="w-full p-2 border border-border rounded bg-background"
+              />
             </div>
-            <div>
-              <div className="flex items-center justify-between mb-1">
-                <label className="font-medium">Line Items</label>
-                <Button variant="outline" size="xs" onClick={() => setFormItems([...formItems, { product_id: 1, quantity: 1, unit_price: 0 }])}>
-                  + Add Item
-                </Button>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="font-medium block mb-1">Order Quantity</label>
+                <input
+                  type="number"
+                  value={itemQty}
+                  onChange={(e) => setItemQty(Number(e.target.value))}
+                  className="w-full p-2 border border-border rounded bg-background"
+                />
               </div>
-              {formItems.map((item, idx) => (
-                <div key={idx} className="grid grid-cols-4 gap-2 mb-2">
-                  <div className="col-span-2">
-                    <select value={item.product_id} onChange={(e) => {
-                      const items = [...formItems]; items[idx].product_id = Number(e.target.value);
-                      const prod = products.find((p) => p.id === Number(e.target.value));
-                      if (prod) items[idx].unit_price = prod.price;
-                      setFormItems(items);
-                    }} className="w-full p-2 border border-border rounded bg-background text-xs">
-                      <option value={0}>Select...</option>
-                      {products.map((p) => (
-                        <option key={p.id} value={p.id}>{p.name}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <input type="number" value={item.quantity} onChange={(e) => {
-                      const items = [...formItems]; items[idx].quantity = Number(e.target.value); setFormItems(items);
-                    }} className="w-full p-2 border border-border rounded bg-background" placeholder="Qty" />
-                  </div>
-                  <div className="flex gap-1">
-                    <input type="number" value={item.unit_price} onChange={(e) => {
-                      const items = [...formItems]; items[idx].unit_price = Number(e.target.value); setFormItems(items);
-                    }} className="w-full p-2 border border-border rounded bg-background" placeholder="Price" />
-                    {formItems.length > 1 && (
-                      <Button variant="ghost" size="xs" onClick={() => setFormItems(formItems.filter((_, i) => i !== idx))}>
-                        ×
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              ))}
+              <div>
+                <label className="font-medium block mb-1">Unit Price (₹)</label>
+                <input
+                  type="number"
+                  value={itemPrice}
+                  onChange={(e) => setItemPrice(Number(e.target.value))}
+                  className="w-full p-2 border border-border rounded bg-background"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="font-medium block mb-1">Purchase Notes</label>
+              <input
+                type="text"
+                value={poNotes}
+                onChange={(e) => setPoNotes(e.target.value)}
+                className="w-full p-2 border border-border rounded bg-background"
+              />
             </div>
           </div>
           <div className="flex justify-end gap-2 mt-4">
-            <Button variant="outline" size="sm" onClick={() => setIsAddOpen(false)}>Cancel</Button>
-            <Button size="sm" onClick={handleCreate} className="bg-[var(--shell-brand)] text-white">Create PO</Button>
+            <Button variant="outline" size="sm" onClick={() => setIsAddOpen(false)}>
+              Cancel
+            </Button>
+            <Button size="sm" onClick={handleCreatePurchaseOrder} className="bg-[var(--shell-brand)] text-white">
+              Issue Purchase Order
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
 
-      {/* View PO Modal */}
-      <Dialog open={!!viewingOrder} onOpenChange={(open) => !open && setViewingOrder(null)}>
-        {viewingOrder && (
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      {/* Edit & Activity Modal */}
+      <Dialog open={!!selectedOrder} onOpenChange={(open) => !open && setSelectedOrder(null)}>
+        {selectedOrder && (
+          <DialogContent className="max-w-md">
             <DialogHeader>
-              <DialogTitle className="text-lg font-bold">{viewingOrder.order_number}</DialogTitle>
-              <DialogDescription>
-                Supplier: {suppliers.find((s) => s.id === viewingOrder.supplier_id)?.name || `#${viewingOrder.supplier_id}`} | Status: {viewingOrder.status}
-              </DialogDescription>
+              <DialogTitle className="flex items-center justify-between text-base">
+                <span>Manage Purchase Order</span>
+                <span className="font-mono text-sm text-[var(--shell-brand)]">{selectedOrder.order_number}</span>
+              </DialogTitle>
+              <DialogDescription>Update procurement lifecycle status and view transaction logs.</DialogDescription>
             </DialogHeader>
-            <div className="space-y-4 my-2 text-xs">
-              <div className="grid grid-cols-2 gap-4 text-xs">
-                <div><span className="font-medium text-[var(--shell-muted)]">Order Date:</span> {viewingOrder.ordered_at?.split("T")[0] || viewingOrder.created_at.split("T")[0]}</div>
-                <div><span className="font-medium text-[var(--shell-muted)]">Expected:</span> {viewingOrder.expected_at?.split("T")[0] || "-"}</div>
-                <div><span className="font-medium text-[var(--shell-muted)]">Warehouse ID:</span> {viewingOrder.warehouse_id}</div>
-                <div><span className="font-medium text-[var(--shell-muted)]">Notes:</span> {viewingOrder.notes || "-"}</div>
+
+            {/* Status Editing */}
+            <div className="p-3 bg-muted rounded-lg border border-border my-2 text-xs space-y-2">
+              <label className="font-bold block text-foreground uppercase tracking-wide">Procurement Status</label>
+              <div className="flex items-center gap-3">
+                <select
+                  value={editStatus}
+                  onChange={(e) => setEditStatus(e.target.value)}
+                  className="p-1.5 border border-border rounded bg-background text-xs font-semibold"
+                >
+                  <option value="DRAFT">Draft</option>
+                  <option value="SUBMITTED">Submitted to Vendor</option>
+                  <option value="APPROVED">Approved</option>
+                  <option value="PARTIALLY_RECEIVED">Partially Received (Stock Added)</option>
+                  <option value="COMPLETED">Goods Received (Stock Added)</option>
+                  <option value="CANCELLED">Cancelled</option>
+                </select>
+                <Button size="xs" onClick={handleUpdateStatus} className="bg-[var(--shell-brand)] text-white hover:bg-[var(--shell-action)]">
+                  Save Status
+                </Button>
               </div>
-              <table className="w-full text-xs border border-border rounded-lg">
-                <thead className="bg-[var(--shell-surface-alt)] text-[var(--shell-muted)] uppercase">
-                  <tr>
-                    <th className="p-2 text-left">Product</th>
-                    <th className="p-2 text-right">Qty</th>
-                    <th className="p-2 text-right">Unit Price</th>
-                    <th className="p-2 text-right">Subtotal</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border">
-                  {viewingOrder.items.map((item) => (
-                    <tr key={item.id}>
-                      <td className="p-2">{products.find((p) => p.id === item.product_id)?.name || `#${item.product_id}`}</td>
-                      <td className="p-2 text-right">{item.quantity}</td>
-                      <td className="p-2 text-right">{money(item.unit_price)}</td>
-                      <td className="p-2 text-right">{money(item.subtotal)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-                <tfoot className="bg-[var(--shell-surface-alt)]/50 font-semibold">
-                  <tr>
-                    <td colSpan={3} className="p-2 text-right">Subtotal:</td>
-                    <td className="p-2 text-right">{money(viewingOrder.subtotal)}</td>
-                  </tr>
-                  <tr>
-                    <td colSpan={3} className="p-2 text-right">Tax:</td>
-                    <td className="p-2 text-right">{money(viewingOrder.tax_amount)}</td>
-                  </tr>
-                  <tr>
-                    <td colSpan={3} className="p-2 text-right">Total:</td>
-                    <td className="p-2 text-right font-bold">{money(viewingOrder.total)}</td>
-                  </tr>
-                </tfoot>
-              </table>
             </div>
-            <div className="flex justify-end pt-2 border-t border-border mt-4">
-              <Button size="sm" onClick={() => setViewingOrder(null)} className="bg-[var(--shell-brand)] text-white">Close</Button>
+
+            {/* Activity Display Timeline */}
+            <div className="space-y-4 my-3 text-xs">
+              <h4 className="font-bold text-foreground uppercase tracking-wide">Activity Timeline Log</h4>
+              
+              <div className="relative border-l border-border pl-4 space-y-4 ml-2">
+                {/* Milestone 1: Draft */}
+                <div className="relative">
+                  <div className="absolute -left-[21px] mt-0.5 bg-background border border-border rounded-full p-0.5">
+                    <CheckCircle2 className="h-3 w-3 text-muted-foreground" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-foreground">Purchase Order Drafted</p>
+                    <p className="text-[10px] text-muted-foreground">{new Date(selectedOrder.created_at).toLocaleString()}</p>
+                  </div>
+                </div>
+
+                {/* Milestone 2: Submitted */}
+                {["SUBMITTED", "APPROVED", "PARTIALLY_RECEIVED", "COMPLETED"].includes(selectedOrder.status) && (
+                  <div className="relative">
+                    <div className="absolute -left-[21px] mt-0.5 bg-background border border-border rounded-full p-0.5">
+                      <Truck className="h-3 w-3 text-[var(--shell-warning)]" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-foreground">Sent to Supplier Vendor</p>
+                      <p className="text-[10px] text-muted-foreground">
+                        {selectedOrder.submitted_at || selectedOrder.ordered_at
+                          ? new Date(selectedOrder.submitted_at || selectedOrder.ordered_at!).toLocaleString()
+                          : "Confirmed"}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Milestone 2b: Approved */}
+                {["APPROVED", "PARTIALLY_RECEIVED", "COMPLETED"].includes(selectedOrder.status) && (
+                  <div className="relative">
+                    <div className="absolute -left-[21px] mt-0.5 bg-background border border-border rounded-full p-0.5">
+                      <CheckCircle2 className="h-3 w-3 text-[var(--shell-info)]" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-foreground">Purchase Order Approved</p>
+                      <p className="text-[10px] text-muted-foreground">
+                        {selectedOrder.approved_at ? new Date(selectedOrder.approved_at).toLocaleString() : "Confirmed"}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Milestone 3: Received */}
+                {["PARTIALLY_RECEIVED", "COMPLETED"].includes(selectedOrder.status) && (
+                  <div className="relative">
+                    <div className="absolute -left-[21px] mt-0.5 bg-background border border-border rounded-full p-0.5">
+                      <CheckCircle2 className="h-3 w-3 text-[var(--shell-success)]" />
+                    </div>
+                    <div>
+                      <p className="font-bold text-[var(--shell-success)]">
+                        {selectedOrder.status === "PARTIALLY_RECEIVED" ? "Partially Received & Stock Updated" : "Goods Received & Stock Incremented"}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground">
+                        {selectedOrder.received_at ? new Date(selectedOrder.received_at).toLocaleString() : "Updated"}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Milestone 4: Cancelled */}
+                {selectedOrder.status === "CANCELLED" && (
+                  <div className="relative">
+                    <div className="absolute -left-[21px] mt-0.5 bg-background border border-border rounded-full p-0.5">
+                      <AlertTriangle className="h-3 w-3 text-destructive" />
+                    </div>
+                    <div>
+                      <p className="font-bold text-destructive">Purchase Order Cancelled</p>
+                      <p className="text-[10px] text-muted-foreground">Voided transaction</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 mt-4 border-t border-border pt-3">
+              <Button variant="outline" size="sm" onClick={() => setSelectedOrder(null)}>
+                Close Panel
+              </Button>
             </div>
           </DialogContent>
         )}
       </Dialog>
 
-      {/* Delete Modal */}
+      {/* Putaway Modal (P5) */}
+      <Dialog open={!!putawayOrder} onOpenChange={(open) => !open && setPutawayOrder(null)}>
+        {putawayOrder && (
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-base">
+                <MapPin className="h-4 w-4 text-[var(--shell-success)]" /> Putaway Received Goods
+              </DialogTitle>
+              <DialogDescription className="text-xs">
+                Assign warehouse locations to received quantities on <span className="font-mono font-bold">{putawayOrder.order_number}</span>.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-2.5 my-2 text-xs max-h-72 overflow-y-auto">
+              {(putawayOrder.items || []).length === 0 ? (
+                <p className="text-muted-foreground">No line items on this PO.</p>
+              ) : (
+                (putawayOrder.items || []).map((it) => {
+                  const outstanding = it.received_quantity - (it.putaway_quantity || 0);
+                  const row = putawayRows[it.product_id] || { quantity: 0, location: "" };
+                  return (
+                    <div key={it.id} className="border border-border rounded-md p-2.5 space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="font-semibold">Product #{it.product_id}</span>
+                        <span className="text-[10px] text-muted-foreground">
+                          received {it.received_quantity} · putaway {it.putaway_quantity || 0} · outstanding {outstanding}
+                        </span>
+                      </div>
+                      {outstanding > 0 && (
+                        <div className="grid grid-cols-2 gap-2">
+                          <input
+                            type="number"
+                            value={row.quantity}
+                            max={outstanding}
+                            onChange={(e) =>
+                              setPutawayRows((prev) => ({
+                                ...prev,
+                                [it.product_id]: { ...row, quantity: Number(e.target.value) },
+                              }))
+                            }
+                            className="w-full p-1.5 border border-border rounded bg-background"
+                          />
+                          <input
+                            type="text"
+                            value={row.location}
+                            onChange={(e) =>
+                              setPutawayRows((prev) => ({
+                                ...prev,
+                                [it.product_id]: { ...row, location: e.target.value },
+                              }))
+                            }
+                            placeholder="Location (e.g. Aisle-B-12)"
+                            className="w-full p-1.5 border border-border rounded bg-background"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  );
+                })
+              )}
+            </div>
+            <div className="flex justify-end gap-2 mt-4 border-t border-border pt-3">
+              <Button variant="outline" size="sm" onClick={() => setPutawayOrder(null)}>
+                Cancel
+              </Button>
+              <Button size="sm" onClick={handlePutaway} className="bg-emerald-700 text-white hover:bg-emerald-800">
+                <MapPin className="h-3.5 w-3.5 mr-1" /> Confirm Putaway
+              </Button>
+            </div>
+          </DialogContent>
+        )}
+      </Dialog>
+
+      {/* Delete Confirmation Modal */}
       <Dialog open={!!orderToDelete} onOpenChange={(open) => !open && setOrderToDelete(null)}>
         {orderToDelete && (
           <DialogContent className="max-w-sm">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2 text-destructive">
-                <AlertTriangle className="h-5 w-5" /> Delete PO
+                <AlertTriangle className="h-5 w-5" /> Delete Purchase Order
               </DialogTitle>
-              <DialogDescription>
-                Delete <strong>{orderToDelete.order_number}</strong>? This is permanent.
+              <DialogDescription className="text-xs">
+                Are you sure you want to delete Purchase Order <span className="font-bold">{orderToDelete.order_number}</span>? This action is permanent and cannot be undone.
               </DialogDescription>
             </DialogHeader>
             <div className="flex justify-end gap-2 mt-4">
-              <Button variant="outline" size="sm" onClick={() => setOrderToDelete(null)}>Cancel</Button>
-              <Button size="sm" variant="destructive" onClick={handleDelete}>Confirm Delete</Button>
+              <Button variant="outline" size="sm" onClick={() => setOrderToDelete(null)}>
+                Cancel
+              </Button>
+              <Button size="sm" variant="destructive" onClick={handleDeletePO}>
+                Confirm Delete
+              </Button>
             </div>
           </DialogContent>
         )}

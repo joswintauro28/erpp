@@ -14,6 +14,7 @@ EVENT_ORDER_RESERVED = "inventory.order.reserved"
 EVENT_ORDER_PICKING = "inventory.order.picking"
 EVENT_ORDER_PACKED = "inventory.order.packed"
 EVENT_ORDER_FULFILLED = "inventory.order.fulfilled"
+EVENT_ORDER_CANCELLED = "inventory.order.cancelled"
 EVENT_SHIPMENT_DISPATCHED = "inventory.shipment.dispatched"
 EVENT_PO_CREATED = "inventory.po.created"
 EVENT_PO_APPROVED = "inventory.po.approved"
@@ -22,6 +23,15 @@ EVENT_STOCK_ADJUSTED = "inventory.stock.adjusted"
 EVENT_STOCK_SHORTAGE = "inventory.order.shortage"
 EVENT_SERIAL_UPDATED = "inventory.serial.updated"
 EVENT_SUPPLIER_STATUS = "inventory.supplier.status_changed"
+# Procurement & manufacturing (blueprint P1/P5/I3-I4)
+EVENT_PURCHASE_REQUISITION_CREATED = "inventory.pr.created"
+EVENT_PURCHASE_REQUISITION_APPROVED = "inventory.pr.approved"
+EVENT_QUALITY_CHECK = "inventory.quality.check"
+EVENT_STOCK_PUTAWAY = "inventory.stock.putaway"
+EVENT_WORK_ORDER_CREATED = "production.work_order.created"
+EVENT_WORK_ORDER_RELEASED = "production.work_order.released"
+EVENT_WORK_ORDER_COMPLETED = "production.work_order.completed"
+EVENT_WORK_ORDER_CANCELLED = "production.work_order.cancelled"
 
 
 async def _do_publish(routing_key: str, payload: dict) -> None:

@@ -78,6 +78,8 @@ model Invoice {
   vendorId        Int?           @map("vendor_id")
   vendorName      String?        @map("vendor_name")
   invoiceNumber   String?        @unique @map("invoice_number")
+  salesOrderCode  String?        @map("sales_order_code")
+  poReference     String?        @map("po_reference")
   status          InvoiceStatus  @default(draft)
   issueDate       DateTime?      @map("issue_date")
   dueDate         DateTime?      @map("due_date")
@@ -112,6 +114,8 @@ model Invoice {
   @@index([organizationId, status])
   @@index([clientId])
   @@index([vendorId])
+  @@index([salesOrderCode])
+  @@index([poReference])
   @@map("invoices")
 }
 

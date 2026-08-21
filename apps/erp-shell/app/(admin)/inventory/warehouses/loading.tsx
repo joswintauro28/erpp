@@ -1,42 +1,67 @@
+import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+
 export default function WarehousesLoading() {
   return (
-    <div className="relative space-y-6 animate-pulse">
-      {/* Brand Sweep Loader */}
-      <span className="absolute -top-6 left-0 h-0.5 w-1/3 rounded-full bg-[var(--shell-brand)] shimmer-glow" />
-
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="space-y-2">
-          <div className="h-6 w-32 rounded-md shimmer-glow" />
-          <div className="h-4 w-48 rounded shimmer-glow" />
+    <div className="space-y-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-4">
+        <div className="space-y-1.5">
+          <Skeleton className="h-7 w-48" />
+          <Skeleton className="h-4 w-96" />
         </div>
-        <div className="h-9 w-32 rounded-lg shimmer-glow" />
+        <Skeleton className="h-9 w-36" />
       </div>
 
-      {/* Search Input Bar */}
-      <div className="h-9 w-full max-w-xs rounded-lg shimmer-glow" />
-
-      {/* 2-column Card Grid */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <div
-            key={i}
-            className="rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface)] p-4 shadow-sm space-y-3.5"
-          >
-            <div className="flex items-start justify-between">
-              <div className="space-y-2 flex-1">
-                <div className="flex items-center gap-2">
-                  <div className="h-4 w-4 rounded shimmer-glow" />
-                  <div className="h-4 w-44 rounded shimmer-glow" />
-                </div>
-                <div className="h-3 w-16 rounded shimmer-glow" />
-                <div className="h-3 w-56 rounded shimmer-glow" />
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <Card key={i}>
+            <CardContent className="p-4 flex items-center justify-between">
+              <div className="space-y-1">
+                <Skeleton className="h-3 w-24" />
+                <Skeleton className="h-6 w-16" />
               </div>
-              <div className="h-5 w-12 rounded-full shimmer-glow" />
-            </div>
-          </div>
+              <Skeleton className="h-8 w-8 rounded-full" />
+            </CardContent>
+          </Card>
         ))}
       </div>
+
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <Skeleton className="h-9 w-full sm:w-72" />
+        <Skeleton className="h-9 w-32" />
+      </div>
+
+      <Card>
+        <CardHeader className="pb-3 flex flex-row items-center justify-between">
+          <Skeleton className="h-4 w-36" />
+          <Skeleton className="h-4 w-20" />
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between border-b border-border pb-2">
+              <Skeleton className="h-3 w-20" />
+              <Skeleton className="h-3 w-36" />
+              <Skeleton className="h-3 w-28" />
+              <Skeleton className="h-3 w-24" />
+              <Skeleton className="h-3 w-16" />
+              <Skeleton className="h-3 w-20" />
+            </div>
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="flex items-center justify-between py-2.5 border-b border-border/50 last:border-0">
+                <Skeleton className="h-4 w-16 font-mono" />
+                <div className="space-y-1">
+                  <Skeleton className="h-4 w-40" />
+                  <Skeleton className="h-3 w-24" />
+                </div>
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-5 w-16 rounded-full" />
+                <Skeleton className="h-7 w-20 rounded-md" />
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

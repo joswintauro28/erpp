@@ -1,6 +1,8 @@
+import { toastWarning } from "@/utils/toast";
+
 export const exportToCSV = (dataArray: any[], filename: string) => {
   if (!dataArray || !dataArray.length) {
-    alert("No data available to export.");
+    toastWarning("No data available to export.");
     return;
   }
   

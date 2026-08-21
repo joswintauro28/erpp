@@ -43,3 +43,5 @@ export const noteStatusVariant = (s: string) => {
   if (s === "issued") return "default" as const;
   return "outline" as const;
 };
+
+export { statusVariant, type StatusVariantKey } from "../utils/status";

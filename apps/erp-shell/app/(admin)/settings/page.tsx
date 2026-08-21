@@ -105,7 +105,7 @@ export default function GeneralSettings() {
   return (
     <div className="relative space-y-6">
       {/* Brand Sweep Line */}
-      <span className="absolute -top-6 left-0 h-0.5 w-1/3 rounded-full bg-[#8C1D24] shimmer-glow" />
+      <span className="absolute -top-6 left-0 h-0.5 w-1/3 rounded-full bg-[var(--shell-brand)] shimmer-glow" />
 
       {/* Page Header */}
       <div className="flex items-center justify-between">
@@ -122,7 +122,7 @@ export default function GeneralSettings() {
       {message && (
         <div className={`flex items-center gap-3 rounded-xl border px-5 py-3.5 ${
           message.type === "success" 
-            ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-600" 
+            ? "border-[var(--shell-success)]/30 bg-[var(--shell-success)]/10 text-[var(--shell-success)]" 
             : "border-destructive/30 bg-destructive/10 text-destructive"
         }`}>
           {message.type === "success" ? (
@@ -138,7 +138,7 @@ export default function GeneralSettings() {
       <Card className="border-[var(--shell-border)] bg-[var(--shell-surface)] hover:shadow-md transition-shadow duration-200">
         <CardHeader className="p-5 pb-3">
           <div className="flex items-center gap-2">
-            <Building2 className="h-4 w-4 text-[#8C1D24]" />
+            <Building2 className="h-4 w-4 text-[var(--shell-brand)]" />
             <CardTitle className="text-sm font-semibold text-[var(--shell-foreground)]">Company Information</CardTitle>
           </div>
           <CardDescription className="text-xs text-[var(--shell-muted)]">Basic details about your business entity</CardDescription>
@@ -235,7 +235,7 @@ export default function GeneralSettings() {
       <Card className="border-[var(--shell-border)] bg-[var(--shell-surface)] hover:shadow-md transition-shadow duration-200">
         <CardHeader className="p-5 pb-3">
           <div className="flex items-center gap-2">
-            <DollarSign className="h-4 w-4 text-[#8C1D24]" />
+            <DollarSign className="h-4 w-4 text-[var(--shell-brand)]" />
             <CardTitle className="text-sm font-semibold text-[var(--shell-foreground)]">Financial Settings</CardTitle>
           </div>
           <CardDescription className="text-xs text-[var(--shell-muted)]">Fiscal year, currency, and accounting preferences</CardDescription>
@@ -297,7 +297,7 @@ export default function GeneralSettings() {
       <Card className="border-[var(--shell-border)] bg-[var(--shell-surface)] hover:shadow-md transition-shadow duration-200">
         <CardHeader className="p-5 pb-3">
           <div className="flex items-center gap-2">
-            <Globe className="h-4 w-4 text-[#8C1D24]" />
+            <Globe className="h-4 w-4 text-[var(--shell-brand)]" />
             <CardTitle className="text-sm font-semibold text-[var(--shell-foreground)]">Regional Settings</CardTitle>
           </div>
           <CardDescription className="text-xs text-[var(--shell-muted)]">Timezone, date format, and language preferences</CardDescription>
@@ -361,7 +361,7 @@ export default function GeneralSettings() {
         <Button variant="outline" size="sm" onClick={() => window.location.reload()} className="hover:bg-[var(--shell-surface-alt)]">Cancel</Button>
         <Button 
           size="sm" 
-          className="bg-[#8C1D24] hover:bg-[#8C1D24]/90 text-white shadow"
+          className="bg-[var(--shell-brand)] hover:bg-[var(--shell-brand)]/90 text-white shadow"
           onClick={handleSave} 
           disabled={saving}
         >

@@ -1,5 +1,5 @@
 import type { Lead, Client } from "@/types/crm";
-export { money, lakhFormat, invoiceStatusVariant, quotationStatusVariant, formatDate, noteStatusVariant } from "@/lib/utils";
+export { money, lakhFormat, invoiceStatusVariant, quotationStatusVariant, formatDate, noteStatusVariant, statusVariant } from "@/lib/utils";
 
 export const number = (v: number | null | undefined): string => {
   if (v === null || v === undefined || isNaN(v)) return "0";

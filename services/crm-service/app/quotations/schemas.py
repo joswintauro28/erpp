@@ -27,6 +27,15 @@ class QuotationOut(BaseModel):
     created_at: Optional[str] = None
     items: List[QuotationItemOut] = []
 
+    # CPQ internal-approval overlay (S5/S6)
+    approval_status: Optional[str] = None
+    approval_required: Optional[bool] = False
+    discount_pct: Optional[float] = 0.0
+    discount_amount: Optional[float] = 0.0
+    approval_threshold: Optional[float] = 15.0
+    approved_by: Optional[str] = None
+    decided_at: Optional[str] = None
+
 
 class QuotationSummary(BaseModel):
     total_quotations: int

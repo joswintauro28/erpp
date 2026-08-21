@@ -16,8 +16,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { api } from "@/services/api";
-import { money, lakhFormat } from "@/utils/format";
+import { money, lakhFormat, statusVariant } from "@/utils/format";
 import type { BillingDashboardData } from "@/types/billing";
+import { useAuth } from "@/contexts/AuthContext";
 import DashboardLoading from "./loading";
 
 const STATUS_COLORS: Record<string, string> = {
@@ -33,12 +34,12 @@ function statusColor(status: string): string {
   return STATUS_COLORS[status.toLowerCase()] ?? "var(--chart-4)";
 }
 
-const statusVariant = (s: string) => {
-  if (s === "paid") return "default" as const;
-  if (s === "sent" || s === "pending") return "secondary" as const;
-  if (s === "overdue") return "destructive" as const;
-  return "outline" as const;
-};
+function getGreeting(): string {
+  const h = new Date().getHours();
+  if (h < 12) return "Good morning";
+  if (h < 17) return "Good afternoon";
+  return "Good evening";
+}
 
 function KpiCard({ label, value, subtitle, icon: Icon, color, index, loading }: {
   label: string; value: string; subtitle?: string; icon: typeof Wallet; color: string; index: number; loading?: boolean;
@@ -57,28 +58,35 @@ function KpiCard({ label, value, subtitle, icon: Icon, color, index, loading }: 
   }
   return (
     <div
-      className="animate-kpi flex flex-col gap-1 rounded-xl border border-border bg-card p-4 transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1)]"
+      className="animate-kpi flex flex-col gap-2 rounded-xl border border-border bg-card p-5 hover:-translate-y-1 hover:shadow-engineered transition-all duration-300 relative overflow-hidden group"
       style={{ animationDelay: `${index * 0.05}s` }}
     >
+      <span 
+        className="absolute left-0 top-0 bottom-0 w-1 transition-all duration-300 group-hover:w-1.5"
+        style={{ backgroundColor: color }}
+      />
       <div className="flex items-center justify-between">
-        <span className="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">
+        <span className="text-xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">
           {label}
         </span>
-        <div className="flex h-7 w-7 items-center justify-center rounded-md border border-border bg-background">
-          <Icon className="h-3.5 w-3.5" style={{ color }} />
+        <div 
+          className="flex h-8 w-8 items-center justify-center rounded-lg border border-border transition-transform duration-300 group-hover:scale-110"
+          style={{ backgroundColor: `${color}10`, borderColor: `${color}25` }}
+        >
+          <Icon className="h-4 w-4" style={{ color }} />
         </div>
       </div>
-      <span className="font-heading text-2xl font-semibold tracking-tight text-foreground">
+      <span className="font-heading text-2xl font-bold tracking-tight text-foreground mt-1">
         {value}
       </span>
-      {subtitle && <span className="text-xs text-muted-foreground">{subtitle}</span>}
+      {subtitle && <span className="text-xs text-muted-foreground font-medium mt-1">{subtitle}</span>}
     </div>
   );
 }
 
 function SectionHeading({ label }: { label: string }) {
   return (
-    <div className="mb-4 flex items-center gap-2">
+    <div className="mb-5 flex items-center gap-2">
       <h2 className="font-heading text-xs font-light uppercase tracking-[0.12em] text-muted-foreground">
         {label}
       </h2>
@@ -89,6 +97,7 @@ function SectionHeading({ label }: { label: string }) {
 
 export default function BillingDashboard() {
   const router = useRouter();
+  const { user } = useAuth();
   const [data, setData] = useState<BillingDashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -135,7 +144,27 @@ export default function BillingDashboard() {
   const totalInvoices = d?.summary?.reduce((a, i) => a + i.count, 0) ?? 0;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-10 lg:space-y-12">
+      {/* Welcome Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[var(--shell-border)] pb-5">
+        <div className="flex flex-col gap-1">
+          <h1 className="font-heading text-2xl font-semibold tracking-tight text-[var(--shell-foreground)]">
+            {getGreeting()}, {user?.full_name || user?.email || "Accountant"}
+          </h1>
+          <p className="text-sm text-[var(--shell-muted)]">
+            Here&apos;s a live view of your revenue stream, receivables, payables, and invoice statuses.
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Badge variant="outline" className="px-3 py-1 text-xs border-[var(--shell-brand)]/40 text-[var(--shell-brand)] bg-[var(--shell-brand)]/5 font-medium">
+            Billing & Finance Console
+          </Badge>
+          <Button size="sm" className="bg-[var(--shell-brand)] text-white hover:bg-[var(--shell-brand)]/90 gap-1.5 text-xs shadow-sm" onClick={() => router.push("/billing/invoices")}>
+            <Plus className="h-3.5 w-3.5" /> New Invoice
+          </Button>
+        </div>
+      </div>
+
       {hasOverdue && (
         <div className="flex flex-wrap items-center gap-3 rounded-xl border border-accent-foreground/20 bg-gradient-to-r from-accent/5 to-transparent px-5 py-3.5">
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-accent/10">
@@ -364,7 +393,7 @@ export default function BillingDashboard() {
                     <TableCell className="text-sm text-muted-foreground">{inv.client_name}</TableCell>
                     <TableCell className="text-right font-mono text-sm font-medium">{lakhFormat(inv.total)}</TableCell>
                     <TableCell>
-                      <Badge variant={statusVariant(inv.status)} className="capitalize text-xs">
+                      <Badge variant={statusVariant("invoice", inv.status)} className="capitalize text-xs">
                         {inv.status.replace("_", " ")}
                       </Badge>
                     </TableCell>

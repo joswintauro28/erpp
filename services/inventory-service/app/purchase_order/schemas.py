@@ -16,6 +16,9 @@ class PurchaseOrderItemOut(BaseModel):
     product_id: int
     quantity: int
     received_quantity: int = 0
+    putaway_quantity: int = 0
+    putaway_at: datetime | None = None
+    location: str | None = None
     unit_price: float
     subtotal: float
 
@@ -25,6 +28,16 @@ class PurchaseOrderItemOut(BaseModel):
 class PurchaseOrderItemReceipt(BaseModel):
     product_id: int
     quantity: int = Field(gt=0)
+
+
+class PutawayItemRequest(BaseModel):
+    product_id: int
+    quantity: int = Field(gt=0)
+    location: str | None = None
+
+
+class PutawayRequest(BaseModel):
+    items: list[PutawayItemRequest] = Field(min_length=1)
 
 
 class PurchaseOrderCreate(BaseModel):

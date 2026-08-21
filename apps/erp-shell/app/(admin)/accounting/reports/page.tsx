@@ -330,8 +330,8 @@ export default function Reports() {
                 <CardTitle className="text-xs text-[--shell-muted]">Gross Profit</CardTitle>
               </CardHeader>
               <CardContent className="p-4 pt-1">
-                <p className="font-heading text-lg font-bold text-emerald-600">{money(cogsData?.summary?.gross_profit || 0)}</p>
-                <p className="text-[11px] text-emerald-600 mt-0.5">{cogsData?.summary?.gross_margin_pct || 0}% Margin</p>
+                <p className="font-heading text-lg font-bold text-[var(--shell-success)]">{money(cogsData?.summary?.gross_profit || 0)}</p>
+                <p className="text-[11px] text-[var(--shell-success)] mt-0.5">{cogsData?.summary?.gross_margin_pct || 0}% Margin</p>
               </CardContent>
             </Card>
             <Card>
@@ -339,7 +339,7 @@ export default function Reports() {
                 <CardTitle className="text-xs text-[--shell-muted]">Operating Margin</CardTitle>
               </CardHeader>
               <CardContent className="p-4 pt-1">
-                <p className="font-heading text-lg font-bold text-sky-600">{cogsData?.summary?.operating_margin_pct || 0}%</p>
+                <p className="font-heading text-lg font-bold text-[var(--shell-info)]">{cogsData?.summary?.operating_margin_pct || 0}%</p>
                 <p className="text-[11px] text-[--shell-muted] mt-0.5">Net of operating expenses</p>
               </CardContent>
             </Card>
@@ -380,7 +380,7 @@ export default function Reports() {
                         <TableCell className="text-xs text-[--shell-muted]">{inv.issue_date}</TableCell>
                         <TableCell className="text-right font-mono text-xs">{money(inv.revenue)}</TableCell>
                         <TableCell className="text-right font-mono text-xs text-destructive">{money(inv.cogs)}</TableCell>
-                        <TableCell className="text-right font-mono text-xs font-bold text-emerald-600">{money(inv.gross_profit)}</TableCell>
+                        <TableCell className="text-right font-mono text-xs font-bold text-[var(--shell-success)]">{money(inv.gross_profit)}</TableCell>
                         <TableCell className="text-right font-mono text-xs font-bold">{inv.margin_pct}%</TableCell>
                       </TableRow>
                     ))
@@ -424,7 +424,7 @@ export default function Reports() {
                         <TableCell className="text-right font-mono text-xs">{money(prod.avg_selling_price)}</TableCell>
                         <TableCell className="text-right font-mono text-xs">{money(prod.total_revenue)}</TableCell>
                         <TableCell className="text-right font-mono text-xs text-destructive">{money(prod.total_cogs)}</TableCell>
-                        <TableCell className="text-right font-mono text-xs font-bold text-emerald-600">{money(prod.gross_profit)}</TableCell>
+                        <TableCell className="text-right font-mono text-xs font-bold text-[var(--shell-success)]">{money(prod.gross_profit)}</TableCell>
                         <TableCell className="text-right font-mono text-xs font-bold">{prod.margin_pct}%</TableCell>
                       </TableRow>
                     ))

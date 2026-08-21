@@ -8,8 +8,10 @@ import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { api } from "@/services/api";
 import { exportToCSV } from "@/utils/exportCsv";
-import GenericCreateModal from "@/components/GenericCreateModal";
-import GenericDetailsModal from "@/components/GenericDetailsModal";
+import { toastError } from "@/utils/toast";
+import { useConfirm } from "@datavex/ui-theme";
+import CustomerCreateModal from "./CustomerCreateModal";
+import CustomerDetailsModal from "./CustomerDetailsModal";
 import CustomerTable from "./CustomerTable";
 
 export default function CustomersPage() {
@@ -31,10 +33,12 @@ export default function CustomersPage() {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
+  const confirm = useConfirm();
+
   const handleDelete = async (record: any) => {
-    if (window.confirm("Are you sure?")) {
+    if (await confirm({ title: "Delete customer", message: "Are you sure you want to delete this customer?", destructive: true })) {
       try { await api.delete("/customers/" + record.id_str); fetchData(); }
-      catch { alert("Delete failed"); }
+      catch { toastError("Delete failed"); }
     }
   };
 
@@ -106,8 +110,8 @@ export default function CustomersPage() {
         </Card>
       </div>
 
-      <GenericCreateModal entityType="customers" entityName="Customer" isOpen={isModalOpen} onClose={() => { setIsModalOpen(false); setEditRecord(null); }} editRecord={editRecord} onSuccess={fetchData} />
-      <GenericDetailsModal record={selectedRecordForDetails} entityName="Customer" isOpen={isDetailsOpen} onClose={() => { setIsDetailsOpen(false); setSelectedRecordForDetails(null); }} onSuccess={fetchData} />
+      <CustomerCreateModal isOpen={isModalOpen} onClose={() => { setIsModalOpen(false); setEditRecord(null); }} editRecord={editRecord} onSuccess={fetchData} />
+      <CustomerDetailsModal record={selectedRecordForDetails} isOpen={isDetailsOpen} onClose={() => { setIsDetailsOpen(false); setSelectedRecordForDetails(null); }} />
     </div>
   );
 }
