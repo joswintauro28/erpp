@@ -82,6 +82,7 @@ async def get_db():
 # Import models here to register with Base.metadata for Alembic autogenerate
 from app.settings.models import SystemSettings
 from app.notification.models import Notification
+from app.files.models import FileRecord
 
 
 def create_all_schema() -> None:

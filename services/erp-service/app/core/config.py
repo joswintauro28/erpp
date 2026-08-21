@@ -23,6 +23,22 @@ class Settings(BaseSettings):
     REGISTER_RATE_LIMIT: str = "3/hour"
     API_RATE_LIMIT: str = "100/minute"
 
+    # MinIO Object Storage
+    MINIO_ENDPOINT: str = "localhost:9000"
+    MINIO_ROOT_USER: str = "minioadmin"
+    MINIO_ROOT_PASSWORD: str = "minioadmin"
+    MINIO_SECURE: bool = False
+
+    # File upload limits
+    MAX_FILE_SIZE_MB: int = 10
+    ALLOWED_MIME_TYPES: str = (
+        "image/*,application/pdf,text/csv,"
+        "application/vnd.ms-excel,"
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,"
+        "application/msword,"
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    )
+
     # App
     PORT: int = 8000
     FRONTEND_URL: str = "http://localhost:3000"

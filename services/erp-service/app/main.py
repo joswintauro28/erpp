@@ -21,6 +21,7 @@ from app.billing.router import router as billing_router
 from app.inventory.router import router as inventory_router
 from app.settings.router import router as settings_router
 from app.events.router import router as events_router
+from app.files.router import router as files_router
 
 
 @asynccontextmanager
@@ -116,6 +117,7 @@ app.include_router(billing_router)
 app.include_router(inventory_router)
 app.include_router(settings_router)
 app.include_router(events_router)
+app.include_router(files_router)
 
 
 @app.get("/health", tags=["system"])
