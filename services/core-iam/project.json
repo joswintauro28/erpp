@@ -1,0 +1,34 @@
+{
+  "name": "core-iam",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "sourceRoot": "services/core-iam",
+  "targets": {
+    "dev": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun run start:dev",
+        "cwd": "services/core-iam"
+      }
+    },
+    "build": {
+      "command": "bun run build",
+      "options": {
+        "cwd": "services/core-iam"
+      },
+      "outputs": ["{workspaceRoot}/services/core-iam/dist"]
+    },
+    "start": {
+      "command": "bun run start",
+      "options": {
+        "cwd": "services/core-iam"
+      }
+    },
+    "test": {
+      "command": "bun run test",
+      "options": {
+        "cwd": "services/core-iam"
+      }
+    }
+  }
+}

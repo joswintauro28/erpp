@@ -1,0 +1,70 @@
+import asyncio
+import sys
+import os
+from logging.config import fileConfig
+
+# Add CWD to python path to resolve app module imports
+sys.path.append(os.getcwd())
+
+
+from alembic import context
+from sqlalchemy import pool
+from sqlalchemy.ext.asyncio import create_async_engine
+
+from app.core.config import settings
+from app.core.database import Base
+
+# Import all models so they register in Base.metadata
+from app.product.models import Product
+from app.warehouse.models import Warehouse
+from app.stock.models import Stock, StockMovement
+from app.supplier.models import Supplier
+from app.purchase_order.models import PurchaseOrder, PurchaseOrderItem
+from app.purchase_requisition.models import PurchaseRequisition, PurchaseRequisitionItem
+from app.quality_check.models import QualityCheck
+from app.work_order.models import WorkOrder, WorkOrderOperation, WorkOrderMaterial
+from app.serial_number.models import SerialNumber
+from app.fulfillment.models import SalesOrderFulfillment, FulfillmentItem
+
+config = context.config
+
+# Dynamically set sqlalchemy.url from settings.DATABASE_URL
+config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
+
+if config.config_file_name is not None:
+    fileConfig(config.config_file_name)
+
+target_metadata = Base.metadata
+
+
+def run_migrations_offline():
+    url = settings.DATABASE_URL
+    context.configure(url=url, target_metadata=target_metadata, literal_binds=True)
+    with context.begin_transaction():
+        context.run_migrations()
+
+
+def do_run_migrations(connection):
+    context.configure(connection=connection, target_metadata=target_metadata)
+    with context.begin_transaction():
+        context.run_migrations()
+
+
+async def run_async_migrations():
+    connectable = create_async_engine(
+        settings.DATABASE_URL,
+        poolclass=pool.NullPool,
+    )
+    async with connectable.connect() as connection:
+        await connection.run_sync(do_run_migrations)
+    await connectable.dispose()
+
+
+def run_migrations_online():
+    asyncio.run(run_async_migrations())
+
+
+if context.is_offline_mode():
+    run_migrations_offline()
+else:
+    run_migrations_online()

@@ -1,0 +1,65 @@
+# Dependencies — root + recursive (nested workspace dirs)
+node_modules/
+**/node_modules/
+.pnpm-store/
+**/.pnpm-store/
+.next/
+**/.next/
+
+# Python — root + recursive
+__pycache__/
+**/__pycache__/
+*.pyc
+*.pyo
+.venv/
+**/.venv/
+venv/
+**/venv/
+*.egg-info/
+
+# Build outputs — root + recursive
+dist/
+**/dist/
+build/
+**/build/
+target/
+**/target/
+
+# IDE
+.idea/
+**/.idea/
+.vscode/
+**/.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+**/.DS_Store
+Thumbs.db
+
+# Environment
+.env
+**/.env
+.env.local
+.env.*.local
+
+# Nx
+.nx/
+**/.nx/
+
+# Git
+.git/
+**/.git/
+.gitignore
+
+# Logs
+*.log
+
+# Docker
+Dockerfile
+docker-compose*.yml
+
+# Temp
+tmp/
+temp/

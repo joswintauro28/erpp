@@ -1,0 +1,373 @@
+# ─────────────────────────────────────────────────────────────
+# DATAVEX ERP — Local Development Docker Compose
+# Architecture: 9 microservices + PostgreSQL + Nginx
+# Network: All services communicate via container names
+# ─────────────────────────────────────────────────────────────
+
+name: datavex-erp
+
+services:
+
+  # ─── PostgreSQL ───────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: datavex-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-root}
+      POSTGRES_DB: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/01-init.sql
+    networks:
+      - erp-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # ─── RabbitMQ Message Broker ──────────────────────────────
+  rabbitmq:
+    image: rabbitmq:3.12-management-alpine
+    container_name: datavex-rabbitmq
+    restart: unless-stopped
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_running"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
+    networks:
+      - erp-network
+
+  # ─── Core IAM (NestJS + Prisma) — Port 8002 ──────────────
+  core-iam:
+    build:
+      context: ../../
+      dockerfile: services/core-iam/Dockerfile
+      args:
+        BUILD_PROXY: ${HTTP_PROXY:-}
+    container_name: datavex-core-iam
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-root}@postgres:5432/erp_iam
+      JWT_SECRET: ${JWT_SECRET:-development-jwt-secret-key-123}
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+      COOKIE_DOMAIN: ${COOKIE_DOMAIN:-erp.local}
+      PORT: "8002"
+      CORS_ORIGINS: http://app.erp.local,http://crm.erp.local,http://billing.erp.local,http://inventory.erp.local
+    ports:
+      - "8002:8002"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:8002/api/health', (res) => { if (res.statusCode === 200) process.exit(0); else process.exit(1); }).on('error', () => process.exit(1))"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 45s
+    networks:
+      - erp-network
+
+  # ─── Billing Service (NestJS + Prisma) — Port 8003 ───────
+  billing-service:
+    build:
+      context: ../../
+      dockerfile: services/billing-service/Dockerfile
+      args:
+        BUILD_PROXY: ${HTTP_PROXY:-}
+    container_name: datavex-billing-service
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-root}@postgres:5432/erp_billing
+      JWT_SECRET: ${JWT_SECRET:-development-jwt-secret-key-123}
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+      PORT: "8003"
+      CORS_ORIGINS: http://app.erp.local,http://billing.erp.local
+    ports:
+      - "8003:8003"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:8003/api/health', (res) => { if (res.statusCode === 200) process.exit(0); else process.exit(1); }).on('error', () => process.exit(1))"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 45s
+    networks:
+      - erp-network
+
+  # ─── ERP Service (FastAPI Gateway) — Port 8000 ───────────
+  erp-service:
+    build:
+      context: ../../
+      dockerfile: services/erp-service/Dockerfile
+    container_name: datavex-erp-service
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-root}@postgres:5432/erp_db
+      JWT_SECRET: ${JWT_SECRET:-development-jwt-secret-key-123}
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+      PORT: "8000"
+      FRONTEND_URL: ${SHELL_APP_URL:-http://app.erp.local}
+      BILLING_SERVICE_URL: http://billing-service:8003/api
+      INVENTORY_SERVICE_URL: http://inventory-service:8004
+      CRM_SERVICE_URL: http://crm-service:8001
+      CORS_ORIGINS: http://app.erp.local,http://crm.erp.local,http://billing.erp.local,http://inventory.erp.local
+    ports:
+      - "8000:8000"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    networks:
+      - erp-network
+
+  # ─── CRM Service (FastAPI) — Port 8001 ───────────────────
+  crm-service:
+    build:
+      context: ../../
+      dockerfile: services/crm-service/Dockerfile
+    container_name: datavex-crm-service
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-root}@postgres:5432/erp_crm
+      JWT_SECRET: ${JWT_SECRET:-development-jwt-secret-key-123}
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+      PORT: "8001"
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      BILLING_SERVICE_URL: http://billing-service:8003
+      INVENTORY_SERVICE_URL: http://inventory-service:8004
+      CORS_ORIGINS: http://crm.erp.local,http://app.erp.local
+    ports:
+      - "8001:8001"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    networks:
+      - erp-network
+
+  # ─── Inventory Service (FastAPI) — Port 8004 ─────────────
+  inventory-service:
+    build:
+      context: ../../
+      dockerfile: services/inventory-service/Dockerfile
+    container_name: datavex-inventory-service
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-root}@postgres:5432/erp_inventory
+      JWT_SECRET: ${JWT_SECRET:-development-jwt-secret-key-123}
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+      PORT: "8004"
+      FRONTEND_URL: ${INVENTORY_APP_URL:-http://inventory.erp.local}
+      CORS_ORIGINS: http://inventory.erp.local,http://app.erp.local
+    ports:
+      - "8004:8004"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    networks:
+      - erp-network
+
+  # ─── ERP Shell (Next.js) — Port 3000 ─────────────────────
+  erp-shell:
+    build:
+      context: ../../
+      dockerfile: apps/erp-shell/Dockerfile
+      args:
+        BUILD_PROXY: ${HTTP_PROXY:-}
+        NEXT_PUBLIC_BILLING_APP_URL: ${BILLING_APP_URL:-http://billing.erp.local}
+        NEXT_PUBLIC_CRM_APP_URL: ${CRM_APP_URL:-http://crm.erp.local}
+        NEXT_PUBLIC_INVENTORY_APP_URL: ${INVENTORY_APP_URL:-http://inventory.erp.local}
+    container_name: datavex-erp-shell
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      HOSTNAME: "0.0.0.0"
+      BACKEND_API_URL: http://erp-service:8000
+      IAM_API_URL: http://core-iam:8002
+      NEXT_PUBLIC_API_URL: /api
+      NEXT_PUBLIC_BILLING_APP_URL: ${BILLING_APP_URL:-http://billing.erp.local}
+      NEXT_PUBLIC_CRM_APP_URL: ${CRM_APP_URL:-http://crm.erp.local}
+      NEXT_PUBLIC_INVENTORY_APP_URL: ${INVENTORY_APP_URL:-http://inventory.erp.local}
+    ports:
+      - "3000:3000"
+    depends_on:
+      core-iam:
+        condition: service_healthy
+      erp-service:
+        condition: service_healthy
+      billing-service:
+        condition: service_healthy
+      inventory-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://127.0.0.1:3000/', (res) => { if (res.statusCode >= 200 && res.statusCode < 400) process.exit(0); else process.exit(1); }).on('error', () => process.exit(1))"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 90s
+    networks:
+      - erp-network
+
+  # ─── CRM Shell (Next.js) — Port 3001 ─────────────────────
+  crm-shell:
+    build:
+      context: ../../
+      dockerfile: apps/crm-ui/Dockerfile
+      args:
+        BUILD_PROXY: ${HTTP_PROXY:-}
+        NEXT_PUBLIC_SHELL_APP_URL: ${SHELL_APP_URL:-http://app.erp.local}
+        NEXT_PUBLIC_APP_URL: ${CRM_APP_URL:-http://crm.erp.local}
+    container_name: datavex-crm-shell
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: "3001"
+      HOSTNAME: "0.0.0.0"
+      IAM_API_URL: http://core-iam:8002
+      CRM_API_URL: http://crm-service:8001
+      NEXT_PUBLIC_API_URL: /api
+      NEXT_PUBLIC_APP_URL: ${CRM_APP_URL:-http://crm.erp.local}
+      NEXT_PUBLIC_SHELL_APP_URL: ${SHELL_APP_URL:-http://app.erp.local}
+    ports:
+      - "3001:3001"
+    depends_on:
+      core-iam:
+        condition: service_healthy
+      crm-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://127.0.0.1:3001/', (res) => { if (res.statusCode >= 200 && res.statusCode < 500) process.exit(0); else process.exit(1); }).on('error', () => process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks:
+      - erp-network
+
+  # ─── Billing UI (Next.js) — Port 3002 ────────────────────
+  billing-ui:
+    build:
+      context: ../../
+      dockerfile: apps/billing-ui/Dockerfile
+      args:
+        BUILD_PROXY: ${HTTP_PROXY:-}
+        NEXT_PUBLIC_SHELL_APP_URL: ${SHELL_APP_URL:-http://app.erp.local}
+        NEXT_PUBLIC_APP_URL: ${BILLING_APP_URL:-http://billing.erp.local}
+    container_name: datavex-billing-ui
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: "3002"
+      HOSTNAME: "0.0.0.0"
+      BILLING_API_URL: http://billing-service:8003
+      IAM_API_URL: http://core-iam:8002
+      NEXT_PUBLIC_API_URL: /api
+      NEXT_PUBLIC_APP_URL: ${BILLING_APP_URL:-http://billing.erp.local}
+      NEXT_PUBLIC_SHELL_APP_URL: ${SHELL_APP_URL:-http://app.erp.local}
+    ports:
+      - "3002:3002"
+    depends_on:
+      core-iam:
+        condition: service_healthy
+      billing-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://127.0.0.1:3002/', (res) => { if (res.statusCode >= 200 && res.statusCode < 400) process.exit(0); else process.exit(1); }).on('error', () => process.exit(1))"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 90s
+    networks:
+      - erp-network
+
+  # ─── Inventory UI (Next.js) — Port 3004 ──────────────────
+  inventory-ui:
+    build:
+      context: ../../
+      dockerfile: apps/inventory-ui/Dockerfile
+      args:
+        BUILD_PROXY: ${HTTP_PROXY:-}
+        NEXT_PUBLIC_SHELL_APP_URL: ${SHELL_APP_URL:-http://app.erp.local}
+        NEXT_PUBLIC_APP_URL: ${INVENTORY_APP_URL:-http://inventory.erp.local}
+    container_name: datavex-inventory-ui
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: "3004"
+      HOSTNAME: "0.0.0.0"
+      INVENTORY_API_URL: http://inventory-service:8004
+      IAM_API_URL: http://core-iam:8002
+      NEXT_PUBLIC_API_URL: /api
+      NEXT_PUBLIC_APP_URL: ${INVENTORY_APP_URL:-http://inventory.erp.local}
+      NEXT_PUBLIC_SHELL_APP_URL: ${SHELL_APP_URL:-http://app.erp.local}
+    ports:
+      - "3004:3004"
+    depends_on:
+      core-iam:
+        condition: service_healthy
+      inventory-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://127.0.0.1:3004/', (res) => { if (res.statusCode >= 200 && res.statusCode < 400) process.exit(0); else process.exit(1); }).on('error', () => process.exit(1))"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 90s
+    networks:
+      - erp-network
+
+  # ─── Nginx Reverse Proxy — Port 80 ───────────────────────
+  nginx:
+    image: nginx:alpine
+    container_name: datavex-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      erp-shell:
+        condition: service_healthy
+      crm-shell:
+        condition: service_healthy
+      billing-ui:
+        condition: service_healthy
+      inventory-ui:
+        condition: service_healthy
+      core-iam:
+        condition: service_healthy
+    networks:
+      - erp-network
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  erp-network:
+    name: datavex-erp-network
+    driver: bridge

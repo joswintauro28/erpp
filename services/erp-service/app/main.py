@@ -1,108 +1,127 @@
-from fastapi import FastAPI
+from contextlib import asynccontextmanager
+import logging
+
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from psycopg2.extensions import TRANSACTION_STATUS_IDLE
+from fastapi.responses import JSONResponse
+from fastapi.openapi.utils import get_openapi
 
-from app.config import load_env_file
+from app.core.config import settings
+from app.core.exceptions import TooManyRequestsException
+from app.core.middleware import SecurityHeadersMiddleware
 
-load_env_file()
+# Import feature routers
+from app.client.router import router as clients_router
+from app.product.router import router as products_router
+from app.dashboard.router import router as dashboard_router
+from app.notification.router import router as notifications_router
+from app.notification.websocket import router as notifications_ws_router
+from app.crm.router import router as crm_router
+from app.billing.router import router as billing_router
+from app.inventory.router import router as inventory_router
+from app.settings.router import router as settings_router
+from app.events.router import router as events_router
 
-from app.db_bootstrap import ensure_phase1_schema
-from app.database import conn
-from app.routers import auth, clients, dashboard, eway_bills, expenses, invoices, leads, ledger, payments, products, quotations, search, settings, stock, users, notifications, accounting, reports, ai, emails, audit_logs, recurring_invoices, workflow_settings, credit_notes, debit_notes, team, client_portal, warehouses, purchase_orders, inventory, suppliers, accounts
 
-ensure_phase1_schema()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    import asyncio
+    from app.events.notifications_consumer import run_notifications_worker
+    from app.events.cogs_consumer import run_cogs_worker
+    notif_task = asyncio.create_task(run_notifications_worker())
+    cogs_task = asyncio.create_task(run_cogs_worker())
+    yield
+    notif_task.cancel()
+    cogs_task.cancel()
+    try:
+        await asyncio.gather(notif_task, cogs_task, return_exceptions=True)
+    except asyncio.CancelledError:
+        pass
 
 
-from apscheduler.schedulers.background import BackgroundScheduler
-from app.services.recurring_job import process_recurring_invoices
-from app.services.workflow_automation import run_daily_workflows
+app = FastAPI(
+    title="DATAVEX ERP Gateway API",
+    description="Core Business Logic & Microservice Aggregation Gateway for DATAVEX ERP.",
+    version="1.0.0",
+    lifespan=lifespan,
+    docs_url="/docs",
+    redoc_url="/redoc",
+    openapi_url="/openapi.json",
+)
 
-app = FastAPI()
-
-scheduler = BackgroundScheduler()
-
-@app.on_event("startup")
-def startup_event():
-    scheduler.add_job(
-        process_recurring_invoices,
-        trigger="cron",
-        hour=0,
-        minute=5,
-        id="daily_recurring_invoices",
-        replace_existing=True
+def custom_openapi():
+    if app.openapi_schema:
+        return app.openapi_schema
+    openapi_schema = get_openapi(
+        title="DATAVEX ERP Gateway API",
+        version="1.0.0",
+        description="Core Business Logic & Microservice Aggregation Gateway for DATAVEX ERP. Aggregates IAM, CRM, Billing, and Inventory domains.",
+        routes=app.routes,
     )
-    scheduler.add_job(
-        run_daily_workflows,
-        trigger="cron",
-        hour=8,
-        minute=0,
-        id="daily_workflows",
-        replace_existing=True
-    )
-    scheduler.start()
+    openapi_schema["components"] = openapi_schema.get("components", {})
+    openapi_schema["components"]["securitySchemes"] = {
+        "BearerAuth": {
+            "type": "http",
+            "scheme": "bearer",
+            "bearerFormat": "JWT",
+            "description": "Enter JWT Bearer token issued by Core IAM SSO",
+        }
+    }
+    openapi_schema["security"] = [{"BearerAuth": []}]
+    app.openapi_schema = openapi_schema
+    return app.openapi_schema
 
-@app.on_event("shutdown")
-def shutdown_event():
-    scheduler.shutdown()
+app.openapi = custom_openapi
 
+# Security middleware
+app.add_middleware(SecurityHeadersMiddleware)
+
+# CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://127.0.0.1:5173"
-    ],
+    allow_origins=[o.strip() for o in settings.CORS_ORIGINS.split(",") if o.strip()],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 
-@app.middleware("http")
-async def cleanup_database_transaction(request, call_next):
-    try:
-        return await call_next(request)
-    finally:
-        try:
-            if conn.get_transaction_status() != TRANSACTION_STATUS_IDLE:
-                conn.rollback()
-        except Exception:
-            pass
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request, exc):
+    if exc.status_code == 429:
+        return JSONResponse(status_code=429, content={"detail": exc.detail})
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"detail": exc.detail},
+    )
 
 
-app.include_router(clients.router)
-app.include_router(users.router)
-app.include_router(auth.router)
-app.include_router(invoices.router)
-app.include_router(dashboard.router)
-app.include_router(eway_bills.router)
-app.include_router(quotations.router)
-app.include_router(payments.router)
-app.include_router(leads.router)
-app.include_router(products.router)
-app.include_router(ledger.router)
-app.include_router(accounts.router)
-app.include_router(expenses.router)
-app.include_router(search.router)
-app.include_router(notifications.router)
-app.include_router(accounting.router)
-app.include_router(reports.router)
-app.include_router(ai.router)
-app.include_router(settings.router)
-app.include_router(stock.router)
-app.include_router(warehouses.router)
-app.include_router(purchase_orders.router)
-app.include_router(inventory.router)
-app.include_router(emails.router)
-app.include_router(audit_logs.router)
-app.include_router(recurring_invoices.router)
-app.include_router(workflow_settings.router)
-app.include_router(credit_notes.router)
-app.include_router(debit_notes.router)
-app.include_router(team.router)
-app.include_router(client_portal.router)
-app.include_router(suppliers.router)
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request, exc):
+    logging.error(f"Unhandled exception: {str(exc)}", exc_info=True)
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Internal server error"},
+    )
 
 
-@app.get("/")
-def root():
-    return {"message": "VexBill API Running"}
+# Include Routers
+app.include_router(clients_router)
+app.include_router(products_router)
+app.include_router(dashboard_router)
+app.include_router(notifications_router)
+app.include_router(notifications_ws_router)
+app.include_router(crm_router)
+app.include_router(billing_router)
+app.include_router(inventory_router)
+app.include_router(settings_router)
+app.include_router(events_router)
+
+
+@app.get("/health", tags=["system"])
+async def health_check():
+    return {"status": "healthy"}
+
+@app.get("/", tags=["system"])
+async def root():
+    return {"message": "DATAVEX ERP API Running", "status": "healthy"}

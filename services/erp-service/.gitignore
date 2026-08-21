@@ -1,0 +1,14 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environments
+.env
+.venv
+env/
+venv/
+
+# Alembic database migrations
+# alembic/versions/ (Keep this if you check in migrations, but ignore cache)
+**/__pycache__/

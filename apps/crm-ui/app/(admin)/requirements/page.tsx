@@ -1,0 +1,109 @@
+"use client";
+
+import { useState, useEffect, useCallback } from "react";
+import { Plus, Download, Search, Filter } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { exportToCSV } from "@/utils/exportCsv";
+import { toastError } from "@/utils/toast";
+import { useConfirm } from "@datavex/ui-theme";
+import RequirementTable from "./RequirementTable";
+import { Spinner } from "@/components/ui/spinner";
+import { api } from "@/services/api";
+import RequirementCreateModal from "./RequirementCreateModal";
+import RequirementDetailsModal from "./RequirementDetailsModal";
+
+
+export default function RequirementsPage() {
+  const [data, setData] = useState({ summary: { total_requirements: 0, open: 0, overdue_at_risk: 0, owners: 0 }, requirements: [] });
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [selectedRecordForDetails, setSelectedRecordForDetails] = useState(null);
+  const [editRecord, setEditRecord] = useState(null);
+
+  const fetchData = useCallback(async () => {
+    try {
+      const result = await api.get<any>("/requirements");
+      setData(result);
+    } catch { /* silent */ }
+    finally { setLoading(false); }
+  }, []);
+
+  useEffect(() => { fetchData(); }, [fetchData]);
+
+  const confirm = useConfirm();
+
+  const handleDelete = async (record: any) => {
+    if (await confirm({ title: "Delete requirement", message: "Are you sure you want to delete this requirement?", destructive: true })) {
+      try { await api.delete("/requirements/" + record.id_str); fetchData(); }
+      catch { toastError("Delete failed"); }
+    }
+  };
+
+  if (loading) return <div className="space-y-10 lg:space-y-12"><div className="flex h-full items-center justify-center py-20"><Spinner /></div></div>;
+
+  const items = data?.requirements || [];
+  const filtered = search
+    ? items.filter((i: any) => JSON.stringify(i).toLowerCase().includes(search.toLowerCase()))
+    : items;
+
+  return (
+    <div className="space-y-10 lg:space-y-12">
+      <div className="flex items-center justify-end gap-3">
+        <Button variant="outline" size="sm" onClick={() => exportToCSV(items, "requirements")}><Download className="h-4 w-4" /> Export</Button>
+        <Button size="sm" onClick={() => setIsModalOpen(true)}><Plus className="h-4 w-4" /> New Requirement</Button>
+      </div>
+
+      <div>
+        <div className="mb-5 flex items-center gap-2">
+          <h2 className="font-heading text-xs font-light uppercase tracking-[0.12em] text-[var(--shell-muted)]">OVERVIEW</h2>
+          <div className="h-px flex-1 bg-[var(--shell-border)]" />
+        </div>
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+          {[
+            { label: "TOTAL REQUIREMENTS", value: data.summary?.total_requirements, trend: "requirements logged" },
+            { label: "OPEN", value: data.summary?.open, trend: "under review" },
+            { label: "OVERDUE / AT RISK", value: data.summary?.overdue_at_risk, trend: data.summary?.overdue_at_risk > 0 ? "cancelled" : "none critical" },
+            { label: "REPRESENTATIVES", value: data.summary?.owners, trend: "active reps" },
+          ].map((m) => (
+            <div key={m.label} className="rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface)] p-4 space-y-2 hover:shadow-engineered transition-shadow">
+              <p className="text-xs font-medium uppercase tracking-[0.08em] text-[var(--shell-muted)]">{m.label}</p>
+              <p className="font-heading text-2xl font-semibold tracking-tight text-[var(--shell-foreground)]">{m.value ?? 0}</p>
+              <p className="text-xs text-[var(--shell-muted)]">{m.trend}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <div className="mb-5 flex items-center gap-2">
+          <h2 className="font-heading text-xs font-light uppercase tracking-[0.12em] text-[var(--shell-muted)]">RECORDS</h2>
+          <div className="h-px flex-1 bg-[var(--shell-border)]" />
+        </div>
+        <Card className="hover:shadow-engineered transition-shadow duration-200 border-[var(--shell-border)] bg-[var(--shell-surface)]">
+          <div className="flex items-center gap-3 border-b border-[var(--shell-border)] p-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--shell-muted)]" />
+              <Input placeholder="Search requirements..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 h-9" />
+            </div>
+            <Filter className="h-4 w-4 text-[var(--shell-muted)]" />
+          </div>
+          <div className="overflow-x-auto">
+            <RequirementTable 
+              requirements={filtered} 
+              onView={(rec) => { setSelectedRecordForDetails(rec); setIsDetailsOpen(true); }} 
+              onEdit={(rec) => { setEditRecord(rec); setIsModalOpen(true); }} 
+              onDelete={handleDelete} 
+            />
+          </div>
+        </Card>
+      </div>
+
+      <RequirementCreateModal isOpen={isModalOpen} onClose={() => { setIsModalOpen(false); setEditRecord(null); }} editRecord={editRecord} onSuccess={fetchData} />
+      <RequirementDetailsModal record={selectedRecordForDetails} isOpen={isDetailsOpen} onClose={() => { setIsDetailsOpen(false); setSelectedRecordForDetails(null); }} onSuccess={fetchData} />
+    </div>
+  );
+}

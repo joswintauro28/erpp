@@ -22,7 +22,6 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
 lib64/
 parts/
 sdist/
@@ -144,6 +143,7 @@ celerybeat.pid
 
 # Environments
 .env
+.env.docker
 .envrc
 .venv
 env/
@@ -230,12 +230,35 @@ Thumbs.db
 # VS Code
 .vscode/
 
-# Frontend
+# Frontend & Monorepo
 node_modules/
-frontend/node_modules/
-frontend/dist/
-frontend/build/
+**/node_modules/
 .vercel/
-
-# Render/Vercel local configs
 .render/
+.eslintcache
+*.log
+
+# Next.js & Turbopack
+.next/
+**/.next/
+
+# Nx Cache
+.nx/
+**/.nx/
+
+# Python Virtual Environments & Cache
+.venv/
+**/.venv/
+**/__pycache__/
+*.pyc
+
+# Local Environment Secrets
+.env
+**/.env
+.env.docker
+**/.env.docker
+.env.local
+**/.env.local
+
+# Freebuff
+.freebuff/

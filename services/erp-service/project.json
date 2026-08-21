@@ -1,0 +1,27 @@
+{
+  "name": "erp-service",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "sourceRoot": "services/erp-service",
+  "targets": {
+    "dev": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": ".venv/bin/uvicorn app.main:app --port 8000 --reload",
+        "cwd": "services/erp-service"
+      }
+    },
+    "migrate": {
+      "command": ".venv/bin/alembic upgrade head",
+      "options": {
+        "cwd": "services/erp-service"
+      }
+    },
+    "seed": {
+      "command": ".venv/bin/python scripts/seed.py",
+      "options": {
+        "cwd": "services/erp-service"
+      }
+    }
+  }
+}
