@@ -18,7 +18,27 @@ export class BankReconciliationService {
   }
 
   /**
+   * Import bank statement from a file stored in MinIO via erp-service.
+   * Fetches the file by its file_id, parses, and discards — no base64 in transit.
+   */
+  async importFileById(organizationId: number, fileId: number, fileName: string) {
+    const erpServiceUrl = process.env.ERP_SERVICE_URL || "http://localhost:8000";
+    const response = await fetch(`${erpServiceUrl}/api/files/${fileId}/download`, {
+      redirect: "follow",
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch file from erp-service: ${response.status} ${response.statusText}`);
+    }
+
+    const arrayBuffer = await response.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    return this.processFileBuffer(organizationId, buffer, fileName);
+  }
+
+  /**
    * Import bank statement from a Base64-encoded file (CSV or XLSX).
+   * @deprecated Use importFileById instead for MinIO-based file handling.
    */
   async importFile(organizationId: number, fileBase64: string, fileName: string) {
     const buffer = Buffer.from(fileBase64, "base64");

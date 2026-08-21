@@ -27,6 +27,16 @@ export class BankReconciliationController {
     return this.service.importFile(user.organization_id, fileBase64, fileName);
   }
 
+  @Post("bank-reconciliation/import-file-by-id")
+  @Permissions("invoices.create")
+  async importFileById(
+    @Body("file_id") fileId: number,
+    @Body("fileName") fileName: string,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return this.service.importFileById(user.organization_id, fileId, fileName);
+  }
+
   @Get("bank-reconciliation/transactions")
   @Permissions("invoices.view")
   async getTransactions(
