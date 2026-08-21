@@ -13,6 +13,5 @@ class Document(Base):
     status = Column(String)
     owner = Column(String)
     updated_at = Column(String)
-    file_data = Column(String, nullable=True)
+    file_uri = Column(String, nullable=True)
     summary = Column(String, nullable=True)
-    files = Column(String, nullable=True)

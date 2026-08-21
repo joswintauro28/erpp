@@ -21,8 +21,7 @@ class QuotationOut(BaseModel):
     valid_until: str
     notes: str
     account: Optional[str] = None
-    file_data: Optional[str] = None
-    file_name: Optional[str] = None
+    file_uri: Optional[str] = None
     converted_invoice_id: Optional[int] = None
     created_at: Optional[str] = None
     items: List[QuotationItemOut] = []

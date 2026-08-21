@@ -10,8 +10,7 @@ class SalesOrderBase(BaseModel):
     eta: Optional[str] = None
     status: Optional[str] = None
     owner: Optional[str] = None
-    file_data: Optional[str] = None
-    file_name: Optional[str] = None
+    file_uri: Optional[str] = None
     line_items: Optional[List[dict]] = None
     # O2/O3 credit check + internal approval state
     credit_check_status: Optional[str] = "Not Checked"

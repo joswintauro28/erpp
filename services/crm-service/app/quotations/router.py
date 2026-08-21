@@ -40,20 +40,17 @@ def _build_quotation_out(q: dict) -> QuotationOut:
     q_out.account = q.get("client_name")
     
     notes_raw = q.get("notes") or ""
-    file_data = None
-    file_name = None
+    file_uri = None
     
     if notes_raw.strip().startswith("{") and notes_raw.strip().endswith("}"):
         try:
             notes_dict = json.loads(notes_raw)
             q_out.notes = notes_dict.get("notes", "")
-            file_data = notes_dict.get("file_data")
-            file_name = notes_dict.get("file_name")
+            file_uri = notes_dict.get("file_uri")
         except Exception:
             pass
             
-    q_out.file_data = file_data
-    q_out.file_name = file_name
+    q_out.file_uri = file_uri
     return q_out
 
 
@@ -150,8 +147,6 @@ async def _map_crm_payload_to_billing(payload: dict, db: AsyncSession) -> dict:
     notes_dict = {
         "owner": payload.get('owner', 'Unassigned'),
         "notes": payload.get("notes", ""),
-        "file_data": payload.get("file_data"),
-        "file_name": payload.get("file_name")
     }
     notes_json = json.dumps(notes_dict)
 

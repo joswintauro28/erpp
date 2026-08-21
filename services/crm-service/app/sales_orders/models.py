@@ -14,8 +14,7 @@ class SalesOrder(Base):
     date_ordered = Column(String, nullable=True)
     status = Column(String)
     owner = Column(String)
-    file_data = Column(String, nullable=True)
-    file_name = Column(String, nullable=True)
+    file_uri = Column(String, nullable=True)
     # Product line items from the quote/order: [{ product_name, sku, quantity, unit_price }]
     line_items = Column(JSON, nullable=True)
 

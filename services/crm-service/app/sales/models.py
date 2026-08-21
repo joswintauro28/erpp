@@ -14,5 +14,4 @@ class Sale(Base):
     due_date = Column(String, nullable=True)
     status = Column(String)
     rep = Column(String, nullable=True)
-    file_data = Column(String, nullable=True)
-    file_name = Column(String, nullable=True)
+    file_uri = Column(String, nullable=True)
