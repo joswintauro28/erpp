@@ -70,7 +70,7 @@ graph TD
     %% ==========================================
     %% CENTRAL EVENT BUS (The Nervous System)
     %% ==========================================
-    Kafka((Central Event Bus\nKafka / RabbitMQ)):::eventbus
+    RabbitMQ((Central Event Bus\nRabbitMQ)):::eventbus
 
     %% ==========================================
     %% DOMAIN 1: CRM & SALES
@@ -109,13 +109,13 @@ graph TD
     end
 
     %% Publish SO Created Event
-    O4 ===> |"Publish: Order.Approved"| Kafka
+    O4 ===> |"Publish: Order.Approved"| RabbitMQ
 
     %% ==========================================
     %% DOMAIN 2: INVENTORY & SCM
     %% ==========================================
     subgraph INV ["2. Supply Chain & Fulfillment (Domain: Operations)"]
-        Kafka ===> |"Subscribe: Order.Approved"| I1(Available to Promise - ATP Check)
+        RabbitMQ ===> |"Subscribe: Order.Approved"| I1(Available to Promise - ATP Check)
         
         I1 --> I2{In Stock?}
         
@@ -156,15 +156,15 @@ graph TD
     end
 
     %% Publish Dispatch & PO Events
-    I10 ===> |"Publish: Shipment.Dispatched"| Kafka
-    P2 ===> |"Publish: PurchaseOrder.Created"| Kafka
+    I10 ===> |"Publish: Shipment.Dispatched"| RabbitMQ
+    P2 ===> |"Publish: PurchaseOrder.Created"| RabbitMQ
 
     %% ==========================================
     %% DOMAIN 3: ACCOUNTS & BILLING
     %% ==========================================
     subgraph ACC ["3. Accounts, Billing & GL (Domain: Finance)"]
-        Kafka ===> |"Subscribe: Shipment.Dispatched"| A1(Auto-Generate Sales Invoice)
-        Kafka ===> |"Subscribe: PurchaseOrder.Created"| AP1(Create Accounts Payable - AP)
+        RabbitMQ ===> |"Subscribe: Shipment.Dispatched"| A1(Auto-Generate Sales Invoice)
+        RabbitMQ ===> |"Subscribe: PurchaseOrder.Created"| AP1(Create Accounts Payable - AP)
         
         %% Billing Flow
         A1 --> A2(Apply Taxes & Discounts)
@@ -179,7 +179,7 @@ graph TD
         
         %% General Ledger & Accounting Flow
         A3 -. "Trigger" .-> F2(Recognize Revenue)
-        Kafka ===> |"Subscribe: Shipment.Dispatched"| F1(Recognize COGS Expense)
+        RabbitMQ ===> |"Subscribe: Shipment.Dispatched"| F1(Recognize COGS Expense)
         A8 -. "Trigger" .-> F3(Decrease AR, Increase Cash)
         
         F1 & F2 & F3 --> F4(Bank Reconciliation)
@@ -558,7 +558,7 @@ The central gateway dynamically stitches these independent responses together in
 
 If your Super Admin dashboard needs to show complex historical data (like a chart of *Sales Closed vs. Inventory Used* over the last 12 months), making multiple live API calls will slow down your application.
 
-1. You introduce a lightweight event-streaming layer (like **RabbitMQ** or **Kafka**) or a simple webhook network.
+1. You introduce a lightweight event-streaming layer (like **RabbitMQ** or **RabbitMQ**) or a simple webhook network.
 2. Every time a transaction occurs (e.g., the Billing service generates an invoice, or the CRM team wins a lead), the service publishes a lightweight message packet like `{"event": "INVOICE_CREATED", "amount": 5000}` to the message pipeline.
 3. A small background utility process reads these messages and syncs them down to a dedicated read-only analytical database or data store owned exclusively by the Super Admin workspace. This gives your executives instant data visualization speeds without putting any read loads on your production operational databases.
 

@@ -7,7 +7,7 @@ Items identified during the Accounts & Billing audit that are deferred for futur
 ## 1. Event Broker / Message Queue Integration
 
 **Status: 🔴 Not started**
-**Depends on: Infrastructure decision (Kafka vs RabbitMQ vs Redis Streams)**
+**Depends on: Infrastructure decision (RabbitMQ vs RabbitMQ vs Redis Streams)**
 
 All flows below are currently approximated via synchronous REST calls. A central event bus should replace these once deployed.
 

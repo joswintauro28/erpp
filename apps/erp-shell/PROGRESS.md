@@ -287,15 +287,17 @@ const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
 | Route | Page | Key Features |
 |-------|------|-------------|
-| `/inventory/products` | Products | 15 industrial products, 4 KPI cards, search + category filter, low-stock alerts, toggle active |
-| `/inventory/stock` | Stock Movements | 18 entries, In/Out type filter, date sort, search by product/ref/warehouse |
-| `/inventory/stock/adjustments` | Stock Adjustments | 8 adjustments with status workflow (draft→approved→rejected), addition/reduction badges |
-| `/inventory/valuation` | Inventory Valuation | WAC valuation, category breakdown cards, % of total column, footer totals |
-| `/inventory/warehouses` | Warehouses | 4 locations with capacity utilization progress bars, manager/contact info, card layout |
-| `/inventory/purchase-orders` | Purchase Orders | 10 POs with status lifecycle (draft→sent→confirmed→received→cancelled), color-coded |
-| `/inventory/suppliers` | Suppliers | 10 suppliers with contact info, GST, category tags, toggle active |
-| `/inventory/batches` | Batches | 12 batches with expiry tracking (Valid / Expiring Soon / Expired) |
-| `/inventory/serials` | Serials | 15 serialized items with lifecycle (In Stock → Sold → Warranty → Returned → Scrapped) |
+| `/inventory/fulfillment` | Order Fulfillment | SO fulfillment pipeline Kanban, auto-PO on shortage, SO status sync |
+| `/inventory/products` | Products | Product catalog with SKU, pricing, tax rates, batch/serial flags |
+| `/inventory/stock` | Stock Levels | Real-time stock per product x warehouse, adjustment modal |
+| `/inventory/stock/movements` | Stock Movements | In/Out/Adjustment movement log with reference tracking |
+| `/inventory/serial-numbers` | Serial Numbers | Serial tracking per product x warehouse with status filter |
+| `/inventory/quality-checks` | Quality Checks | Quality inspection logs and status chips |
+| `/inventory/suppliers` | Suppliers | Vendor registry with GST, payment terms |
+| `/inventory/purchase-requisitions` | Purchase Requisitions | Buy requests with status badges |
+| `/inventory/purchase-orders` | Purchase Orders | PO lifecycle (draft -> ordered -> received) with auto-totaling |
+| `/inventory/work-orders` | Work Orders | Manufacturing production run routing and issue tracking |
+| `/inventory/warehouses` | Warehouses | Multi-warehouse locations with capacity tracking |
 
 ## Settings Module
 
@@ -336,15 +338,17 @@ const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 /accounting/ledger         → General Ledger (API-ready)
 /accounting/expenses       → Expenses (API-ready)
 /accounting/reports        → Financial Reports (API-ready)
+/inventory/fulfillment       → Order Fulfillment (API-ready)
 /inventory/products        → Products (API-ready)
-/inventory/stock           → Stock Movements (API-ready)
-/inventory/stock/adjustments → Stock Adjustments (API-ready)
-/inventory/valuation       → Inventory Valuation (API-ready)
-/inventory/warehouses      → Warehouses (API-ready)
-/inventory/purchase-orders → Purchase Orders (API-ready)
+/inventory/stock           → Stock Levels (API-ready)
+/inventory/stock/movements → Stock Movements (API-ready)
+/inventory/serial-numbers  → Serial Numbers (API-ready)
+/inventory/quality-checks  → Quality Checks (API-ready)
 /inventory/suppliers       → Suppliers (API-ready)
-/inventory/batches         → Batches (API-ready)
-/inventory/serials         → Serials (API-ready)
+/inventory/purchase-requisitions → Purchase Requisitions (API-ready)
+/inventory/purchase-orders → Purchase Orders (API-ready)
+/inventory/work-orders     → Work Orders (API-ready)
+/inventory/warehouses      → Warehouses (API-ready)
 /settings                  → General Settings (API-ready)
 /settings/branding         → Branding (API-ready)
 /settings/notifications    → Notifications (API-ready)

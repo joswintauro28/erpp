@@ -137,7 +137,7 @@ All tokens defined in `packages/ui-theme/src/globals.css` as CSS custom properti
 - `useAuth()` returns `{ user, isAuthenticated, loading, logout }` — no `login()` function.
 - **Proxy** (`proxy.ts`): Routes `/api/auth/*` → core-iam (8002), all other `/api/*` → inventory-service (8004).
 
-**Routes (8 total)**
+**Routes (12 total)**
 
 | Route | API Endpoint | Description |
 |-------|-------------|-------------|

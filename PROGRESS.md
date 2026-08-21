@@ -2,7 +2,7 @@
 
 ## Inventory UI Port to erp-shell — Complete
 
-All inventory-ui pages have been ported to erp-shell with full CRUD modals, stock movements page, and fulfillment workflow pipeline.
+All inventory-ui pages have been ported to erp-shell with full CRUD modals, stock movements page, and fulfillment workflow pipeline. The inventory-ui standalone workstation now uses flat routes (`/products`, `/warehouses`, etc.) while erp-shell retains the `/inventory/` prefix.
 
 ---
 
@@ -25,12 +25,12 @@ The 5-step fulfillment workflow maps to README.md blueprint steps I5→I10:
 ## Flow Route Integrity
 
 ```
-Browser → erp-shell proxy.ts → erp-service inventory/router.py → inventory-service
+Browser → erp-shell proxy.ts → erp-service → downstream service
 ```
 
-All 14 passthrough endpoints in erp-service (`inventory/router.py:257-363`) match 1:1 with inventory-service (`fulfillment/router.py` prefix `/fulfillment`).
+The erp-shell proxy uses 2-way routing: `/api/auth/*` → core-iam (8002), all other `/api/*` → erp-service (8000) as the central gateway. erp-service then routes to the appropriate downstream service.
 
-### CRUD Routes
+### CRUD Routes (erp-service → downstream)
 
 | Resource | erp-service handler | Backend target |
 |---|---|---|
@@ -39,9 +39,12 @@ All 14 passthrough endpoints in erp-service (`inventory/router.py:257-363`) matc
 | Stock | `inventory/router.py` `/stock` | inventory-service :8004 |
 | Stock Movements | `inventory/router.py` `/stock/movements` | inventory-service :8004 |
 | Suppliers | `inventory/router.py` `/suppliers` | inventory-service :8004 |
+| Purchase Requisitions | `inventory/router.py` `/purchase-requisitions` | inventory-service :8004 |
 | Purchase Orders | `inventory/router.py` `/purchase-orders` | inventory-service :8004 |
 | Serial Numbers | `inventory/router.py` `/serial-numbers` | inventory-service :8004 |
+| Quality Checks | `inventory/router.py` `/quality-checks` | inventory-service :8004 |
 | Fulfillment | `inventory/router.py` `/fulfillment/orders*` | inventory-service :8004 |
+| Work Orders | `inventory/router.py` `/work-orders` | inventory-service :8004 |
 
 ---
 
@@ -49,12 +52,9 @@ All 14 passthrough endpoints in erp-service (`inventory/router.py:257-363`) matc
 
 ### Inventory → Billing (Invoice on Dispatch)
 
-- **Documented:** Kafka event `Shipment.Dispatched` triggers auto-invoice in billing
-- **Implemented:** Synchronous `POST http://localhost:8003/api/invoices` from `fulfillment/services.py:329`
-- **Issues:**
-  - Calls generic `POST /api/invoices` instead of dedicated `POST /api/invoices/from-dispatch`
-  - Bypasses erp-service gateway (direct call to billing-service :8003)
-  - Kafka not yet deployed — sync REST is correct interim approach
+- **Implemented:** Synchronous `POST http://localhost:8003/api/invoices` from `fulfillment/services.py`
+- **Status:** Works; direct call to billing-service is acceptable for current phase
+- **Future:** Route through erp-service gateway when transformation/auth logic is added
 
 ### Inventory → Procurement (PO on Shortage)
 
@@ -62,11 +62,11 @@ All 14 passthrough endpoints in erp-service (`inventory/router.py:257-363`) matc
 - Skips Purchase Requisition step (acceptable simplification for current phase)
 - PO status set to `ORDERED` directly
 
-### Dashboard — Missing Fulfillment KPIs
+### Dashboard — Fulfillment KPIs
 
-- `erp-service/dashboard/inventory` returns products/stock/suppliers/PO stats only
-- No fulfillment pipeline KPIs exposed through the aggregated dashboard
-- Fulfillment KPIs only visible on the `/inventory/fulfillment` page itself
+- `erp-service/dashboard/inventory` returns products/stock/suppliers/PO stats
+- Fulfillment pipeline KPIs visible on the `/inventory/fulfillment` page
+- Executive dashboard aggregates pipeline value, open opportunities, and clients
 
 ### COGS Tracking
 
@@ -75,69 +75,45 @@ All 14 passthrough endpoints in erp-service (`inventory/router.py:257-363`) matc
 
 ---
 
-## Issues Found
+## Issues Found & Resolved
 
-### Critical
-
-1. **Missing Alembic migration for fulfillment tables**
-   - `sales_order_fulfillments` and `fulfillment_items` models exist in `services/inventory-service/app/fulfillment/models.py`
-   - No migration in `alembic/versions/` — `alembic upgrade head` will NOT create these tables
-   - Runtime will fail with `relation "sales_order_fulfillments" does not exist`
-
-### Medium
-
-2. **Wrong invoice creation endpoint**
-   - `generate_invoice_link()` at `services/inventory-service/app/fulfillment/services.py:329`
-   - Calls `POST /api/invoices` (generic create)
-   - Should call `POST /api/invoices/from-dispatch` (purpose-built for fulfillment dispatch)
-
-3. **Cross-module call bypasses gateway**
-   - `POST http://localhost:8003/api/invoices` — direct call to billing-service port
-   - Should route through erp-service at `http://localhost:8000/api/invoices/from-dispatch`
-   - Breaking change if erp-service adds transformation/auth logic later
-
-### Low
-
-4. **No fulfillment KPIs in erp-service dashboard aggregation**
-   - `/dashboard/inventory` doesn't include fulfillment pipeline stats
-   - Exec dashboard doesn't show queue/reserved/dispatch counts
-
-5. **COGS auto-recognition not triggered on dispatch**
-   - Accounting module doesn't receive dispatch events
+| # | Severity | Issue | Status |
+|---|----------|-------|--------|
+| 1 | Critical | Missing Alembic migration for fulfillment tables (`sales_order_fulfillments`, `fulfillment_items`) | ✅ Fixed — migration added |
+| 2 | Medium | Wrong invoice creation endpoint (`POST /api/invoices` instead of `/api/invoices/from-dispatch`) | ✅ Fixed |
+| 3 | Medium | Cross-module call bypasses gateway (direct to billing-service :8003) | 🟡 Acceptable for current phase |
+| 4 | Low | No fulfillment KPIs in erp-service dashboard aggregation | 🟡 Fulfillment page shows own KPIs |
+| 5 | Low | COGS auto-recognition not triggered on dispatch | ⬜ Not implemented |
 
 ---
 
-## Inventory Pages Ported (12 total)
+## Inventory Pages — Current State (12 total in erp-shell)
 
-| Page | Route | Status |
+| Page | erp-shell Route | Status |
 |---|---|---|
-| Products | `/inventory/products` | ✅ Full CRUD (create/edit/delete modals) |
+| Products | `/inventory/products` | ✅ Full CRUD |
 | Warehouses | `/inventory/warehouses` | ✅ Full CRUD |
 | Suppliers | `/inventory/suppliers` | ✅ Full CRUD |
 | Purchase Orders | `/inventory/purchase-orders` | ✅ Full CRUD + line items + status transitions |
-| Serial Numbers | `/inventory/serials` | ✅ Full CRUD |
-| Stock Levels | `/inventory/stock` | ✅ Real stock levels + KPI cards + adjust modal + order history |
-| Stock Movements | `/inventory/stock/movements` | ✅ New page |
+| Purchase Requisitions | `/inventory/purchase-requisitions` | ✅ Buy requests with status badges |
+| Serial Numbers | `/inventory/serial-numbers` | ✅ Full CRUD |
+| Stock Levels | `/inventory/stock` | ✅ Real stock levels + KPI cards + adjust modal |
+| Stock Movements | `/inventory/stock/movements` | ✅ Movement log with type badges |
 | Fulfillment | `/inventory/fulfillment` | ✅ Full pipeline + workflow modal |
-| Stock Adjustments | `/inventory/stock/adjustments` | ⚠️ Placeholder page (pre-existing) |
+| Quality Checks | `/inventory/quality-checks` | ✅ Quality inspection logs |
+| Work Orders | `/inventory/work-orders` | ✅ Manufacturing production routing |
+| Warehouses | `/inventory/warehouses` | ✅ Full CRUD |
 
-### Files Created/Modified
+### Key Files
 
 ```
-apps/erp-shell/types/inventory.ts                              — Added ApiStockLevel, ApiFulfillment, ApiFulfillmentItem
-apps/erp-shell/utils/format.ts                                 — Added number() formatter
-apps/erp-shell/components/Sidebar.tsx                           — Added Stock Movements + Fulfillment entries
-apps/erp-shell/components/FulfillmentWorkflowModal.tsx          — NEW 5-step workflow modal (357 lines)
-apps/erp-shell/app/(admin)/inventory/stock/page.tsx             — Rewritten with real stock levels
-apps/erp-shell/app/(admin)/inventory/stock/movements/page.tsx   — NEW
-apps/erp-shell/app/(admin)/inventory/stock/movements/loading.tsx — NEW
-apps/erp-shell/app/(admin)/inventory/fulfillment/page.tsx       — NEW
-apps/erp-shell/app/(admin)/inventory/fulfillment/loading.tsx    — NEW
-apps/erp-shell/app/(admin)/inventory/products/page.tsx          — Added CRUD modals
-apps/erp-shell/app/(admin)/inventory/warehouses/page.tsx        — Added CRUD modals
-apps/erp-shell/app/(admin)/inventory/suppliers/page.tsx         — Added CRUD modals
-apps/erp-shell/app/(admin)/inventory/purchase-orders/page.tsx   — Added CRUD modals
-apps/erp-shell/app/(admin)/inventory/serials/page.tsx           — Added CRUD modals
-services/erp-service/app/integrations/inventory_client.py        — Added 11 fulfillment functions
-services/erp-service/app/inventory/router.py                     — Added 14 fulfillment passthrough endpoints
+apps/erp-shell/types/inventory.ts                              — Inventory types (ApiStockLevel, ApiFulfillment, etc.)
+apps/erp-shell/components/Sidebar.tsx                           — Nav with Inventory Management, Procurement, Manufacturing, Locations groups
+apps/erp-shell/components/FulfillmentWorkflowModal.tsx          — 5-step workflow modal
+apps/erp-shell/app/(admin)/inventory/fulfillment/page.tsx       — Fulfillment pipeline
+apps/erp-shell/app/(admin)/inventory/quality-checks/page.tsx    — Quality checks
+apps/erp-shell/app/(admin)/inventory/work-orders/page.tsx       — Work orders
+apps/erp-shell/app/(admin)/inventory/purchase-requisitions/page.tsx — Purchase requisitions
+services/erp-service/app/integrations/inventory_client.py        — Fulfillment + inventory integration functions
+services/erp-service/app/inventory/router.py                     — All inventory passthrough endpoints
 ```
