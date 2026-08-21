@@ -13,7 +13,7 @@ This package provides the central styling directives, Tailwind configuration var
 ## 2. Exports & Components
 - **Utility:** Exposes the `cn` utility (combines `clsx` and `tailwind-merge`), plus `statusVariant(domain, status)` and toast helpers.
 - **UI Primitives (19):** `badge`, `button`, `card`, `dialog`, `input`, `label`, `progress`, `select`, `spinner`, `table`, `textarea`, `notification-provider`, `notification-bell`, `skeleton`, `tabs`, `toaster`, `confirm-dialog`, `tooltip`, `dropdown-menu`, `switch`, `checkbox`, `avatar`, `separator`, `pagination`, `breadcrumb`.
-- **Shared Composites (9):** `multi-step-dialog`, `empty-state`, `search-input`, `loading-spinner`, `page-header`, `kpi-card`, `section-heading`, `theme-provider`, `theme-toggle`.
+- **Shared Composites (11):** `multi-step-dialog`, `empty-state`, `search-input`, `loading-spinner`, `page-header`, `kpi-card`, `section-heading`, `theme-provider`, `theme-toggle`, `file-upload`, `file-viewer`.
 
 ## 3. Package Integration
 - **Package Name:** `@datavex/ui-theme`
