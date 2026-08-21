@@ -53,6 +53,10 @@ export * from "./components/shared/section-heading";
 export * from "./components/shared/theme-provider";
 export * from "./components/shared/theme-toggle";
 
+// File management (MinIO presigned URL pattern)
+export * from "./components/shared/file-upload";
+export * from "./components/shared/file-viewer";
+
 // Export common utilities
 export { cn } from "./lib/utils";
 export * from "./lib/utils";
