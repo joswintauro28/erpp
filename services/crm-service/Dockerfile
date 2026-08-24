@@ -36,7 +36,8 @@ RUN playwright install-deps chromium
 USER appuser
 
 # Install Chromium browser binaries in appuser's home directory
-RUN playwright install chromium
+RUN playwright install chromium && \
+    patchright install chromium
 
 # Download browserforge headers and fingerprints database
 RUN python -m browserforge update
