@@ -404,7 +404,6 @@ export default function OpportunityDetailModal({ record, isOpen, onClose, onSucc
       setEditQuote(null);
       setQuoteData({ quote_no: "", value: "", valid_until: "", status: "Draft", owner: "" });
       setQuoteFileId(null);
-      if (fileInputRef.current) fileInputRef.current.value = "";
       fetchQuotations();
       if (onSuccess) onSuccess();
     } catch {
