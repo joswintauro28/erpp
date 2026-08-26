@@ -19,19 +19,33 @@ export class BankReconciliationService {
 
   /**
    * Import bank statement from a file stored in MinIO via erp-service.
-   * Fetches the file by its file_id, parses, and discards — no base64 in transit.
+   * Fetches the presigned download URL, then downloads the actual file bytes.
+   * @param jwtToken Raw JWT bearer token to forward to erp-service.
    */
-  async importFileById(organizationId: number, fileId: number, fileName: string) {
+  async importFileById(organizationId: number, fileId: number, fileName: string, jwtToken: string) {
     const erpServiceUrl = process.env.ERP_SERVICE_URL || "http://localhost:8000";
-    const response = await fetch(`${erpServiceUrl}/api/files/${fileId}/download`, {
-      redirect: "follow",
+
+    // Step 1: Get the presigned download URL from erp-service
+    const metaResponse = await fetch(`${erpServiceUrl}/api/files/${fileId}/download`, {
+      headers: { "Authorization": `Bearer ${jwtToken}` },
     });
 
-    if (!response.ok) {
-      throw new Error(`Failed to fetch file from erp-service: ${response.status} ${response.statusText}`);
+    if (!metaResponse.ok) {
+      throw new Error(`Failed to fetch file metadata from erp-service: ${metaResponse.status} ${metaResponse.statusText}`);
     }
 
-    const arrayBuffer = await response.arrayBuffer();
+    const meta = await metaResponse.json() as { download_url: string };
+    if (!meta.download_url) {
+      throw new Error("erp-service returned no download_url for this file");
+    }
+
+    // Step 2: Download the actual file bytes from MinIO via the presigned URL
+    const fileResponse = await fetch(meta.download_url, { redirect: "follow" });
+    if (!fileResponse.ok) {
+      throw new Error(`Failed to download file from storage: ${fileResponse.status} ${fileResponse.statusText}`);
+    }
+
+    const arrayBuffer = await fileResponse.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
     return this.processFileBuffer(organizationId, buffer, fileName);
   }

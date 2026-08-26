@@ -7,6 +7,7 @@ hosts_entries=(
     "127.0.0.1 crm.erp.local"
     "127.0.0.1 billing.erp.local"
     "127.0.0.1 inventory.erp.local"
+    "127.0.0.1 minio.erp.local"
 )
 
 hosts_path="/etc/hosts"
@@ -39,3 +40,4 @@ echo "  http://app.erp.local        → Executive Shell"
 echo "  http://crm.erp.local        → CRM Workstation"
 echo "  http://billing.erp.local    → Billing Workstation"
 echo "  http://inventory.erp.local  → Inventory Workstation"
+echo "  http://minio.erp.local      → MinIO Object Storage"

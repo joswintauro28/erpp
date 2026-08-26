@@ -28,7 +28,8 @@ DATAVEX/ERP/ (Root)
 │   └── ui-theme/                          # Shared Tailwind v4 variables, globals, and Shadcn UI components
 │
 ├── infrastructure/                        # DOCKER & REVERSE PROXY
-│   └── local/                             # Docker compose config, setup-hosts script, Nginx maps
+│   ├── local/                             # Docker compose config, setup-hosts script, Nginx maps
+│   └── internal/                          # Production/internal deployment config (real domains, secrets template, deploy guide)
 │
 └── AGENTS.md                              # Unified AI Agent instructions & project context hub
 ```
@@ -523,6 +524,18 @@ The repository contains a production-ready dockerization configuration (featurin
 # 5. Stop the stack
 ./infrastructure/local/docker-build.sh stop
 ```
+
+### Internal / Production Deployment
+For deploying on an internal VM (HTTP, no SSL), use the `infrastructure/internal/` configuration:
+
+```bash
+cd infrastructure/internal
+cp .env.docker.example .env.docker  # Fill in production secrets
+docker compose --env-file .env.docker build
+docker compose --env-file .env.docker up -d
+```
+
+See [`infrastructure/internal/DEPLOY.md`](infrastructure/internal/DEPLOY.md) for the full step-by-step deployment guide.
 
 ### Running Locally (Native Process Development)
 To run services in developer mode natively:

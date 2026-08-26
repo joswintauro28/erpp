@@ -1,5 +1,35 @@
 # DATAVEX ERP — Progress & Audit Report
 
+## File Upload/Storage Pipeline — Complete (2026-08-26)
+
+Full MinIO-backed presigned URL file system deployed across the stack. All 15 identified bugs fixed.
+
+### What Was Built/Fixed
+
+| Component | Changes |
+|-----------|--------|
+| `erp-service/app/files/router.py` | Fixed MIME regex, added org scoping, added `/stream` endpoint, added `/cleanup-pending`, checksum on confirm |
+| `erp-service/app/files/minio_client.py` | All sync calls wrapped in `asyncio.to_thread`, error logging, presigned URL rewriting to public hostname |
+| `erp-service/app/files/schemas.py` | `owner_id` allows 0 for unlinked uploads |
+| `erp-service/app/core/config.py` | Added `MINIO_PUBLIC_URL` setting |
+| `erp-shell/proxy.ts` | Added `/files/` routing to erp-service (preserving `/api` prefix) |
+| `billing-service` bank-reconciliation | JWT forwarding + JSON response parsing for file import |
+| Both `DocumentCreateModal.tsx` | Sends `file_uri` instead of `file_id`, fetches metadata on edit |
+| `file-viewer.tsx` | Uses `/stream` endpoint for browser downloads |
+| `crm-service/Dockerfile` + `inventory-service/Dockerfile` | Added `openssl` to fix pip install SSL errors |
+| `infrastructure/local/nginx.conf` | Added `minio.erp.local` server block |
+| `infrastructure/local/docker-compose.yml` | Added `MINIO_PUBLIC_URL` env var |
+| `infrastructure/internal/` | Complete production deployment config (compose, nginx, secrets template, deploy guide) |
+
+### Deployment Config
+
+| Config | Path | Purpose |
+|--------|------|--------|
+| Local dev | `infrastructure/local/` | Docker Compose with `*.erp.local` domains |
+| Internal prod | `infrastructure/internal/` | Docker Compose with `*.erp.datavex.com` domains |
+
+---
+
 ## Inventory UI Port to erp-shell — Complete
 
 All inventory-ui pages have been ported to erp-shell with full CRUD modals, stock movements page, and fulfillment workflow pipeline. The inventory-ui standalone workstation now uses flat routes (`/products`, `/warehouses`, etc.) while erp-shell retains the `/inventory/` prefix.

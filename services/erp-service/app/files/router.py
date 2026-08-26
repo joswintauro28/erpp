@@ -4,7 +4,9 @@ Uses the presigned URL pattern: the backend never handles binary data.
 Files go directly between the client and MinIO.
 """
 
+import logging
 import re
+from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select
@@ -24,17 +26,23 @@ from app.files.schemas import (
     UploadResponse,
 )
 
+logger = logging.getLogger(__name__)
+
 router = APIRouter(prefix="/api/files", tags=["files"])
 
 # MIME type validation
+# Fixed: use image/[a-z0-9.+_-]+ instead of image/\* which matched literal "image/*"
 _MIME_PATTERN = re.compile(
-    r"^(image/\*|application/pdf|text/csv|"
+    r"^(image/[a-z0-9.+_-]+|application/pdf|text/csv|"
     r"application/vnd\.ms-excel|"
     r"application/vnd\.openxmlformats-officedocument\.spreadsheetml\.sheet|"
     r"application/msword|"
     r"application/vnd\.openxmlformats-officedocument\.wordprocessingml\.document)$",
     re.IGNORECASE,
 )
+
+# Pending record TTL — abandoned uploads older than this are eligible for cleanup
+_PENDING_TTL_MINUTES = 30
 
 
 def _validate_mime(mime: str) -> None:
@@ -62,6 +70,18 @@ def _validate_bucket(bucket: str) -> None:
             detail=f"Invalid bucket '{bucket}'. "
             f"Valid buckets: {', '.join(sorted(mc.VALID_BUCKETS))}",
         )
+
+
+# ---------------------------------------------------------------------------
+# Helper: scope a query to the caller's organization to prevent IDOR
+# ---------------------------------------------------------------------------
+
+def _org_filter(stmt, payload: dict):
+    """Add organization_id filter to prevent cross-tenant file access."""
+    org_id = payload.get("organization_id")
+    if org_id is not None:
+        stmt = stmt.where(FileRecord.organization_id == org_id)
+    return stmt
 
 
 # ---------------------------------------------------------------------------
@@ -105,8 +125,8 @@ async def request_upload(
     db.add(record)
     await db.flush()
 
-    # Generate presigned PUT URL
-    upload_url = mc.generate_put_url(
+    # Generate presigned PUT URL (async-wrapped)
+    upload_url = await mc.generate_put_url(
         bucket=body.bucket,
         object_key=object_key,
         content_type=body.mime_type,
@@ -134,19 +154,28 @@ async def confirm_upload(
     """Client calls this after successfully uploading the file to MinIO.
     We verify the object exists and return the final file record."""
 
-    stmt = select(FileRecord).where(FileRecord.id == body.file_id)
+    stmt = _org_filter(
+        select(FileRecord).where(FileRecord.id == body.file_id), payload
+    )
     result = await db.execute(stmt)
     record = result.scalar_one_or_none()
 
     if not record:
         raise HTTPException(status_code=404, detail="File record not found")
 
-    # Verify the object actually landed in MinIO
-    if not mc.object_exists(record.bucket, record.object_key):
+    # Verify the object actually landed in MinIO (async-wrapped)
+    if not await mc.object_exists(record.bucket, record.object_key):
         raise HTTPException(
             status_code=400,
             detail="File not found in storage. Please retry the upload.",
         )
+
+    # Mark record as confirmed by setting a non-null checksum.
+    # The cleanup endpoint uses checksum_sha256 IS NULL to find pending records,
+    # so this prevents confirmed uploads from being garbage-collected.
+    if record.checksum_sha256 is None:
+        record.checksum_sha256 = "confirmed"
+        await db.flush()
 
     return record
 
@@ -162,7 +191,9 @@ async def get_file(
     payload: dict = Depends(get_current_token_payload),
     db: AsyncSession = Depends(get_db),
 ):
-    stmt = select(FileRecord).where(FileRecord.id == file_id)
+    stmt = _org_filter(
+        select(FileRecord).where(FileRecord.id == file_id), payload
+    )
     result = await db.execute(stmt)
     record = result.scalar_one_or_none()
 
@@ -173,7 +204,7 @@ async def get_file(
 
 
 # ---------------------------------------------------------------------------
-# 4. Download file (redirect to presigned GET URL)
+# 4. Download file — returns presigned URL as JSON (for programmatic use)
 # ---------------------------------------------------------------------------
 
 
@@ -185,14 +216,16 @@ async def download_file(
 ):
     """Generate a presigned GET URL for the client to download directly."""
 
-    stmt = select(FileRecord).where(FileRecord.id == file_id)
+    stmt = _org_filter(
+        select(FileRecord).where(FileRecord.id == file_id), payload
+    )
     result = await db.execute(stmt)
     record = result.scalar_one_or_none()
 
     if not record:
         raise HTTPException(status_code=404, detail="File not found")
 
-    download_url = mc.generate_get_url(
+    download_url = await mc.generate_get_url(
         bucket=record.bucket,
         object_key=record.object_key,
     )
@@ -201,7 +234,38 @@ async def download_file(
 
 
 # ---------------------------------------------------------------------------
-# 5. Delete file
+# 5. Stream file — 302 redirect to presigned URL (for browser downloads)
+# ---------------------------------------------------------------------------
+
+
+@router.get("/{file_id}/stream")
+async def stream_file(
+    file_id: int,
+    payload: dict = Depends(get_current_token_payload),
+    db: AsyncSession = Depends(get_db),
+):
+    """Redirect to a presigned GET URL so browsers can download directly.
+    This avoids the JSON-wrapping issue of the /download endpoint."""
+
+    stmt = _org_filter(
+        select(FileRecord).where(FileRecord.id == file_id), payload
+    )
+    result = await db.execute(stmt)
+    record = result.scalar_one_or_none()
+
+    if not record:
+        raise HTTPException(status_code=404, detail="File not found")
+
+    download_url = await mc.generate_get_url(
+        bucket=record.bucket,
+        object_key=record.object_key,
+    )
+
+    return RedirectResponse(url=download_url, status_code=302)
+
+
+# ---------------------------------------------------------------------------
+# 6. Delete file
 # ---------------------------------------------------------------------------
 
 
@@ -213,15 +277,17 @@ async def delete_file(
 ):
     """Delete a file from MinIO and remove its registry record."""
 
-    stmt = select(FileRecord).where(FileRecord.id == file_id)
+    stmt = _org_filter(
+        select(FileRecord).where(FileRecord.id == file_id), payload
+    )
     result = await db.execute(stmt)
     record = result.scalar_one_or_none()
 
     if not record:
         raise HTTPException(status_code=404, detail="File not found")
 
-    # Delete from MinIO
-    mc.delete_object(record.bucket, record.object_key)
+    # Delete from MinIO (async-wrapped)
+    await mc.delete_object(record.bucket, record.object_key)
 
     # Delete from DB
     await db.delete(record)
@@ -230,7 +296,7 @@ async def delete_file(
 
 
 # ---------------------------------------------------------------------------
-# 6. List files by owner
+# 7. List files by owner
 # ---------------------------------------------------------------------------
 
 
@@ -246,7 +312,39 @@ async def list_files(
     stmt = (
         select(FileRecord)
         .where(FileRecord.owner_type == owner_type, FileRecord.owner_id == owner_id)
-        .order_by(FileRecord.created_at.desc())
     )
+    stmt = _org_filter(stmt, payload)
+    stmt = stmt.order_by(FileRecord.created_at.desc())
     result = await db.execute(stmt)
     return list(result.scalars().all())
+
+
+# ---------------------------------------------------------------------------
+# 8. Cleanup abandoned pending uploads (internal / cron)
+# ---------------------------------------------------------------------------
+
+
+@router.post("/cleanup-pending")
+async def cleanup_pending(
+    payload: dict = Depends(get_current_token_payload),
+    db: AsyncSession = Depends(get_db),
+):
+    """Delete pending FileRecords older than the TTL that were never confirmed.
+    Intended for periodic cleanup (cron job or admin trigger).
+    Only cleans up pending records belonging to the caller's organization."""
+    cutoff = datetime.now(timezone.utc) - timedelta(minutes=_PENDING_TTL_MINUTES)
+    stmt = select(FileRecord).where(
+        FileRecord.created_at < cutoff,
+        FileRecord.checksum_sha256.is_(None),  # pending records never got checksum
+    )
+    stmt = _org_filter(stmt, payload)
+    result = await db.execute(stmt)
+    orphaned = list(result.scalars().all())
+
+    deleted = 0
+    for record in orphaned:
+        await mc.delete_object(record.bucket, record.object_key)
+        await db.delete(record)
+        deleted += 1
+
+    return {"detail": f"Cleaned up {deleted} abandoned upload(s)"}

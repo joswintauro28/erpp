@@ -15,7 +15,11 @@ export function proxy(request: NextRequest) {
 
   let url: URL;
   if (path.startsWith("/auth/")) {
+    // Auth endpoints go to core-iam (preserves /api prefix)
     url = new URL(`/api${path}${search}`, IAM_URL);
+  } else if (path.startsWith("/files/")) {
+    // File endpoints require /api prefix (router uses prefix="/api/files")
+    url = new URL(`/api${path}${search}`, BACKEND_URL);
   } else {
     // All domain requests (products, warehouses, stock, invoices, payments, CRM, etc.)
     // flow through erp-service (port 8000) as the Central API Gateway & Aggregator

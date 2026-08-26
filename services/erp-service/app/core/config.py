@@ -28,6 +28,10 @@ class Settings(BaseSettings):
     MINIO_ROOT_USER: str = "minioadmin"
     MINIO_ROOT_PASSWORD: str = "minioadmin"
     MINIO_SECURE: bool = False
+    # Public URL for presigned URLs — browsers use this to reach MinIO.
+    # In Docker: http://minio.erp.local:80  (proxied through nginx)
+    # In local dev: http://localhost:9000
+    MINIO_PUBLIC_URL: str = "http://localhost:9000"
 
     # File upload limits
     MAX_FILE_SIZE_MB: int = 10

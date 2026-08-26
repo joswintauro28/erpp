@@ -417,6 +417,13 @@ const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 4. **Toasts**: ported `utils/toast.ts` + `components/ToastContainer.tsx` from crm-ui and mounted in the admin layout.
 5. **Cleanup**: replaced the generic `GenericCreateModal`/`GenericDetailsModal` usage with the bespoke crm-ui modals; deleted both generic modals. Fixed 3 strict-mode implicit-any errors in copied modals. Fixed exec dashboard recommendation link to the shell's own `/ai-assistant`.
 
+### v12 — File Upload/Storage Pipeline & Proxy Fix
+
+1. **Proxy routing fix:** Added `/files/` → erp-service routing (preserving `/api` prefix) in `proxy.ts`. Previously, all file operations from the executive shell returned 404 because the proxy stripped `/api` but the file router expected `/api/files/*`.
+2. **File upload/viewer integration:** `DocumentCreateModal` now sends `file_uri` (matching the CRM Document model) instead of `file_id`. On edit, fetches existing file metadata to populate `FileViewer`.
+3. **FileViewer stream endpoint:** Downloads now use `/api/files/{id}/stream` (302 redirect) instead of the JSON-wrapping `/download` endpoint.
+4. **Theme alignment:** File upload/viewer components aligned to shell theme tokens.
+
 ## What's Left
 
 - **Wire remaining pages to API**: Quotations, Recurring Invoices, Credit/Debit Notes, Payments, all Accounting/Inventory/Settings/Team pages (currently empty state)

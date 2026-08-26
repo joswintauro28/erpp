@@ -3,7 +3,7 @@
 import * as React from "react";
 import { Upload, X, FileIcon, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import { cn } from "../../lib/utils";
-import { Button } from "../ui/button";
+import { api } from "@datavex/auth-middleware";
 
 export interface FileRecord {
   id: number;
@@ -87,25 +87,17 @@ export function FileUpload({
       setUploading((prev) => [...prev, entry]);
 
       try {
-        const res = await fetch("/api/files/upload-request", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            original_name: file.name,
-            mime_type: file.type || "application/octet-stream",
-            size_bytes: file.size,
-            bucket,
-            owner_type: ownerType,
-            owner_id: ownerId,
-          }),
+        const { file_id, upload_url } = await api.post<{
+          file_id: number;
+          upload_url: string;
+        }>("/files/upload-request", {
+          original_name: file.name,
+          mime_type: file.type || "application/octet-stream",
+          size_bytes: file.size,
+          bucket,
+          owner_type: ownerType,
+          owner_id: ownerId,
         });
-
-        if (!res.ok) {
-          const err = await res.json().catch(() => ({ detail: "Upload request failed" }));
-          throw new Error(err.detail || "Upload request failed");
-        }
-
-        const { file_id, upload_url } = await res.json();
 
         entry.progress = "uploading";
         setUploading((prev) => [...prev]);
@@ -121,15 +113,9 @@ export function FileUpload({
         entry.progress = "confirming";
         setUploading((prev) => [...prev]);
 
-        const confirmRes = await fetch("/api/files/confirm-upload", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ file_id }),
+        const record = await api.post<FileRecord>("/files/confirm-upload", {
+          file_id,
         });
-
-        if (!confirmRes.ok) throw new Error("Failed to confirm upload");
-
-        const record: FileRecord = await confirmRes.json();
         entry.progress = "done";
         entry.record = record;
         setUploading((prev) => [...prev]);

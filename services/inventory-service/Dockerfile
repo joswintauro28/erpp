@@ -4,6 +4,8 @@ WORKDIR /app
 ENV PIP_DISABLE_PIP_VERSION_CHECK=1 \
     PIP_DEFAULT_TIMEOUT=120
 
+RUN apt-get update && apt-get install -y --no-install-recommends openssl && rm -rf /var/lib/apt/lists/*
+
 RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 

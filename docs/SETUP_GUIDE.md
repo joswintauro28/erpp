@@ -124,6 +124,52 @@ Other test accounts are listed in the [Seeded Users Reference](#4-reference-seed
 
 ---
 
+## 2B. Path A2: Internal / Production Deployment (VM)
+
+For deploying on an internal company VM (HTTP only, real domain names), use the `infrastructure/internal/` configuration. This is a separate, standalone compose setup with production secrets and real domain names.
+
+### Prerequisites
+- Ubuntu 24.04 VM with Docker installed
+- SSH access via ProxyJump through gitlab-vm
+- DNS records or `/etc/hosts` entries for `*.erp.datavex.com`
+- Ports 80 forwarded from public IP to VM
+
+### Steps
+```bash
+# 1. SSH into the VM
+ssh datavex-vm
+
+# 2. Install Docker
+curl -fsSL https://get.docker.com | sudo sh
+sudo usermod -aG docker $USER
+# Log out and back in
+
+# 3. Clone the repo
+git clone <repo-url> datavex-erp
+cd datavex-erp
+
+# 4. Configure environment
+cd infrastructure/internal
+cp .env.docker.example .env.docker
+nano .env.docker  # Fill in production secrets
+
+# 5. Build and start
+docker compose --env-file .env.docker build
+docker compose --env-file .env.docker up -d
+
+# 6. Seed databases
+docker compose --env-file .env.docker exec erp-service python scripts/seed.py
+docker compose --env-file .env.docker exec core-iam bunx prisma db seed
+
+# 7. Verify
+docker compose --env-file .env.docker ps
+curl http://app.erp.datavex.com
+```
+
+See [`infrastructure/internal/DEPLOY.md`](../infrastructure/internal/DEPLOY.md) for the complete deployment guide with troubleshooting.
+
+---
+
 ## 3. Path B: Manual / Native Development Environment
 
 This setup runs all microservices natively on the host machine.

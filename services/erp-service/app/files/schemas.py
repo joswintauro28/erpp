@@ -13,7 +13,7 @@ class UploadRequest(BaseModel):
     size_bytes: int = Field(..., gt=0)
     bucket: str = Field(..., max_length=63)
     owner_type: str = Field(..., max_length=50)
-    owner_id: int = Field(..., gt=0)
+    owner_id: int = Field(..., ge=0)  # 0 = not yet linked to an entity (e.g. new quotation upload)
 
 
 class UploadResponse(BaseModel):

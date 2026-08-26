@@ -1,10 +1,11 @@
-import { Controller, Get, Post, Body, Param, Query, UseGuards, ParseIntPipe } from "@nestjs/common";
+import { Controller, Get, Post, Body, Param, Query, UseGuards, ParseIntPipe, Req } from "@nestjs/common";
 import { AuthGuard } from "../auth/auth.guard";
 import { PermissionsGuard } from "../auth/permissions.guard";
 import { Permissions } from "../auth/permissions.decorator";
 import { CurrentUser } from "../auth/current-user.decorator";
 import { BankReconciliationService } from "./bank-reconciliation.service";
 import type { JwtPayload } from "../auth/auth.guard";
+import type { Request } from "express";
 
 @Controller()
 @UseGuards(AuthGuard, PermissionsGuard)
@@ -33,8 +34,12 @@ export class BankReconciliationController {
     @Body("file_id") fileId: number,
     @Body("fileName") fileName: string,
     @CurrentUser() user: JwtPayload,
+    @Req() req: Request,
   ) {
-    return this.service.importFileById(user.organization_id, fileId, fileName);
+    // Extract raw JWT from Authorization header to forward to erp-service
+    const authHeader = req.headers.authorization || "";
+    const jwtToken = authHeader.replace(/^Bearer\s+/, "");
+    return this.service.importFileById(user.organization_id, fileId, fileName, jwtToken);
   }
 
   @Get("bank-reconciliation/transactions")

@@ -5,7 +5,8 @@ $hostsEntries = @(
     "127.0.0.1 app.erp.local",
     "127.0.0.1 crm.erp.local",
     "127.0.0.1 billing.erp.local",
-    "127.0.0.1 inventory.erp.local"
+    "127.0.0.1 inventory.erp.local",
+    "127.0.0.1 minio.erp.local"
 )
 
 $hostsPath = "$env:SystemRoot\System32\drivers\etc\hosts"
@@ -47,3 +48,4 @@ Write-Host "  http://app.erp.local        → Executive Shell"
 Write-Host "  http://crm.erp.local        → CRM Workstation"
 Write-Host "  http://billing.erp.local    → Billing Workstation"
 Write-Host "  http://inventory.erp.local  → Inventory Workstation"
+Write-Host "  http://minio.erp.local      → MinIO Object Storage"

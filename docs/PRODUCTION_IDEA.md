@@ -6,8 +6,18 @@ Create a `/infrastructure/prod/` directory containing all production-grade infra
 
 ---
 
-## Current State — `/infrastructure/local/`
+## Current State
 
+### `/infrastructure/internal/` — Internal Deployment (DONE)
+A complete internal/production deployment configuration has been created:
+- Real domain names (`*.erp.datavex.com`)
+- Production secrets template (`.env.docker.example`)
+- Standalone nginx config with MinIO proxy
+- Step-by-step deployment guide (`DEPLOY.md`)
+- PostgreSQL init script
+- `.gitignore` to prevent secret leaks
+
+### `/infrastructure/local/` — Development Sandbox
 `/infrastructure/local/` is a **development sandbox**:
 - Single PostgreSQL container with default config
 - All ports exposed to host
@@ -326,9 +336,9 @@ CREATE TABLE file_records (
 
 ## Implementation Phases
 
-### Phase 1: Infrastructure — MinIO in Docker Compose
+### Phase 1: Infrastructure — MinIO in Docker Compose ✅ DONE
 
-**Scope:** Add MinIO to local dev sandbox and production compose.
+**Scope:** Add MinIO to local dev sandbox and production compose. **Completed 2026-08-26.**
 
 | Task | Files |
 |------|-------|
@@ -348,9 +358,18 @@ CREATE TABLE file_records (
 
 ---
 
-### Phase 2: erp-service File API
+### Phase 2: erp-service File API ✅ DONE
 
-**Scope:** Upload/download endpoints in erp-service using presigned URL pattern.
+**Scope:** Upload/download endpoints in erp-service using presigned URL pattern. **Completed 2026-08-26.**
+
+**Additional fixes applied:**
+- MIME regex fixed (`image/*` → `image/[a-z0-9.+_-]+`)
+- Organization ID scoping on all endpoints (IDOR prevention)
+- `GET /:id/stream` endpoint for browser downloads
+- `POST /cleanup-pending` for abandoned upload cleanup
+- `asyncio.to_thread` wrapping on all MinIO SDK calls
+- `confirm-upload` now sets `checksum_sha256` to prevent cleanup of confirmed records
+- `MINIO_PUBLIC_URL` config for Docker presigned URL rewriting
 
 | Task | Files |
 |------|-------|
@@ -377,9 +396,15 @@ CREATE TABLE file_records (
 
 ---
 
-### Phase 3: Frontend File Components
+### Phase 3: Frontend File Components ✅ DONE
 
-**Scope:** Shared upload/viewer components in `@datavex/ui-theme`.
+**Scope:** Shared upload/viewer components in `@datavex/ui-theme`. **Completed 2026-08-26.**
+
+**Additional fixes applied:**
+- `FileViewer` now uses `/api/files/{id}/stream` endpoint for downloads
+- `DocumentCreateModal` sends `file_uri` instead of `file_id`
+- `DocumentCreateModal` fetches existing file metadata on edit
+- `owner_id` schema allows 0 (unlinked uploads)
 
 | Task | Files |
 |------|-------|

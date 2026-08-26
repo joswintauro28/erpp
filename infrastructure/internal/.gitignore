@@ -1,0 +1,6 @@
+# Real environment file with secrets — never commit this
+.env.docker
+
+# Docker volumes (persistent data)
+postgres_data/
+minio_data/

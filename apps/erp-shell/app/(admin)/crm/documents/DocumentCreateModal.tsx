@@ -37,6 +37,7 @@ export default function DocumentCreateModal({
     size: "",
   });
   const [fileId, setFileId] = useState<number | null>(null);
+  const [fileUri, setFileUri] = useState<string | null>(null);
   const [existingFile, setExistingFile] = useState<FileRecord | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -54,6 +55,20 @@ export default function DocumentCreateModal({
           size: editRecord.size || "",
         });
         setFileId(editRecord.file_id || null);
+        // If editing and record has a file_uri, fetch the FileRecord for viewer
+        if (editRecord.file_uri) {
+          setFileUri(editRecord.file_uri);
+          // Try to fetch file metadata for preview — extract file_id from URI if possible
+          const extractFileId = async () => {
+            try {
+              const files = await api.get<any[]>(`/files?owner_type=document&owner_id=${editRecord.id || 0}`);
+              if (files && files.length > 0) {
+                setExistingFile(files[0]);
+              }
+            } catch { /* ignore — viewer just won't show */ }
+          };
+          extractFileId();
+        }
       } else {
         setFormData({
           title: "",
@@ -65,6 +80,7 @@ export default function DocumentCreateModal({
           size: "",
         });
         setFileId(null);
+        setFileUri(null);
       }
       setExistingFile(null);
       setError("");
@@ -83,6 +99,7 @@ export default function DocumentCreateModal({
 
   const handleUploadComplete = (record: FileRecord) => {
     setFileId(record.id);
+    setFileUri(record.uri);
     setFormData((prev) => ({
       ...prev,
       title: prev.title || record.original_name.split(".")[0],
@@ -97,6 +114,7 @@ export default function DocumentCreateModal({
     try {
       await api.delete(`/files/${fileId}`);
       setFileId(null);
+      setFileUri(null);
       setExistingFile(null);
     } catch {
       // ignore
@@ -124,7 +142,7 @@ export default function DocumentCreateModal({
       ...formData,
       name: formData.title,
       updated_at: dateStr,
-      file_id: fileId,
+      file_uri: fileUri,
     };
 
     try {

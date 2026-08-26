@@ -4,6 +4,7 @@ import * as React from "react";
 import { Download, ExternalLink, FileIcon, Image, FileText, Trash2 } from "lucide-react";
 import { cn } from "../../lib/utils";
 import { Button } from "../ui/button";
+import { api } from "@datavex/auth-middleware";
 import type { FileRecord } from "./file-upload";
 
 interface FileViewerProps {
@@ -27,17 +28,29 @@ function fileIcon(mimeType: string) {
   return <FileIcon className="h-4 w-4 text-[var(--shell-muted)]" />;
 }
 
-function downloadFile(record: FileRecord) {
-  const a = document.createElement("a");
-  a.href = `/api/files/${record.id}/download`;
-  a.download = record.original_name;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
+async function downloadFile(record: FileRecord) {
+  try {
+    // Use the /stream endpoint which 302-redirects to the presigned MinIO URL.
+    // This avoids the JSON-wrapping issue and works with browser download.
+    const baseUrl = "/api/files";
+    const a = document.createElement("a");
+    a.href = `${baseUrl}/${record.id}/stream`;
+    a.download = record.original_name;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  } catch {
+    // silent
+  }
 }
 
-function openPreview(record: FileRecord) {
-  window.open(`/api/files/${record.id}/download`, "_blank");
+async function openPreview(record: FileRecord) {
+  try {
+    // Use the /stream endpoint which 302-redirects to the presigned MinIO URL.
+    window.open(`/api/files/${record.id}/stream`, "_blank");
+  } catch {
+    // silent
+  }
 }
 
 export function FileViewer({ files, onDelete, className, showActions = true }: FileViewerProps) {
