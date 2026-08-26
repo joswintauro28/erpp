@@ -233,6 +233,7 @@ export default function SalesOrderCreateModal({
                 bucket="crm-assets"
                 ownerType="sales_order"
                 ownerId={editRecord?.id || 0}
+                clientName={formData.account || "general"}
                 onUpload={handleUploadComplete}
                 accept="application/pdf,image/*"
               />

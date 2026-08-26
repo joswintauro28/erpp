@@ -402,6 +402,7 @@ export default function SalesOrderDetailsModal({
                   bucket="crm-assets"
                   ownerType="sales_order"
                   ownerId={record?.id || 0}
+                  clientName={record?.account || "general"}
                   onUpload={(r: FileRecord) => setInvoiceFileId(r.id)}
                   accept="application/pdf,image/*"
                 />

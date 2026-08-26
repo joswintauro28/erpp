@@ -1,7 +1,17 @@
 "use client";
 
 import * as React from "react";
-import { Upload, X, FileIcon, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
+import {
+  Upload,
+  X,
+  Loader2,
+  CheckCircle2,
+  AlertCircle,
+  FileImage,
+  FileText,
+  FileSpreadsheet,
+  File,
+} from "lucide-react";
 import { cn } from "../../lib/utils";
 import { api } from "@datavex/auth-middleware";
 
@@ -25,6 +35,7 @@ interface FileUploadProps {
   ownerType: string;
   ownerId: number;
   onUpload: (record: FileRecord) => void;
+  clientName?: string;  // e.g. "Acme Corp" — organises files as <client>/<domain>/ in the bucket
   accept?: string;
   maxSize?: number;
   multiple?: boolean;
@@ -38,6 +49,8 @@ interface UploadingFile {
   error?: string;
   record?: FileRecord;
 }
+
+/* ── helpers ─────────────────────────────────────────────────────────────── */
 
 function formatBytes(bytes: number): string {
   if (bytes === 0) return "0 B";
@@ -57,11 +70,31 @@ function isAccepted(file: File, accept?: string): boolean {
   });
 }
 
+/** Return a lucide-react icon component + colour pair for the given MIME type. */
+function fileTypeMeta(mime: string): {
+  Icon: typeof File;
+  bg: string;
+  fg: string;
+} {
+  if (mime.startsWith("image/"))
+    return { Icon: FileImage, bg: "bg-blue-100 dark:bg-blue-900/40", fg: "text-blue-600 dark:text-blue-400" };
+  if (mime === "application/pdf")
+    return { Icon: FileText, bg: "bg-red-100 dark:bg-red-900/40", fg: "text-red-600 dark:text-red-400" };
+  if (mime.includes("spreadsheet") || mime.includes("excel") || mime === "text/csv")
+    return { Icon: FileSpreadsheet, bg: "bg-emerald-100 dark:bg-emerald-900/40", fg: "text-emerald-600 dark:text-emerald-400" };
+  if (mime.includes("wordprocessing") || mime === "application/msword")
+    return { Icon: FileText, bg: "bg-indigo-100 dark:bg-indigo-900/40", fg: "text-indigo-600 dark:text-indigo-400" };
+  return { Icon: File, bg: "bg-muted", fg: "text-[var(--shell-muted)]" };
+}
+
+/* ── component ───────────────────────────────────────────────────────────── */
+
 export function FileUpload({
   bucket,
   ownerType,
   ownerId,
   onUpload,
+  clientName,
   accept = "image/*,application/pdf,.csv,.xlsx,.docx",
   maxSize = 10 * 1024 * 1024,
   multiple = false,
@@ -97,6 +130,7 @@ export function FileUpload({
           bucket,
           owner_type: ownerType,
           owner_id: ownerId,
+          client_name: clientName || null,
         });
 
         entry.progress = "uploading";
@@ -126,7 +160,7 @@ export function FileUpload({
         setUploading((prev) => [...prev]);
       }
     },
-    [bucket, ownerType, ownerId, accept, maxSize, onUpload],
+    [bucket, ownerType, ownerId, clientName, accept, maxSize, onUpload],
   );
 
   const handleFiles = React.useCallback(
@@ -162,14 +196,40 @@ export function FileUpload({
     setUploading((prev) => prev.filter((_, i) => i !== idx));
   };
 
-  const progressIcon = (p: UploadingFile["progress"]) => {
+  /* ── render helpers ────────────────────────────────────────────────────── */
+
+  const statusBadge = (p: UploadingFile["progress"]) => {
     switch (p) {
       case "done":
-        return <CheckCircle2 className="h-4 w-4 text-green-500" />;
+        return (
+          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 dark:bg-emerald-900/40 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 dark:text-emerald-400">
+            <CheckCircle2 className="h-3 w-3" /> Done
+          </span>
+        );
       case "error":
-        return <AlertCircle className="h-4 w-4 text-red-500" />;
+        return (
+          <span className="inline-flex items-center gap-1 rounded-full bg-red-100 dark:bg-red-900/40 px-2 py-0.5 text-[10px] font-semibold text-red-700 dark:text-red-400">
+            <AlertCircle className="h-3 w-3" /> Error
+          </span>
+        );
+      case "uploading":
+        return (
+          <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 dark:bg-amber-900/40 px-2 py-0.5 text-[10px] font-semibold text-amber-700 dark:text-amber-400">
+            <Loader2 className="h-3 w-3 animate-spin" /> Uploading
+          </span>
+        );
+      case "confirming":
+        return (
+          <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 dark:bg-blue-900/40 px-2 py-0.5 text-[10px] font-semibold text-blue-700 dark:text-blue-400">
+            <Loader2 className="h-3 w-3 animate-spin" /> Confirming
+          </span>
+        );
       default:
-        return <Loader2 className="h-4 w-4 animate-spin text-[var(--shell-brand)]" />;
+        return (
+          <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold text-[var(--shell-muted)]">
+            <Loader2 className="h-3 w-3 animate-spin" /> Preparing
+          </span>
+        );
     }
   };
 
@@ -184,6 +244,7 @@ export function FileUpload({
         className="hidden"
       />
 
+      {/* Drop zone */}
       <div
         onDrop={handleDrop}
         onDragOver={handleDragOver}
@@ -193,45 +254,86 @@ export function FileUpload({
           "flex cursor-pointer flex-col items-center gap-2 rounded-lg border-2 border-dashed p-6 text-center transition-colors",
           isDragOver
             ? "border-[var(--shell-brand)] bg-[var(--shell-brand)]/5"
-            : "border-[var(--shell-muted)] hover:border-[var(--shell-brand)]/50 hover:bg-muted/50",
+            : "border-[var(--shell-muted)]/40 hover:border-[var(--shell-brand)]/50 hover:bg-muted/50",
           disabled && "pointer-events-none opacity-50",
         )}
       >
-        <Upload className="h-8 w-8 text-[var(--shell-muted)]" />
-        <p className="text-sm font-medium text-[var(--shell-foreground)]">
-          Drop files here or click to browse
-        </p>
-        <p className="text-xs text-[var(--shell-muted)]">
-          Max {formatBytes(maxSize)}
-        </p>
+        <div className="rounded-full bg-muted/60 p-2.5">
+          <Upload className="h-5 w-5 text-[var(--shell-muted)]" />
+        </div>
+        <div>
+          <p className="text-sm font-medium text-[var(--shell-foreground)]">
+            Drop files here or click to browse
+          </p>
+          <p className="mt-0.5 text-[11px] text-[var(--shell-muted)]">
+            Max {formatBytes(maxSize)} · {accept.replace(/\//g, "/* ")}
+          </p>
+        </div>
       </div>
 
+      {/* Upload list */}
       {uploading.length > 0 && (
         <div className="space-y-2">
-          {uploading.map((entry, idx) => (
-            <div
-              key={`${entry.file.name}-${idx}`}
-              className="flex items-center gap-3 rounded-md border border-[var(--shell-muted)]/20 bg-muted/30 px-3 py-2"
-            >
-              {progressIcon(entry.progress)}
-              <FileIcon className="h-4 w-4 shrink-0 text-[var(--shell-muted)]" />
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium">{entry.file.name}</p>
-                <p className="text-xs text-[var(--shell-muted)]">
-                  {formatBytes(entry.file.size)}
-                  {entry.error && <span className="ml-2 text-red-500">{entry.error}</span>}
-                </p>
+          {uploading.map((entry, idx) => {
+            const { Icon, bg, fg } = fileTypeMeta(entry.file.type);
+            const isActive = entry.progress === "uploading" || entry.progress === "confirming" || entry.progress === "reading";
+
+            return (
+              <div
+                key={`${entry.file.name}-${idx}`}
+                className={cn(
+                  "relative overflow-hidden rounded-lg border px-3 py-2.5 transition-colors",
+                  entry.progress === "done"
+                    ? "border-emerald-200 dark:border-emerald-800 bg-emerald-50/50 dark:bg-emerald-900/10"
+                    : entry.progress === "error"
+                      ? "border-red-200 dark:border-red-800 bg-red-50/50 dark:bg-red-900/10"
+                      : "border-[var(--shell-border)] bg-[var(--shell-surface)]",
+                )}
+              >
+                {/* Progress bar overlay */}
+                {isActive && (
+                  <div className="absolute inset-x-0 top-0 h-0.5 bg-muted overflow-hidden">
+                    <div className="h-full bg-[var(--shell-brand)] animate-pulse w-full" />
+                  </div>
+                )}
+
+                <div className="flex items-center gap-3">
+                  {/* File type icon */}
+                  <div className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-lg", bg)}>
+                    <Icon className={cn("h-4.5 w-4.5", fg)} />
+                  </div>
+
+                  {/* File info */}
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium text-[var(--shell-foreground)]">
+                      {entry.file.name}
+                    </p>
+                    <div className="mt-0.5 flex items-center gap-2">
+                      <span className="text-[11px] text-[var(--shell-muted)]">
+                        {formatBytes(entry.file.size)}
+                      </span>
+                      {entry.error && (
+                        <span className="text-[11px] text-red-500">{entry.error}</span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Status */}
+                  {statusBadge(entry.progress)}
+
+                  {/* Remove button */}
+                  {!isActive && (
+                    <button
+                      onClick={() => removeEntry(idx)}
+                      className="shrink-0 rounded-md p-1 text-[var(--shell-muted)] hover:bg-muted hover:text-[var(--shell-foreground)] transition-colors"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  )}
+                </div>
               </div>
-              {entry.progress !== "uploading" && entry.progress !== "confirming" && (
-                <button
-                  onClick={() => removeEntry(idx)}
-                  className="shrink-0 rounded p-1 hover:bg-muted"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              )}
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

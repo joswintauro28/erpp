@@ -105,8 +105,12 @@ async def request_upload(
     org_id = payload.get("organization_id", 1)
     user_id = payload["user_id"]
 
-    # Generate unique object key
-    object_key = mc.make_object_key(body.original_name)
+    # Generate unique object key — scoped to <client>/<domain>/ when client_name is provided
+    object_key = mc.make_object_key(
+        body.original_name,
+        client_name=body.client_name,
+        owner_type=body.owner_type,
+    )
     uri = f"s3://{body.bucket}/{object_key}"
 
     # Create DB record (pending — not confirmed until POST confirm-upload)

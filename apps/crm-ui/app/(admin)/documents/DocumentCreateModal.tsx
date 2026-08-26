@@ -191,6 +191,7 @@ export default function DocumentCreateModal({
                 bucket="crm-assets"
                 ownerType="document"
                 ownerId={editRecord?.id || 0}
+                clientName={formData.account || "general"}
                 onUpload={handleUploadComplete}
                 accept="application/pdf,image/*"
                 maxSize={10 * 1024 * 1024}

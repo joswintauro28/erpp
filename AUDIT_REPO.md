@@ -329,3 +329,159 @@ For balance — areas that audited clean:
 16. Auth hardening: uniform login errors (H1), rotation transaction + reuse detection (H3), registration lockdown (H4), lockout backoff (M1).
 17. Schema cleanups: drop dead models, add membership/role-permission uniques (M4/M5), FK constraints (L7), serial uniqueness (M17).
 18. Observability/config: DLQ for workers (M16), rate limiting on billing (M12), rotate committed dev secrets, externalize all inter-service URLs (L2/L3).
+
+---
+
+## 9. UI/UX AUDIT
+
+**Audit date:** 2026-08-26
+**Scope:** All 4 frontend apps (erp-shell, crm-ui, billing-ui, inventory-ui) — 291 TSX files, ~11,500 className declarations, ~107 buttons, ~281 form inputs.
+**Method:** Automated pattern analysis + manual code review of component hierarchy, design token usage, accessibility, form UX, error handling, and responsive design.
+
+---
+
+### 9.1 Executive Summary
+
+| Severity | Count | Summary |
+|----------|-------|---------|
+| **HIGH** | 5 | Silent error swallowing (~50 catch blocks), no keyboard navigation (0 onKeyDown handlers), inconsistent page header hierarchy, missing form validation (253/281 inputs unvalidated), no focus-visible styles on most interactive elements |
+| **MEDIUM** | 8 | Duplicated color maps across apps, hardcoded hex colors in progress bars/inline styles, inconsistent Button variant/size usage, broken file previews (covered in §2), missing `loading.tsx` in 3 erp-shell routes, no pagination on most list views, inconsistent search/filter state naming, no responsive table → card fallback |
+| **LOW** | 6 | Inconsistent Badge variant usage, duplicated SectionHeading component, inconsistent spacing scale, missing Skeleton loading patterns, console.error in production code, no skip-to-content link |
+
+---
+
+### 9.2 HIGH Findings
+
+#### U1. Silent error swallowing — ~50 catch blocks with no user feedback
+**Pattern:** `} catch { /* handled */ }` or `} catch { }` across all 4 apps.
+
+Affected pages: billing-ui accounting (accounts, expenses, ledger, periods, reports, dunning), billing-ui billing (credit-notes, debit-notes, invoices), crm-ui (contacts, customers, documents, leads), erp-shell (quotations, fulfillment). Users perform destructive actions (delete, status change) and get no confirmation or error message when it fails.
+
+**Fix:** Route all catch blocks through a shared `handleError(err)` utility that shows a toast notification with the error message.
+
+#### U2. Zero keyboard navigation support
+**Pattern:** `grep -rn "onKeyDown\|onKeyUp\|onKeyPress" apps/` returns **0 results**.
+
+No modal supports Escape to close (except Next.js Dialog default). No table supports arrow-key navigation. No custom dropdown supports keyboard selection. No drag-and-drop zone supports keyboard activation.
+
+**Fix:** Add `onKeyDown` handlers to: (a) all modals for Escape, (b) all custom select/dropdown components for arrow keys, (c) all table rows for Enter/Space to expand, (d) drag-and-drop zones for keyboard upload trigger.
+
+#### U3. Inconsistent page header hierarchy
+**Pattern:** Three different heading styles used across pages:
+- `text-3xl font-bold tracking-tight` (reconciliation, some dashboards)
+- `text-2xl font-semibold` (most billing accounting pages)
+- `text-2xl font-bold tracking-tight` (aging, quotation details)
+- `font-heading text-2xl font-semibold tracking-tight` (dashboard pages)
+
+Some pages use the shared `PageHeader` component from ui-theme; most don't.
+
+**Fix:** Standardize on `PageHeader` from ui-theme for all list/table pages. Reserve `text-3xl` for dashboard hero headings only. Add `font-heading` consistently to all page titles.
+
+#### U4. Missing form validation — 253 of 281 inputs unvalidated
+**Pattern:** Only 28 inputs use `required`. Zero inputs use `pattern`, `minLength`, or `maxLength`. No client-side validation library (zod, yup) is used.
+
+Critical: Delete confirmations (via native `confirm()`) don't prevent accidental double-clicks. Form submissions rely entirely on backend validation, producing cryptic 400/422 errors.
+
+**Fix:** (a) Add `required` to all mandatory fields. (b) Add `minLength`/`maxLength` to text fields. (c) Implement a shared `FormValidator` using zod schemas, matching backend DTOs. (d) Disable submit buttons during submission (partially done — 64/57 ratio suggests most pages do this).
+
+#### U5. Missing focus-visible styles
+**Pattern:** Only 70 elements across the entire codebase have `focus:` or `focus-visible:` styles. Most buttons, inputs, and interactive elements rely on browser defaults which are invisible in the dark theme.
+
+**Fix:** Add global `focus-visible:ring-2 focus-visible:ring-[var(--shell-brand)] focus-visible:ring-offset-2` to the base layer in `globals.css` for all interactive elements (`button`, `a`, `input`, `select`, `textarea`, `[role="button"]`).
+
+---
+
+### 9.3 MEDIUM Findings
+
+#### U6. Duplicated color maps across apps
+**Pattern:** Color lookup tables are copy-pasted instead of shared:
+- `stageColors` — crm-ui + erp-shell OpportunityDetailModal (identical 10-line object)
+- `statusColor()` — billing-ui + erp-shell dashboard pages (identical function)
+- `levelColors` — billing-ui + erp-shell dunning pages
+- `frequencyColors` — billing-ui + erp-shell recurring-invoices pages
+- `categoryColors` — erp-shell expenses page
+- `roleColors` — erp-shell team page
+
+**Fix:** Create `packages/ui-theme/src/lib/color-maps.ts` exporting all shared color maps. Import from ui-theme in all apps.
+
+#### U7. Hardcoded hex colors in progress bars and inline styles
+**Files:**
+- `crm-ui/reports/page.tsx:166` — `bg-[#0ea5e9]`
+- `crm-ui/reports/page.tsx:189` — `bg-[#10b981]`
+- `erp-shell/crm/reports/page.tsx:166,189` — same
+- `crm-ui/quotations/QuotationDetailsModal.tsx:146` — `style="color: #10b981"`
+- `erp-shell/quotations/QuotationDetailsModal.tsx:146` — same
+
+**Fix:** Replace with theme tokens: `bg-[var(--shell-info)]`, `text-[var(--shell-success)]`.
+
+#### U8. Inconsistent Button variant/size usage
+**Counts:** `outline` 355×, `ghost` 128×, `destructive` 44×, `neutral` 23×, `default` 4×, `secondary` 2×. Sizes: `sm` 395×, `icon-sm` 73×, `xs` 31×, `icon` 6×.
+
+**Issues:** (a) `secondary` is nearly unused (2×) — should be merged with `neutral` or removed. (b) `xs` size is inconsistent — only some pages use it. (c) Icon buttons inconsistently use `icon-sm` vs `icon`.
+
+**Fix:** Define button size/variant guidelines in a shared `BUTTON_STANDARDS.md` or enforce via lint. Remove `secondary` variant if identical to `neutral`.
+
+#### U9. Missing `loading.tsx` in 3 erp-shell routes
+**Counts:** erp-shell: 50 pages, 47 loading.tsx (3 missing). billing-ui: 19 pages, 15 loading.tsx (4 missing).
+
+Missing routes show a blank white screen during Suspense boundaries.
+
+**Fix:** Add `loading.tsx` with Skeleton placeholders to all routes missing them.
+
+#### U10. No pagination on most list views
+**Pattern:** Only the aging page (`billing-ui/accounting/aging`) implements pagination. All other list pages (invoices, payments, credit-notes, debit-notes, quotations, recurring-invoices, expenses, ledger, periods) render the entire dataset.
+
+With 100+ records, tables become unscrollable and slow.
+
+**Fix:** Implement a shared `DataTable` component with server-side or client-side pagination, page size selector, and page navigation.
+
+#### U11. Inconsistent search/filter state naming
+**Pattern:** Search state variables use 3 different naming conventions:
+- `search` / `setSearch` (most pages)
+- `searchQuery` / `setSearchQuery` (aging page)
+- `cfSearchQuery` / `setCfSearchQuery` (reports page)
+
+**Fix:** Standardize on `search` / `setSearch` across all pages.
+
+#### U12. No responsive table → card fallback
+**Pattern:** 18 tables use `overflow-x-auto`, but none implement a card-based mobile layout. Tables scroll horizontally on mobile, which is a poor UX.
+
+**Fix:** Create a shared `ResponsiveTable` component that renders as a table on `md:` and above, and as a card list on `sm:` and below.
+
+---
+
+### 9.4 LOW Findings
+
+#### U13. Inconsistent Badge variant usage
+**Counts:** `outline` 40×, `neutral` 23×, `destructive` 19×, `default` 2×.
+
+`default` is barely used (2×). Some status badges use hardcoded Tailwind colors instead of Badge variants.
+
+**Fix:** Audit all Badge usages and ensure consistent variant mapping: success → `neutral` with green, warning → `outline` with amber, error → `destructive`, info → `outline`.
+
+#### U14. Duplicated SectionHeading component
+**Files:** `billing-ui/dashboard/page.tsx:87` defines a local `SectionHeading`. ui-theme also exports `SectionHeading`. Some pages import from ui-theme, others use the local copy.
+
+**Fix:** Remove all local `SectionHeading` definitions. Use only the one from `@datavex/ui-theme`.
+
+#### U15. Inconsistent spacing scale
+**Counts:** `gap-2` 602×, `gap-3` 415×, `gap-4` 354×, `space-y-1` 299×, `space-y-2` 259×.
+
+All values from `1` to `6` are used for both `gap` and `space-y`, with no clear rule for when to use which.
+
+**Fix:** Define spacing guidelines: `gap-2` for tight inline groups, `gap-3` for form fields, `gap-4` for card grids, `space-y-4` for page sections, `space-y-6` for major sections.
+
+#### U16. console.error in production code
+**Pattern:** ~20 `console.error()` calls in production pages (aging, reports, lead-discovery, fulfillment, quotations).
+
+**Fix:** Replace with toast notifications or remove. Use a proper logging service (Sentry, LogRocket) for production error tracking.
+
+#### U17. Missing skip-to-content link
+**Pattern:** No page implements a skip-to-content link for screen reader users. The sidebar navigation requires tabbing through ~20+ links before reaching main content.
+
+**Fix:** Add `<a href="#main-content" className="sr-only focus:not-sr-only">Skip to content</a>` as the first element in each layout. Add `id="main-content"` to the main content area.
+
+#### U18. Inconsistent error display patterns
+**Pattern:** Some pages show errors in red `destructive` divs, some in `bg-red-50 border-red-200` custom divs, some use toast, some use `console.error`, some silently swallow.
+
+**Fix:** Standardize on a single error display pattern: toast notification for transient errors, inline banner for persistent errors that need user action.

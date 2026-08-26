@@ -187,6 +187,7 @@ export default function QuotationCreateModal({ isOpen, onClose, onSuccess, editR
               bucket="crm-assets"
               ownerType="quotation"
               ownerId={editRecord?.id || 0}
+              clientName={formData.account || "general"}
               onUpload={handleUploadComplete}
               accept="application/pdf,image/*"
             />

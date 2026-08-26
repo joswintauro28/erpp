@@ -38,7 +38,10 @@ function ReqRow({ req, onDelete, onEdit }: ReqRowProps) {
       >
         <ClipboardList size={14} className="shrink-0 text-[var(--shell-brand)]" />
         <div className="flex-1 min-w-0">
-          <div className="font-semibold text-sm text-[var(--shell-foreground)] truncate">{req.name}</div>
+          <div className="font-semibold text-sm text-[var(--shell-foreground)] flex items-center gap-1.5 truncate">
+            {req.name}
+            {req.file_id && <Paperclip size={11} className="shrink-0 text-[var(--shell-info)]" />}
+          </div>
           <div className="text-xs text-[var(--shell-muted)] mt-px">{req.category} &middot; {req.priority} priority &middot; {req.owner}</div>
         </div>
         <Badge variant="neutral">{req.status}</Badge>
@@ -66,6 +69,15 @@ function ReqRow({ req, onDelete, onEdit }: ReqRowProps) {
             <div className="text-[11px] font-bold uppercase tracking-wider text-[var(--shell-muted)] mb-1">Description</div>
             <div className="text-xs text-[var(--shell-foreground)] leading-relaxed">{req.name}</div>
           </div>
+          {req.file_id && (
+            <div className="border-t border-[var(--shell-border)] pt-3 mt-3">
+              <div className="text-[11px] font-bold uppercase tracking-wider text-[var(--shell-muted)] mb-1">Attachment</div>
+              <a href={`/api/files/${req.file_id}/stream`} target="_blank" rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-xs text-[var(--shell-info)] hover:underline">
+                <Paperclip size={12} /> View attached file
+              </a>
+            </div>
+          )}
           <div className="flex justify-end gap-2 mt-3">
             <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); onEdit(req); }}><Edit2 size={12} className="mr-1" /> Edit</Button>
             <Button variant="outline" size="sm" className="border-[var(--shell-danger)]/30 text-[var(--shell-danger)] hover:bg-[var(--shell-danger-surface)]" onClick={(e) => { e.stopPropagation(); onDelete(req); }}><Trash2 size={12} className="mr-1" /> Delete</Button>
@@ -285,6 +297,7 @@ export default function OpportunityDetailModal({ record, isOpen, onClose, onSucc
 
   const [editReq, setEditReq] = useState<any>(null);
   const [editQuote, setEditQuote] = useState<any>(null);
+  const [reqFileId, setReqFileId] = useState<number | null>(null);
 
   const fetchRequirements = useCallback(async () => {
     if (!record) return;
@@ -323,6 +336,7 @@ export default function OpportunityDetailModal({ record, isOpen, onClose, onSucc
       setQuoteData({ quote_no: "", value: "", valid_until: "", status: "Draft", owner: "" });
       setEditReq(null);
       setEditQuote(null);
+      setReqFileId(null);
       setPreviewQuote(null);
       setQuoteFileId(null);
       fetchRequirements();
@@ -356,6 +370,7 @@ export default function OpportunityDetailModal({ record, isOpen, onClose, onSucc
         priority: reqData.priority,
         status: reqData.status,
         owner: reqData.owner,
+        file_id: reqFileId,
       };
       if (isEdit) {
         await api.put(`/requirements/${editReq.id_str}`, body);
@@ -364,6 +379,7 @@ export default function OpportunityDetailModal({ record, isOpen, onClose, onSucc
       }
       setShowReqForm(false);
       setEditReq(null);
+      setReqFileId(null);
       setReqData({ name: "", category: "Technical", priority: "Medium", status: "Draft", owner: "" });
       fetchRequirements();
       if (onSuccess) onSuccess();
@@ -559,9 +575,23 @@ export default function OpportunityDetailModal({ record, isOpen, onClose, onSucc
                           <input type="text" placeholder="e.g. Aditi Rao" value={reqData.owner} onChange={(e) => setReqData((p) => ({ ...p, owner: e.target.value }))} className="h-8 w-full rounded-md border border-[var(--shell-border)] bg-[var(--shell-surface)] px-2.5 text-xs" required />
                         </div>
                       </div>
+                      <div>
+                        <label className="block text-[10px] font-semibold uppercase text-[var(--shell-muted)] mb-1">
+                          Attach File <span className="font-normal lowercase text-[var(--shell-muted)]">(PDF or image, optional)</span>
+                        </label>
+                        <FileUpload
+                          bucket="crm-assets"
+                          ownerType="requirement"
+                          ownerId={0}
+                          clientName={record.account || "general"}
+                          onUpload={(r: FileRecord) => setReqFileId(r.id)}
+                          accept="application/pdf,image/*"
+                          maxSize={10 * 1024 * 1024}
+                        />
+                      </div>
                     </div>
                     <div className="flex gap-2 justify-end mt-3">
-                      <Button type="button" variant="outline" size="sm" onClick={() => { setShowReqForm(false); setEditReq(null); setReqData({ name: "", category: "Technical", priority: "Medium", status: "Draft", owner: "" }); }}>Cancel</Button>
+                      <Button type="button" variant="outline" size="sm" onClick={() => { setShowReqForm(false); setEditReq(null); setReqFileId(null); setReqData({ name: "", category: "Technical", priority: "Medium", status: "Draft", owner: "" }); }}>Cancel</Button>
                       <Button type="submit" size="sm" disabled={reqSubmitting}>
                         {reqSubmitting ? <Loader size={13} className="mr-1 animate-spin" /> : <CheckCircle size={13} className="mr-1" />}
                         {reqSubmitting ? "Saving..." : "Save Requirement"}
@@ -655,6 +685,7 @@ export default function OpportunityDetailModal({ record, isOpen, onClose, onSucc
                           bucket="crm-assets"
                           ownerType="quotation"
                           ownerId={editQuote?.id || 0}
+                          clientName={record.account || "general"}
                           onUpload={(r: FileRecord) => setQuoteFileId(r.id)}
                           accept="application/pdf,image/*"
                           maxSize={10 * 1024 * 1024}

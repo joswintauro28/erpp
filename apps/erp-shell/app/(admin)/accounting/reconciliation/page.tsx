@@ -488,9 +488,10 @@ export default function ReconciliationPage() {
               <div className="space-y-2">
                 <Label className="text-xs font-semibold">Select File (CSV or XLSX)</Label>
                 <FileUpload
-                  bucket="crm-assets"
-                  ownerType="document"
+                  bucket="finance-records"
+                  ownerType="bank_statement"
                   ownerId={0}
+                  clientName="bank-statements"
                   onUpload={handleUploadComplete}
                   accept=".csv,.xlsx"
                 />

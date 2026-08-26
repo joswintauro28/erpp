@@ -247,6 +247,7 @@ export default function QuotationDetailsModal({ record, isOpen, onClose, onSucce
                   bucket="crm-assets"
                   ownerType="sales_order"
                   ownerId={0}
+                  clientName={record.account || "general"}
                   onUpload={(r: FileRecord) => setSoFileId(r.id)}
                   accept="application/pdf,image/*"
                 />

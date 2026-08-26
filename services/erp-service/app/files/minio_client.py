@@ -161,10 +161,42 @@ async def object_exists(bucket: str, object_key: str) -> bool:
 # Helpers
 # ---------------------------------------------------------------------------
 
-def make_object_key(original_name: str) -> str:
-    """Generate a unique, path-safe object key: ``<uuid>_<sanitised_name>``."""
-    safe = "".join(c if c.isalnum() or c in "._-" else "_" for c in original_name)
-    return f"{uuid.uuid4().hex}_{safe}"
+def _sanitize_path_component(name: str) -> str:
+    """Sanitise a string so it is safe as a single directory/filename component.
+    Converts whitespace and path separators to underscores, collapses repeats,
+    and strips leading/trailing underscores.
+    """
+    safe = "".join(c if c.isalnum() or c in ".-_" else "_" for c in name)
+    return safe.strip("_") or "uncategorised"
+
+
+def make_object_key(original_name: str, client_name: str | None = None, owner_type: str | None = None) -> str:
+    """Generate a unique, path-safe object key.
+
+    When *client_name* is provided the key is hierarchical::
+
+        <client_name>/<owner_type>/<uuid>_<sanitised_name>
+
+    When *client_name* is ``None`` the key falls back to::
+
+        <owner_type>/<uuid>_<sanitised_name>
+
+    If *owner_type* is also ``None`` the legacy flat layout is used::
+
+        <uuid>_<sanitised_name>
+    """
+    safe_name = "".join(c if c.isalnum() or c in "._-" else "_" for c in original_name)
+    filename = f"{uuid.uuid4().hex}_{safe_name}"
+
+    segments: list[str] = []
+    if client_name:
+        segments.append(_sanitize_path_component(client_name))
+    if owner_type:
+        segments.append(_sanitize_path_component(owner_type))
+
+    if segments:
+        return "/".join(segments) + "/" + filename
+    return filename
 
 
 def sha256_hex(data: bytes) -> str:

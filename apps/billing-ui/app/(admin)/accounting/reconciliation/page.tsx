@@ -668,6 +668,7 @@ export default function ReconciliationPage() {
                   bucket="finance-records"
                   ownerType="bank_statement"
                   ownerId={0}
+                  clientName="bank-statements"
                   onUpload={handleUploadComplete}
                   accept=".csv,.xlsx"
                   maxSize={10 * 1024 * 1024}
