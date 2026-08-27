@@ -8,88 +8,80 @@
 
 ## Executive Summary
 
-| Severity | Count | Summary |
-|----------|-------|---------|
-| **CRITICAL** | **0** | **All 6 fixed** — RBAC guard hardened, MIME regex corrected, IDOR scoping added, file_id contract settled, billing fetch forwarded, docker scripts preserved |
-| **HIGH** | 15 | Timing attacks, non-atomic money/stock math, Decimal corruption in responses, global-vs-org unique collisions, phantom events before commit |
-| **MEDIUM** | **~3 deferred** | **20/23 fixed** — lockout, CORS, currency, throttling, unique constraints, worker DLQ, payment guards; 3 inventory items deferred (complex reversal logic) |
-| **LOW** | ~12 | Committed dev secrets, hardcoded topology, boilerplate leftovers |
+| Severity | Count | Status |
+|----------|-------|--------|
+| **CRITICAL** | **0** | **All 6 resolved** — RBAC hardened, MIME fixed, IDOR scoping, file_id contract, billing fetch, docker scripts |
+| **HIGH** | **15** | **All open** — timing attacks, non-atomic money/stock, Decimal corruption, global-vs-org unique, phantom events |
+| **MEDIUM** | **3** | **20/23 resolved** — M13 (step_back), M14 (dispatch warehouse), M18 (shortage provisioning) deferred |
+| **LOW** | **12** | **All open** — dev secrets, hardcoded topology, dead models, missing FKs, no type verification |
+| **UI/UX** | **2** | **16/18 resolved** — U10 (pagination), U12 (responsive tables) deferred |
 
-~~The three most urgent clusters~~ **All resolved** (2026-08-27):
-
-1. ✅ **core-iam RBAC hardened.** `PermissionsGuard` now denies-by-default; all 9 admin routes carry `@Permissions(...)` decorators.
-2. ✅ **MinIO file pipeline fixed.** MIME regex corrected, org scoping added (IDOR), `file_id` column added to 4 CRM models, billing-service file fetch forwards JWT.
-3. ✅ **Docker scripts safe.** `down` preserves volumes; destructive `destroy` verb requires confirmation.
-
-> **Remaining focus:** Concurrency correctness (H8–H12) and auth hardening (H1–H5).
+**Remaining focus:** Concurrency correctness (H8–H12), auth hardening (H1–H5), Decimal corruption (H6), and schema hygiene (L7–L9).
 
 ---
 
-## 1. CRITICAL Findings
+## Resolved Findings (reference)
 
-### C1. ~~Full RBAC bypass — any authenticated user can self-promote to admin~~ ✅ FIXED
-**Service:** core-iam · `src/auth/guards/permissions.guard.ts`
+### CRITICAL ✅ All Resolved
 
-**Fix applied (2026-08-27):** Guard now denies-by-default when no `@Permissions()` decorator is present (throws `UnauthorizedException`). All 9 admin routes in `auth.controller.ts` now carry explicit `@Permissions(...)` annotations:
-- `users:read` (GET /users/me), `users:list` (GET /users), `users:manage` (POST/PUT/DELETE users), `roles:list` (GET /roles), `roles:manage` (PUT roles/:id/permissions), `permissions:list` (GET /permissions).
-- Organization Owners still bypass all permission checks.
+| ID | Finding | Resolution Date |
+|----|---------|-----------------|
+| C1 | RBAC bypass — PermissionsGuard allow-all | 2026-08-27 — deny-by-default + @Permissions on all routes |
+| C2 | MIME regex matches literal `image/*` | 2026-08-26 — corrected to `image/[a-z0-9.+_-]+` |
+| C3 | IDOR — no org scoping on file endpoints | 2026-08-26 — `_org_filter()` on all 5 handlers |
+| C4 | file_id contract break — generic CRUD drops key | 2026-08-27 — `file_id` column added to 4 CRM models |
+| C5 | billing-service can't fetch files from erp-service | 2026-08-26 — JWT forwarded + presigned URL two-step |
+| C6 | Docker stop scripts destroy volumes | 2026-08-27 — `down` preserves volumes; `destroy` verb requires confirmation |
 
----
+### MEDIUM ✅ Resolved (20/23)
 
-### C2. Image uploads are rejected — MIME regex matches the literal string `image/*`
-**Service:** erp-service · `app/files/router.py:30-37`
+| ID | Finding | Resolution |
+|----|---------|------------|
+| M1 | Account-lockout non-atomic counter | Atomic `UPDATE` via `$queryRaw` |
+| M2 | CORS wildcard with credentials | Removed `*.erp.local` regex |
+| M3 | Deactivated users keep valid tokens | `getUserMe` throws on `!isActive` |
+| M4 | Duplicate memberships / seed re-runs | `@@unique` + seed `upsert` |
+| M5 | Duplicate rolePerms / weak bcrypt | `@@unique` + `genSalt(12)` |
+| M6 | Manual sent→paid skips payment | Removed `"paid"` from `sent` transitions |
+| M7 | Recurring scheduler fabricates GST | Default `"intrastate"` |
+| M8 | Consumer idempotency dead P2002 catch | Removed unreachable catch |
+| M9 | Bank recon no transaction | Wrapped in `$transaction` |
+| M10 | Payments lack guards | Draft/void check + overpayment clamping |
+| M11 | Currency USD vs INR | All journals + schema → `"INR"` |
+| M12 | No ThrottlerModule on billing | `ThrottlerModule` with `APP_GUARD` |
+| M15 | Stock race condition | `UniqueConstraint(org, product, warehouse)` |
+| M16 | Worker silently acks poisoned messages | `message.nack(requeue=False)` on error |
+| M17 | Duplicate serial numbers | `UniqueConstraint(org, serial_number)` |
+| M19 | Bare `except: pass` | Logged warnings |
+| M20 | JWT in WS query param | Documented (browser API limitation) |
+| M21 | Notification REST bypasses proxies | Default to same-origin |
+| M22 | crm-service CORS `*` with credentials | Explicit origins |
+| M23 | Pending FileRecords never cleaned | Self-cleanup on each upload |
 
-```python
-_MIME_PATTERN = re.compile(
-    r"^(image/\*|application/pdf|text/csv|..."
-```
+### UI/UX ✅ Resolved (16/18)
 
-The alternative `image/\*` matches the **literal string** `"image/*"`, not real types like `image/png`. Since `_validate_mime(body.mime_type)` runs against the actual uploaded type:
-
-- `image/png`, `image/jpeg` … → **400 rejected**
-- A client sending the literal string `"image/*"` → accepted (validation inverted!)
-
-Every frontend modal passes `accept="application/pdf,image/*"`; browsers resolve that to concrete types, so **all image uploads fail**.
-
-**Fix:** `r"^image/[a-z0-9.+_-]+|application/pdf|..."`.
-
----
-
-### C3. ~~Cross-tenant file access (IDOR) — zero organization scoping on every file endpoint~~ ✅ FIXED
-**Service:** erp-service · `app/files/router.py`
-
-**Fix applied:** `_org_filter(stmt, payload)` helper added and applied to all 5 data endpoints (confirm, get, download, delete, list). Every query now includes `.where(FileRecord.organization_id == payload["organization_id"])`.
-
----
-
-### C4. ~~File attachment flow silently discards files end-to-end (frontend/backend contract break)~~ ✅ FIXED
-**Apps/services:** crm-ui + erp-shell modals ↔ crm-service
-
-**Fix applied (2026-08-27):** `file_id = Column(Integer, nullable=True)` added to all 4 CRM models that support file attachments:
-- `documents/models.py` (Document)
-- `opportunities/models.py` (Opportunity)
-- `requirements/models.py` (Requirement)
-- `sales_orders/models.py` (SalesOrder)
-
-Generic CRUD now accepts `file_id` in payloads since it exists in `mapper.columns`. Frontend modals send `file_id` → backend stores it → file lookup works.
-
----
-
-### C5. ~~billing-service cannot fetch statement files from erp-service (no auth + wrong response shape)~~ ✅ FIXED
-**Service:** billing-service · `src/bank-reconciliation/bank-reconciliation.service.ts`
-
-**Fix applied:** `importFileById()` now forwards the caller's JWT via `Authorization: Bearer` header, fetches the JSON response from `/api/files/:id/download`, extracts `download_url`, then fetches the actual file bytes from the presigned URL.
-
----
-
-### C6. ~~Stop/prune scripts destroy database volumes~~ ✅ FIXED
-**Infrastructure:** `infrastructure/local/docker-build.ps1` and `docker-build.sh`
-
-**Fix applied (2026-08-27):** `down`/`stop` now run `compose down --remove-orphans` (volumes preserved). Destructive behavior moved behind a new `destroy` verb that prompts for `YES` confirmation before running `down --volumes --rmi all`. `prune` now runs `down --remove-orphans` + `docker image prune -f` (keeps volumes).
+| ID | Finding | Resolution |
+|----|---------|------------|
+| U1 | ~50 silent catch blocks | `handleError()` utility + 90+ replacements |
+| U2 | Zero keyboard navigation | Escape/Enter/Space handlers |
+| U3 | Inconsistent page headers | `PageHeader` standardized |
+| U4 | Missing form validation | `required`/`minLength`/`maxLength` added |
+| U5 | Missing focus-visible styles | Global `focus-visible:ring-2` |
+| U6 | Duplicated color maps | Shared `color-maps.ts` |
+| U7 | Hardcoded hex colors | Theme variables |
+| U8 | Inconsistent Button variants | `variant="secondary"` → `"outline"`; `size="sm"` in modals |
+| U9 | Missing loading.tsx | 16 new skeleton files |
+| U11 | Inconsistent search naming | Standardized to `search`/`setSearch` |
+| U13 | Inconsistent Badge usage | Standardized variant mapping |
+| U14 | Duplicated SectionHeading | Removed local copies |
+| U15 | Inconsistent spacing scale | Standardized gap/space-y values |
+| U16 | console.error in production | All replaced with `handleError()` |
+| U17 | Missing skip-to-content | Added to all 4 layouts |
+| U18 | Inconsistent error display | Toast + inline banner standard |
 
 ---
 
-## 2. HIGH Findings
+## 1. HIGH Findings (all open)
 
 ### H1. Login timing attack + email enumeration
 **core-iam** `src/auth/auth.service.ts:24-41` — unknown emails skip the bcrypt compare entirely (~100 ms difference) and return distinct messages ("No account found with this email address"). Constant-time dummy-hash compare + uniform "Invalid credentials" needed.
@@ -154,18 +146,20 @@ Fail loudly instead.
 
 ---
 
-## 3. MEDIUM Findings ✅ ALL FIXED (2026-08-27)
+## 2. MEDIUM Findings (3 deferred)
 
-| Severity | Status | Summary |
-|----------|--------|---------|
-| **core-iam (M1–M5)** | ✅ **All fixed** | Atomic lockout, CORS tightened, token invalidation, unique constraints, bcrypt cost |
-| **billing (M6–M12)** | ✅ **All fixed** | Transition guards, GST fix, idempotency, transaction wrapping, payment guards, INR currency, throttling |
-| **inventory (M13–M19)** | ✅ **14/17 fixed** | Stock/serial unique constraints, worker DLQ, bare except fixed; M13/M14/M18 deferred (complex reversal logic) |
-| **frontend (M20–M23)** | ✅ **All fixed** | Proxy base URL, CORS origins, pending cleanup, WS token documented |
+### M13. `step_back(DISPATCHED→PACKED)` never restores deducted quantity/reserved
+**inventory-service** `app/fulfillment/services.py:811-836` — reversing a dispatch never restores the quantity that was deducted or the reservation that was made, causing perpetual stock shrinkage.
+
+### M14. Dispatch picks arbitrary warehouse row
+**inventory-service** `app/fulfillment/services.py:305-306,318` — dispatch uses `scalars().first()` to pick a warehouse, which returns an arbitrary row when multiple warehouses hold stock. Also records movement with negative quantity, contradicting `record_movement`'s positive-quantity contract.
+
+### M18. Shortage auto-provisioning invents suppliers, warehouses, SKUs
+**inventory-service** `app/fulfillment/services.py:91-95,437-443,457-465` — when stock is short, the system creates fake suppliers (`supplier@vendor.com`), random warehouses, and SKUs (`SKU-{randint(1000,9999)}`) that collide with the global-unique SKU constraint.
 
 ---
 
-## 4. LOW Findings
+## 3. LOW Findings (all open)
 
 | # | Finding | Location |
 |---|---------|----------|
@@ -184,90 +178,50 @@ Fail loudly instead.
 
 ---
 
-## 5. What Held Up Well
+## 4. UI/UX Findings (2 deferred)
 
-For balance — areas that audited clean:
+| ID | Finding | Status |
+|----|---------|--------|
+| U10 | No pagination on most list views | ⏳ Deferred — requires shared `DataTable` with server-side pagination |
+| U12 | No responsive table → card fallback | ⏳ Deferred — 18 tables use `overflow-x-auto`; no card-based mobile layout |
+
+---
+
+## 5. What Held Up Well
 
 - **inventory-service auth**: every router chains `Depends(get_current_org_id)`; token-type enforcement correct.
 - **Validation pipes**: billing uses `forbidNonWhitelisted: true`; FastAPI/Pydantic contracts solid.
 - **JWT secret consistency**: all four services currently agree on the shared secret.
 - **MinIO object keys**: `make_object_key` uses uuid4 prefixes — no collision risk.
 - **Alembic chains**: both new migrations chain correctly off their respective heads.
-- **Frontend proxies**: erp-shell, crm-ui, billing-ui, inventory-ui all correctly route `/files/*` to erp-service with proper prefix handling.
+- **Frontend proxies**: all 4 workstations correctly route `/files/*` to erp-service.
+- **MinIO async**: all sync SDK calls wrapped in `asyncio.to_thread()` — event loop not blocked.
 
 ---
 
-## 6. Remediation Roadmap (priority order)
+## 6. Remediation Roadmap
 
-~~**Sprint 1 — security stopgaps (days)**~~ ✅ DONE
-1. ✅ C1: deny-by-default PermissionsGuard + annotate all admin routes (core-iam).
-2. ✅ C3: add `organization_id` scoping to all five file endpoints.
-3. ✅ C6: fix docker-build scripts to preserve volumes.
-4. H14/M8: remove `|| 1` org defaults in both event consumers.
-5. H2/H5: gate cookie `secure` flag by env; remove default invite password.
+~~**Sprint 1 — security stopgaps**~~ ✅ DONE
+~~**Sprint 2 — file pipeline**~~ ✅ DONE
+~~**Sprint 3 — medium fixes**~~ ✅ DONE (3 deferred)
 
-~~**Sprint 2 — make the file pipeline actually work (week)**~~ ✅ DONE
-6. ✅ C2: fix MIME regex.
-7. ✅ C4: settle `file_id` vs `file_uri` contract — added `file_id` column to 4 CRM models.
-8. ✅ C5: billing import-file-by-id — forward JWT + handle JSON/presigned two-step fetch.
-9. M23: pending-record TTL cleanup.
+**Sprint 4 — concurrency & money integrity (H6–H12)**
+1. H8/H9: atomic `increment` for `paidAmount`; refund-state guard for pending payments.
+2. H11/H12: `FOR UPDATE` / atomic UPDATE for stock; reservation caps.
+3. H7: per-org unique constraints for all document numbers.
+4. H13: outbox pattern (table already exists in billing) or publish-after-commit hooks.
+5. H6: Decimal-safe SnakeCaseInterceptor.
 
-**Sprint 3 — concurrency & money integrity (1–2 weeks)**
-10. H8/H9: atomic `increment` for `paidAmount`; refund-state guard.
-11. H11/H12/M15: `FOR UPDATE` / atomic UPDATE for stock; stock-row unique constraint.
-12. H7: per-org unique constraints for all document numbers.
-13. H13: outbox pattern (table already exists in billing).
-14. H6: Decimal-safe interceptor.
+**Sprint 5 — auth hardening (H1–H5)**
+6. H1: constant-time dummy-hash compare + uniform "Invalid credentials".
+7. H2: gate cookie `secure` flag by `NODE_ENV`.
+8. H3: wrap refresh rotation in `$transaction` + revoke all user tokens on reuse.
+9. H4: restrict registration to invite-only or require admin approval.
+10. H5: remove default invite password; require explicit password.
 
-**Sprint 4 — hygiene**
-15. Auth hardening: uniform login errors (H1), rotation transaction + reuse detection (H3), registration lockdown (H4), lockout backoff (M1).
-16. Schema cleanups: drop dead models, add membership/role-permission uniques (M4/M5), FK constraints (L7), serial uniqueness (M17).
-17. Observability/config: DLQ for workers (M16), rate limiting on billing (M12), rotate committed dev secrets, externalize all inter-service URLs (L2/L3).
-
----
-
-## 7. UI/UX AUDIT
-
-**Audit date:** 2026-08-26 · **Last verified:** 2026-08-27
-**Scope:** All 4 frontend apps (erp-shell, crm-ui, billing-ui, inventory-ui) — 291 TSX files, ~11,500 className declarations, ~107 buttons, ~281 form inputs.
-**Method:** Automated pattern analysis + manual code review of component hierarchy, design token usage, accessibility, form UX, error handling, and responsive design.
-
-> **All HIGH and MEDIUM UI/UX items have been completed** as of 2026-08-27. Only the responsive tables item remains.
-
-### 7.1 Executive Summary
-
-| Severity | Count | Status |
-|----------|-------|--------|
-| ~~HIGH~~ | ~~5~~ | **All resolved** — error handling, keyboard nav, page headers, focus-visible |
-| ~~MEDIUM~~ | ~~8~~ | **7 resolved** — color maps, hex colors, button variants, loading.tsx, search naming, file previews, skip-to-content |
-| **MEDIUM** | **1** | **Open** — No responsive table → card fallback on mobile |
-
-### 7.2 Completed Findings
-
-| ID | Finding | Status | Resolution |
-|----|---------|--------|------------|
-| U1 | ~50 silent catch blocks with no user feedback | ✅ **DONE** | `handleError()` utility created in `@datavex/ui-theme`; 90+ catch blocks across all 4 apps now show toast notifications |
-| U2 | Zero keyboard navigation support | ✅ **DONE** | Escape key on all custom modals; Enter/Space on expandable table rows (ReqRow, QuoteRow); keyboard-activatable drag-and-drop zones |
-| U3 | Inconsistent page header hierarchy | ✅ **DONE** | `PageHeader` component standardized across all list/table pages; dashboard hero headings use `text-3xl`; all headings use `font-heading` |
-| U4 | Missing form validation (253/281 inputs) | ✅ **DONE** | `required` attribute added to all mandatory fields; `minLength`/`maxLength` on text fields; submit buttons disabled during submission |
-| U5 | Missing focus-visible styles | ✅ **DONE** | Global `focus-visible:ring-2` in `globals.css` for all interactive elements; skip-to-content CSS class added |
-| U6 | Duplicated color maps across apps | ✅ **DONE** | Shared `color-maps.ts` in `@datavex/ui-theme` exporting `stageColors`, `statusColor`, `levelColors`, `frequencyColors`; all apps import from ui-theme |
-| U7 | Hardcoded hex colors in progress bars/inline styles | ✅ **DONE** | All `bg-[#0ea5e9]`, `bg-[#10b981]`, inline `style="color: #..."` replaced with theme variables |
-| U8 | Inconsistent Button variant/size usage | ✅ **DONE** | `variant="secondary"` → `variant="outline"`; modal buttons standardized to `size="sm"`; `BUTTON_STANDARDS.md` documented |
-| U9 | Missing `loading.tsx` in routes | ✅ **DONE** | 16 new skeleton loading files created across all 4 apps — 0 routes missing loading state |
-| U10 | No pagination on most list views | ⏳ **DEFERRED** | Requires shared `DataTable` component with server-side pagination — tracked in TODO.md |
-| U11 | Inconsistent search/filter state naming | ✅ **DONE** | `searchQuery`/`cfSearchQuery` → `search`/`setSearch` across all pages |
-| U12 | No responsive table → card fallback | ⏳ **OPEN** | 18 tables use `overflow-x-auto`; none implement card-based mobile layout |
-| U13 | Inconsistent Badge variant usage | ✅ **DONE** | Badge usage standardized; `default` variant usage increased; consistent variant mapping |
-| U14 | Duplicated SectionHeading component | ✅ **DONE** | Local `SectionHeading` removed; all pages import from `@datavex/ui-theme` |
-| U15 | Inconsistent spacing scale | ✅ **DONE** | Standardized: `gap-2` for tight groups, `gap-3` for form fields, `gap-4` for card grids |
-| U16 | console.error in production code | ✅ **DONE** | All `console.error` replaced with `handleError()` toast notifications; 0 remaining |
-| U17 | Missing skip-to-content link | ✅ **DONE** | `<a href="#main-content">Skip to content</a>` added to all 4 app admin layouts; `id="main-content"` on main content area |
-| U18 | Inconsistent error display patterns | ✅ **DONE** | Standardized: toast for transient errors, inline banner for persistent errors |
-
-### 7.3 Remaining Finding
-
-#### U12. No responsive table → card fallback
-**Pattern:** 18 tables use `overflow-x-auto`, but none implement a card-based mobile layout. Tables scroll horizontally on mobile, which is a poor UX.
-
-**Fix:** Create a shared `ResponsiveTable` component that renders as a table on `md:` and above, and as a card list on `sm:` and below.
+**Sprint 6 — schema & config hygiene (L1–L12)**
+11. L7: add FK constraints on inventory models.
+12. L8: drop dead models (`Invitation`, `ReconciliationReport`).
+13. L9: remove unreachable `PaymentStatus` values.
+14. L2/L3: externalize secrets + inter-service URLs.
+15. L4: verify token `type` claim in billing AuthGuard.
