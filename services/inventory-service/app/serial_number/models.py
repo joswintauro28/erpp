@@ -8,6 +8,9 @@ from app.core.database import Base
 
 class SerialNumber(Base):
     __tablename__ = "serial_numbers"
+    __table_args__ = (
+        sa.UniqueConstraint("organization_id", "serial_number", name="uq_serial_org_number"),
+    )
 
     id: Mapped[int] = mapped_column(sa.Integer, primary_key=True)
     organization_id: Mapped[int] = mapped_column(sa.Integer, nullable=False, index=True)

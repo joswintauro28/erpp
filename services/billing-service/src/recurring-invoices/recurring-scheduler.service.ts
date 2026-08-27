@@ -38,7 +38,8 @@ export class RecurringSchedulerService {
             0,
           );
 
-          const gstTreatment = tmpl.clientId % 2 === 0 ? "interstate" : "intrastate" as const;
+          // M7: default to intrastate (domestic) instead of fabricating based on clientId
+          const gstTreatment = "intrastate" as const;
           const gstRate = 18;
           let cgst = 0, sgst = 0, igst = 0;
           if (gstTreatment === "intrastate") {

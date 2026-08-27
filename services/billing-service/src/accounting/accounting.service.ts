@@ -315,7 +315,7 @@ export class AccountingService {
         templateType: "EXPENSE",
         sourceType: "Expense",
         sourceId: expense.id,
-        currency: "USD",
+        currency: "INR",
         createdBy: "system",
         lines: [
           {

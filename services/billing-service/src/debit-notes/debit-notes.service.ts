@@ -109,7 +109,7 @@ export class DebitNotesService {
         templateType: "DEBIT_NOTE",
         sourceType: "DebitNote",
         sourceId: debitNote.id,
-        currency: "USD",
+        currency: "INR",
         createdBy: "system",
         lines: [
           {

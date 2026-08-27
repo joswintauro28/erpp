@@ -141,6 +141,7 @@ model OrganizationMember {
   role           Role?        @relation(fields: [roleId], references: [id], onDelete: SetNull)
   updatedAt      DateTime     @default(now()) @updatedAt @map("updated_at")
 
+  @@unique([organizationId, userId])
   @@index([userId])
   @@index([organizationId])
   @@index([userId, status])
@@ -192,5 +193,6 @@ model RolePermission {
   permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
   updatedAt    DateTime   @default(now()) @updatedAt @map("updated_at")
 
+  @@unique([roleId, permissionId])
   @@map("role_permissions")
 }

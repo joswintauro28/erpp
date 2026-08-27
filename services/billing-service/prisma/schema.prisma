@@ -907,7 +907,7 @@ model Journal {
   sourceType       String        @map("source_type")
   sourceId         Int           @map("source_id")
   batchId          Int?          @map("batch_id")
-  currency         String        @default("USD")
+  currency         String        @default("INR")
   exchangeRate     Decimal       @default(1.000000) @map("exchange_rate") @db.Decimal(12, 6)
   baseAmount       Decimal       @map("base_amount") @db.Decimal(12, 2)
   reportingAmount  Decimal       @map("reporting_amount") @db.Decimal(12, 2)

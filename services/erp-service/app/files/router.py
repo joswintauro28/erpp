@@ -105,6 +105,19 @@ async def request_upload(
     org_id = payload.get("organization_id", 1)
     user_id = payload["user_id"]
 
+    # M23: self-cleanup — remove stale pending records on each new upload
+    cutoff = datetime.now(timezone.utc) - timedelta(minutes=_PENDING_TTL_MINUTES)
+    stale = await db.execute(
+        select(FileRecord).where(
+            FileRecord.organization_id == org_id,
+            FileRecord.created_at < cutoff,
+            FileRecord.checksum_sha256.is_(None),
+        )
+    )
+    for orphan in stale.scalars().all():
+        await mc.delete_object(orphan.bucket, orphan.object_key)
+        await db.delete(orphan)
+
     # Generate unique object key — scoped to <client>/<domain>/ when client_name is provided
     object_key = mc.make_object_key(
         body.original_name,

@@ -127,17 +127,23 @@ async function main() {
   console.log(`  Created ${usersData.length} users`);
 
   const mainAdmin = dbUsers.find(du => du.user.email === 'admin@datavex.com')?.user!;
-  const org = await prisma.organization.create({
-    data: { name: 'DATAVEX Industries Pvt Ltd', ownerId: mainAdmin.id },
+  // M4: use upsert to avoid creating duplicate orgs on re-runs
+  const org = await prisma.organization.upsert({
+    where: { id: 1 },
+    update: { name: 'DATAVEX Industries Pvt Ltd' },
+    create: { name: 'DATAVEX Industries Pvt Ltd', ownerId: mainAdmin.id },
   });
 
   for (const du of dbUsers) {
     const roleId = roleMap.get(du.roleName);
-    await prisma.organizationMember.create({
-      data: { organizationId: org.id, userId: du.user.id, roleId: roleId ?? null, status: 'active' },
+    // M4: use upsert to avoid duplicate membership race
+    await prisma.organizationMember.upsert({
+      where: { organizationId_userId: { organizationId: org.id, userId: du.user.id } },
+      update: { roleId: roleId ?? null, status: 'active' },
+      create: { organizationId: org.id, userId: du.user.id, roleId: roleId ?? null, status: 'active' },
     });
   }
-  console.log('  Created 1 organization with 6 members');
+  console.log('  Upserted 1 organization with members');
 
   for (const du of dbUsers) {
     const userId = du.user.id;

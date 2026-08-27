@@ -116,7 +116,7 @@ export class CreditNotesService {
         templateType: "CREDIT_NOTE",
         sourceType: "CreditNote",
         sourceId: creditNote.id,
-        currency: "USD",
+        currency: "INR",
         createdBy: "system",
         lines: [
           {

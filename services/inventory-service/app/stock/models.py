@@ -8,6 +8,9 @@ from app.core.database import Base
 
 class Stock(Base):
     __tablename__ = "stock"
+    __table_args__ = (
+        sa.UniqueConstraint("organization_id", "product_id", "warehouse_id", name="uq_stock_org_product_warehouse"),
+    )
 
     id: Mapped[int] = mapped_column(sa.Integer, primary_key=True)
     organization_id: Mapped[int] = mapped_column(sa.Integer, nullable=False, index=True)

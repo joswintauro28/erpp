@@ -447,7 +447,7 @@ export class InvoicesService {
 
   private readonly validTransitions: Record<string, string[]> = {
     draft: ["sent", "void"],
-    sent: ["partially_paid", "paid", "overdue", "void"],
+    sent: ["partially_paid", "overdue", "void"],
     partially_paid: ["paid", "overdue", "void"],
     overdue: ["paid", "partially_paid", "void"],
     paid: [],
@@ -599,7 +599,7 @@ export class InvoicesService {
       templateType: "INVOICE",
       sourceType: "Invoice",
       sourceId: invoice.id,
-      currency: "USD",
+      currency: "INR",  // M11: match system default currency
       createdBy: "system",
       lines,
     }, tx);

@@ -134,8 +134,9 @@ class StockService:
                 await FulfillmentService(self.db).resume_pending_fulfillments(
                     organization_id, product_ids=[product_id], warehouse_id=warehouse_id
                 )
-            except Exception:
-                pass
+            except Exception as exc:
+                import logging
+                logging.getLogger(__name__).warning("Failed to resume pending fulfillments: %s", exc)
 
         return stock
 
@@ -191,8 +192,9 @@ class StockService:
                 await FulfillmentService(self.db).resume_pending_fulfillments(
                     organization_id, product_ids=[product_id], warehouse_id=warehouse_id
                 )
-            except Exception:
-                pass
+            except Exception as exc:
+                import logging
+                logging.getLogger(__name__).warning("Failed to resume pending fulfillments: %s", exc)
 
         return movement
 

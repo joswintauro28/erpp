@@ -64,6 +64,8 @@ export class BankReconciliationService {
    */
   private async processFileBuffer(organizationId: number, buffer: Buffer, fileName: string) {
     try {
+      // M9: wrap entire import in a transaction for atomicity
+      return await this.prisma.$transaction(async (tx) => {
       const workbook = XLSX.read(buffer, { type: "buffer", cellDates: true });
       const sheetName = workbook.SheetNames[0];
       const sheet = workbook.Sheets[sheetName];
@@ -146,6 +148,7 @@ export class BankReconciliationService {
         batch,
         message: `Imported ${imported} transactions from ${fileName}`,
       };
+      }); // end $transaction
     } catch (e: any) {
       this.logger.error(`Error processing file: ${e.message}`, e.stack);
       return { imported: 0, error: `Failed to parse file: ${e.message}` };

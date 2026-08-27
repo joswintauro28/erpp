@@ -40,22 +40,25 @@ export class AuthService {
 
     const isMatch = await bcrypt.compare(pass, user.passwordHash);
     if (!isMatch) {
-      const newAttempts = user.failedLoginAttempts + 1;
       const lockThreshold = this.configService.get<number>('LOCK_THRESHOLD', 5);
       const lockDurationMinutes = this.configService.get<number>('LOCK_DURATION_MINUTES', 15);
 
-      const updateData: Record<string, unknown> = {
-        failedLoginAttempts: newAttempts,
-      };
+      // M1 fix: atomic increment via Prisma to prevent lost-update races
+      const [updatedUser] = await this.prisma.$queryRaw<
+        { failedLoginAttempts: number }[]
+      >`
+        UPDATE users
+        SET failed_login_attempts = failed_login_attempts + 1,
+            locked_until = CASE
+              WHEN failed_login_attempts + 1 >= ${lockThreshold}
+              THEN NOW() + interval '${lockDurationMinutes} minutes'
+              ELSE locked_until
+            END
+        WHERE id = ${user.id}
+        RETURNING failed_login_attempts
+      `;
 
-      if (newAttempts >= lockThreshold) {
-        updateData.lockedUntil = new Date(Date.now() + lockDurationMinutes * 60 * 1000);
-      }
-
-      await this.prisma.user.update({
-        where: { id: user.id },
-        data: updateData,
-      });
+      const newAttempts = updatedUser?.failedLoginAttempts ?? user.failedLoginAttempts + 1;
 
       throw new UnauthorizedException('Incorrect password');
     }
@@ -169,7 +172,7 @@ export class AuthService {
       throw new ConflictException('A user with this email already exists');
     }
 
-    const salt = await bcrypt.genSalt(10);
+    const salt = await bcrypt.genSalt(12);
     const passwordHash = await bcrypt.hash(dto.password, salt);
 
     return this.prisma.$transaction(async (tx) => {
@@ -337,6 +340,11 @@ export class AuthService {
       throw new UnauthorizedException('User not found');
     }
 
+    // M3: reject deactivated users — their tokens should be treated as invalid
+    if (!user.isActive) {
+      throw new UnauthorizedException('Account has been deactivated');
+    }
+
     const accessPayload = await this.generateAccessPayload(userId);
 
     return {
@@ -400,7 +408,7 @@ export class AuthService {
       }
     } else {
       const defaultPassword = data.password || 'User@123!';
-      const salt = await bcrypt.genSalt(10);
+      const salt = await bcrypt.genSalt(12);
       const passwordHash = await bcrypt.hash(defaultPassword, salt);
       user = await this.prisma.user.create({
         data: {

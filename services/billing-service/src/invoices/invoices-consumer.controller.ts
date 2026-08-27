@@ -161,21 +161,11 @@ export class InvoicesConsumerController {
         poReference: data.order_number,
       };
 
-      try {
-        const result = await this.invoicesService.create(organizationId, dto);
-        this.logger.log(`Auto-created Accounts Payable entry ID ${result.id} for PO creation`);
-      } catch (err) {
-        // Unique (organization_id, po_reference) payable constraint: a concurrent
-        // create already won — suppress the duplicate instead of failing.
-        if ((err as any)?.code === "P2002" && data.order_number) {
-          const existing = await this.invoicesService.findByPoReference(organizationId, String(data.order_number));
-          if (existing) {
-            this.logger.log(`AP entry ${existing.id} already exists for PO ${data.order_number}; concurrent duplicate suppressed`);
-            return;
-          }
-        }
-        throw err;
-      }
+      // M8: idempotency already verified above via findByPoReference.
+      // Fail loudly on create errors instead of silently catching P2002
+      // from a constraint that may not exist.
+      const result = await this.invoicesService.create(organizationId, dto);
+      this.logger.log(`Auto-created Accounts Payable entry ID ${result.id} for PO creation`);
     } catch (err) {
       this.logger.error(`Failed to handle PO created event: ${(err as any).message}`, (err as any).stack);
     }

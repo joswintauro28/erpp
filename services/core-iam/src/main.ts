@@ -30,7 +30,8 @@ async function bootstrap() {
         callback(null, true);
       } else if (corsOrigins.includes(origin)) {
         callback(null, true);
-      } else if (origin.match(/^https?:\/\/(localhost|127\.0\.0\.1|.*\.erp\.local)(:\d+)?$/)) {
+      } else if (origin.match(/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/) ||
+                 corsOrigins.some((o) => origin === o)) {
         callback(null, true);
       } else {
         callback(new Error('Not allowed by CORS'));

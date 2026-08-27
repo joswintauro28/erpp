@@ -105,6 +105,7 @@ export class PaymentsService {
 
       const { cashBankId, arId } = await this.getAccountIds(organizationId);
 
+      // Mark payment as cleared
       await tx.payment.update({
         where: { id },
         data: { status: "cleared" },
@@ -115,7 +116,18 @@ export class PaymentsService {
           where: { id: payment.invoiceId },
         });
         if (invoice) {
-          const paidAmount = Number(invoice.paidAmount) + Number(payment.amount);
+          // M10: prevent clearing payments against draft/void invoices
+          if (invoice.status === "draft" || invoice.status === "void") {
+            throw new BadRequestException(
+              `Cannot clear payment against a "${invoice.status}" invoice.`
+            );
+          }
+
+          // M10: prevent overpayment — clamp to remaining balance
+          const paidAmount = Math.min(
+            Number(invoice.paidAmount) + Number(payment.amount),
+            Number(invoice.total)
+          );
           const total = Number(invoice.total);
           let newStatus = invoice.status;
 
@@ -186,6 +198,13 @@ export class PaymentsService {
         where: { id: dto.invoiceId, organizationId },
       });
       if (!invoice) throw new NotFoundException("Invoice not found");
+
+      // M10: prevent payments against draft/void invoices
+      if (invoice.status === "draft" || invoice.status === "void") {
+        throw new BadRequestException(
+          `Cannot record payment against a "${invoice.status}" invoice.`
+        );
+      }
 
       const payment = await tx.payment.create({
         data: {

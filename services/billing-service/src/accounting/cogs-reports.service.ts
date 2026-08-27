@@ -81,7 +81,7 @@ export class CogsReportsService {
       inventory_asset_value: Math.round(invAssetBalance),
       inventory_turnover: inventoryTurnover,
       postings_count: postingsCount,
-      currency: "USD",
+      currency: "INR",
     };
   }
 

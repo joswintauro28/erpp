@@ -137,6 +137,9 @@ async def process_crm_order_approved(message: aio_pika.IncomingMessage):
                 
         except Exception as e:
             logger.error(f"Error processing crm.order.approved: {str(e)}", exc_info=True)
+            # M16: nack the message so RabbitMQ requeues it for retry/DLQ
+            message.nack(requeue=False)
+            return
 
 async def process_crm_order_cancelled(message: aio_pika.IncomingMessage):
     async with message.process():
@@ -158,6 +161,8 @@ async def process_crm_order_cancelled(message: aio_pika.IncomingMessage):
                     logger.info(f"No fulfillment found for cancelled sales order {sales_order_code}")
         except Exception as e:
             logger.error(f"Error processing crm.order.cancelled: {str(e)}", exc_info=True)
+            message.nack(requeue=False)
+            return
 
 
 async def run_worker():

@@ -41,8 +41,9 @@ interface NotificationContextValue {
 const NotificationContext = createContext<NotificationContextValue | null>(null);
 
 function resolveEndpoints(props: { restBase?: string; wsUrl?: string }) {
+  // M21: default to same-origin (goes through app proxy) instead of hardcoded localhost
   const restBase =
-    props.restBase || process.env.NEXT_PUBLIC_ERP_API_URL || "http://localhost:8000";
+    props.restBase || process.env.NEXT_PUBLIC_ERP_API_URL || "";
   const wsUrl =
     props.wsUrl ||
     process.env.NEXT_PUBLIC_ERP_WS_URL ||
