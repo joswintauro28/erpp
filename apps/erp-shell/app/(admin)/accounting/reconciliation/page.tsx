@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { api } from "@/services/api";
 import { money } from "@/utils/format";
-import { FileUpload, type FileRecord } from "@datavex/ui-theme";
+import { FileUpload, type FileRecord, handleError } from "@datavex/ui-theme";
 
 export default function ReconciliationPage() {
   const [activeTab, setActiveTab] = useState<"transactions" | "settings" | "variance" | "audit">("transactions");
@@ -375,7 +375,7 @@ export default function ReconciliationPage() {
                   </div>
                 </div>
               </div>
-              <Button type="submit" className="bg-[var(--shell-brand)] text-white hover:bg-[var(--shell-action)]">Save Configurations</Button>
+              <Button type="submit" size="sm" className="bg-[var(--shell-brand)] text-white hover:bg-[var(--shell-action)]">Save Configurations</Button>
             </form>
           </CardContent>
         </Card>

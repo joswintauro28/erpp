@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { BarChart3, TrendingUp, TrendingDown, AlertTriangle, DollarSign, Receipt, Wallet, Banknote, ArrowUpRight, ArrowDownRight, Minus } from "lucide-react";
 import ReportsLoading from "./loading";
 import { api } from "@/services/api";
+import { handleError } from "@datavex/ui-theme";
 import { money } from "@/utils/format";
 
 type Tab = "pl" | "balance-sheet" | "cash-flow" | "cogs";
@@ -30,7 +31,7 @@ export default function ReportsPage() {
   const [cfLoading, setCfLoading] = useState(false);
   const [activeTx, setActiveTx] = useState<any>(null);
   const [showDrilldown, setShowDrilldown] = useState(false);
-  const [cfSearchQuery, setCfSearchQuery] = useState("");
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     async function fetch() {
@@ -71,7 +72,7 @@ export default function ReportsPage() {
           setDetailedCf(res);
         }
       } catch (err) {
-        console.error("Failed to fetch detailed cash flow", err);
+        handleError("Failed to fetch detailed cash flow", err);
       } finally {
         setCfLoading(false);
       }
@@ -562,8 +563,8 @@ export default function ReportsPage() {
                         <input
                           type="text"
                           placeholder="Search transactions..."
-                          value={cfSearchQuery}
-                          onChange={(e) => setCfSearchQuery(e.target.value)}
+                          value={search}
+                          onChange={(e) => setSearch(e.target.value)}
                           className="rounded-lg border border-border bg-transparent pl-8 pr-3 py-1.5 text-xs text-foreground outline-none focus:ring-1 focus:ring-accent w-64"
                         />
                         <span className="absolute left-2.5 top-1.5 text-xs text-muted-foreground">🔍</span>
@@ -584,9 +585,9 @@ export default function ReportsPage() {
                         <TableBody>
                           {detailedCf.transactions
                             .filter((t: any) =>
-                              t.description.toLowerCase().includes(cfSearchQuery.toLowerCase()) ||
-                              t.counter_account.name.toLowerCase().includes(cfSearchQuery.toLowerCase()) ||
-                              (t.reference_type || "").toLowerCase().includes(cfSearchQuery.toLowerCase())
+                              t.description.toLowerCase().includes(search.toLowerCase()) ||
+                              t.counter_account.name.toLowerCase().includes(search.toLowerCase()) ||
+                              (t.reference_type || "").toLowerCase().includes(search.toLowerCase())
                             )
                             .slice(0, 50).map((tx: any) => (
                               <TableRow
@@ -635,7 +636,7 @@ export default function ReportsPage() {
                         <h3 className="text-sm font-bold text-foreground">Transaction Details</h3>
                         <p className="text-[11px] text-muted-foreground">Reference: {activeTx.reference_type ? `${activeTx.reference_type} ID: ${activeTx.reference_id}` : "Direct Ledger Entry"}</p>
                       </div>
-                      <button onClick={() => setShowDrilldown(false)} className="h-6 w-6 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground text-xs font-bold">✕</button>
+                      <Button variant="ghost" size="icon-xs" onClick={() => setShowDrilldown(false)} className="text-muted-foreground hover:text-foreground">✕</Button>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4 text-xs">

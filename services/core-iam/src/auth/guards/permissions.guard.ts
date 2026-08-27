@@ -34,9 +34,11 @@ export class PermissionsGuard implements CanActivate {
       // Attach user info payload to request object for downstream controllers
       request.user = payload;
 
-      // If no permissions are explicitly annotated, JWT verification is sufficient
+      // DENY-BY-DEFAULT: routes without @Permissions() are locked.
+      // This prevents accidentally unprotected admin endpoints (audit C1).
+      // Login/register/refresh/logout are NOT guarded — they are free to call.
       if (!requiredPermissions || requiredPermissions.length === 0) {
-        return true;
+        throw new UnauthorizedException('This endpoint requires explicit @Permissions() annotation');
       }
 
       // Organization Owners (admins/super-admins) bypass all permission restrictions
@@ -48,7 +50,10 @@ export class PermissionsGuard implements CanActivate {
       const userPermissions: string[] = payload.permissions || [];
       const hasPermission = requiredPermissions.some(perm => userPermissions.includes(perm));
       
-      return hasPermission;
+      if (!hasPermission) {
+        throw new UnauthorizedException('Insufficient permissions');
+      }
+      return true;
     } catch (err) {
       throw new UnauthorizedException('Invalid or expired authorization token');
     }

@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { api } from "@/services/api";
+import { handleError } from "@datavex/ui-theme";
 import { money, formatDate } from "@/utils/format";
 import type { QuotationDetailView, QuotationItemView } from "@/types/billing";
 
@@ -350,22 +351,22 @@ export default function QuotationForm({ mode, initialData, onSuccess }: Quotatio
       <div className="flex items-center justify-between">
         <div>
           {step > 0 ? (
-            <Button type="button" variant="outline" onClick={() => setStep(step - 1)}>
+            <Button type="button" variant="outline" size="sm" onClick={() => setStep(step - 1)}>
               <ChevronLeft className="h-4 w-4" /> Back
             </Button>
           ) : (
-            <Button type="button" variant="ghost" onClick={() => router.back()}>
+            <Button type="button" variant="ghost" size="sm" onClick={() => router.back()}>
               Cancel
             </Button>
           )}
         </div>
         <div>
           {step < 2 ? (
-            <Button type="button" disabled={!canNext} onClick={() => setStep(step + 1)}>
+            <Button type="button" disabled={!canNext} size="sm" onClick={() => setStep(step + 1)}>
               Next <ChevronRight className="h-4 w-4" />
             </Button>
           ) : (
-            <Button type="button" disabled={saving || grandTotal <= 0} onClick={handleSubmit}>
+            <Button type="button" disabled={saving size="sm" || grandTotal <= 0} onClick={handleSubmit}>
               {saving && <Loader2 className="mr-1 h-4 w-4 animate-spin" />}
               <Save className="h-4 w-4" />
               {isEdit ? "Update Quotation" : "Create Quotation"}

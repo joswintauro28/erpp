@@ -17,6 +17,7 @@ import {
 import { searchBilling, money, statusVariant } from "@/utils/format";
 import type { Quotation } from "@/types/billing";
 import { api } from "@/services/api";
+import { handleError } from "@datavex/ui-theme";
 import QuotationsLoading from "./loading";
 
 const statusOptions = ["", "draft", "sent", "accepted", "rejected", "expired"] as const;
@@ -35,7 +36,7 @@ export default function Quotations() {
         const qData = await api.get<Quotation[]>("/invoices/quotations");
         setQuotes(qData);
       } catch (err) {
-        console.error("Failed to load quotations data", err);
+        handleError("Failed to load quotations data", err);
       } finally {
         setLoading(false);
       }
@@ -60,7 +61,7 @@ export default function Quotations() {
       const updated = await api.put<Quotation>(`/invoices/quotations/${id}/status?status=${status}`);
       setQuotes((prev) => prev.map((q) => q.id === id ? updated : q));
     } catch (err) {
-      console.error("Failed to update status", err);
+      handleError("Failed to update status", err);
     }
   };
 
@@ -72,7 +73,7 @@ export default function Quotations() {
       const updatedQuotes = await api.get<Quotation[]>("/invoices/quotations");
       setQuotes(updatedQuotes);
     } catch (err) {
-      console.error("Failed to convert quotation", err);
+      handleError("Failed to convert quotation", err);
     }
   };
 
@@ -82,7 +83,7 @@ export default function Quotations() {
       await api.delete(`/invoices/quotations/${id}`);
       setQuotes((prev) => prev.filter((q) => q.id !== id));
     } catch (err) {
-      console.error("Failed to delete quotation", err);
+      handleError("Failed to delete quotation", err);
     }
   };
 

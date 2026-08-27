@@ -507,7 +507,7 @@ export default function ReconciliationPage() {
                 </div>
               </div>
 
-              <Button type="submit" className="bg-[var(--shell-brand)] text-white hover:bg-[var(--shell-action)]">
+              <Button type="submit" size="sm" className="bg-[var(--shell-brand)] text-white hover:bg-[var(--shell-action)]">
                 Save Configurations
               </Button>
             </form>

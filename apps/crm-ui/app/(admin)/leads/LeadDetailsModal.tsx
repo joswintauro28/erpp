@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { X, Target, TrendingUp, Calendar, AlertCircle, Sparkles, BadgeCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { api } from "@/services/api";
+import { handleError } from "@datavex/ui-theme";
 import { toastSuccess, toastError, errorMessage } from "@/utils/toast";
 
 const formatCurrency = (value: any) => {

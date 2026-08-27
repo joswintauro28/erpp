@@ -23,6 +23,7 @@ import { InviteUserDto, UpdateUserRoleDto, UpdateUserStatusDto, UpdateRolePermis
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { PermissionsGuard } from './guards/permissions.guard';
+import { Permissions } from './decorators/permissions.decorator';
 
 @Controller('auth')
 export class AuthController {
@@ -146,12 +147,14 @@ export class AuthController {
 
   @Get('users/me')
   @UseGuards(PermissionsGuard)
+  @Permissions('users:read')
   async getMe(@Req() req: Request & { user: any }) {
     return this.authService.getUserMe(Number(req.user.sub));
   }
 
   @Get('users')
   @UseGuards(PermissionsGuard)
+  @Permissions('users:list')
   async listUsers(@Req() req: Request & { user: any }) {
     const orgId = Number(req.user.organization_id);
     return this.authService.listUsersInOrganization(orgId);
@@ -159,6 +162,7 @@ export class AuthController {
 
   @Post('users')
   @UseGuards(PermissionsGuard)
+  @Permissions('users:manage')
   async inviteUser(
     @Req() req: Request & { user: any },
     @Body() body: InviteUserDto
@@ -169,6 +173,7 @@ export class AuthController {
 
   @Put('users/:id/status')
   @UseGuards(PermissionsGuard)
+  @Permissions('users:manage')
   async toggleStatus(
     @Req() req: Request & { user: any },
     @Param('id') id: string,
@@ -180,6 +185,7 @@ export class AuthController {
 
   @Put('users/:id/role')
   @UseGuards(PermissionsGuard)
+  @Permissions('users:manage')
   async updateRole(
     @Req() req: Request & { user: any },
     @Param('id') id: string,
@@ -191,6 +197,7 @@ export class AuthController {
 
   @Delete('users/:id')
   @UseGuards(PermissionsGuard)
+  @Permissions('users:manage')
   async deleteUser(
     @Req() req: Request & { user: any },
     @Param('id') id: string
@@ -201,18 +208,21 @@ export class AuthController {
 
   @Get('roles')
   @UseGuards(PermissionsGuard)
+  @Permissions('roles:list')
   async listRoles() {
     return this.authService.listAvailableRoles();
   }
 
   @Get('permissions')
   @UseGuards(PermissionsGuard)
+  @Permissions('permissions:list')
   async listPermissions() {
     return this.authService.listAllPermissions();
   }
 
   @Put('roles/:id/permissions')
   @UseGuards(PermissionsGuard)
+  @Permissions('roles:manage')
   async updateRolePermissions(
     @Param('id') id: string,
     @Body() body: UpdateRolePermissionsDto

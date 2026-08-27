@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AlertTriangle, Loader2, Lock, Unlock, Calendar } from "lucide-react";
 import { api } from "@/services/api";
+import { handleError } from "@datavex/ui-theme";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -41,7 +42,7 @@ export default function PeriodsPage() {
     try {
       await api.post(`/periods/${id}/close`, {});
       load();
-    } catch { /* handled */ } finally { setActionLoading(null); }
+    } catch (err) { handleError(err); } finally { setActionLoading(null); }
   };
 
   const handleReopen = async (id: number) => {
@@ -56,7 +57,7 @@ export default function PeriodsPage() {
       await api.post(`/periods/${reopenId}/reopen-request`, { reason: reopenReason || "Reopening period" });
       setReopenId(null);
       load();
-    } catch { /* handled */ } finally { setActionLoading(null); }
+    } catch (err) { handleError(err); } finally { setActionLoading(null); }
   };
 
   if (loading) {

@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import { Search, Plus, Receipt, Download, Trash2, AlertTriangle, Loader2, Wallet, Building2, CalendarDays } from "lucide-react";
 import { toastInfo } from "@/utils/toast";
 import { api } from "@/services/api";
+import { handleError } from "@datavex/ui-theme";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -309,8 +310,8 @@ export default function Expenses() {
             </div>
 
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setCreateOpen(false)}>Cancel</Button>
-              <Button type="submit" disabled={saving} className="bg-[var(--shell-brand)] hover:bg-[var(--shell-brand)]/90 text-white">
+              <Button type="button" variant="outline" size="sm" onClick={() => setCreateOpen(false)}>Cancel</Button>
+              <Button type="submit" size="sm" disabled={saving} className="bg-[var(--shell-brand)] hover:bg-[var(--shell-brand)]/90 text-white">
                 {saving && <Loader2 className="mr-1 h-4 w-4 animate-spin" />}
                 Add Expense
               </Button>

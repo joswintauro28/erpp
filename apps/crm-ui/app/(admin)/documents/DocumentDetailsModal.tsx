@@ -14,6 +14,7 @@ import {
 interface FileItem {
   name: string;
   size?: string;
+  file_id?: number;
   file_data?: string;
 }
 
@@ -23,17 +24,7 @@ interface DocumentDetailsModalProps {
   onClose: () => void;
 }
 
-function dataURLtoBlob(dataurl: string) {
-  const arr = dataurl.split(",");
-  const mime = arr[0].match(/:(.*?);/)?.[1] || "application/octet-stream";
-  const bstr = atob(arr[1]);
-  const n = bstr.length;
-  const u8arr = new Uint8Array(n);
-  for (let i = 0; i < n; i++) {
-    u8arr[i] = bstr.charCodeAt(i);
-  }
-  return new Blob([u8arr], { type: mime });
-}
+
 
 function getMockHtml(doc: any) {
   return `
@@ -123,12 +114,12 @@ export default function DocumentDetailsModal({
       } catch {}
     }
 
-    if (list.length === 0 && doc.file_data) {
+    if (list.length === 0 && doc.file_id) {
       list = [
         {
-          name: doc.name || doc.title,
+          name: doc.name || doc.title || "attachment",
           size: doc.size,
-          file_data: doc.file_data,
+          file_id: doc.file_id,
         },
       ];
     }
@@ -141,25 +132,14 @@ export default function DocumentDetailsModal({
 
   const handleDownloadFile = (file: FileItem | null) => {
     const target = file || activeFile;
-    if (target?.file_data) {
-      try {
-        const blob = dataURLtoBlob(target.file_data);
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = target.name;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-      } catch {
-        const link = document.createElement("a");
-        link.href = target.file_data!;
-        link.download = target.name;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      }
+    const fid = target?.file_id;
+    if (fid) {
+      const a = document.createElement("a");
+      a.href = `/api/files/${fid}/stream`;
+      a.download = target?.name || "download";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
     } else {
       const blob = new Blob([getMockHtml(doc)], { type: "text/html" });
       const url = URL.createObjectURL(blob);
@@ -175,20 +155,9 @@ export default function DocumentDetailsModal({
 
   const handleOpenInNewTab = (file: FileItem | null) => {
     const target = file || activeFile;
-    if (target?.file_data) {
-      try {
-        const blob = dataURLtoBlob(target.file_data);
-        const url = URL.createObjectURL(blob);
-        window.open(url, "_blank");
-      } catch {
-        const newTab = window.open();
-        if (newTab) {
-          newTab.document.write(
-            `<iframe src="${target.file_data}" frameborder="0" style="border:0; width:100%; height:100%;" allowfullscreen></iframe>`
-          );
-          newTab.document.close();
-        }
-      }
+    const fid = target?.file_id;
+    if (fid) {
+      window.open(`/api/files/${fid}/stream`, "_blank");
     } else {
       const newTab = window.open();
       if (newTab) {
@@ -199,27 +168,43 @@ export default function DocumentDetailsModal({
   };
 
   const renderFilePreview = () => {
-    if (activeFile?.file_data) {
-      if (activeFile.file_data.startsWith("data:application/pdf")) {
+    const fid = activeFile?.file_id;
+    if (fid) {
+      const streamUrl = `/api/files/${fid}/stream`;
+      // Try to determine type from name extension
+      const name = activeFile?.name || "";
+      const isPdf = name.toLowerCase().endsWith(".pdf");
+      const isImage = /\.(png|jpe?g|gif|webp|svg|bmp)$/i.test(name);
+      if (isPdf) {
         return (
           <iframe
-            src={activeFile.file_data}
+            src={streamUrl}
             className="w-full h-[420px] border-0 rounded-lg bg-[var(--shell-surface)]"
-            title={activeFile.name}
+            title={activeFile?.name || "PDF Preview"}
           />
         );
       }
-      if (activeFile.file_data.startsWith("data:image/")) {
+      if (isImage) {
         return (
           <div className="flex items-center justify-center bg-[var(--shell-surface-alt)] border border-[var(--shell-border)] p-4 rounded-lg h-[420px]">
             <img
-              src={activeFile.file_data}
-              alt={activeFile.name}
+              src={streamUrl}
+              alt={activeFile?.name || "Preview"}
               className="max-w-full max-h-full object-contain rounded-md"
             />
           </div>
         );
       }
+      // Unknown type — show download prompt
+      return (
+        <div className="flex flex-col items-center justify-center h-[420px] bg-[var(--shell-surface-alt)] border border-[var(--shell-border)] rounded-lg gap-3 text-[var(--shell-muted)]">
+          <FileText size={40} strokeWidth={1} />
+          <p className="text-sm">Preview not available for this file type.</p>
+          <Button variant="outline" size="sm" onClick={() => handleDownloadFile(activeFile)}>
+            <Download size={13} className="mr-1" /> Download to view
+          </Button>
+        </div>
+      );
     }
 
     return (

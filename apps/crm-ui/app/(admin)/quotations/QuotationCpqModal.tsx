@@ -265,7 +265,7 @@ export default function QuotationCpqModal({ isOpen, onClose, onSuccess, defaultA
         </div>
 
         <div className="mt-5 flex justify-end gap-2">
-          <Button variant="outline" onClick={onClose}>Cancel</Button>
+          <Button variant="outline" size="sm" onClick={onClose}>Cancel</Button>
           <Button onClick={handleSubmit} disabled={submitting} className={cn(requiresApproval && "bg-amber-600 hover:bg-amber-700")}>
             {submitting ? "Creating..." : requiresApproval ? "Create & Submit for Approval" : "Create Quotation"}
           </Button>

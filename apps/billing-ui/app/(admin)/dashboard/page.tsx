@@ -16,6 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { api } from "@/services/api";
+import { handleError } from "@datavex/ui-theme";
 import { money, lakhFormat, statusVariant } from "@/utils/format";
 import type { BillingDashboardData } from "@/types/billing";
 import { useAuth } from "@/contexts/AuthContext";

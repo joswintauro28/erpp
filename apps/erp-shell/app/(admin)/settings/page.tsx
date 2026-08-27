@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/select";
 import { Save, Building2, AlertTriangle, CheckCircle, Loader2, DollarSign, Globe } from "lucide-react";
 import { api } from "@/services/api";
+import { handleError } from "@datavex/ui-theme";
 
 export default function GeneralSettings() {
   const [loading, setLoading] = useState(true);
@@ -53,7 +54,7 @@ export default function GeneralSettings() {
         }
       })
       .catch((err) => {
-        console.error("Failed to load settings", err);
+        handleError("Failed to load settings", err);
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -72,7 +73,7 @@ export default function GeneralSettings() {
       await api.put("/settings", payload);
       setMessage({ type: "success", text: "Settings saved successfully!" });
     } catch (err) {
-      console.error("Failed to save settings", err);
+      handleError("Failed to save settings", err);
       setMessage({ type: "error", text: "Failed to save settings. Please try again." });
     } finally {
       setSaving(false);

@@ -14,4 +14,5 @@ class Document(Base):
     owner = Column(String)
     updated_at = Column(String)
     file_uri = Column(String, nullable=True)
+    file_id = Column(Integer, nullable=True)
     summary = Column(String, nullable=True)

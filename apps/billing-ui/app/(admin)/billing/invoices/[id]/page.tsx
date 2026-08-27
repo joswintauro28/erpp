@@ -17,6 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { LoadingSpinner } from "@/components/shared/loading-spinner";
 import { api } from "@/services/api";
+import { handleError } from "@datavex/ui-theme";
 import { useToast } from "@/contexts/ToastContext";
 import { money, formatDate, statusVariant } from "@/utils/format";
 import type { InvoiceDetailView } from "@/types/billing";
@@ -674,8 +675,8 @@ export default function InvoiceDetail() {
               <Input id="pay-ref" placeholder="Transaction / UTR reference" value={payRef} onChange={(e) => setPayRef(e.target.value)} />
             </div>
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setPayOpen(false)}>Cancel</Button>
-              <Button type="submit" disabled={paySaving || !payAmount}>
+              <Button type="button" variant="outline" size="sm" onClick={() => setPayOpen(false)}>Cancel</Button>
+              <Button type="submit" size="sm" disabled={paySaving || !payAmount}>
                 {paySaving && <Loader2 className="mr-1 h-4 w-4 animate-spin" />}
                 Record Payment
               </Button>
@@ -701,7 +702,7 @@ export default function InvoiceDetail() {
             )}
           </p>
           <DialogFooter className="mt-4">
-            <Button type="button" variant="outline" onClick={() => setConfirmAction(null)} disabled={confirmSaving}>Cancel</Button>
+            <Button type="button" variant="outline" size="sm" onClick={() => setConfirmAction(null)} disabled={confirmSaving}>Cancel</Button>
             <Button variant="destructive" onClick={handleConfirmedAction} disabled={confirmSaving}>
               {confirmSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Ban className="mr-2 h-4 w-4" />}
               {confirmAction ? (actionLabels[confirmAction] ?? confirmAction) : ""}
@@ -842,8 +843,8 @@ export default function InvoiceDetail() {
             </form>
           </div>
           <DialogFooter className="shrink-0 gap-2 border-t border-border bg-[--shell-surface] px-6 py-4">
-            <Button type="button" variant="outline" onClick={() => setEditOpen(false)}>Cancel</Button>
-            <Button type="submit" form="edit-invoice-form" disabled={editSaving}>
+            <Button type="button" variant="outline" size="sm" onClick={() => setEditOpen(false)}>Cancel</Button>
+            <Button type="submit" size="sm" form="edit-invoice-form" disabled={editSaving}>
               {editSaving && <Loader2 className="mr-1 h-4 w-4 animate-spin" />}
               Save Changes
             </Button>

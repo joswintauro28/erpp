@@ -13,7 +13,7 @@ import OpportunityDetailModal from "./OpportunityDetailModal";
 import { Spinner } from "@/components/ui/spinner";
 import { api } from "@/services/api";
 import { toastError } from "@/utils/toast";
-import { useConfirm } from "@datavex/ui-theme";
+import { useConfirm, handleError } from "@datavex/ui-theme";
 import OpportunityCreateModal from "./OpportunityCreateModal";
 
 

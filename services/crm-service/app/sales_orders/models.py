@@ -15,6 +15,7 @@ class SalesOrder(Base):
     status = Column(String)
     owner = Column(String)
     file_uri = Column(String, nullable=True)
+    file_id = Column(Integer, nullable=True)
     # Product line items from the quote/order: [{ product_name, sku, quantity, unit_price }]
     line_items = Column(JSON, nullable=True)
 

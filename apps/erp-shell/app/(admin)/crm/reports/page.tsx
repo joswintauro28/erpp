@@ -9,7 +9,7 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { Spinner } from "@/components/ui/spinner";
 import { exportToCSV } from "@/utils/exportCsv";
 import { toastError } from "@/utils/toast";
-import { useConfirm } from "@datavex/ui-theme";
+import { useConfirm, handleError } from "@datavex/ui-theme";
 import { api } from "@/services/api";
 import ReportTable from "./ReportTable";
 import ReportCreateModal from "./ReportCreateModal";
@@ -163,7 +163,7 @@ export default function ReportsPage() {
                     <span className="text-[var(--shell-foreground)]">{item.status}</span>
                     <span className="text-[var(--shell-muted)]">{item.count} leads</span>
                   </div>
-                  <Progress value={(item.count / maxLeadCount) * 100} className="[&>div]:bg-[#0ea5e9]" />
+                  <Progress value={(item.count / maxLeadCount) * 100} className="[&>div]:bg-[var(--shell-info)]" />
                 </div>
               ))
             ) : (
@@ -186,7 +186,7 @@ export default function ReportsPage() {
                   <p className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--shell-muted)]">{item.stage}</p>
                   <p className="font-heading text-2xl font-semibold tracking-tight text-[var(--shell-foreground)] mt-1">{item.count}</p>
                   <div className="mt-2">
-                    <Progress value={(item.count / maxOppCount) * 100} className="h-1 [&>div]:bg-[#10b981]" />
+                    <Progress value={(item.count / maxOppCount) * 100} className="h-1 [&>div]:bg-[var(--shell-success)]" />
                   </div>
                 </div>
               ))

@@ -3,6 +3,7 @@
 import { useState, useEffect, ChangeEvent } from "react";
 import { Search, Plus, Pencil, Power, PowerOff, AlertTriangle, Loader2, Banknote, Landmark, Scale, TrendingUp, ShoppingCart } from "lucide-react";
 import { api } from "@/services/api";
+import { handleError } from "@datavex/ui-theme";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -313,8 +314,8 @@ export default function ChartOfAccounts() {
               )}
             </div>
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setCreateOpen(false)}>Cancel</Button>
-              <Button type="submit" disabled={saving} className="bg-[var(--shell-brand)] hover:bg-[var(--shell-brand)]/90 text-white">
+              <Button type="button" variant="outline" size="sm" onClick={() => setCreateOpen(false)}>Cancel</Button>
+              <Button type="submit" size="sm" disabled={saving} className="bg-[var(--shell-brand)] hover:bg-[var(--shell-brand)]/90 text-white">
                 {saving && <Loader2 className="mr-1 h-4 w-4 animate-spin" />}
                 {editId !== null ? "Update Account" : "Create Account"}
               </Button>

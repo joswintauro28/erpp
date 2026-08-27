@@ -18,6 +18,7 @@ import {
 import { searchBilling, money } from "@/utils/format";
 import type { DebitNote } from "@/types/billing";
 import { api } from "@/services/api";
+import { handleError } from "@datavex/ui-theme";
 import DebitNotesLoading from "./loading";
 
 export default function DebitNotes() {
@@ -227,8 +228,8 @@ export default function DebitNotes() {
             </div>
 
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setCreateOpen(false)}>Cancel</Button>
-              <Button type="submit" disabled={saving} className="bg-[var(--shell-brand)] hover:bg-[var(--shell-brand)]/90 text-white">
+              <Button type="button" variant="outline" size="sm" onClick={() => setCreateOpen(false)}>Cancel</Button>
+              <Button type="submit" size="sm" disabled={saving} className="bg-[var(--shell-brand)] hover:bg-[var(--shell-brand)]/90 text-white">
                 {saving && <Loader2 className="mr-1 h-4 w-4 animate-spin" />}
                 Create Debit Note
               </Button>

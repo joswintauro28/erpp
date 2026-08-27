@@ -23,3 +23,4 @@ class Requirement(Base):
     lead_id_str = Column(String, nullable=True, index=True)
     opportunity_id_str = Column(String, nullable=True, index=True)
     submitted_date = Column(String, nullable=True)
+    file_id = Column(Integer, nullable=True)

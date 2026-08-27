@@ -24,7 +24,7 @@ import { money, formatDate, statusVariant } from "@/utils/format";
 import { KanbanBoard, type KanbanColumn } from "@/components/kanban/kanban-board";
 import { api } from "@/services/api";
 import { useToast } from "@/contexts/ToastContext";
-import { useConfirm, PageHeader, KpiCard, SectionHeading } from "@datavex/ui-theme";
+import { useConfirm, PageHeader, KpiCard, SectionHeading, handleError } from "@datavex/ui-theme";
 import type { ApiInvoice, InvoiceListView } from "@/types/billing";
 import InvoicesLoading from "./loading";
 
@@ -128,7 +128,7 @@ export default function Invoices() {
     try {
       await api.put(`/invoices/${itemId}/status`, { status: newStatus });
       loadInvoices();
-    } catch { /* handled by api */ }
+    } catch (err) { handleError(err); }
   };
 
   // ── Create Invoice Form State ──────────────────────────────────────────────
@@ -546,8 +546,8 @@ export default function Invoices() {
             </form>
           </div>
           <DialogFooter className="shrink-0 gap-2 border-t border-border bg-[--shell-surface] px-6 py-4 rounded-t-none">
-            <Button type="button" variant="outline" onClick={() => { if (!saving) setCreateOpen(false); }}>Cancel</Button>
-            <Button type="submit" form="create-invoice-form" disabled={saving || !formClientName || formItems.length === 0} className="min-w-[140px]">
+            <Button type="button" variant="outline" size="sm" onClick={() => { if (!saving) setCreateOpen(false); }}>Cancel</Button>
+            <Button type="submit" size="sm" form="create-invoice-form" disabled={saving || !formClientName || formItems.length === 0} className="min-w-[140px]">
               {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Create Invoice
             </Button>

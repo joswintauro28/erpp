@@ -259,7 +259,45 @@
   body {
     @apply bg-background text-foreground font-sans text-base antialiased;
   }
+
+  /* Global keyboard focus indicator — visible only when navigating with Tab */
+  button:not([disabled]),
+  a[href],
+  input:not([type="hidden"]):not([disabled]),
+  select:not([disabled]),
+  textarea:not([disabled]),
+  [role="button"]:not([disabled]),
+  [tabindex]:not([tabindex="-1"]):not([disabled]) {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--shell-brand)] focus-visible:ring-offset-2 focus-visible:ring-offset-background;
+  }
+
+  /* Skip-to-content link */
+  .skip-to-content {
+    @apply sr-only;
+  }
+  .skip-to-content:focus {
+    @apply not-sr-only fixed top-2 left-2 z-[9999] rounded-md bg-[var(--shell-brand)] px-4 py-2 text-sm font-bold text-white shadow-lg;
+  }
 }
+
+/*
+ * Spacing & Border Radius Guidelines (for reference):
+ *
+ * Spacing scale:
+ *   gap-1 / gap-1.5 — tight inline (icon + text)
+ *   gap-2 — compact groups
+ *   gap-3 — form fields, list items
+ *   gap-4 — card grids, section dividers
+ *   gap-6 — major page sections
+ *   space-y-4 — form sections
+ *   space-y-6 — page sections
+ *
+ * Border radius:
+ *   rounded-md — inputs, buttons, small elements
+ *   rounded-lg — dialogs, popovers
+ *   rounded-xl — cards, containers
+ *   rounded-full — badges, avatars, pills
+ */
 
 /* Animations */
 @keyframes kpi-enter {

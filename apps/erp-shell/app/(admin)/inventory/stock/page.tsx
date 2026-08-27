@@ -19,6 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { api } from "@/services/api";
+import { handleError } from "@datavex/ui-theme";
 import { toastError } from "@/utils/toast";
 import { number } from "@/utils/format";
 import Link from "next/link";
@@ -83,7 +84,7 @@ export default function StockPage() {
       setFulfillmentHistory(filteredFulfillments);
       setPoHistory(filteredPOs);
     } catch (err) {
-      console.error(err);
+      handleError(err);
     } finally {
       setHistoryLoading(false);
     }
@@ -122,7 +123,7 @@ export default function StockPage() {
       setIsAdjustOpen(false);
       fetchStock();
     } catch (err) {
-      console.error(err);
+      handleError(err);
       toastError("Failed to adjust stock", "Check backend logs.");
     }
   };

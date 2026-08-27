@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/dialog";
 import { LoadingSpinner } from "@/components/shared/loading-spinner";
 import { api } from "@/services/api";
+import { handleError } from "@datavex/ui-theme";
 import { money, formatDate, quotationStatusVariant as statusVariant } from "@/utils/format";
 import { useAuth } from "@/contexts/AuthContext";
 import type { QuotationDetailView } from "@/types/billing";
@@ -69,7 +70,7 @@ export default function QuotationDetail() {
     try {
       await api.put(`/invoices/quotations/${params.id}/status?status=${status}`);
       loadQuotation();
-    } catch { /* handled */ } finally {
+    } catch (err) { handleError(err); } finally {
       setActionLoading("");
     }
   };
@@ -79,7 +80,7 @@ export default function QuotationDetail() {
     try {
       await api.post(`/invoices/quotations/${params.id}/convert`);
       loadQuotation();
-    } catch { /* handled */ } finally {
+    } catch (err) { handleError(err); } finally {
       setActionLoading("");
     }
   };
@@ -89,7 +90,7 @@ export default function QuotationDetail() {
     try {
       await api.delete(`/invoices/quotations/${params.id}`);
       router.push("/billing/quotations");
-    } catch { /* handled */ } finally {
+    } catch (err) { handleError(err); } finally {
       setDeleteSaving(false);
       setDeleteOpen(false);
     }
@@ -507,7 +508,7 @@ export default function QuotationDetail() {
             This will permanently remove the record and all associated items from the ledger. This action cannot be reversed.
           </p>
           <DialogFooter className="mt-4">
-            <Button type="button" variant="outline" className="border-[var(--shell-border)]" onClick={() => setDeleteOpen(false)}>Cancel</Button>
+            <Button type="button" variant="outline" size="sm" className="border-[var(--shell-border)]" onClick={() => setDeleteOpen(false)}>Cancel</Button>
             <Button variant="destructive" onClick={handleDelete} disabled={deleteSaving} className="bg-red-600 hover:bg-red-700 text-white">
               {deleteSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Trash2 className="mr-2 h-4 w-4" />}
               Delete Quotation

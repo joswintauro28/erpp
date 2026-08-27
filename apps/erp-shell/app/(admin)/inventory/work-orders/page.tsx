@@ -22,6 +22,7 @@ import { Input } from "@/components/ui/input";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { api } from "@/services/api";
+import { handleError } from "@datavex/ui-theme";
 import { toastError, toastWarning } from "@/utils/toast";
 
 interface Operation {
@@ -99,7 +100,7 @@ export default function WorkOrdersPage() {
       setOrders(woData || []);
       setProducts(prodData || []);
     } catch (err) {
-      console.error(err);
+      handleError(err);
     } finally {
       setLoading(false);
     }
@@ -125,7 +126,7 @@ export default function WorkOrdersPage() {
       setIsAddOpen(false);
       fetchData();
     } catch (err) {
-      console.error(err);
+      handleError(err);
       toastError("Failed to create work order.");
     }
   };
@@ -135,7 +136,7 @@ export default function WorkOrdersPage() {
       await api.post(`/work-orders/${id}/${action}`);
       fetchData();
     } catch (err) {
-      console.error(err);
+      handleError(err);
       toastError("Action failed", "Check backend logs.");
     }
   };
@@ -149,7 +150,7 @@ export default function WorkOrdersPage() {
       setSelectedOrder(null);
       fetchData();
     } catch (err) {
-      console.error(err);
+      handleError(err);
       toastError("Material issue failed", "Insufficient stock?");
     }
   };
@@ -161,7 +162,7 @@ export default function WorkOrdersPage() {
       setOrderToDelete(null);
       fetchData();
     } catch (err) {
-      console.error(err);
+      handleError(err);
       toastError("Failed to delete work order.");
     }
   };

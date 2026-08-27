@@ -28,6 +28,7 @@ import {
   Filter,
 } from "lucide-react";
 import { api } from "@/services/api";
+import { handleError } from "@datavex/ui-theme";
 import { money } from "@/utils/format";
 
 
@@ -36,7 +37,7 @@ export default function AgingWorkstationPage() {
   
   const [asOfDate, setAsOfDate] = useState<string>(new Date().toISOString().split("T")[0]);
   const [selectedBucket, setSelectedBucket] = useState<string>("ALL");
-  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [search, setSearch] = useState<string>("");
   
   const [page, setPage] = useState<number>(1);
   const pageSize = 15;
@@ -62,28 +63,28 @@ export default function AgingWorkstationPage() {
       const data = await api.get<any>(`/aging/summary?asOfDate=${asOfDate}`);
       setSummary(data);
     } catch (e) {
-      console.error(e);
+      handleError(e);
       setError("Failed to load aging summary");
     }
   };
 
   const fetchCustomers = async () => {
     try {
-      const query = `/aging/customers?asOfDate=${asOfDate}&page=${page}&pageSize=${pageSize}&search=${encodeURIComponent(searchQuery)}`;
+      const query = `/aging/customers?asOfDate=${asOfDate}&page=${page}&pageSize=${pageSize}&search=${encodeURIComponent(search)}`;
       const data = await api.get<any>(query);
       setCustomersResult(data);
     } catch (e) {
-      console.error(e);
+      handleError(e);
     }
   };
 
   const fetchInvoices = async (validate: boolean = false) => {
     try {
-      const query = `/aging/invoices?asOfDate=${asOfDate}&page=${page}&pageSize=${pageSize}&search=${encodeURIComponent(searchQuery)}&agingBucket=${selectedBucket}${validate ? "&validate=true" : ""}`;
+      const query = `/aging/invoices?asOfDate=${asOfDate}&page=${page}&pageSize=${pageSize}&search=${encodeURIComponent(search)}&agingBucket=${selectedBucket}${validate ? "&validate=true" : ""}`;
       const data = await api.get<any>(query);
       setInvoicesResult(data);
     } catch (e) {
-      console.error(e);
+      handleError(e);
     }
   };
 
@@ -92,7 +93,7 @@ export default function AgingWorkstationPage() {
       const data = await api.get<any>(`/aging/reconciliation?asOfDate=${asOfDate}`);
       setReconciliation(data);
     } catch (e) {
-      console.error(e);
+      handleError(e);
     }
   };
 
@@ -115,7 +116,7 @@ export default function AgingWorkstationPage() {
   useEffect(() => {
     if (activeTab === "customers") fetchCustomers();
     if (activeTab === "invoices") fetchInvoices();
-  }, [page, searchQuery, selectedBucket, activeTab]);
+  }, [page, search, selectedBucket, activeTab]);
 
   const handleExport = async (viewType: "summary" | "customers" | "invoices") => {
     setExporting(true);
@@ -134,7 +135,7 @@ export default function AgingWorkstationPage() {
       a.click();
       a.remove();
     } catch (e) {
-      console.error("Export failed", e);
+      handleError("Export failed", e);
     } finally {
       setExporting(false);
     }
@@ -147,7 +148,7 @@ export default function AgingWorkstationPage() {
       const data = await api.get<any>(`/aging/invoice/${invoiceId}`);
       setTimelineData(data);
     } catch (e) {
-      console.error(e);
+      handleError(e);
     } finally {
       setTimelineLoading(false);
     }
@@ -401,8 +402,8 @@ export default function AgingWorkstationPage() {
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search customer name..."
-                value={searchQuery}
-                onChange={(e) => { setSearchQuery(e.target.value); setPage(1); }}
+                value={search}
+                onChange={(e) => { setSearch(e.target.value); setPage(1); }}
                 className="pl-9 text-xs"
               />
             </div>
@@ -486,8 +487,8 @@ export default function AgingWorkstationPage() {
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Filter by invoice # or client..."
-                  value={searchQuery}
-                  onChange={(e) => { setSearchQuery(e.target.value); setPage(1); }}
+                  value={search}
+                  onChange={(e) => { setSearch(e.target.value); setPage(1); }}
                   className="pl-9 text-xs"
                 />
               </div>

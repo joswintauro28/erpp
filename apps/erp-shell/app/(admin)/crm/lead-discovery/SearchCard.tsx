@@ -85,7 +85,7 @@ const loadCityOptions = async (inputValue: string) => {
     });
     return uniqueCities;
   } catch (error) {
-    console.error("Error fetching cities:", error);
+    handleError("Error fetching cities:", error);
     return [];
   }
 };
@@ -406,7 +406,7 @@ export default function SearchCard({
                 <Loader2 size={14} className="mr-1.5 animate-spin" /> Stop Generation
               </Button>
             ) : isStopped ? (
-              <Button variant="secondary" onClick={onReset}>
+              <Button variant="outline" onClick={onReset}>
                 <ArrowLeft size={14} className="mr-1.5" /> Reset Search
               </Button>
             ) : (

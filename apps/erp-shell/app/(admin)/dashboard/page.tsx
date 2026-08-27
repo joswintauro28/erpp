@@ -19,7 +19,7 @@ import { api } from "@/services/api";
 import type { DashboardData } from "@/types/dashboard";
 import { statusVariant } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
-import { PageHeader, KpiCard, SectionHeading } from "@datavex/ui-theme";
+import { PageHeader, KpiCard, SectionHeading, handleError } from "@datavex/ui-theme";
 import DashboardLoading from "./loading";
 import PipelineChart from "./PipelineChart";
 import Recommendations from "./Recommendations";

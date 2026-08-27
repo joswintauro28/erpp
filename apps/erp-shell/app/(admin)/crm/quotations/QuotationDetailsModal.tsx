@@ -106,11 +106,11 @@ export default function QuotationDetailsModal({ record, isOpen, onClose, onSucce
             .account { margin: 4px 0 0 0; color: #b45309; font-weight: 600; font-size: 14px; }
             .metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
             .metric-box { background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 16px; }
-            .metric-label { font-size: 11px; color: #64748b; font-weight: 500; text-transform: uppercase; margin-bottom: 4px; }
+            .metric-label { font-size: 11px; color: var(--shell-muted); font-weight: 500; text-transform: uppercase; margin-bottom: 4px; }
             .metric-val { font-size: 18px; font-weight: 700; color: #0f172a; }
             .details-list { font-size: 13px; margin-top: 16px; }
             .details-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f1f5f9; }
-            .details-label { color: #64748b; }
+            .details-label { color: var(--shell-muted); }
             .details-val { font-weight: 500; color: #334155; }
           </style>
         </head>
@@ -143,7 +143,7 @@ export default function QuotationDetailsModal({ record, isOpen, onClose, onSucce
               </div>
               <div class="details-item">
                 <span class="details-label">Status</span>
-                <span class="details-val" style="color: ${record.status === 'Accepted' ? '#10b981' : '#64748b'}">${record.status || 'Draft'}</span>
+                <span class="details-val" style="color: ${record.status === 'Accepted' ? 'var(--shell-success)' : 'var(--shell-muted)'}">${record.status || 'Draft'}</span>
               </div>
             </div>
           </div>
@@ -254,10 +254,10 @@ export default function QuotationDetailsModal({ record, isOpen, onClose, onSucce
               </div>
 
               <div className="flex justify-end gap-3 mt-4">
-                <Button type="button" variant="outline" onClick={() => setShowSalesOrderForm(false)}>
+                <Button type="button" variant="outline" size="sm" onClick={() => setShowSalesOrderForm(false)}>
                   Back
                 </Button>
-                <Button type="submit" disabled={salesOrderSubmitting} className="bg-emerald-600 hover:bg-emerald-700">
+                <Button type="submit" size="sm" disabled={salesOrderSubmitting} className="bg-emerald-600 hover:bg-emerald-700">
                   {salesOrderSubmitting ? 'Creating...' : 'Confirm & Add to Sales Orders'}
                 </Button>
               </div>
@@ -281,11 +281,11 @@ export default function QuotationDetailsModal({ record, isOpen, onClose, onSucce
                 </div>
               ))}
 
-              {record.file_name && (
+              {record.file_name && record.file_id && (
                 <div>
                   <div className="text-[10px] font-semibold uppercase text-[var(--shell-muted)] mb-1">Attached Document</div>
                   <a
-                    href={record.file_data}
+                    href={`/api/files/${record.file_id}/stream`}
                     download={record.file_name}
                     className="inline-flex items-center gap-1 text-xs font-medium text-[var(--shell-brand)] hover:underline cursor-pointer"
                   >

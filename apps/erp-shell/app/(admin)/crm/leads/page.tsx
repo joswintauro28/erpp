@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { exportToCSV } from "@/utils/exportCsv";
 import { toastSuccess, toastError, errorMessage } from "@/utils/toast";
-import { useConfirm } from "@datavex/ui-theme";
+import { useConfirm, handleError } from "@datavex/ui-theme";
 import { cn } from "@/lib/utils";
 import LeadTable from "./LeadTable";
 import LeadDetailsModal from "./LeadDetailsModal";

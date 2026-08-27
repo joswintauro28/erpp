@@ -17,6 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { statusVariant } from "@/lib/utils";
 import { MultiStepDialog } from "@/components/multi-step-dialog";
 import { api } from "@/services/api";
+import { handleError } from "@datavex/ui-theme";
 import type { CrmCustomer, CrmCustomersResponse } from "@/types/crm";
 import ClientsLoading from "./loading";
 

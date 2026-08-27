@@ -18,10 +18,10 @@ import {
   Trash2,
   Layers,
 } from "lucide-react";
-import { Button } from "@datavex/ui-theme";
-import { Badge } from "@datavex/ui-theme";
-import { Card, CardContent, CardHeader, CardTitle } from "@datavex/ui-theme";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@datavex/ui-theme";
+import { Button, handleError } from "@datavex/ui-theme";
+import { Badge, handleError } from "@datavex/ui-theme";
+import { Card, CardContent, CardHeader, CardTitle, handleError } from "@datavex/ui-theme";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, handleError } from "@datavex/ui-theme";
 import { api } from "@/services/api";
 import { toastError, toastWarning } from "@/utils/toast";
 import FulfillmentWorkflowModal, { FulfillmentOrder } from "@/components/FulfillmentWorkflowModal";
@@ -59,7 +59,7 @@ export default function OrderFulfillmentPage() {
       const res = await api.get<FulfillmentOrder[]>("/fulfillment/orders");
       setOrders(res || []);
     } catch (err) {
-      console.error(err);
+      handleError(err);
     } finally {
       setLoading(false);
     }
@@ -88,7 +88,7 @@ export default function OrderFulfillmentPage() {
       setNewOrderCode(`SO-${Math.floor(1000 + Math.random() * 9000)}`);
       fetchOrders();
     } catch (err) {
-      console.error(err);
+      handleError(err);
       toastError("Failed to create sales order", "Please check backend logs.");
     }
   };
@@ -100,7 +100,7 @@ export default function OrderFulfillmentPage() {
       setOrderToDelete(null);
       fetchOrders();
     } catch (err) {
-      console.error(err);
+      handleError(err);
       toastError("Failed to delete fulfillment order.");
     }
   };
@@ -121,7 +121,7 @@ export default function OrderFulfillmentPage() {
       setSelectedBatchIds([]);
       fetchOrders();
     } catch (err) {
-      console.error(err);
+      handleError(err);
       toastError("Batch creation failed", "Only RESERVED orders can be batched.");
     }
   };

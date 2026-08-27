@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { api } from "@/services/api";
+import { handleError } from "@datavex/ui-theme";
 import { toastError, toastWarning } from "@/utils/toast";
 import { money } from "@/utils/format";
 
@@ -81,7 +82,7 @@ export default function PurchaseOrdersPage() {
       if (supData && supData.length > 0) setSelectedSupplierId(supData[0].id);
       if (whData && whData.length > 0) setSelectedWarehouseId(whData[0].id);
     } catch (err) {
-      console.error(err);
+      handleError(err);
     } finally {
       setLoading(false);
     }
@@ -113,7 +114,7 @@ export default function PurchaseOrdersPage() {
       setIsAddOpen(false);
       fetchData();
     } catch (err) {
-      console.error(err);
+      handleError(err);
       toastError("Failed to create Purchase Order.");
     }
   };
@@ -136,7 +137,7 @@ export default function PurchaseOrdersPage() {
       setSelectedOrder(null);
       fetchData();
     } catch (err) {
-      console.error(err);
+      handleError(err);
       toastError("Failed to update status.");
     }
   };
@@ -148,7 +149,7 @@ export default function PurchaseOrdersPage() {
       setOrderToDelete(null);
       fetchData();
     } catch (err) {
-      console.error(err);
+      handleError(err);
       toastError("Failed to delete purchase order.");
     }
   };
@@ -184,7 +185,7 @@ export default function PurchaseOrdersPage() {
       setPutawayOrder(null);
       fetchData();
     } catch (err) {
-      console.error(err);
+      handleError(err);
       toastError("Putaway failed", "Verify quantities against received goods.");
     }
   };

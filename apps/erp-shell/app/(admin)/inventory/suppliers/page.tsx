@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { api } from "@/services/api";
+import { handleError } from "@datavex/ui-theme";
 import { toastError } from "@/utils/toast";
 
 interface Supplier {
@@ -79,7 +80,7 @@ export default function SuppliersPage() {
       setPhone("");
       fetchSuppliers();
     } catch (err) {
-      console.error(err);
+      handleError(err);
     }
   };
 
@@ -99,7 +100,7 @@ export default function SuppliersPage() {
       setEditingSupplier(null);
       fetchSuppliers();
     } catch (err) {
-      console.error(err);
+      handleError(err);
     }
   };
 
@@ -110,7 +111,7 @@ export default function SuppliersPage() {
       setSupplierToDelete(null);
       fetchSuppliers();
     } catch (err) {
-      console.error(err);
+      handleError(err);
       toastError("Failed to delete supplier.");
     }
   };

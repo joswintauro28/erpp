@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { ScrollText, AlertTriangle, Plus, Loader2, Search, Pencil, Trash2 } from "lucide-react";
 import { api } from "@/services/api";
+import { handleError } from "@datavex/ui-theme";
 import { money } from "@/utils/format";
 import type { ExpenseEntry, AccountEntry } from "@/types/billing";
 import ExpensesLoading from "./loading";
@@ -64,7 +65,7 @@ export default function ExpensesPage() {
       setCreateOpen(false);
       setFormAccountId(""); setFormAmount(""); setFormCategory(""); setFormDescription(""); setFormDate("");
       load();
-    } catch { /* handled */ } finally { setSaving(false); }
+    } catch (err) { handleError(err); } finally { setSaving(false); }
   };
 
   const handleEditClick = (exp: ExpenseEntry) => {
@@ -93,7 +94,7 @@ export default function ExpensesPage() {
       setEditId(null);
       setFormAccountId(""); setFormAmount(""); setFormCategory(""); setFormDescription(""); setFormDate("");
       load();
-    } catch { /* handled */ } finally { setSaving(false); }
+    } catch (err) { handleError(err); } finally { setSaving(false); }
   };
 
   const handleDelete = async (id: number) => {
@@ -101,7 +102,7 @@ export default function ExpensesPage() {
     try {
       await api.delete(`/expenses/${id}`);
       load();
-    } catch { /* handled */ }
+    } catch (err) { handleError(err); }
   };
 
   if (loading) return <ExpensesLoading />;
@@ -231,8 +232,8 @@ export default function ExpensesPage() {
               <Textarea id="ex-desc" rows={2} placeholder="Optional description" value={formDescription} onChange={(e) => setFormDescription(e.target.value)} />
             </div>
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setCreateOpen(false)}>Cancel</Button>
-              <Button type="submit" disabled={saving || !formAccountId || !formAmount}>
+              <Button type="button" variant="outline" size="sm" onClick={() => setCreateOpen(false)}>Cancel</Button>
+              <Button type="submit" size="sm" disabled={saving || !formAccountId || !formAmount}>
                 {saving && <Loader2 className="mr-1 h-4 w-4 animate-spin" />}
                 Record Expense
               </Button>
@@ -275,8 +276,8 @@ export default function ExpensesPage() {
               <Textarea id="ex-edit-desc" rows={2} placeholder="Optional description" value={formDescription} onChange={(e) => setFormDescription(e.target.value)} />
             </div>
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setEditOpen(false)}>Cancel</Button>
-              <Button type="submit" disabled={saving || !formAccountId || !formAmount}>
+              <Button type="button" variant="outline" size="sm" onClick={() => setEditOpen(false)}>Cancel</Button>
+              <Button type="submit" size="sm" disabled={saving || !formAccountId || !formAmount}>
                 {saving && <Loader2 className="mr-1 h-4 w-4 animate-spin" />}
                 Update Expense
               </Button>

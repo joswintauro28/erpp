@@ -2,7 +2,7 @@
 # Run from repository root or from infrastructure/local/
 
 param(
-    [ValidateSet("build", "up", "down", "rebuild", "logs", "ps", "prune")]
+    [ValidateSet("build", "up", "down", "stop", "rebuild", "logs", "ps", "prune", "destroy")]
     [string]$Command = "up",
 
     [string[]]$Service = @(),
@@ -41,7 +41,19 @@ switch ($Command) {
         & docker compose @baseArgs @upArgs
     }
     "down" {
-        & docker compose @baseArgs down --volumes --remove-orphans
+        # Default: stop containers but keep volumes (data safe)
+        & docker compose @baseArgs down --remove-orphans
+    }
+    "stop" {
+        # Alias for down — stop containers, keep volumes
+        & docker compose @baseArgs down --remove-orphans
+    }
+    "destroy" {
+        # Destructive: stop + remove volumes + remove images
+        Write-Warning "This will DELETE all databases and stored files."
+        $confirm = Read-Host "Type YES to confirm"
+        if ($confirm -ne "YES") { Write-Host "Aborted."; exit 0 }
+        & docker compose @baseArgs down --volumes --rmi all --remove-orphans
     }
     "rebuild" {
         & docker compose @baseArgs build --no-cache
@@ -54,6 +66,8 @@ switch ($Command) {
         & docker compose @baseArgs ps
     }
     "prune" {
-        & docker compose @baseArgs down --volumes --rmi all --remove-orphans
+        # Prune: stop + remove dangling images (keeps volumes)
+        & docker compose @baseArgs down --remove-orphans
+        docker image prune -f
     }
 }

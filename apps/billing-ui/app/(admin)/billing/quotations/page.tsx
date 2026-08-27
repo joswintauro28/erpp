@@ -17,6 +17,7 @@ import {
 import { SearchInput } from "@/components/shared/search-input";
 import { EmptyState } from "@/components/shared/empty-state";
 import { api } from "@/services/api";
+import { handleError } from "@datavex/ui-theme";
 import { money, formatDate, quotationStatusVariant as statusVariant } from "@/utils/format";
 import { useAuth } from "@/contexts/AuthContext";
 import type { Quotation } from "@/types/billing";
@@ -67,7 +68,7 @@ export default function Quotations() {
     try {
       await api.post(`/invoices/quotations/${id}/convert`);
       load();
-    } catch { /* handled */ } finally { setActionLoading(null); }
+    } catch (err) { handleError(err); } finally { setActionLoading(null); }
   };
 
   const handleStatusChange = async (id: number, status: string) => {
@@ -75,7 +76,7 @@ export default function Quotations() {
     try {
       await api.put(`/invoices/quotations/${id}/status?status=${status}`);
       load();
-    } catch { /* handled */ } finally { setActionLoading(null); }
+    } catch (err) { handleError(err); } finally { setActionLoading(null); }
   };
 
   const handleDelete = async (id: number) => {
@@ -84,7 +85,7 @@ export default function Quotations() {
       await api.delete(`/invoices/quotations/${id}`);
       setDeleteConfirm(null);
       load();
-    } catch { /* handled */ } finally { setDeleteSaving(false); }
+    } catch (err) { handleError(err); } finally { setDeleteSaving(false); }
   };
 
 
@@ -212,7 +213,7 @@ export default function Quotations() {
             Are you sure you want to delete this quotation? This action cannot be undone.
           </p>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setDeleteConfirm(null)}>Cancel</Button>
+            <Button type="button" variant="outline" size="sm" onClick={() => setDeleteConfirm(null)}>Cancel</Button>
             <Button variant="destructive" onClick={() => deleteConfirm && handleDelete(deleteConfirm)} disabled={deleteSaving}>
               {deleteSaving && <Loader2 className="mr-1 h-4 w-4 animate-spin" />}
               Delete

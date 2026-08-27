@@ -14,6 +14,7 @@ import {
   ChevronLeft, ChevronRight,
 } from "lucide-react";
 import { api, getAccessToken } from "@/services/api";
+import { handleError } from "@datavex/ui-theme";
 import { money } from "@/utils/format";
 
 
@@ -21,7 +22,7 @@ export default function AgingWorkstationPage() {
   const [activeTab, setActiveTab] = useState<"summary" | "customers" | "invoices" | "reconciliation">("summary");
   const [asOfDate, setAsOfDate] = useState<string>(new Date().toISOString().split("T")[0]);
   const [selectedBucket, setSelectedBucket] = useState<string>("ALL");
-  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [search, setSearch] = useState<string>("");
   const [page, setPage] = useState<number>(1);
   const pageSize = 15;
   const [loading, setLoading] = useState<boolean>(true);
@@ -44,25 +45,25 @@ export default function AgingWorkstationPage() {
 
   const fetchCustomers = async () => {
     try {
-      const query = `/aging/customers?asOfDate=${asOfDate}&page=${page}&pageSize=${pageSize}&search=${encodeURIComponent(searchQuery)}`;
+      const query = `/aging/customers?asOfDate=${asOfDate}&page=${page}&pageSize=${pageSize}&search=${encodeURIComponent(search)}`;
       const data = await api.get<any>(query);
       setCustomersResult(data);
-    } catch { /* handled */ }
+    } catch (err) { handleError(err); }
   };
 
   const fetchInvoices = async (validate: boolean = false) => {
     try {
-      const query = `/aging/invoices?asOfDate=${asOfDate}&page=${page}&pageSize=${pageSize}&search=${encodeURIComponent(searchQuery)}&agingBucket=${selectedBucket}${validate ? "&validate=true" : ""}`;
+      const query = `/aging/invoices?asOfDate=${asOfDate}&page=${page}&pageSize=${pageSize}&search=${encodeURIComponent(search)}&agingBucket=${selectedBucket}${validate ? "&validate=true" : ""}`;
       const data = await api.get<any>(query);
       setInvoicesResult(data);
-    } catch { /* handled */ }
+    } catch (err) { handleError(err); }
   };
 
   const fetchReconciliation = async () => {
     try {
       const data = await api.get<any>(`/aging/reconciliation?asOfDate=${asOfDate}`);
       setReconciliation(data);
-    } catch { /* handled */ }
+    } catch (err) { handleError(err); }
   };
 
   const loadAll = async () => {
@@ -77,7 +78,7 @@ export default function AgingWorkstationPage() {
   useEffect(() => {
     if (activeTab === "customers") fetchCustomers();
     if (activeTab === "invoices") fetchInvoices();
-  }, [page, searchQuery, selectedBucket, activeTab]);
+  }, [page, search, selectedBucket, activeTab]);
 
   const handleExport = async (viewType: "summary" | "customers" | "invoices") => {
     setExporting(true);
@@ -90,7 +91,7 @@ export default function AgingWorkstationPage() {
       const a = document.createElement("a");
       a.href = url; a.download = `AR_Aging_${viewType}_${asOfDate}.csv`;
       document.body.appendChild(a); a.click(); a.remove();
-    } catch { /* handled */ } finally { setExporting(false); }
+    } catch (err) { handleError(err); } finally { setExporting(false); }
   };
 
   const openDrilldown = async (invoiceId: number) => {
@@ -99,7 +100,7 @@ export default function AgingWorkstationPage() {
     try {
       const data = await api.get<any>(`/aging/invoice/${invoiceId}`);
       setTimelineData(data);
-    } catch { /* handled */ } finally { setTimelineLoading(false); }
+    } catch (err) { handleError(err); } finally { setTimelineLoading(false); }
   };
 
   if (loading && !summary) {
@@ -253,7 +254,7 @@ export default function AgingWorkstationPage() {
           <div className="flex items-center gap-3">
             <div className="relative flex-1 max-w-sm">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-[var(--shell-muted)]" />
-              <Input placeholder="Search customer name..." value={searchQuery} onChange={(e) => { setSearchQuery(e.target.value); setPage(1); }} className="pl-9 text-xs" />
+              <Input placeholder="Search customer name..." value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} className="pl-9 text-xs" />
             </div>
           </div>
           <Card className="shadow-sm"><CardContent className="p-0">
@@ -305,7 +306,7 @@ export default function AgingWorkstationPage() {
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-3 flex-1 max-w-md">
               <div className="relative flex-1"><Search className="absolute left-2.5 top-2.5 h-4 w-4 text-[var(--shell-muted)]" />
-                <Input placeholder="Filter by invoice # or client..." value={searchQuery} onChange={(e) => { setSearchQuery(e.target.value); setPage(1); }} className="pl-9 text-xs" />
+                <Input placeholder="Filter by invoice # or client..." value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} className="pl-9 text-xs" />
               </div>
               <Select value={selectedBucket} onValueChange={(v) => { if (v) { setSelectedBucket(v); setPage(1); } }}>
                 <SelectTrigger className="w-36 text-xs"><SelectValue placeholder="All Buckets" /></SelectTrigger>

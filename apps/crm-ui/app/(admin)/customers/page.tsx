@@ -9,7 +9,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { api } from "@/services/api";
 import { exportToCSV } from "@/utils/exportCsv";
 import { toastError } from "@/utils/toast";
-import { useConfirm, PageHeader, KpiCard, SectionHeading } from "@datavex/ui-theme";
+import { useConfirm, PageHeader, KpiCard, SectionHeading, handleError } from "@datavex/ui-theme";
 import CustomerCreateModal from "./CustomerCreateModal";
 import CustomerDetailsModal from "./CustomerDetailsModal";
 import CustomerTable from "./CustomerTable";

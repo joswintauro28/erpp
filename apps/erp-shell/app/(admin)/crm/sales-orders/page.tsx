@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { exportToCSV } from "@/utils/exportCsv";
 import { toastSuccess, toastError, toastWarning, errorMessage } from "@/utils/toast";
-import { useConfirm } from "@datavex/ui-theme";
+import { useConfirm, handleError } from "@datavex/ui-theme";
 import SalesOrderTable from "./SalesOrderTable";
 import { Spinner } from "@/components/ui/spinner";
 import { api } from "@/services/api";

@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { BookOpen, AlertTriangle, Plus, Loader2, Search, Pencil } from "lucide-react";
 import { api } from "@/services/api";
+import { handleError } from "@datavex/ui-theme";
 import { money } from "@/utils/format";
 import type { LedgerEntryView, AccountEntry } from "@/types/billing";
 import GeneralLedgerLoading from "./loading";
@@ -63,7 +64,7 @@ export default function LedgerPage() {
       setJournalOpen(false);
       setFormAccountId(""); setFormDebit(""); setFormCredit(""); setFormDesc(""); setFormDate("");
       load();
-    } catch { /* handled */ } finally { setSaving(false); }
+    } catch (err) { handleError(err); } finally { setSaving(false); }
   };
 
   const handleEditClick = (entry: LedgerEntryView) => {
@@ -92,7 +93,7 @@ export default function LedgerPage() {
       setEditId(null);
       setFormAccountId(""); setFormDebit(""); setFormCredit(""); setFormDesc(""); setFormDate("");
       load();
-    } catch { /* handled */ } finally { setSaving(false); }
+    } catch (err) { handleError(err); } finally { setSaving(false); }
   };
 
   if (loading) return <GeneralLedgerLoading />;
@@ -215,8 +216,8 @@ export default function LedgerPage() {
               <Input id="jl-date" type="date" value={formDate} onChange={(e) => setFormDate(e.target.value)} />
             </div>
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setJournalOpen(false)}>Cancel</Button>
-              <Button type="submit" disabled={saving || !formAccountId || (!formDebit && !formCredit)}>
+              <Button type="button" variant="outline" size="sm" onClick={() => setJournalOpen(false)}>Cancel</Button>
+              <Button type="submit" size="sm" disabled={saving || !formAccountId || (!formDebit && !formCredit)}>
                 {saving && <Loader2 className="mr-1 h-4 w-4 animate-spin" />}
                 Create Entry
               </Button>
@@ -259,8 +260,8 @@ export default function LedgerPage() {
               <Input id="jl-edit-date" type="date" value={formDate} onChange={(e) => setFormDate(e.target.value)} />
             </div>
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setEditOpen(false)}>Cancel</Button>
-              <Button type="submit" disabled={saving || !formAccountId || (!formDebit && !formCredit)}>
+              <Button type="button" variant="outline" size="sm" onClick={() => setEditOpen(false)}>Cancel</Button>
+              <Button type="submit" size="sm" disabled={saving || !formAccountId || (!formDebit && !formCredit)}>
                 {saving && <Loader2 className="mr-1 h-4 w-4 animate-spin" />}
                 Update Entry
               </Button>

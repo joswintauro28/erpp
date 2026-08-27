@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { api } from "@/services/api";
 import { money } from "@/utils/format";
 import { toastError } from "@/utils/toast";
-import { PageHeader, KpiCard, SectionHeading } from "@datavex/ui-theme";
+import { PageHeader, KpiCard, SectionHeading, handleError } from "@datavex/ui-theme";
 import Link from "next/link";
 
 interface Product {
@@ -76,7 +76,7 @@ export default function ProductsPage() {
       setQcRequired(false);
       fetchProducts();
     } catch (err) {
-      console.error(err);
+      handleError(err);
     }
   };
 
@@ -97,7 +97,7 @@ export default function ProductsPage() {
       setEditingProduct(null);
       fetchProducts();
     } catch (err) {
-      console.error(err);
+      handleError(err);
     }
   };
 
@@ -108,7 +108,7 @@ export default function ProductsPage() {
       setProductToDelete(null);
       fetchProducts();
     } catch (err) {
-      console.error(err);
+      handleError(err);
       toastError("Failed to delete product.");
     }
   };

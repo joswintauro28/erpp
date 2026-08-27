@@ -14,9 +14,9 @@ import {
   Loader2,
   ExternalLink,
 } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@datavex/ui-theme";
-import { Button } from "@datavex/ui-theme";
-import { Badge } from "@datavex/ui-theme";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, handleError } from "@datavex/ui-theme";
+import { Button, handleError } from "@datavex/ui-theme";
+import { Badge, handleError } from "@datavex/ui-theme";
 import { api } from "@/services/api";
 import { toastError, toastWarning, toastSuccess } from "@/utils/toast";
 
@@ -90,7 +90,7 @@ export default function FulfillmentWorkflowModal({
       const res = await api.post<StockCheckResult>(`/fulfillment/orders/${order.id}/check-stock`, {});
       setStockCheck(res);
     } catch (err) {
-      console.error(err);
+      handleError(err);
     } finally {
       setLoading(false);
     }
@@ -102,7 +102,7 @@ export default function FulfillmentWorkflowModal({
       await api.post(`/fulfillment/orders/${order.id}/reserve`, {});
       onUpdate();
     } catch (err) {
-      console.error(err);
+      handleError(err);
     } finally {
       setLoading(false);
     }
@@ -114,7 +114,7 @@ export default function FulfillmentWorkflowModal({
       await api.post(`/fulfillment/orders/${order.id}/pick-list`, {});
       onUpdate();
     } catch (err) {
-      console.error(err);
+      handleError(err);
     } finally {
       setLoading(false);
     }
@@ -126,7 +126,7 @@ export default function FulfillmentWorkflowModal({
       await api.post(`/fulfillment/orders/${order.id}/pack`, {});
       onUpdate();
     } catch (err) {
-      console.error(err);
+      handleError(err);
     } finally {
       setLoading(false);
     }
@@ -138,7 +138,7 @@ export default function FulfillmentWorkflowModal({
       await api.post(`/fulfillment/orders/${order.id}/step-back`, {});
       onUpdate();
     } catch (err) {
-      console.error(err);
+      handleError(err);
       toastError("Failed to roll back to previous stage.");
     } finally {
       setLoading(false);
@@ -159,7 +159,7 @@ export default function FulfillmentWorkflowModal({
       setDispatchSuccess(true);
       onUpdate();
     } catch (err) {
-      console.error(err);
+      handleError(err);
     } finally {
       setLoading(false);
     }
@@ -172,7 +172,7 @@ export default function FulfillmentWorkflowModal({
       toastSuccess("Purchase Order created successfully for out-of-stock items!");
       onUpdate();
     } catch (err) {
-      console.error(err);
+      handleError(err);
     } finally {
       setLoading(false);
     }
@@ -185,7 +185,7 @@ export default function FulfillmentWorkflowModal({
       setInvoiceMessage("Invoice generated and sent to Billing Workstation!");
       onUpdate();
     } catch (err) {
-      console.error(err);
+      handleError(err);
       setInvoiceMessage("Invoice trigger completed.");
       onUpdate();
     } finally {

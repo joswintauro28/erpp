@@ -56,8 +56,15 @@ export * from "./components/shared/theme-toggle";
 // File management (MinIO presigned URL pattern)
 export * from "./components/shared/file-upload";
 export * from "./components/shared/file-viewer";
+export * from "./components/shared/file-preview-modal";
+export * from "./components/shared/search-filter";
+export * from "./components/shared/status-filter";
+export * from "./components/shared/skeleton-patterns";
 
 // Export common utilities
 export { cn } from "./lib/utils";
 export * from "./lib/utils";
 export * from "./utils/toast";
+export * from "./lib/error-handler";
+export * from "./lib/color-maps";
+export * from "./lib/file-helpers";

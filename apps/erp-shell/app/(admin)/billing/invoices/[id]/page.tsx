@@ -22,6 +22,7 @@ import {
 import { MultiStepDialog } from "@/components/multi-step-dialog";
 import { money, statusVariant } from "@/utils/format";
 import { api } from "@/services/api";
+import { handleError } from "@datavex/ui-theme";
 import type { ApiInvoice, InvoiceDetailView, InvoiceItemView, ApiPayment } from "@/types/billing";
 import InvoiceDetailLoading from "./loading";
 
@@ -146,7 +147,7 @@ export default function InvoiceDetail() {
       });
       setEditOpen(false);
       loadInvoice();
-    } catch { /* handled */ } finally {
+    } catch (err) { handleError(err); } finally {
       setEditSaving(false);
     }
   };
@@ -664,8 +665,8 @@ export default function InvoiceDetail() {
             </div>
 
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setEditOpen(false)}>Cancel</Button>
-              <Button type="submit" disabled={editSaving}>
+              <Button type="button" variant="outline" size="sm" onClick={() => setEditOpen(false)}>Cancel</Button>
+              <Button type="submit" size="sm" disabled={editSaving}>
                 {editSaving && <Loader2 className="mr-1 h-4 w-4 animate-spin" />}
                 Save Changes
               </Button>

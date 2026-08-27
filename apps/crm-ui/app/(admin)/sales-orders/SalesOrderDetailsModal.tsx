@@ -8,7 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { FileUpload, type FileRecord } from "@datavex/ui-theme";
+import { FileUpload, type FileRecord, handleError } from "@datavex/ui-theme";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -54,7 +54,7 @@ export default function SalesOrderDetailsModal({
       setRelatedRequirements(reqData.requirements || []);
       setRelatedQuotations(qData.quotations || []);
     } catch (err) {
-      console.error("Failed to fetch related data", err);
+      handleError("Failed to fetch related data", err);
     } finally {
       setLoadingRelated(false);
     }
@@ -256,23 +256,19 @@ export default function SalesOrderDetailsModal({
                   )}
                 </div>
 
-                {record.file_data && (
+                {record.file_id && (
                   <div className="rounded-lg border border-[var(--shell-border)] bg-[var(--shell-bg)]/50 p-3">
                     <div className="mb-2 flex items-center justify-between">
                       <span className="text-xs font-semibold truncate max-w-[200px]">Invoice: {record.file_name || "attachment"}</span>
                       <a
-                        href={record.file_data}
+                        href={`/api/files/${record.file_id}/stream`}
                         download={record.file_name || "invoice"}
                         className="inline-flex shrink-0 items-center justify-center rounded bg-[var(--shell-brand)] px-2 py-0.5 text-xs text-white hover:bg-[var(--shell-action)]"
                       >
                         <Download className="mr-1 size-3" /> Download
                       </a>
                     </div>
-                    {record.file_data.startsWith("data:application/pdf") ? (
-                      <iframe src={record.file_data} className="w-full h-[150px] border border-[var(--shell-border)] rounded" />
-                    ) : record.file_data.startsWith("data:image/") ? (
-                      <img src={record.file_data} alt="Attachment Preview" className="max-w-full max-h-[150px] object-contain rounded" />
-                    ) : null}
+                    <iframe src={`/api/files/${record.file_id}/stream`} className="w-full h-[150px] border border-[var(--shell-border)] rounded" title="Invoice Preview" />
                   </div>
                 )}
               </div>
@@ -345,7 +341,7 @@ export default function SalesOrderDetailsModal({
                     Approve Order
                   </Button>
                 )}
-                {["Paid", "Delivered", "Done", "Invoiced", "Cancelled"].includes(record.status) || !!record.file_data ? (
+                {["Paid", "Delivered", "Done", "Invoiced", "Cancelled"].includes(record.status) || !!record.file_id ? (
                   <>
                     <Button variant="outline" size="sm" onClick={() => onEdit?.(record)}>
                       Edit Order

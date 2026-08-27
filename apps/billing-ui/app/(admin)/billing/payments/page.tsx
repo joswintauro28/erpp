@@ -18,6 +18,7 @@ import { SearchInput } from "@/components/shared/search-input";
 import { LoadingSpinner } from "@/components/shared/loading-spinner";
 import { EmptyState } from "@/components/shared/empty-state";
 import { api } from "@/services/api";
+import { handleError } from "@datavex/ui-theme";
 import { useToast } from "@/contexts/ToastContext";
 import { money } from "@/utils/format";
 import type { BillingPayment } from "@/types/billing";
@@ -294,8 +295,8 @@ export default function Payments() {
             </div>
 
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setRecordOpen(false)}>Cancel</Button>
-              <Button type="submit" disabled={saving}>
+              <Button type="button" variant="outline" size="sm" onClick={() => setRecordOpen(false)}>Cancel</Button>
+              <Button type="submit" size="sm" disabled={saving}>
                 {saving && <Loader2 className="mr-1 h-4 w-4 animate-spin" />}
                 Record Payment
               </Button>
@@ -319,7 +320,7 @@ export default function Payments() {
             Are you sure you want to issue a refund for this payment? This action will reverse the payment and update the invoice balance accordingly.
           </p>
           <DialogFooter className="mt-4">
-            <Button variant="outline" onClick={() => setRefundConfirmId(null)}>Cancel</Button>
+            <Button variant="outline" size="sm" onClick={() => setRefundConfirmId(null)}>Cancel</Button>
             <Button
               className="bg-amber-600 hover:bg-amber-700 text-white"
               onClick={() => refundConfirmId !== null && handleRefund(refundConfirmId)}

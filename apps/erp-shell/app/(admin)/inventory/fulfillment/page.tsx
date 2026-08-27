@@ -23,6 +23,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { api } from "@/services/api";
+import { handleError } from "@datavex/ui-theme";
 import { toastError, toastWarning } from "@/utils/toast";
 import FulfillmentWorkflowModal from "@/components/FulfillmentWorkflowModal";
 import type { ApiFulfillment } from "@/types/inventory";
@@ -60,7 +61,7 @@ export default function OrderFulfillmentPage() {
       const res = await api.get<ApiFulfillment[]>("/fulfillment/orders");
       setOrders(res || []);
     } catch (err) {
-      console.error(err);
+      handleError(err);
     } finally {
       setLoading(false);
     }
@@ -89,7 +90,7 @@ export default function OrderFulfillmentPage() {
       setNewOrderCode(`SO-${Math.floor(1000 + Math.random() * 9000)}`);
       fetchOrders();
     } catch (err) {
-      console.error(err);
+      handleError(err);
       toastError("Failed to create sales order", "Please check backend logs.");
     }
   };
@@ -101,7 +102,7 @@ export default function OrderFulfillmentPage() {
       setOrderToDelete(null);
       fetchOrders();
     } catch (err) {
-      console.error(err);
+      handleError(err);
       toastError("Failed to delete fulfillment order.");
     }
   };
@@ -122,7 +123,7 @@ export default function OrderFulfillmentPage() {
       setSelectedBatchIds([]);
       fetchOrders();
     } catch (err) {
-      console.error(err);
+      handleError(err);
       toastError("Batch creation failed", "Only RESERVED orders can be batched.");
     }
   };

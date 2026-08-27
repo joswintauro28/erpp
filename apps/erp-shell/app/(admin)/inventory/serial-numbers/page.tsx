@@ -25,6 +25,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { api } from "@/services/api";
+import { handleError } from "@datavex/ui-theme";
 import { toastError, toastWarning } from "@/utils/toast";
 
 interface SerialNumber {
@@ -130,7 +131,7 @@ export default function SerialRegistryPage() {
       setProducts(productsData || []);
       setWarehouses(warehousesData || []);
     } catch (err) {
-      console.error(err);
+      handleError(err);
     } finally {
       setLoading(false);
     }
@@ -206,7 +207,7 @@ export default function SerialRegistryPage() {
       resetForm();
       fetchData();
     } catch (err) {
-      console.error(err);
+      handleError(err);
       toastError("Failed to register serial unit", "Check backend logs.");
     }
   };
@@ -228,7 +229,7 @@ export default function SerialRegistryPage() {
       resetForm();
       fetchData();
     } catch (err) {
-      console.error(err);
+      handleError(err);
       toastError("Failed to update serial unit.");
     }
   };
@@ -240,7 +241,7 @@ export default function SerialRegistryPage() {
       setSerialToDelete(null);
       fetchData();
     } catch (err) {
-      console.error(err);
+      handleError(err);
     }
   };
 

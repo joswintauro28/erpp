@@ -11,16 +11,7 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/shared/empty-state";
 import { api } from "@/services/api";
 import { toastError } from "@/utils/toast";
-import { useConfirm } from "@datavex/ui-theme";
-import { FileUpload, type FileRecord } from "@datavex/ui-theme";
-
-const stageColors: Record<string, { bg: string; color: string }> = {
-  Discovery:   { bg: "#dbeafe", color: "#1d4ed8" },
-  Proposal:    { bg: "#fef3c7", color: "#b45309" },
-  Negotiation: { bg: "#ede9fe", color: "#7c3aed" },
-  Won:         { bg: "#dcfce7", color: "#15803d" },
-  Lost:        { bg: "#fee2e2", color: "#b91c1c" },
-};
+import { useConfirm, handleError, stageColors, FileUpload, type FileRecord } from "@datavex/ui-theme";
 
 interface ReqRowProps {
   req: any;
@@ -34,6 +25,9 @@ function ReqRow({ req, onDelete, onEdit }: ReqRowProps) {
     <div className="rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface)] mb-2 overflow-hidden">
       <div
         onClick={() => setOpen((o) => !o)}
+        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setOpen((o) => !o); } }}
+        tabIndex={0}
+        role="button"
         className="flex items-center gap-3 p-3 cursor-pointer select-none"
       >
         <ClipboardList size={14} className="shrink-0 text-[var(--shell-brand)]" />
@@ -145,13 +139,16 @@ function QuoteRow({ quote, onDelete, onPreview, onConverted, onEdit }: QuoteRowP
     >
       <div
         onClick={() => setOpen((o) => !o)}
+        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setOpen((o) => !o); } }}
+        tabIndex={0}
+        role="button"
         className="flex items-center gap-3 p-3 cursor-pointer select-none"
       >
         <FileSpreadsheet size={14} className={`shrink-0 ${isConverted ? "text-[var(--shell-success)]" : "text-[var(--shell-warning)]"}`} />
         <div className="flex-1 min-w-0">
           <div className="font-semibold text-sm text-[var(--shell-foreground)] flex items-center gap-1.5 flex-wrap">
             {quote.quote_no}
-            {quote.file_data && <Paperclip size={11} className="text-[var(--shell-warning)]" />}
+            {quote.file_id && <Paperclip size={11} className="text-[var(--shell-warning)]" />}
             {isConverted && (
               <span className="text-[10px] font-bold text-[var(--shell-success)] bg-[var(--shell-success-surface)] px-1.5 py-0.5 rounded-full">
                 &#10003; Converted to Sales Order
@@ -185,14 +182,14 @@ function QuoteRow({ quote, onDelete, onPreview, onConverted, onEdit }: QuoteRowP
             ))}
           </div>
 
-          {quote.file_data ? (
+          {quote.file_id ? (
             <div className="border-t border-[var(--shell-border)] pt-3 mb-3">
               <div className="text-[11px] font-bold uppercase tracking-wider text-[var(--shell-muted)] mb-2">Attached File</div>
               <div className="flex items-center gap-3 p-2.5 rounded-lg border border-[var(--shell-warning)]/30 bg-[var(--shell-warning-surface)]">
                 <Paperclip size={13} className="text-[var(--shell-warning)] shrink-0" />
                 <span className="flex-1 text-xs font-medium text-[var(--shell-foreground)] truncate">{quote.file_name || "attachment"}</span>
                 <Button variant="outline" size="sm" className="h-7 text-[11px]" onClick={(e) => { e.stopPropagation(); onPreview(quote); }}><Eye size={12} className="mr-1" /> View</Button>
-                <a href={quote.file_data} download={quote.file_name || "attachment"} onClick={(e) => e.stopPropagation()}>
+                <a href={`/api/files/${quote.file_id}/stream`} download={quote.file_name || "attachment"} onClick={(e) => e.stopPropagation()}>
                   <Button variant="outline" size="sm" className="h-7 text-[11px] border-[var(--shell-success)]/30 text-[var(--shell-success)]"><Download size={12} className="mr-1" /> Download</Button>
                 </a>
               </div>
@@ -278,6 +275,13 @@ interface OpportunityDetailModalProps {
 export default function OpportunityDetailModal({ record, isOpen, onClose, onSuccess }: OpportunityDetailModalProps) {
   const confirm = useConfirm();
   const [tab, setTab] = useState("details");
+n  // Escape key handler
+  useEffect(() => {
+    if (!isOpen) return;
+    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [isOpen, onClose]);
 
   const [requirements, setRequirements] = useState<any[]>([]);
   const [reqLoading, setReqLoading] = useState(false);
@@ -460,7 +464,7 @@ export default function OpportunityDetailModal({ record, isOpen, onClose, onSucc
     { label: "Last Updated", value: record.updated_at },
   ].filter((r) => r.value);
 
-  const sc = stageColors[record.stage] || { bg: "#f1f5f9", color: "#64748b" };
+  const sc = stageColors[record.stage] || { bg: "var(--shell-surface-alt)", color: "var(--shell-muted)" };
 
   return (
     <>
@@ -741,21 +745,17 @@ export default function OpportunityDetailModal({ record, isOpen, onClose, onSucc
                 <span className="text-[11px] text-[var(--shell-muted)]">&middot; {previewQuote.quote_no}</span>
               </div>
               <div className="flex gap-2 items-center">
-                <a href={previewQuote.file_data} download={previewQuote.file_name || "attachment"}>
+                <a href={`/api/files/${previewQuote.file_id}/stream`} download={previewQuote.file_name || "attachment"}>
                   <Button size="sm" variant="outline"><Download size={13} className="mr-1" /> Download</Button>
                 </a>
                 <button onClick={() => setPreviewQuote(null)} className="text-[var(--shell-muted)] hover:text-[var(--shell-foreground)] cursor-pointer"><X size={18} /></button>
               </div>
             </div>
             <div className="flex-1 overflow-hidden rounded-lg border border-[var(--shell-border)] min-h-[400px] max-h-[70vh]">
-              {previewQuote.file_data?.startsWith("data:application/pdf") ? (
-                <iframe src={previewQuote.file_data} className="w-full h-full min-h-[400px] border-none" title="PDF Preview" />
-              ) : previewQuote.file_data?.startsWith("data:image/") ? (
-                <div className="flex items-center justify-center bg-[var(--shell-bg)] h-full min-h-[400px] p-4">
-                  <img src={previewQuote.file_data} alt="Attachment" className="max-w-full max-h-[65vh] object-contain rounded-md" />
-                </div>
+              {previewQuote.file_id ? (
+                <iframe src={`/api/files/${previewQuote.file_id}/stream`} className="w-full h-full min-h-[400px] border-none" title="PDF Preview" />
               ) : (
-                <div className="flex items-center justify-center h-full min-h-[200px] text-[var(--shell-muted)] text-xs">Preview not available for this file type.</div>
+                <div className="flex items-center justify-center h-full min-h-[200px] text-[var(--shell-muted)] text-xs">Preview not available.</div>
               )}
             </div>
           </div>

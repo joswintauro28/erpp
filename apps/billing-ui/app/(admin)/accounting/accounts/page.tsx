@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { LoadingSpinner } from "@/components/shared/loading-spinner";
 import { Receipt, AlertTriangle, Plus, Loader2, Search } from "lucide-react";
 import { api } from "@/services/api";
+import { handleError } from "@datavex/ui-theme";
 import { money } from "@/utils/format";
 import type { AccountEntry } from "@/types/billing";
 import ChartOfAccountsLoading from "./loading";
@@ -53,7 +54,7 @@ export default function AccountsPage() {
       setCreateOpen(false);
       setFormCode(""); setFormName(""); setFormType("Expense"); setFormDesc("");
       load();
-    } catch { /* handled */ } finally { setSaving(false); }
+    } catch (err) { handleError(err); } finally { setSaving(false); }
   };
 
   if (loading) return <ChartOfAccountsLoading />;
@@ -166,8 +167,8 @@ export default function AccountsPage() {
               <Textarea id="ac-desc" rows={2} placeholder="Optional description" value={formDesc} onChange={(e) => setFormDesc(e.target.value)} />
             </div>
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setCreateOpen(false)}>Cancel</Button>
-              <Button type="submit" disabled={saving || !formCode || !formName}>
+              <Button type="button" variant="outline" size="sm" onClick={() => setCreateOpen(false)}>Cancel</Button>
+              <Button type="submit" size="sm" disabled={saving || !formCode || !formName}>
                 {saving && <Loader2 className="mr-1 h-4 w-4 animate-spin" />}
                 Create Account
               </Button>

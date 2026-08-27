@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
 import { api, getAccessToken } from "@/services/api";
+import { handleError } from "@datavex/ui-theme";
 import { exportToCSV } from "@/utils/exportCsv";
 import { toastError, toastSuccess, toastInfo } from "@/utils/toast";
 import SearchCard from "./SearchCard";

@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
 import { api } from "@/services/api";
+import { handleError } from "@datavex/ui-theme";
 import AIAssistantTable from "./AIAssistantTable";
 import AIAssistantLoading from "./loading";
 
@@ -161,7 +162,7 @@ export default function AIAssistantPage() {
               <div className="p-4 border-t border-[var(--shell-border)] bg-[var(--shell-bg)]/30">
                 <form onSubmit={(e) => { e.preventDefault(); handleChat(); }} className="flex gap-3">
                   <Input placeholder="Ask anything about customers, pipelines, draft replies..." value={chatInput} onChange={(e) => setChatInput(e.target.value)} disabled={chatLoading} className="flex-1" />
-                  <Button type="submit" disabled={chatLoading || !chatInput.trim()}>
+                  <Button type="submit" size="sm" disabled={chatLoading || !chatInput.trim()}>
                     <Send size={14} className="mr-1.5" /> Send
                   </Button>
                 </form>

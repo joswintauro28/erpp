@@ -18,6 +18,7 @@ import {
 import { MultiStepDialog } from "@/components/multi-step-dialog";
 import { searchBilling, money } from "@/utils/format";
 import { api } from "@/services/api";
+import { handleError } from "@datavex/ui-theme";
 import type { BillingPayment } from "@/types/billing";
 import PaymentsLoading from "./loading";
 

@@ -25,8 +25,16 @@ case "$COMMAND" in
     up)
         docker compose "${BASE_ARGS[@]}" up -d $SERVICE
         ;;
-    down)
-        docker compose "${BASE_ARGS[@]}" down --volumes --remove-orphans
+    down|stop)
+        # Default: stop containers but keep volumes (data safe)
+        docker compose "${BASE_ARGS[@]}" down --remove-orphans
+        ;;
+    destroy)
+        # Destructive: stop + remove volumes + remove images
+        echo "WARNING: This will DELETE all databases and stored files."
+        read -p "Type YES to confirm: " confirm
+        if [ "$confirm" != "YES" ]; then echo "Aborted."; exit 0; fi
+        docker compose "${BASE_ARGS[@]}" down --volumes --rmi all --remove-orphans
         ;;
     rebuild)
         docker compose "${BASE_ARGS[@]}" build --no-cache $SERVICE
@@ -39,7 +47,9 @@ case "$COMMAND" in
         docker compose "${BASE_ARGS[@]}" ps
         ;;
     prune)
-        docker compose "${BASE_ARGS[@]}" down --volumes --rmi all --remove-orphans
+        # Prune: stop + remove dangling images (keeps volumes)
+        docker compose "${BASE_ARGS[@]}" down --remove-orphans
+        docker image prune -f
         ;;
     *)
         echo "Usage: $0 {build|up|down|rebuild|logs|ps|prune} [service_name]"

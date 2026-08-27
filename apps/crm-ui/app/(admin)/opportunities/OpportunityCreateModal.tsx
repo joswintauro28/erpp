@@ -164,10 +164,10 @@ export default function OpportunityCreateModal({ isOpen, onClose, onSuccess, edi
           </div>
 
           <div className="flex justify-end gap-3 mt-4">
-            <Button type="button" variant="outline" onClick={onClose}>
+            <Button type="button" variant="outline" size="sm" onClick={onClose}>
               Cancel
             </Button>
-            <Button type="submit" disabled={submitting}>
+            <Button type="submit" size="sm" disabled={submitting}>
               {submitting ? 'Saving...' : `${editRecord ? 'Save' : 'Add'} Opportunity`}
             </Button>
           </div>

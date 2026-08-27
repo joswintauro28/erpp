@@ -20,6 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { api } from "@/services/api";
+import { handleError } from "@datavex/ui-theme";
 import { toastError, toastWarning } from "@/utils/toast";
 import { money } from "@/utils/format";
 
@@ -105,7 +106,7 @@ export default function PurchaseRequisitionsPage() {
       setSuppliers(supData || []);
       setWarehouses(whData || []);
     } catch (err) {
-      console.error(err);
+      handleError(err);
     } finally {
       setLoading(false);
     }
@@ -128,7 +129,7 @@ export default function PurchaseRequisitionsPage() {
       setIsAddOpen(false);
       fetchData();
     } catch (err) {
-      console.error(err);
+      handleError(err);
       toastError("Failed to create requisition", "Unknown product names must first exist in the product catalog.");
     }
   };
@@ -138,7 +139,7 @@ export default function PurchaseRequisitionsPage() {
       await api.post(`/purchase-requisitions/${id}/${action}`);
       fetchData();
     } catch (err) {
-      console.error(err);
+      handleError(err);
       toastError("Action failed", "Invalid transition?");
     }
   };
@@ -157,7 +158,7 @@ export default function PurchaseRequisitionsPage() {
       setSelectedReq(null);
       fetchData();
     } catch (err) {
-      console.error(err);
+      handleError(err);
       toastError("Conversion failed", "Only APPROVED requisitions can become purchase orders.");
     }
   };
@@ -169,7 +170,7 @@ export default function PurchaseRequisitionsPage() {
       setReqToDelete(null);
       fetchData();
     } catch (err) {
-      console.error(err);
+      handleError(err);
       toastError("Failed to delete requisition.");
     }
   };

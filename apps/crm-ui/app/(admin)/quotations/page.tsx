@@ -8,7 +8,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { api } from "@/services/api";
 import { exportToCSV } from "@/utils/exportCsv";
 import { toastSuccess, toastError, errorMessage } from "@/utils/toast";
-import { useConfirm } from "@datavex/ui-theme";
+import { useConfirm, handleError } from "@datavex/ui-theme";
 import QuotationCreateModal from "./QuotationCreateModal";
 import QuotationDetailsModal from "./QuotationDetailsModal";
 import QuotationTable from "./QuotationTable";

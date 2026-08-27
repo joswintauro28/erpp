@@ -20,3 +20,4 @@ class Opportunity(Base):
     lead_id_str = Column(String, nullable=True, index=True)
     # [{stage, at, by}] progression trail for the Kanban/table view
     stage_history = Column(JSON, nullable=True)
+    file_id = Column(Integer, nullable=True)

@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { Search, ArrowUpDown, AlertTriangle } from "lucide-react";
 import { api } from "@/services/api";
+import { handleError } from "@datavex/ui-theme";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";

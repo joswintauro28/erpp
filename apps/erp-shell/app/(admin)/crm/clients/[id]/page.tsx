@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { MultiStepDialog } from "@/components/multi-step-dialog";
 import { money, statusVariant } from "@/utils/format";
 import { api } from "@/services/api";
+import { handleError } from "@datavex/ui-theme";
 import type { ApiClient, PortalAccess } from "@/types/crm";
 import type { ApiInvoice, ApiPayment } from "@/types/billing";
 import ClientDetailLoading from "./loading";
