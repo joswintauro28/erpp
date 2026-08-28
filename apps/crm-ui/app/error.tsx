@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { handleError } from "@datavex/ui-theme";
 
 export default function Error({
   error,

@@ -135,7 +135,7 @@ export default function AgingWorkstationPage() {
       a.click();
       a.remove();
     } catch (e) {
-      handleError("Export failed", e);
+      handleError(e, "Export failed");
     } finally {
       setExporting(false);
     }

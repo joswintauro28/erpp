@@ -36,7 +36,7 @@ export default function Quotations() {
         const qData = await api.get<Quotation[]>("/invoices/quotations");
         setQuotes(qData);
       } catch (err) {
-        handleError("Failed to load quotations data", err);
+        handleError(err, "Failed to load quotations data");
       } finally {
         setLoading(false);
       }
@@ -61,7 +61,7 @@ export default function Quotations() {
       const updated = await api.put<Quotation>(`/invoices/quotations/${id}/status?status=${status}`);
       setQuotes((prev) => prev.map((q) => q.id === id ? updated : q));
     } catch (err) {
-      handleError("Failed to update status", err);
+      handleError(err, "Failed to update status");
     }
   };
 
@@ -73,7 +73,7 @@ export default function Quotations() {
       const updatedQuotes = await api.get<Quotation[]>("/invoices/quotations");
       setQuotes(updatedQuotes);
     } catch (err) {
-      handleError("Failed to convert quotation", err);
+      handleError(err, "Failed to convert quotation");
     }
   };
 
@@ -83,7 +83,7 @@ export default function Quotations() {
       await api.delete(`/invoices/quotations/${id}`);
       setQuotes((prev) => prev.filter((q) => q.id !== id));
     } catch (err) {
-      handleError("Failed to delete quotation", err);
+      handleError(err, "Failed to delete quotation");
     }
   };
 

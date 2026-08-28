@@ -14,9 +14,7 @@ import {
   Loader2,
   ExternalLink,
 } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, handleError } from "@datavex/ui-theme";
-import { Button, handleError } from "@datavex/ui-theme";
-import { Badge, handleError } from "@datavex/ui-theme";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Button, Badge, handleError } from "@datavex/ui-theme";
 import { api } from "@/services/api";
 import { toastError, toastWarning, toastSuccess } from "@/utils/toast";
 

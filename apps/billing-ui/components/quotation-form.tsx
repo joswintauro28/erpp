@@ -366,7 +366,7 @@ export default function QuotationForm({ mode, initialData, onSuccess }: Quotatio
               Next <ChevronRight className="h-4 w-4" />
             </Button>
           ) : (
-            <Button type="button" disabled={saving size="sm" || grandTotal <= 0} onClick={handleSubmit}>
+            <Button type="button" size="sm" disabled={saving || grandTotal <= 0} onClick={handleSubmit}>
               {saving && <Loader2 className="mr-1 h-4 w-4 animate-spin" />}
               <Save className="h-4 w-4" />
               {isEdit ? "Update Quotation" : "Create Quotation"}

@@ -275,7 +275,7 @@ interface OpportunityDetailModalProps {
 export default function OpportunityDetailModal({ record, isOpen, onClose, onSuccess }: OpportunityDetailModalProps) {
   const confirm = useConfirm();
   const [tab, setTab] = useState("details");
-n  // Escape key handler
+  // Escape key handler
   useEffect(() => {
     if (!isOpen) return;
     const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };

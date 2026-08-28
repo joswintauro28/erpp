@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { handleError } from "@datavex/ui-theme";
 
 const defaultCityOptions = [
   { value: "mumbai", label: "Mumbai, India" },
@@ -85,7 +86,7 @@ const loadCityOptions = async (inputValue: string) => {
     });
     return uniqueCities;
   } catch (error) {
-    handleError("Error fetching cities:", error);
+    handleError(error, "Error fetching cities");
     return [];
   }
 };

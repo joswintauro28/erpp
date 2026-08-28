@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { BarChart3, TrendingUp, TrendingDown, AlertTriangle, DollarSign, Receipt, Wallet, Banknote, ArrowUpRight, ArrowDownRight, Minus } from "lucide-react";
 import ReportsLoading from "./loading";
 import { api } from "@/services/api";
-import { handleError } from "@datavex/ui-theme";
+import { handleError, Button } from "@datavex/ui-theme";
 import { money } from "@/utils/format";
 
 type Tab = "pl" | "balance-sheet" | "cash-flow" | "cogs";
@@ -72,7 +72,7 @@ export default function ReportsPage() {
           setDetailedCf(res);
         }
       } catch (err) {
-        handleError("Failed to fetch detailed cash flow", err);
+        handleError(err, "Failed to fetch detailed cash flow");
       } finally {
         setCfLoading(false);
       }

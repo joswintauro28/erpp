@@ -54,7 +54,7 @@ export default function GeneralSettings() {
         }
       })
       .catch((err) => {
-        handleError("Failed to load settings", err);
+        handleError(err, "Failed to load settings");
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -73,7 +73,7 @@ export default function GeneralSettings() {
       await api.put("/settings", payload);
       setMessage({ type: "success", text: "Settings saved successfully!" });
     } catch (err) {
-      handleError("Failed to save settings", err);
+      handleError(err, "Failed to save settings");
       setMessage({ type: "error", text: "Failed to save settings. Please try again." });
     } finally {
       setSaving(false);

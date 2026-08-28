@@ -54,7 +54,7 @@ export default function SalesOrderDetailsModal({
       setRelatedRequirements(reqData.requirements || []);
       setRelatedQuotations(qData.quotations || []);
     } catch (err) {
-      handleError("Failed to fetch related data", err);
+      handleError(err, "Failed to fetch related data");
     } finally {
       setLoadingRelated(false);
     }
