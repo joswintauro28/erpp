@@ -10,7 +10,7 @@ import {
   type ReactNode,
 } from "react";
 
-import { getAccessToken } from "@datavex/auth-middleware";
+import { getAccessToken, api } from "@datavex/auth-middleware";
 
 export interface LiveNotification {
   id: number;
@@ -78,11 +78,10 @@ export function NotificationProvider({
     try {
       const token = getAccessToken();
       if (!token) return;
-      const res = await fetch(`${getRestBase()}/notifications/history?limit=50`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) return;
-      const data = (await res.json()) as NotificationHistoryResponse;
+      // L10: use shared api client for auto-retry on 401
+      const data = await api.get<NotificationHistoryResponse>(
+        `/api/notifications/history?limit=50`
+      );
       setNotifications(data.notifications || []);
       setUnreadCount(data.unread || 0);
     } catch {
@@ -193,10 +192,8 @@ export function NotificationProvider({
       try {
         const token = getAccessToken();
         if (!token) return;
-        await fetch(`${getRestBase()}/notifications/${id}/read`, {
-          method: "PUT",
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        // L10: use shared api client for auto-retry on 401
+        await api.put(`/api/notifications/${id}/read`);
       } catch {
         // optimistic update stands; next refresh reconciles
       }
@@ -206,17 +203,14 @@ export function NotificationProvider({
 
   const markAllRead = useCallback(async () => {
     setNotifications((prev) => prev.map((n) => ({ ...n, read_status: true })));
-    setUnreadCount(0);
-    try {
-      const token = getAccessToken();
-      if (!token) return;
-      await fetch(`${getRestBase()}/notifications/read-all`, {
-        method: "PUT",
-        headers: { Authorization: `Bearer ${token}` },
-      });
-    } catch {
-      // optimistic
-    }
+    setUnreadCount(0);      try {
+        const token = getAccessToken();
+        if (!token) return;
+        // L10: use shared api client for auto-retry on 401
+        await api.put(`/api/notifications/read-all`);
+      } catch {
+        // optimistic
+      }
   }, []);
 
   return (

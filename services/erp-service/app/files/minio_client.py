@@ -135,14 +135,17 @@ async def generate_get_url(
 
 
 async def delete_object(bucket: str, object_key: str) -> None:
-    """Delete an object from MinIO."""
+    """Delete an object from MinIO. Raises S3Error on failure."""
     client = get_minio_client()
+
     def _delete():
-        try:
-            client.remove_object(bucket, object_key)
-        except S3Error as exc:
-            logger.warning("MinIO delete_object failed for %s/%s: %s", bucket, object_key, exc)
-    await asyncio.to_thread(_delete)
+        client.remove_object(bucket, object_key)
+
+    try:
+        await asyncio.to_thread(_delete)
+    except S3Error as exc:
+        logger.warning("MinIO delete_object failed for %s/%s: %s", bucket, object_key, exc)
+        raise
 
 
 async def object_exists(bucket: str, object_key: str) -> bool:

@@ -1,7 +1,7 @@
 """enrich_serial_numbers_registry
 
 Revision ID: c7e2f1a9b4d8
-Revises: a1b2c3d4e5f6
+Revises: f7e8d9c0b1a2
 Create Date: 2026-08-04 10:00:00.000000
 
 """
@@ -13,7 +13,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision: str = 'c7e2f1a9b4d8'
-down_revision: Union[str, None] = 'a1b2c3d4e5f6'
+down_revision: Union[str, None] = 'f7e8d9c0b1a2'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

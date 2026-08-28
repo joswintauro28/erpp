@@ -9,10 +9,12 @@ import { connect } from "amqplib";
     {
       provide: "AMQP_CONNECTION",
       useFactory: async (configService: ConfigService): Promise<any> => {
-        const url = configService.get<string>("RABBITMQ_URL") || "amqp://guest:guest@localhost:5672";
+        // L3: requires RABBITMQ_URL in production
+        const url = configService.get<string>("RABBITMQ_URL") ?? "amqp://guest:guest@localhost:5672";
         try {
           return await connect(url);
         } catch (err) {
+          // eslint-disable-next-line no-console
           console.error(`Failed to connect to RabbitMQ: ${(err as any).message}`);
           throw err;
         }

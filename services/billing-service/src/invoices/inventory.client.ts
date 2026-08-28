@@ -12,7 +12,8 @@ interface BatchCostItem {
 export class InventoryClientService {
   private readonly logger = new Logger(InventoryClientService.name);
   private readonly inventoryUrl =
-    process.env.INVENTORY_SERVICE_URL || "http://localhost:8004";
+    // L3: requires INVENTORY_SERVICE_URL in production
+    process.env.INVENTORY_SERVICE_URL ?? "http://localhost:8004";
 
   private cache = new Map<string, { data: any; expiresAt: number }>();
   private readonly TTL_MS = 30000; // 30s TTL cache for draft estimations

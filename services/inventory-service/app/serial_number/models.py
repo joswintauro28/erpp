@@ -14,8 +14,8 @@ class SerialNumber(Base):
 
     id: Mapped[int] = mapped_column(sa.Integer, primary_key=True)
     organization_id: Mapped[int] = mapped_column(sa.Integer, nullable=False, index=True)
-    product_id: Mapped[int] = mapped_column(sa.Integer, nullable=False, index=True)
-    warehouse_id: Mapped[int] = mapped_column(sa.Integer, nullable=False, index=True)
+    product_id: Mapped[int] = mapped_column(sa.Integer, sa.ForeignKey("products.id"), nullable=False, index=True)
+    warehouse_id: Mapped[int] = mapped_column(sa.Integer, sa.ForeignKey("warehouses.id"), nullable=False, index=True)
     serial_number: Mapped[str] = mapped_column(sa.String(255), nullable=False)
     sku: Mapped[str | None] = mapped_column(sa.String(100), nullable=True, index=True)
     # Lifecycle status: in_stock | reserved | sold | returned | repair | damaged | retired | in_transit

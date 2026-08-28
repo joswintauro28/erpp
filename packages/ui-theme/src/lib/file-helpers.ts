@@ -6,16 +6,9 @@
  * This module provides a helper to fetch the FileRecord by owner.
  */
 
-export interface FileRecord {
-  id: number;
-  original_name: string;
-  mime_type: string;
-  size_bytes: number;
-  bucket: string;
-  object_key: string;
-  owner_type: string;
-  owner_id: number | null;
-}
+// Re-export FileRecord from file-upload to avoid duplicate interface
+export type { FileRecord } from "../components/shared/file-upload";
+import type { FileRecord } from "../components/shared/file-upload";
 
 /**
  * Fetch the FileRecord for a given owner_type and owner_id.
@@ -23,29 +16,40 @@ export interface FileRecord {
  */
 export async function fetchFileRecord(
   ownerType: string,
-  ownerId: number
+  ownerId: number,
 ): Promise<FileRecord | null> {
   try {
-    const res = await fetch(`/api/files?owner_type=${ownerType}&owner_id=${ownerId}`);
-    if (!res.ok) return null;
-    const data = await res.json();
-    const files = data.files || data;
-    if (Array.isArray(files) && files.length > 0) {
-      return files[0];
-    }
-    return null;
+    const { api } = await import("@datavex/auth-middleware");
+    const records = await api.get<FileRecord[]>(
+      `/api/files?owner_type=${ownerType}&owner_id=${ownerId}`,
+    );
+    return records.length > 0 ? records[0] : null;
   } catch {
     return null;
   }
 }
 
 /**
- * Resolve file_id from a file_uri string (s3://bucket/key).
- * Returns null if the URI is not parseable.
+ * Resolve a file_id from a file_uri (s3://...) by looking up the FileRecord.
+ * If file_id is already available, returns it directly.
  */
-export function resolveFileIdFromFileUri(fileUri: string | null | undefined): string | null {
+export async function resolveFileIdFromFileUri(
+  fileUri: string | null | undefined,
+): Promise<string | null> {
   if (!fileUri) return null;
-  // file_uri format: s3://bucket/key
-  const match = fileUri.match(/^s3:\/\/[^/]+\/(.+)$/);
-  return match ? match[1] : null;
+
+  // If it's already a numeric ID, return as-is
+  if (/^\d+$/.test(fileUri)) return fileUri;
+
+  // Extract owner info from s3:// URIs if possible
+  // s3://bucket/path — we need to look up by object_key
+  try {
+    const { api } = await import("@datavex/auth-middleware");
+    const records = await api.get<FileRecord[]>(
+      `/api/files?object_key=${encodeURIComponent(fileUri)}`,
+    );
+    return records.length > 0 ? String(records[0].id) : null;
+  } catch {
+    return null;
+  }
 }

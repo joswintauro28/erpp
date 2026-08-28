@@ -27,7 +27,6 @@ model Role {
   isSystemRole        Boolean              @map("is_system_role")
   rolePermissions     RolePermission[]
   organizationMembers OrganizationMember[]
-  invitations         Invitation[]
   updatedAt           DateTime             @default(now()) @updatedAt @map("updated_at")
 
   @@map("roles")
@@ -48,7 +47,6 @@ model User {
   
   organizationMembers  OrganizationMember[]
   refreshTokens        RefreshToken[]
-  invitations          Invitation[]
   ownedOrganizations   Organization[]
   brandingSetting      BrandingSetting?
   companySetting       CompanySetting?
@@ -123,7 +121,6 @@ model Organization {
   createdAt           DateTime             @default(now()) @map("created_at")
   owner               User                 @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   organizationMembers OrganizationMember[]
-  invitations         Invitation[]
   updatedAt           DateTime             @default(now()) @updatedAt @map("updated_at")
 
   @@map("organizations")
@@ -165,24 +162,6 @@ model RefreshToken {
   @@index([expiresAt])
   @@index([userId, revoked])
   @@map("refresh_tokens")
-}
-
-model Invitation {
-  id             Int          @id @default(autoincrement())
-  organizationId Int          @map("organization_id")
-  email          String
-  roleId         Int          @map("role_id")
-  token          String       @unique
-  status         String
-  invitedBy      Int          @map("invited_by")
-  createdAt      DateTime     @default(now()) @map("created_at")
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  role           Role         @relation(fields: [roleId], references: [id], onDelete: Cascade)
-  sender         User         @relation(fields: [invitedBy], references: [id], onDelete: Cascade)
-  updatedAt      DateTime     @default(now()) @updatedAt @map("updated_at")
-
-  @@index([email])
-  @@map("invitations")
 }
 
 model RolePermission {

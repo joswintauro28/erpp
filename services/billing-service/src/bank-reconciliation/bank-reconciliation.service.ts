@@ -23,7 +23,8 @@ export class BankReconciliationService {
    * @param jwtToken Raw JWT bearer token to forward to erp-service.
    */
   async importFileById(organizationId: number, fileId: number, fileName: string, jwtToken: string) {
-    const erpServiceUrl = process.env.ERP_SERVICE_URL || "http://localhost:8000";
+    // L3: requires ERP_SERVICE_URL in production
+    const erpServiceUrl = process.env.ERP_SERVICE_URL ?? "http://localhost:8000";
 
     // Step 1: Get the presigned download URL from erp-service
     const metaResponse = await fetch(`${erpServiceUrl}/api/files/${fileId}/download`, {

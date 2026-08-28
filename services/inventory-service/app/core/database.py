@@ -39,8 +39,11 @@ class BaseRepository(Generic[ModelT]):
         await self.db.flush()
         return instance
 
-    async def get(self, id: int) -> ModelT | None:
+    async def get(self, id: int, organization_id: int | None = None) -> ModelT | None:
+        # L6: enforce org isolation when organization_id column exists
         stmt = sa.select(self.model).where(self.model.id == id)
+        if organization_id is not None and hasattr(self.model, "organization_id"):
+            stmt = stmt.where(self.model.organization_id == organization_id)
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
 
@@ -52,8 +55,8 @@ class BaseRepository(Generic[ModelT]):
         result = await self.db.execute(stmt)
         return list(result.scalars().all())
 
-    async def update(self, id: int, **kwargs: Any) -> ModelT | None:
-        instance = await self.get(id)
+    async def update(self, id: int, organization_id: int | None = None, **kwargs: Any) -> ModelT | None:
+        instance = await self.get(id, organization_id=organization_id)
         if not instance:
             return None
         for key, value in kwargs.items():
@@ -62,8 +65,8 @@ class BaseRepository(Generic[ModelT]):
         await self.db.flush()
         return instance
 
-    async def delete(self, id: int) -> bool:
-        instance = await self.get(id)
+    async def delete(self, id: int, organization_id: int | None = None) -> bool:
+        instance = await self.get(id, organization_id=organization_id)
         if not instance:
             return False
         await self.db.delete(instance)

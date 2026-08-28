@@ -12,12 +12,18 @@ export class DocumentNumberService {
     return `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, "0")}`;
   }
 
+  // L1: Allowlist of safe table/column identifiers to prevent SQL injection
+  private static readonly SAFE_TABLES = new Set([
+    "invoices", "quotations", "credit_notes", "debit_notes",
+  ]);
+  private static readonly SAFE_COLUMNS = new Set([
+    "invoice_number", "quote_number", "credit_note_number", "debit_note_number",
+  ]);
+
   /**
    * Return the next `{prefix}-{YYYYMM}-{NNNN}` number for the given table/column.
    * The sequence is the max existing numeric suffix + 1, scoped to the organization,
    * so numbers are never reused after deletes.
-   *
-   * `table` and `column` are internal, hardcoded constants (never user input).
    */
   async next(
     prefix: string,
@@ -26,6 +32,12 @@ export class DocumentNumberService {
     organizationId: number,
     date: Date = new Date(),
   ): Promise<string> {
+    if (!DocumentNumberService.SAFE_TABLES.has(table)) {
+      throw new Error(`Unsafe table name: ${table}`);
+    }
+    if (!DocumentNumberService.SAFE_COLUMNS.has(column)) {
+      throw new Error(`Unsafe column name: ${column}`);
+    }
     const month = this.monthKey(date);
     const like = `${prefix}-${month}-%`;
     const rows = (await this.prisma.$queryRawUnsafe(
