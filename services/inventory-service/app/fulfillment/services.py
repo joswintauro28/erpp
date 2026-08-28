@@ -86,20 +86,12 @@ class FulfillmentService:
                 product = prod_res.scalar_one_or_none()
 
             if not product:
-                # Auto-create product in catalog if not existing yet
-                import random
-                generated_sku = item_in.sku or f"SKU-{random.randint(1000, 9999)}"
-                product = Product(
-                    organization_id=org_id,
-                    name=item_in.product_name,
-                    sku=generated_sku,
-                    price=item_in.unit_price,
-                    cost_price=item_in.unit_price * 0.7 if item_in.unit_price else 0.0,
-                    track_inventory=True,
-                    is_active=True
+                # M18: require explicit product — do not invent random SKUs
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail=f"Product not found: '{item_in.product_name}' (SKU: {item_in.sku or 'N/A'}). "
+                           "Create the product in the catalog first."
                 )
-                self.db.add(product)
-                await self.db.flush()
 
             item = FulfillmentItem(
                 fulfillment_id=order.id,
@@ -203,17 +195,24 @@ class FulfillmentService:
         for item in order.items:
             item.reserved_quantity = item.ordered_quantity
             
-            # Update Stock reserved count
+            # H12: FOR UPDATE to prevent phantom reservations
             stmt = select(Stock).where(
                 Stock.organization_id == org_id,
                 Stock.product_id == item.product_id
-            )
+            ).with_for_update()
             if order.warehouse_id:
                 stmt = stmt.where(Stock.warehouse_id == order.warehouse_id)
             
             res = await self.db.execute(stmt)
             stock_rec = res.scalars().first()
             if stock_rec:
+                # H12: validate ATP before reserving (prevent oversell)
+                available = stock_rec.quantity - stock_rec.reserved_quantity
+                if available < item.ordered_quantity:
+                    raise HTTPException(
+                        status_code=status.HTTP_409_CONFLICT,
+                        detail=f"Insufficient stock for {item.product_name}: {available} available, {item.ordered_quantity} requested",
+                    )
                 stock_rec.reserved_quantity += item.ordered_quantity
                 
         order.status = "RESERVED"
@@ -301,6 +300,9 @@ class FulfillmentService:
             )
             if order.warehouse_id:
                 stmt = stmt.where(Stock.warehouse_id == order.warehouse_id)
+            else:
+                # M14: pick warehouse with most available stock instead of arbitrary
+                stmt = stmt.order_by((Stock.quantity - Stock.reserved_quantity).desc())
             
             res = await self.db.execute(stmt)
             stock_rec = res.scalars().first()
@@ -434,15 +436,11 @@ class FulfillmentService:
         sup_res = await self.db.execute(sup_stmt)
         supplier = sup_res.scalars().first()
         if not supplier:
-            supplier = Supplier(
-                organization_id=org_id,
-                name="Primary Industrial Supplier",
-                contact_person="Procurement Desk",
-                email="supplier@vendor.com",
-                phone="+91 9876543210",
+            # M18: require explicit supplier — do not invent fake vendors
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="No supplier found for this organization. Create a supplier first before generating a purchase order."
             )
-            self.db.add(supplier)
-            await self.db.flush()
 
         wh_id = order.warehouse_id
         warehouse = None
@@ -455,16 +453,11 @@ class FulfillmentService:
             wh_res = await self.db.execute(wh_stmt)
             warehouse = wh_res.scalars().first()
         if not warehouse:
-            warehouse = Warehouse(
-                organization_id=org_id,
-                name="Main Distribution Center",
-                code="WH-MAIN",
-                city="Bangalore",
-                state="Karnataka",
-                country="India",
+            # M18: require explicit warehouse — do not invent random locations
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="No warehouse found for this organization. Create a warehouse first before generating a purchase order."
             )
-            self.db.add(warehouse)
-            await self.db.flush()
 
         po_number = await next_document_id(self.db, PurchaseOrder, "PO", "order_number", org_id)
         po = PurchaseOrder(
@@ -829,8 +822,34 @@ class FulfillmentService:
         elif order.status == "PACKED":
             order.status = "PICKING"
         elif order.status == "DISPATCHED":
+            # M13: reverse the stock deduction that happened during dispatch
+            for item in order.items:
+                stmt = select(Stock).where(
+                    Stock.organization_id == org_id,
+                    Stock.product_id == item.product_id
+                )
+                if order.warehouse_id:
+                    stmt = stmt.where(Stock.warehouse_id == order.warehouse_id)
+                res = await self.db.execute(stmt)
+                stock_rec = res.scalars().first()
+                if stock_rec:
+                    stock_rec.quantity += item.ordered_quantity
+                    stock_rec.reserved_quantity += item.ordered_quantity
+
+                    # Log reversal movement IN
+                    movement = StockMovement(
+                        organization_id=org_id,
+                        product_id=item.product_id,
+                        warehouse_id=stock_rec.warehouse_id,
+                        type="in",
+                        quantity=item.ordered_quantity,
+                        reference_type="DISPATCH_REVERSAL",
+                        reference_id=order.id,
+                        notes=f"Dispatch reversed for order {order.sales_order_code}"
+                    )
+                    self.db.add(movement)
             order.status = "PACKED"
-            
+
         await self.db.commit()
         await self.db.refresh(order)
         return order
