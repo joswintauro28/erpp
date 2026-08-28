@@ -82,11 +82,12 @@ class StockService:
         if new_quantity < 0:
             raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Physical quantity cannot be negative")
 
+        # H11: FOR UPDATE to prevent concurrent overwrites
         stmt = sa.select(Stock).where(
             Stock.organization_id == organization_id,
             Stock.product_id == product_id,
             Stock.warehouse_id == warehouse_id,
-        )
+        ).with_for_update()
         result = await self.db.execute(stmt)
         stock = result.scalar_one_or_none()
 
@@ -154,11 +155,12 @@ class StockService:
         await self._resolve_product(organization_id, product_id)
         await self._resolve_warehouse(organization_id, warehouse_id)
 
+        # H11: FOR UPDATE to prevent concurrent oversell
         stmt = sa.select(Stock).where(
             Stock.organization_id == organization_id,
             Stock.product_id == product_id,
             Stock.warehouse_id == warehouse_id,
-        )
+        ).with_for_update()
         result = await self.db.execute(stmt)
         stock = result.scalar_one_or_none()
 

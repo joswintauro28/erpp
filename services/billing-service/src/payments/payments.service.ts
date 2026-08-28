@@ -7,7 +7,7 @@ import { PrismaService } from "../prisma/prisma.service";
 import { Prisma } from "@prisma/client";
 import { CreatePaymentDto } from "./dto/create-payment.dto";
 import { EventBusService } from "../event-bus/event-bus.service";
-import { Events } from "../event-bus/event-types";
+import { Events, type EventName, type EventPayload } from "../event-bus/event-types";
 
 @Injectable()
 export class PaymentsService {
@@ -92,7 +92,9 @@ export class PaymentsService {
   }
 
   async clearPayment(id: number, organizationId: number) {
-    return this.prisma.$transaction(async (tx) => {
+    // H13: collect events during transaction, emit after commit
+    const pendingEvents: Array<{ event: EventName; payload: EventPayload }> = [];
+    const result = await this.prisma.$transaction(async (tx) => {
       const payment = await tx.payment.findFirst({
         where: { id, organizationId },
       });
@@ -123,29 +125,27 @@ export class PaymentsService {
             );
           }
 
-          // M10: prevent overpayment — clamp to remaining balance
-          const paidAmount = Math.min(
-            Number(invoice.paidAmount) + Number(payment.amount),
-            Number(invoice.total)
-          );
+          // H8: atomic increment — prevents lost-update under concurrency
           const total = Number(invoice.total);
+          const payAmt = Number(payment.amount);
+          const newPaid = Math.min(Number(invoice.paidAmount) + payAmt, total);
           let newStatus = invoice.status;
-
-          if (paidAmount >= total) {
-            newStatus = "paid";
-          } else if (paidAmount > 0) {
-            newStatus = "partially_paid";
-          }
-
-          const balanceDue = total - paidAmount;
+          if (newPaid >= total) newStatus = "paid";
+          else if (newPaid > 0) newStatus = "partially_paid";
           await tx.invoice.update({
             where: { id: payment.invoiceId },
             data: {
-              paidAmount: new Prisma.Decimal(paidAmount),
-              balanceDue: new Prisma.Decimal(Math.max(0, balanceDue)),
+              paidAmount: { increment: payAmt },
+              balanceDue: { decrement: payAmt },
               status: newStatus,
             },
           });
+          // Clamp if overpayment slipped through (race window)
+          await tx.$executeRaw`
+            UPDATE invoices SET paid_amount = LEAST(paid_amount, total),
+              balance_due = GREATEST(total - LEAST(paid_amount, total), 0)
+            WHERE id = ${payment.invoiceId} AND paid_amount > total
+          `;
 
           if (cashBankId && arId) {
             const entryDate = payment.paymentDate ?? new Date();
@@ -175,7 +175,7 @@ export class PaymentsService {
               ],
             });
           }
-          this.eventBus.emit(Events.InvoicePaid, {
+          pendingEvents.push({ event: Events.InvoicePaid, payload: {
             organizationId,
             invoiceId: payment.invoiceId,
             invoiceNumber: invoice.invoiceNumber ?? `INV-${payment.invoiceId}`,
@@ -184,16 +184,24 @@ export class PaymentsService {
             amount: Number(payment.amount),
             salesOrderCode: invoice.salesOrderCode ?? undefined,
             timestamp: new Date(),
-          });
+          }});
         }
       }
 
       return { message: "Payment cleared successfully", id };
-    });
+    }); // transaction committed
+    // H13: emit events after successful commit
+    for (const { event, payload } of pendingEvents) {
+      this.eventBus.emit(event, payload);
+    }
+    return result;
   }
 
   async create(organizationId: number, dto: CreatePaymentDto) {
-    return this.prisma.$transaction(async (tx) => {
+    // H13: collect events during transaction, emit after commit
+    const pendingEvents: Array<{ event: EventName; payload: EventPayload }> = [];
+
+    const result = await this.prisma.$transaction(async (tx) => {
       const invoice = await tx.invoice.findFirst({
         where: { id: dto.invoiceId, organizationId },
       });
@@ -219,7 +227,7 @@ export class PaymentsService {
         },
       });
 
-      this.eventBus.emit(Events.PaymentRecorded, {
+      pendingEvents.push({ event: Events.PaymentRecorded, payload: {
         organizationId,
         paymentId: payment.id,
         invoiceId: dto.invoiceId,
@@ -227,22 +235,35 @@ export class PaymentsService {
         amount: Number(dto.amount),
         method: dto.paymentMethod ?? "Unknown",
         timestamp: new Date(),
-      });
+      }});
 
       return payment;
-    });
+    }); // transaction committed
+    // H13: emit events after successful commit
+    for (const { event, payload } of pendingEvents) {
+      this.eventBus.emit(event, payload);
+    }
+    return result;
   }
 
   async refund(id: number, organizationId: number) {
     const { cashBankId, arId } = await this.getAccountIds(organizationId);
+    // H13: collect events during transaction, emit after commit
+    const pendingEvents: Array<{ event: EventName; payload: EventPayload }> = [];
 
-    return this.prisma.$transaction(async (tx) => {
+    const result = await this.prisma.$transaction(async (tx) => {
       const payment = await tx.payment.findFirst({
         where: { id, organizationId },
       });
       if (!payment) throw new NotFoundException("Payment not found");
+      // H9: block refunding pending/failed payments (money never moved)
       if (payment.status === "refunded") {
         throw new BadRequestException("Payment already refunded");
+      }
+      if (payment.status === "pending" || payment.status === "failed") {
+        throw new BadRequestException(
+          `Cannot refund a "${payment.status}" payment. Only cleared payments can be refunded.`
+        );
       }
 
       await tx.payment.update({
@@ -306,16 +327,21 @@ export class PaymentsService {
         });
       }
 
-      this.eventBus.emit(Events.PaymentRefunded, {
+      pendingEvents.push({ event: Events.PaymentRefunded, payload: {
         organizationId,
         paymentId: id,
         invoiceId: payment.invoiceId!,
         amount: Number(payment.amount),
         timestamp: new Date(),
-      });
+      }});
 
       return { message: "Payment refunded successfully" };
-    });
+    }); // transaction committed
+    // H13: emit events after successful commit
+    for (const { event, payload } of pendingEvents) {
+      this.eventBus.emit(event, payload);
+    }
+    return result;
   }
 
   async getMetrics(organizationId: number) {

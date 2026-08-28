@@ -14,7 +14,11 @@ function transformValue(value: unknown): unknown {
   if (value === null || value === undefined) return value;
   if (Array.isArray(value)) return value.map(transformValue);
   if (typeof value === "object" && !(value instanceof Date)) {
+    // H6: special-case Prisma.Decimal — expose as number, not internal {s,e,d}
     const obj = value as Record<string, unknown>;
+    if (typeof (obj as any).toJSON === "function" && typeof (obj as any).s !== "undefined") {
+      return Number((obj as any).toJSON());
+    }
     const result: Record<string, unknown> = {};
     for (const [k, v] of Object.entries(obj)) {
       result[camelToSnake(k)] = transformValue(v);

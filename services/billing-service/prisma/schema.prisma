@@ -38,9 +38,11 @@ enum PaymentMethod {
 enum PaymentStatus {
   pending
   cleared
-  completed
-  failed
   refunded
+  // failed — reserved for future payment failure tracking
+  failed
+  // completed — legacy default, superseded by pending→cleared flow
+  completed
 }
 
 enum NoteStatus {
@@ -77,7 +79,7 @@ model Invoice {
   clientName      String?        @map("client_name")
   vendorId        Int?           @map("vendor_id")
   vendorName      String?        @map("vendor_name")
-  invoiceNumber   String?        @unique @map("invoice_number")
+  invoiceNumber   String?        @map("invoice_number")
   salesOrderCode  String?        @map("sales_order_code")
   poReference     String?        @map("po_reference")
   status          InvoiceStatus  @default(draft)
@@ -116,6 +118,7 @@ model Invoice {
   @@index([vendorId])
   @@index([salesOrderCode])
   @@index([poReference])
+  @@unique([organizationId, invoiceNumber])
   @@map("invoices")
 }
 
@@ -147,7 +150,7 @@ model Payment {
   paymentDate   DateTime?     @map("payment_date")
   referenceId   String?       @map("reference_id")
   notes         String?       @db.Text
-  status        PaymentStatus @default(completed)
+  status        PaymentStatus @default(pending)
   createdAt     DateTime      @default(now()) @map("created_at")
 
   invoice Invoice? @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
@@ -202,7 +205,7 @@ model Quotation {
   organizationId      Int              @map("organization_id")
   clientId            Int              @map("client_id")
   clientName          String           @map("client_name")
-  quoteNumber         String           @unique @map("quote_number")
+  quoteNumber         String           @map("quote_number")
   total               Decimal          @default(0.00) @db.Decimal(12, 2)
   status              QuotationStatus  @default(draft)
   issueDate           DateTime?        @map("issue_date")
@@ -214,6 +217,7 @@ model Quotation {
   items QuotationItem[]
 
   @@index([organizationId])
+  @@unique([organizationId, quoteNumber])
   @@map("quotations")
 }
 
@@ -325,25 +329,6 @@ model ReconciliationAuditLog {
   @@index([organizationId])
   @@index([bankTransactionId])
   @@map("reconciliation_audit_logs")
-}
-
-model ReconciliationReport {
-  id              Int      @id @default(autoincrement())
-  organizationId  Int      @map("organization_id")
-  batch           String
-  periodStart     DateTime @map("period_start")
-  periodEnd       DateTime @map("period_end")
-  totalBank       Decimal  @default(0) @map("total_bank") @db.Decimal(12, 2)
-  totalMatched    Decimal  @default(0) @map("total_matched") @db.Decimal(12, 2)
-  totalUnmatched  Decimal  @default(0) @map("total_unmatched") @db.Decimal(12, 2)
-  transactionCount Int    @default(0) @map("transaction_count")
-  matchedCount    Int      @default(0) @map("matched_count")
-  status          String   @default("draft")
-  completedAt     DateTime? @map("completed_at")
-  createdAt       DateTime @default(now()) @map("created_at")
-
-  @@index([organizationId])
-  @@map("reconciliation_reports")
 }
 
 model FiscalPeriod {
