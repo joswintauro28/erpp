@@ -1,6 +1,6 @@
 # ─────────────────────────────────────────────────────────────
 # DATAVEX ERP — Local Development Docker Compose
-# Architecture: 10 microservices + PostgreSQL + MinIO + RabbitMQ + Nginx
+# Architecture: 11 microservices + PostgreSQL + MinIO + RabbitMQ + Nginx
 # Network: All services communicate via container names
 # ─────────────────────────────────────────────────────────────
 
