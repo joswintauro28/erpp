@@ -2,11 +2,12 @@
 
 import logging
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.deps import get_db, get_current_user_id
 from app.core.config import settings
+from app.core.exceptions import ValidationException, NotFoundException, ServiceUnavailableException
 from app.schemas import (
     ChatRequest,
     ChatResponse,
@@ -34,11 +35,11 @@ async def chat(
     """Send a message and get an AI response."""
     # Validate module
     if req.module not in PROMPTS:
-        raise HTTPException(400, f"Invalid module: {req.module}")
+        raise ValidationException(f"Invalid module: {req.module}. Supported: {', '.join(PROMPTS.keys())}")
 
     # Validate input length
     if len(req.message) > settings.MAX_INPUT_LENGTH:
-        raise HTTPException(400, f"Message too long (max {settings.MAX_INPUT_LENGTH} chars)")
+        raise ValidationException(f"Message too long (max {settings.MAX_INPUT_LENGTH} chars)")
 
     user_id = user["user_id"]
     org_id = user.get("organization_id", 0)
@@ -47,7 +48,7 @@ async def chat(
     if req.session_id:
         session = await crud.get_session(db, req.session_id, user_id)
         if not session:
-            raise HTTPException(404, "Session not found")
+            raise NotFoundException("Session not found")
         session_id = session.id
     else:
         # Auto-generate title from first message (first 60 chars)
@@ -85,10 +86,12 @@ async def chat(
         provider = get_provider()
         response_text = await provider.chat(messages)
     except ValueError as e:
-        raise HTTPException(503, f"AI provider not configured: {str(e)}")
+        raise ServiceUnavailableException(f"AI provider not configured: {str(e)}")
+    except NotImplementedError as e:
+        raise ServiceUnavailableException(str(e))
     except Exception as e:
         logger.error("LLM error: %s", str(e))
-        raise HTTPException(502, "AI service temporarily unavailable")
+        raise ServiceUnavailableException("AI service temporarily unavailable")
 
     # Save assistant message
     assistant_msg = await crud.add_message(db, session_id, "assistant", response_text)
@@ -134,7 +137,7 @@ async def get_history(
     """Get message history for a session."""
     session = await crud.get_session(db, session_id, user["user_id"])
     if not session:
-        raise HTTPException(404, "Session not found")
+        raise NotFoundException("Session not found")
 
     messages = await crud.get_history(db, session_id)
     return HistoryResponse(
@@ -160,7 +163,7 @@ async def delete_session(
     """Delete a session and all its messages."""
     deleted = await crud.delete_session(db, session_id, user["user_id"])
     if not deleted:
-        raise HTTPException(404, "Session not found")
+        raise NotFoundException("Session not found")
     return {"detail": "Session deleted"}
 
 
@@ -171,7 +174,7 @@ async def get_suggestions(
 ):
     """Get module-specific suggestion prompts."""
     if module not in MODULE_SUGGESTIONS:
-        raise HTTPException(400, f"Invalid module: {module}")
+        raise ValidationException(f"Invalid module: {module}. Supported: {', '.join(MODULE_SUGGESTIONS.keys())}")
     return SuggestionResponse(
         module=module,
         suggestions=MODULE_SUGGESTIONS[module],

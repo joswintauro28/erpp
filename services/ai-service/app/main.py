@@ -7,10 +7,11 @@ from fastapi.responses import JSONResponse
 
 from app.core.config import settings
 from app.core.database import engine, Base
+from app.core.middleware import SecurityHeadersMiddleware
 from app.router import router as ai_router
 
 # Import models to register with Base.metadata for Alembic
-from app.models import AISession, AIMessage
+from app.models import AISession, AIMessage  # noqa: F401
 
 
 @asynccontextmanager
@@ -29,6 +30,9 @@ app = FastAPI(
     openapi_url="/openapi.json",
     redirect_slashes=False,
 )
+
+# Security middleware
+app.add_middleware(SecurityHeadersMiddleware)
 
 # CORS
 app.add_middleware(

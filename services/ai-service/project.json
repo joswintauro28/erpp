@@ -1,22 +1,20 @@
 {
   "name": "ai-service",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "services/ai-service/app",
+  "sourceRoot": "services/ai-service",
   "projectType": "application",
   "tags": ["backend", "python", "ai"],
   "targets": {
     "dev": {
-      "executor": "nx:run-commands",
+      "command": ".venv\\Scripts\\uvicorn app.main:app --reload --port 8005",
       "options": {
-        "command": "cd services/ai-service && .venv/Scripts/python -m uvicorn app.main:app --host 0.0.0.0 --port 8005 --reload",
-        "cwd": "{workspaceRoot}"
+        "cwd": "services/ai-service"
       }
     },
-    "start": {
-      "executor": "nx:run-commands",
+    "migrate": {
+      "command": ".venv\\Scripts\\alembic upgrade head",
       "options": {
-        "command": "cd services/ai-service && .venv/Scripts/python -m uvicorn app.main:app --host 0.0.0.0 --port 8005",
-        "cwd": "{workspaceRoot}"
+        "cwd": "services/ai-service"
       }
     }
   }

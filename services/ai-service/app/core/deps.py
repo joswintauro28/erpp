@@ -1,13 +1,9 @@
-import logging
-from contextlib import asynccontextmanager
-
 from fastapi import Depends, Header
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.config import settings
+from app.core.exceptions import CredentialsException
+from app.core.security import decode_access_token
 from app.core.database import async_session_factory
-
-logger = logging.getLogger(__name__)
 
 
 async def get_db():
@@ -22,27 +18,29 @@ async def get_db():
             await session.close()
 
 
-async def get_current_user_id(
+async def get_current_token_payload(
     authorization: str = Header(..., alias="Authorization"),
 ) -> dict:
-    """Decode JWT and return payload with user_id and organization_id."""
     if not authorization.startswith("Bearer "):
-        raise Exception("Invalid authorization header format")
+        raise CredentialsException("Invalid authorization header format")
     token = authorization.removeprefix("Bearer ")
     try:
-        from jose import jwt
-        payload = jwt.decode(
-            token,
-            settings.JWT_SECRET,
-            algorithms=[settings.JWT_ALGORITHM],
-        )
-        return {
-            "user_id": int(payload.get("sub", 0)),
-            "email": payload.get("email", ""),
-            "role": payload.get("role", ""),
-            "organization_id": payload.get("organization_id", 0),
-            "organization_name": payload.get("organization_name", ""),
-            "permissions": payload.get("permissions", []),
-        }
+        payload = decode_access_token(token)
+        payload["_raw_token"] = token
+        return payload
     except Exception:
-        raise Exception("Invalid or expired access token")
+        raise CredentialsException("Invalid or expired access token")
+
+
+async def get_current_user_id(
+    payload: dict = Depends(get_current_token_payload),
+) -> dict:
+    return {
+        "user_id": payload.get("sub") or payload.get("user_id", 0),
+        "email": payload.get("email", ""),
+        "role": payload.get("role", ""),
+        "organization_id": payload.get("organization_id", 0),
+        "organization_name": payload.get("organization_name", ""),
+        "permissions": payload.get("permissions", []),
+        "_raw_token": payload.get("_raw_token", ""),
+    }

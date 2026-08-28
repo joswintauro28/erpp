@@ -244,6 +244,33 @@ services:
     networks:
       - erp-network
 
+  # ─── AI Service (FastAPI) — Port 8005 ────────────────────
+  ai-service:
+    build:
+      context: ../../
+      dockerfile: services/ai-service/Dockerfile
+    container_name: datavex-ai-service
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-root}@postgres:5432/erp_ai
+      JWT_SECRET: ${JWT_SECRET:-development-jwt-secret-key-123}
+      PORT: "8005"
+      AI_PROVIDER: ${AI_PROVIDER:-groq}
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
+      GROQ_MODEL: ${GROQ_MODEL:-llama-3.1-8b-instant}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      CRM_SERVICE_URL: http://crm-service:8001
+      BILLING_SERVICE_URL: http://billing-service:8003
+      INVENTORY_SERVICE_URL: http://inventory-service:8004
+      CORS_ORIGINS: http://app.erp.local,http://crm.erp.local,http://billing.erp.local,http://inventory.erp.local
+    ports:
+      - "8005:8005"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - erp-network
+
   # ─── ERP Shell (Next.js) — Port 3000 ─────────────────────
   erp-shell:
     build:
@@ -262,6 +289,7 @@ services:
       HOSTNAME: "0.0.0.0"
       BACKEND_API_URL: http://erp-service:8000
       IAM_API_URL: http://core-iam:8002
+      AI_API_URL: http://ai-service:8005
       NEXT_PUBLIC_API_URL: /api
       NEXT_PUBLIC_BILLING_APP_URL: ${BILLING_APP_URL:-http://billing.erp.local}
       NEXT_PUBLIC_CRM_APP_URL: ${CRM_APP_URL:-http://crm.erp.local}
@@ -276,6 +304,8 @@ services:
       billing-service:
         condition: service_healthy
       inventory-service:
+        condition: service_healthy
+      ai-service:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "node", "-e", "require('http').get('http://127.0.0.1:3000/', (res) => { if (res.statusCode >= 200 && res.statusCode < 400) process.exit(0); else process.exit(1); }).on('error', () => process.exit(1))"]
@@ -304,6 +334,7 @@ services:
       IAM_API_URL: http://core-iam:8002
       CRM_API_URL: http://crm-service:8001
       ERP_API_URL: http://erp-service:8000
+      AI_API_URL: http://ai-service:8005
       NEXT_PUBLIC_API_URL: /api
       NEXT_PUBLIC_APP_URL: ${CRM_APP_URL:-http://crm.erp.local}
       NEXT_PUBLIC_SHELL_APP_URL: ${SHELL_APP_URL:-http://app.erp.local}
@@ -340,6 +371,7 @@ services:
       HOSTNAME: "0.0.0.0"
       BILLING_API_URL: http://billing-service:8003
       IAM_API_URL: http://core-iam:8002
+      AI_API_URL: http://ai-service:8005
       NEXT_PUBLIC_API_URL: /api
       NEXT_PUBLIC_APP_URL: ${BILLING_APP_URL:-http://billing.erp.local}
       NEXT_PUBLIC_SHELL_APP_URL: ${SHELL_APP_URL:-http://app.erp.local}
@@ -376,6 +408,7 @@ services:
       HOSTNAME: "0.0.0.0"
       INVENTORY_API_URL: http://inventory-service:8004
       IAM_API_URL: http://core-iam:8002
+      AI_API_URL: http://ai-service:8005
       NEXT_PUBLIC_API_URL: /api
       NEXT_PUBLIC_APP_URL: ${INVENTORY_APP_URL:-http://inventory.erp.local}
       NEXT_PUBLIC_SHELL_APP_URL: ${SHELL_APP_URL:-http://app.erp.local}
