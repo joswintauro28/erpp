@@ -29,7 +29,8 @@ scrapling.engines.toolbelt.fingerprints.generate_headers = custom_generate_heade
 
 from scrapling import Fetcher
 from scrapling.fetchers import DynamicFetcher
-import google.generativeai as genai
+from google import genai
+from google.genai import types as genai_types
 from dotenv import load_dotenv
 
 # Setup logging
@@ -43,12 +44,13 @@ if not _env_loaded:
 if not _env_loaded:
     _env_loaded = load_dotenv(dotenv_path=".env", override=False)
 
-# Initialize Gemini client
+# Initialize Gemini client (new google-genai SDK)
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+_gemini_client = None
 if not GEMINI_API_KEY:
     logger.warning("GEMINI_API_KEY not found in environment!")
 else:
-    genai.configure(api_key=GEMINI_API_KEY)
+    _gemini_client = genai.Client(api_key=GEMINI_API_KEY)
 
 # Global concurrency guards to prevent resource exhaustion and API rate limiting
 DYNAMIC_FETCH_SEMAPHORE = threading.Semaphore(2)  # Max 2 concurrent DynamicFetcher (Playwright) instances
@@ -122,17 +124,18 @@ class GeminiProvider(LLMProvider):
     """Gemini implementation using gemini-2.5-flash with structured JSON response config."""
     def __init__(self, api_key: str):
         self.api_key = api_key
+        self._client = genai.Client(api_key=api_key)
 
     async def generate_json(self, system_prompt: str, user_prompt: str) -> str:
-        model = genai.GenerativeModel(
-            'gemini-2.5-flash',
-            system_instruction=system_prompt,
-            generation_config=genai.GenerationConfig(
+        response = await self._client.aio.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=user_prompt,
+            config=genai_types.GenerateContentConfig(
+                system_instruction=system_prompt,
                 response_mime_type="application/json",
-                temperature=0.1
-            )
+                temperature=0.1,
+            ),
         )
-        response = await model.generate_content_async(user_prompt)
         return response.text.strip()
 
 class UnifiedLLMClient:
@@ -1210,15 +1213,15 @@ async def extract_details_from_profile_page(profile_url: str) -> Optional[Dict[s
                     "and their official external website URL from the directory profile page text.\n"
                     "Return JSON with keys 'name' and 'website'. Set website to empty string if not found."
                 )
-                model = genai.GenerativeModel(
-                    'gemini-2.5-flash',
-                    system_instruction=system_prompt,
-                    generation_config=genai.GenerationConfig(
+                response = await _gemini_client.aio.models.generate_content(
+                    model='gemini-2.5-flash',
+                    contents=text[:8000],
+                    config=genai_types.GenerateContentConfig(
+                        system_instruction=system_prompt,
                         response_mime_type="application/json",
-                        temperature=0.1
-                    )
+                        temperature=0.1,
+                    ),
                 )
-                response = await model.generate_content_async(text[:8000])
                 import json
                 parsed = json.loads(response.text.strip())
                 ext_name = parsed.get("name", "").strip()
@@ -1315,15 +1318,15 @@ async def extract_companies_from_directory(directory_url: str, text: str, html_c
         )
         prompt = f"Source URL: {directory_url}\n\nDIRECTORY TEXT:\n\"\"\"\n{text[:12000]}\n\"\"\""
         try:
-            model = genai.GenerativeModel(
-                'gemini-2.5-flash',
-                system_instruction=system_prompt,
-                generation_config=genai.GenerationConfig(
+            response = await _gemini_client.aio.models.generate_content(
+                model='gemini-2.5-flash',
+                contents=prompt,
+                config=genai_types.GenerateContentConfig(
+                    system_instruction=system_prompt,
                     response_mime_type="application/json",
-                    temperature=0.1
-                )
+                    temperature=0.1,
+                ),
             )
-            response = await model.generate_content_async(prompt)
             import json
             parsed = json.loads(response.text.strip())
             llm_companies = parsed.get("companies", [])

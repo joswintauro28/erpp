@@ -21,7 +21,6 @@ from app.requirements.router import router as requirements_router
 from app.sales_orders.router import router as sales_orders_router
 
 from app.reports.router import router as reports_router
-from app.ai_assistant.router import router as ai_assistant_router
 from app.lead_discovery.router import router as lead_discovery_router
 from app.quotations.router import router as quotations_router
 
@@ -113,7 +112,6 @@ app.include_router(requirements_router, dependencies=crm_auth)
 app.include_router(sales_orders_router, dependencies=crm_auth)
 
 app.include_router(reports_router, dependencies=crm_auth)
-app.include_router(ai_assistant_router, dependencies=crm_auth)
 app.include_router(lead_discovery_router, dependencies=crm_auth)
 app.include_router(quotations_router, dependencies=crm_auth)
 
@@ -129,8 +127,7 @@ ENTITY_MODEL_MAP = {
     "sales-orders": models.SalesOrder,
     "sales": models.Sale,
 
-    "reports": models.Report,
-    "ai-assistant": models.AIAssistantLog
+    "reports": models.Report
 }
 
 PREFIX_MAP = {
@@ -144,8 +141,7 @@ PREFIX_MAP = {
     models.SalesOrder: "SO",
     models.Sale: "SA",
 
-    models.Report: "RP",
-    models.AIAssistantLog: "AI"
+    models.Report: "RP"
 }
 
 
@@ -197,8 +193,7 @@ async def get_entity_fields(entity_type: str, token_payload: dict = Depends(get_
             options = ["Platinum", "Gold", "Silver"]
         elif name == "type" and entity_type == "contacts":
             options = ["Primary", "Decision", "Influencer", "Inactive"]
-        elif name == "category" and entity_type == "ai-assistant":
-            options = ["Sales", "Support", "General"]
+
         label = name.replace("_", " ").title()
         if name == "owner":
             label = "Sales Representative"
