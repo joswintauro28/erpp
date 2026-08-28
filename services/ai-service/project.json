@@ -1,0 +1,23 @@
+{
+  "name": "ai-service",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "services/ai-service/app",
+  "projectType": "application",
+  "tags": ["backend", "python", "ai"],
+  "targets": {
+    "dev": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "cd services/ai-service && .venv/Scripts/python -m uvicorn app.main:app --host 0.0.0.0 --port 8005 --reload",
+        "cwd": "{workspaceRoot}"
+      }
+    },
+    "start": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "cd services/ai-service && .venv/Scripts/python -m uvicorn app.main:app --host 0.0.0.0 --port 8005",
+        "cwd": "{workspaceRoot}"
+      }
+    }
+  }
+}

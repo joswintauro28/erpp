@@ -1,22 +1,25 @@
 # DATAVEX ERP — AI Chatbot Implementation Plan
 
-**Created:** 2026-08-28 · **Status:** Planning
+**Created:** 2026-08-28 · **Status:** Planning → Building
 
 ---
 
-## Architecture Decision: Centralized Storage
+## Architecture Decision: Dedicated AI Service
 
-**Decision:** Store all AI chat data in `erp_db` via erp-service.
+**Decision:** Create a dedicated `ai-service` microservice for all AI functionality.
 
 **Rationale:**
-- erp-service is the central gateway — already calls billing/inventory/CRM services
-- AI chat is a cross-cutting concern, not domain-specific
-- `module` column provides logical separation (admin/crm/billing/inventory)
-- Admin dashboard needs unified view across all modules
-- Single DB query vs federating 4 service APIs
-- erp-service already owns cross-cutting tables (file_records, notifications, system_settings)
+- **Separation of concerns** — AI logic (LLM orchestration, prompt engineering, session management) is a distinct bounded context from ERP business logic
+- **Resource isolation** — LLM calls are CPU/memory intensive; isolating prevents starving the ERP gateway
+- **Independent deployment** — Changing prompts or LLM providers doesn't risk breaking core ERP operations
+- **Own database** (`erp_ai`) — follows the per-service DB pattern (erp_iam, erp_crm, erp_billing, erp_inventory)
+- **Streaming support** — SSE/WebSocket for AI responses gets its own connection lifecycle
+- **Scalability** — Can scale AI independently under load (e.g., 50 concurrent chat sessions)
+- **Industry pattern** — Matches how companies like Intercom, Linear, Notion separate AI from core services
 
-**Alternative considered:** Distributed storage (each service owns its chats) — rejected due to fragmentation, latency, and complexity overhead for a read-heavy, write-light workload.
+**Rejected alternative:** Storing AI data in erp_db via erp-service — creates ownership confusion, couples AI lifecycle to ERP, and limits independent scaling.
+
+**Context access:** ai-service calls other services directly via HTTP for live data context (no proxy through erp-service).
 
 ---
 
@@ -38,7 +41,7 @@
                             │ POST /api/ai/chat
                             ▼
 ┌─────────────────────────────────────────────────────────┐
-│              erp-service (port 8000)                      │
+│              ai-service (FastAPI, port 8005)              │
 │  ┌─────────────────────────────────────────────────┐    │
 │  │  /api/ai/*                                       │    │
 │  │  ├── POST /chat          (send message)          │    │
@@ -62,10 +65,18 @@
 │  └─────────────────────────────────────────────────┘    │
 │                                                          │
 │  ┌─────────────────────────────────────────────────┐    │
-│  │  erp_db (PostgreSQL)                             │    │
+│  │  erp_ai (PostgreSQL)                             │    │
 │  │  ├── ai_sessions  (id, user_id, module, title)   │    │
 │  │  └── ai_messages  (id, session_id, role, content)│    │
 │  └─────────────────────────────────────────────────┘    │
+└─────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────┐
+│              Other Services (called by ai-service)       │
+│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐   │
+│  │erp-service│ │crm-svc   │ │billing-  │ │inventory-│   │
+│  │ (8000)    │ │ (8001)   │ │svc(8003) │ │svc (8004)│   │
+│  └──────────┘ └──────────┘ └──────────┘ └──────────┘   │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -73,57 +84,72 @@
 
 ## Phase 1: Backend — AI Service Foundation
 
-**Goal:** Stand up the central AI endpoint with session management and LLM integration.
+**Goal:** Stand up the ai-service with session management, LLM integration, and module context.
 
-### Task 1.1: Database Models (erp_db)
-- [ ] Create `services/erp-service/app/ai/models.py`
-  - `AISession`: id, user_id, module (enum), title, created_at, updated_at
-  - `AIMessage`: id, session_id (FK), role (enum: user/assistant/system), content (text), created_at
-- [ ] Create Alembic migration for both tables in `erp_db`
-- [ ] Register models in erp-service's SQLAlchemy Base
+### Task 1.1: Project Scaffold
+- [ ] Create `services/ai-service/` directory structure
+- [ ] `pyproject.toml` with dependencies (fastapi, uvicorn, sqlalchemy, asyncpg, alembic, httpx, pydantic-settings)
+- [ ] `app/main.py` — FastAPI app with CORS, lifespan, router mount
+- [ ] `app/core/config.py` — Settings class (JWT_SECRET, DB_URL, LLM keys)
+- [ ] `app/core/database.py` — AsyncSession factory for `erp_ai`
+- [ ] `app/core/deps.py` — `get_current_user_id` dependency (JWT decode)
+- [ ] `.env.example` — all required env vars with safe placeholders
 
-### Task 1.2: LLM Provider Abstraction
-- [ ] Create `services/erp-service/app/ai/llm_provider.py`
-  - Abstract `LLMProvider` with `async chat(messages, model) -> str`
-  - `GroqProvider` using `httpx` + Groq REST API
-  - `GeminiProvider` stub for future
-  - Factory `get_provider()` based on env config
-- [ ] Add env vars to `services/erp-service/app/core/config.py`:
-  - `AI_PROVIDER: str = "groq"`
-  - `GROQ_API_KEY: str = ""`
-  - `GROQ_MODEL: str = "llama-3.1-8b-instant"`
-  - `GEMINI_API_KEY: str = ""`
+### Task 1.2: Database Models + Migration
+- [ ] `app/models.py` — SQLAlchemy models:
+  - `AISession`: id (UUID), user_id (int), module (enum: admin/crm/billing/inventory), title (str), created_at, updated_at
+  - `AIMessage`: id (UUID), session_id (FK→AISession), role (enum: user/assistant/system), content (text), created_at
+- [ ] Alembic init + migration for `erp_ai` database
+- [ ] Seed system prompt messages per module
 
-### Task 1.3: Module Context Providers
-- [ ] Create `services/erp-service/app/ai/context_providers.py`
-  - `BaseContextProvider` — abstract with `async get_context(user_id) -> dict`
-  - `CRMContextProvider` — calls crm_client.py for customers, pipeline, leads
-  - `BillingContextProvider` — calls billing_client.py for invoices, payments, outstanding
-  - `InventoryContextProvider` — calls inventory_client.py for stock, POs, low-stock alerts
-  - `AdminContextProvider` — calls core-iam for user count, system health
-- [ ] Each provider returns structured dict injected into system prompt
+### Task 1.3: Pydantic Schemas
+- [ ] `app/schemas.py` — Request/response models:
+  - `ChatRequest`: message, session_id?, module
+  - `ChatResponse`: session_id, message (assistant response)
+  - `SessionResponse`: id, title, module, message_count, created_at
+  - `HistoryResponse`: messages[] with role, content, created_at
 
-### Task 1.4: AI Router
-- [ ] Create `services/erp-service/app/ai/router.py`
-  - `POST /api/ai/chat` — `{ message, session_id?, module }`
-    - Resolve/create session
-    - Load module context
-    - Build system prompt + history + user message
-    - Call LLM provider
-    - Save messages to erp_db
-    - Return `{ session_id, response }`
-  - `GET /api/ai/sessions` — list user's sessions, filter by module
-  - `GET /api/ai/history/{session_id}` — message history
-  - `DELETE /api/ai/sessions/{session_id}` — cascade delete
-  - `GET /api/ai/suggestions/{module}` — module-specific prompts
-- [ ] Wire into erp-service FastAPI app
+### Task 1.4: LLM Provider Abstraction
+- [ ] `app/llm/base.py` — Abstract `LLMProvider` with `async chat(messages, model) -> str`
+- [ ] `app/llm/groq.py` — Groq REST API via httpx (default provider)
+- [ ] `app/llm/gemini.py` — Gemini stub for future
+- [ ] `app/llm/factory.py` — `get_provider()` based on `AI_PROVIDER` env var
+- [ ] Env vars: `AI_PROVIDER`, `GROQ_API_KEY`, `GROQ_MODEL`, `GEMINI_API_KEY`
 
-### Task 1.5: System Prompt Templates
-- [ ] Create `services/erp-service/app/ai/prompts.py`
-  - Per-module system prompts with role definition
-  - Each prompt receives live context data as structured block
-  - Guardrails: refuse destructive actions, redirect to UI for mutations
-  - Format: INR currency, Indian date format, professional tone
+### Task 1.5: Module Context Providers
+- [ ] `app/context/base.py` — Abstract `ContextProvider` with `async get_context(user_id) -> dict`
+- [ ] `app/context/crm.py` — Calls crm-service: customers, pipeline, leads
+- [ ] `app/context/billing.py` — Calls billing-service: invoices, payments, outstanding
+- [ ] `app/context/inventory.py` — Calls inventory-service: stock, POs, low-stock alerts
+- [ ] `app/context/admin.py` — Calls core-iam + other services for cross-module KPIs
+- [ ] Each provider returns structured dict for prompt injection
+- [ ] HTTP clients: `app/context/clients.py` — crm_client, billing_client, inventory_client
+
+### Task 1.6: System Prompt Templates
+- [ ] `app/prompts.py` — Per-module system prompts:
+  - `ADMIN_PROMPT` — cross-module overview, system health
+  - `CRM_PROMPT` — customer insights, pipeline analysis, lead scoring
+  - `BILLING_PROMPT` — invoice management, payment tracking, GST
+  - `INVENTORY_PROMPT` — stock levels, procurement, fulfillment
+- [ ] Each prompt: role definition, context format, guardrails, INR formatting, Indian date format
+
+### Task 1.7: CRUD Operations
+- [ ] `app/crud.py` — Database operations:
+  - `create_session(user_id, module, title?) -> AISession`
+  - `get_session(session_id, user_id) -> AISession?`
+  - `list_sessions(user_id, module?) -> list[AISession]`
+  - `delete_session(session_id, user_id) -> bool`
+  - `add_message(session_id, role, content) -> AIMessage`
+  - `get_history(session_id, limit=50) -> list[AIMessage]`
+
+### Task 1.8: AI Router
+- [ ] `app/router.py` — Endpoints:
+  - `POST /api/ai/chat` — Send message, get AI response (streaming-ready)
+  - `GET /api/ai/sessions` — List user's sessions (filterable by module)
+  - `GET /api/ai/history/{session_id}` — Message history
+  - `DELETE /api/ai/sessions/{session_id}` — Delete session + messages
+  - `GET /api/ai/suggestions/{module}` — Module-specific suggestion chips
+- [ ] Wire router into `main.py`
 
 ---
 
@@ -179,19 +205,19 @@
 
 ### Task 4.1: CRM Context
 - [ ] Fetch: active customer count, pipeline value, top 5 open opps, recent leads, tier distribution
-- [ ] Source: crm_client.py → crm-service `/api/customers`, `/api/leads`, `/api/opportunities`
+- [ ] Source: ai-service calls crm-service `/api/customers`, `/api/leads`, `/api/opportunities`
 
 ### Task 4.2: Billing Context
 - [ ] Fetch: outstanding total, overdue count, recent payments, revenue trend, GST summary
-- [ ] Source: billing_client.py → billing-service `/api/invoices`, `/api/payments/metrics`
+- [ ] Source: ai-service calls billing-service `/api/invoices`, `/api/payments/metrics`
 
 ### Task 4.3: Inventory Context
 - [ ] Fetch: product count, low-stock alerts, pending POs, warehouse summary, recent movements
-- [ ] Source: inventory_client.py → inventory-service `/api/stock`, `/api/purchase-orders`
+- [ ] Source: ai-service calls inventory-service `/api/stock`, `/api/purchase-orders`
 
 ### Task 4.4: Admin Context
 - [ ] Fetch: user count, system health, recent activity
-- [ ] Source: core-iam API + erp-service internal queries
+- [ ] Source: ai-service calls core-iam + other services for aggregated KPIs
 
 ---
 
@@ -241,33 +267,115 @@
 ## File Structure
 
 ```
-services/erp-service/app/ai/
-├── __init__.py
-├── router.py              # API endpoints
-├── schemas.py             # Pydantic request/response models
-├── models.py              # SQLAlchemy AISession, AIMessage (erp_db)
-├── llm_provider.py        # LLM abstraction (Groq, Gemini)
-├── context_providers.py   # Per-module context fetchers
-├── prompts.py             # System prompt templates
-└── crud.py                # Database operations
+services/ai-service/                          # NEW — FastAPI, port 8005
+├── app/
+│   ├── __init__.py
+│   ├── main.py                               # FastAPI app entry
+│   ├── core/
+│   │   ├── __init__.py
+│   │   ├── config.py                         # Settings (JWT_SECRET, DB, LLM keys)
+│   │   ├── database.py                       # SQLAlchemy AsyncSession for erp_ai
+│   │   └── deps.py                           # get_current_user_id (JWT decode)
+│   ├── models.py                             # AISession, AIMessage (SQLAlchemy)
+│   ├── schemas.py                            # Pydantic request/response models
+│   ├── crud.py                               # Database operations
+│   ├── router.py                             # /api/ai/* endpoints
+│   ├── prompts.py                            # System prompt templates per module
+│   ├── llm/
+│   │   ├── __init__.py
+│   │   ├── base.py                           # Abstract LLMProvider
+│   │   ├── groq.py                           # Groq REST API (default)
+│   │   └── gemini.py                         # Gemini stub
+│   └── context/
+│       ├── __init__.py
+│       ├── base.py                           # Abstract ContextProvider
+│       ├── clients.py                        # HTTP clients for other services
+│       ├── crm.py                            # CRM context provider
+│       ├── billing.py                        # Billing context provider
+│       ├── inventory.py                      # Inventory context provider
+│       └── admin.py                          # Admin cross-module context
+├── alembic/
+│   ├── env.py
+│   └── versions/
+├── alembic.ini
+├── pyproject.toml
+├── requirements.txt
+├── .env.example
+└── .env
 
 packages/ui-theme/src/components/shared/
-├── ai-chat.tsx            # Shared chat UI component
+├── ai-chat.tsx                               # Shared chat UI component
 
 apps/*/app/(admin)/ai-assistant/
-├── page.tsx               # Renders <AIChat module="..." />
-└── loading.tsx            # Skeleton loading state
+├── page.tsx                                  # Renders <AIChat module="..." />
+└── loading.tsx                               # Skeleton loading state
+
+apps/*/proxy.ts                               # Add /api/ai/* → ai-service (8005)
+```
+
+---
+
+## Proxy Routing (frontend)
+
+All 4 frontend apps add this to their `proxy.ts`:
+
+```ts
+// /api/ai/* → ai-service (port 8005)
+{ source: '/api/ai/:path*', destination: 'http://localhost:8005/api/ai/:path*' },
 ```
 
 ---
 
 ## Dependencies
 
-| Dependency | Purpose | Install |
+### ai-service (Python)
+| Package | Purpose | Version |
 |---|---|---|
-| `httpx` | LLM API calls (already in erp-service) | Already present |
+| `fastapi` | Web framework | >=0.115 |
+| `uvicorn[standard]` | ASGI server | >=0.34 |
+| `sqlalchemy[asyncio]` | ORM | >=2.0 |
+| `asyncpg` | PostgreSQL async driver | >=0.30 |
+| `alembic` | Migrations | >=1.14 |
+| `httpx` | HTTP client (LLM + service calls) | >=0.28 |
+| `pydantic-settings` | Config management | >=2.0 |
+
+### Frontend (shared)
+| Package | Purpose | Install |
+|---|---|---|
 | `react-markdown` | Markdown rendering in chat | `bun add react-markdown` |
-| Alembic migration | Session/message tables | Create new |
+
+---
+
+## Environment Variables
+
+```bash
+# ai-service .env
+DATABASE_URL=postgresql+asyncpg://datavex:datavex@localhost:5432/erp_ai
+JWT_SECRET=development-jwt-secret-key-123
+AI_PROVIDER=groq
+GROQ_API_KEY=gsk_xxxxx
+GROQ_MODEL=llama-3.1-8b-instant
+GEMINI_API_KEY=
+CRM_SERVICE_URL=http://localhost:8001
+BILLING_SERVICE_URL=http://localhost:8003
+INVENTORY_SERVICE_URL=http://localhost:8004
+```
+
+---
+
+## Nx Registration
+
+Add to `nx.json` and root `package.json` workspaces:
+
+```json
+// nx.json — projects
+"ai-service": { "tags": ["backend", "python", "ai"] }
+```
+
+```json
+// package.json — scripts
+"dev:ai": "bun nx run ai-service:dev"
+```
 
 ---
 
@@ -275,11 +383,12 @@ apps/*/app/(admin)/ai-assistant/
 
 - [ ] User can open AI chat from any of 4 workstations
 - [ ] Chat context is module-aware (CRM data for CRM, billing for billing, etc.)
-- [ ] Sessions persist across page reloads (stored in erp_db)
+- [ ] Sessions persist across page reloads (stored in erp_ai DB)
 - [ ] Responses grounded in actual data (not hallucinated)
 - [ ] Mobile-responsive chat UI
 - [ ] < 3s first-token latency
 - [ ] All 4 apps compile clean
+- [ ] ai-service has own DB (erp_ai), own Alembic chain, independent deployment
 
 ---
 
