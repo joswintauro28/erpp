@@ -2,8 +2,8 @@
 
 import { Edit2, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
+import { DataTable, type Column } from "@datavex/ui-theme";
 import { statusVariant } from "@/lib/utils";
 
 interface ContactTableProps {
@@ -14,49 +14,47 @@ interface ContactTableProps {
 }
 
 export default function ContactTable({ contacts, onView, onEdit, onDelete }: ContactTableProps) {
-  if (!contacts?.length) {
-    return (
-      <div className="flex flex-col items-center justify-center py-16 text-[var(--shell-muted)]">
-        <p className="text-sm">No contacts found.</p>
-      </div>
-    );
-  }
+  const columns: Column<any>[] = [
+    {
+      key: "id_str",
+      header: "ID",
+      render: (row) => <span className="text-muted-foreground">{row.id_str}</span>,
+    },
+    {
+      key: "name",
+      header: "Name",
+      render: (row) => <span className="font-medium text-foreground">{row.name}</span>,
+    },
+    { key: "role", header: "Role", hideOnMobile: true },
+    { key: "account", header: "Account" },
+    { key: "email", header: "Email", hideOnMobile: true },
+    { key: "phone", header: "Phone", hideOnMobile: true },
+    {
+      key: "type",
+      header: "Type",
+      render: (row) => <Badge variant={statusVariant("contact", row.type) as any}>{row.type}</Badge>,
+    },
+    { key: "last_contact", header: "Last Contact", hideOnMobile: true },
+    {
+      key: "actions",
+      header: "",
+      className: "w-20",
+      render: (row) => (
+        <div className="flex gap-2 text-muted-foreground">
+          <Button size="icon-sm" className="hover:text-foreground cursor-pointer" onClick={(e) => { e.stopPropagation(); onEdit(row); }} title="Edit"><Edit2 size={14} /></Button>
+          <Button size="icon-sm" className="hover:text-destructive cursor-pointer" onClick={(e) => { e.stopPropagation(); onDelete(row); }} title="Delete"><Trash2 size={14} /></Button>
+        </div>
+      ),
+    },
+  ];
 
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>ID</TableHead>
-          <TableHead>NAME</TableHead>
-          <TableHead>ROLE</TableHead>
-          <TableHead>ACCOUNT</TableHead>
-          <TableHead>EMAIL</TableHead>
-          <TableHead>PHONE</TableHead>
-          <TableHead>TYPE</TableHead>
-          <TableHead>LAST CONTACT</TableHead>
-          <TableHead />
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {contacts.map((item: any) => (
-          <TableRow key={item.id}>
-            <TableCell className="text-[var(--shell-muted)] cursor-pointer" onClick={() => onView(item)}>{item.id_str}</TableCell>
-            <TableCell className="font-medium text-[var(--shell-foreground)] cursor-pointer" onClick={() => onView(item)}>{item.name}</TableCell>
-            <TableCell>{item.role}</TableCell>
-            <TableCell>{item.account}</TableCell>
-            <TableCell>{item.email}</TableCell>
-            <TableCell>{item.phone}</TableCell>
-            <TableCell><Badge variant={statusVariant("contact", item.type)}>{item.type}</Badge></TableCell>
-            <TableCell className="text-[var(--shell-muted)]">{item.last_contact}</TableCell>
-            <TableCell>
-              <div className="flex gap-2 text-[var(--shell-muted)]">
-                <Button size="icon-sm" className="hover:text-[var(--shell-foreground)] cursor-pointer" onClick={() => onEdit(item)} title="Edit"><Edit2 size={14} /></Button>
-                <Button size="icon-sm" className="hover:text-[var(--shell-danger)] cursor-pointer" onClick={() => onDelete(item)} title="Delete"><Trash2 size={14} /></Button>
-              </div>
-            </TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+    <DataTable
+      data={contacts}
+      columns={columns}
+      rowKey={(row) => row.id}
+      onRowClick={(row) => onView(row)}
+      emptyMessage="No contacts found"
+    />
   );
 }

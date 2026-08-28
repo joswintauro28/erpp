@@ -3,7 +3,7 @@
 import { Edit2, Trash2, BadgeCheck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
+import { DataTable, type Column } from "@datavex/ui-theme";
 import { cn, statusVariant } from "@/lib/utils";
 
 const tierVariant = (tier: string) => {
@@ -26,87 +26,102 @@ interface LeadTableProps {
 }
 
 export default function LeadTable({ leads, onView, onEdit, onDelete, onQualify }: LeadTableProps) {
-  if (!leads?.length) {
-    return (
-      <div className="flex flex-col items-center justify-center py-16 text-[var(--shell-muted)]">
-        <p className="text-sm">No leads found.</p>
-      </div>
-    );
-  }
+  const columns: Column<any>[] = [
+    {
+      key: "id_str",
+      header: "ID",
+      render: (row) => <span className="text-muted-foreground">{row.id_str}</span>,
+    },
+    {
+      key: "name",
+      header: "Lead",
+      render: (row) => {
+        const isMql = !!row.is_mql;
+        return (
+          <span className="flex items-center gap-1.5">
+            {row.name}
+            {isMql && (
+              <span className="inline-flex items-center gap-0.5 rounded-full bg-yellow-500/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-yellow-600 border border-yellow-500/30">
+                <BadgeCheck className="h-2.5 w-2.5" /> MQL
+              </span>
+            )}
+          </span>
+        );
+      },
+    },
+    { key: "company", header: "Company" },
+    { key: "source", header: "Source", hideOnMobile: true },
+    {
+      key: "est_value",
+      header: "Est. Value",
+      hideOnMobile: true,
+      render: (row) => formatCurrency(row.est_value),
+    },
+    {
+      key: "score",
+      header: "Score",
+      render: (row) => {
+        const score = Number(row.score ?? 0);
+        return (
+          <div className="flex items-center gap-2">
+            <div className="h-1.5 w-14 overflow-hidden rounded-full bg-border">
+              <div
+                className={cn(
+                  "h-full rounded-full transition-all",
+                  score >= 70 ? "bg-yellow-500" : score >= 40 ? "bg-blue-500" : "bg-slate-400"
+                )}
+                style={{ width: `${score}%` }}
+              />
+            </div>
+            <span className="text-xs font-semibold tabular-nums">{score}</span>
+          </div>
+        );
+      },
+    },
+    {
+      key: "tier",
+      header: "Tier",
+      render: (row) => <Badge variant={tierVariant(row.tier) as any}>{row.tier}</Badge>,
+    },
+    {
+      key: "status",
+      header: "Status",
+      render: (row) => <Badge variant={statusVariant("lead", row.status) as any}>{row.status}</Badge>,
+    },
+    { key: "owner", header: "Owner", hideOnMobile: true },
+    {
+      key: "actions",
+      header: "",
+      className: "w-24",
+      render: (row) => {
+        const isMql = !!row.is_mql;
+        return (
+          <div className="flex gap-2 items-center">
+            {onQualify && isMql && row.status !== "Converted" && row.nurture_status !== "SQL" && (
+              <Button
+                size="icon-sm"
+                title="Qualify to SQL"
+                className="text-muted-foreground hover:text-yellow-600 cursor-pointer"
+                onClick={(e) => { e.stopPropagation(); onQualify(row); }}
+              >
+                <BadgeCheck size={14} />
+              </Button>
+            )}
+            <Button size="icon-sm" className="text-muted-foreground hover:text-foreground cursor-pointer" onClick={(e) => { e.stopPropagation(); onEdit(row); }}><Edit2 size={14} /></Button>
+            <Button size="icon-sm" className="text-muted-foreground hover:text-destructive cursor-pointer" onClick={(e) => { e.stopPropagation(); onDelete(row); }}><Trash2 size={14} /></Button>
+          </div>
+        );
+      },
+    },
+  ];
 
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>ID</TableHead>
-          <TableHead>LEAD</TableHead>
-          <TableHead>COMPANY</TableHead>
-          <TableHead>SOURCE</TableHead>
-          <TableHead>EST. VALUE</TableHead>
-          <TableHead>SCORE</TableHead>
-          <TableHead>TIER</TableHead>
-          <TableHead>STATUS</TableHead>
-          <TableHead>OWNER</TableHead>
-          <TableHead />
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {leads.map((item: any) => {
-          const score = Number(item.score ?? 0);
-          const isMql = !!item.is_mql;
-          return (
-            <TableRow key={item.id} className={cn(isMql && "bg-[var(--shell-warning-surface)]/40")}>
-              <TableCell className="text-[var(--shell-muted)] cursor-pointer" onClick={() => onView(item)}>{item.id_str}</TableCell>
-              <TableCell className="font-medium text-[var(--shell-foreground)] cursor-pointer" onClick={() => onView(item)}>
-                <span className="flex items-center gap-1.5">
-                  {item.name}
-                  {isMql && (
-                    <span className="inline-flex items-center gap-0.5 rounded-full bg-[var(--shell-warning-surface)] px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-[var(--shell-warning)] border border-[var(--shell-warning)]/30">
-                      <BadgeCheck className="h-2.5 w-2.5" /> MQL
-                    </span>
-                  )}
-                </span>
-              </TableCell>
-              <TableCell>{item.company}</TableCell>
-              <TableCell>{item.source}</TableCell>
-              <TableCell>{formatCurrency(item.est_value)}</TableCell>
-              <TableCell>
-                <div className="flex items-center gap-2">
-                  <div className="h-1.5 w-14 overflow-hidden rounded-full bg-[var(--shell-border)]">
-                    <div
-                      className={cn(
-                        "h-full rounded-full transition-all",
-                        score >= 70 ? "bg-[var(--shell-warning-surface)]0" : score >= 40 ? "bg-[var(--shell-info-surface)]0" : "bg-slate-400"
-                      )}
-                      style={{ width: `${score}%` }}
-                    />
-                  </div>
-                  <span className="text-xs font-semibold tabular-nums">{score}</span>
-                </div>
-              </TableCell>
-              <TableCell><Badge variant={tierVariant(item.tier)}>{item.tier}</Badge></TableCell>
-              <TableCell><Badge variant={statusVariant("lead", item.status)}>{item.status}</Badge></TableCell>
-              <TableCell>{item.owner}</TableCell>
-              <TableCell>
-                <div className="flex gap-2 text-[var(--shell-muted)] items-center">
-                  {onQualify && isMql && item.status !== "Converted" && item.nurture_status !== "SQL" && (
-                    <Button
-                      size="icon-sm"
-                      title="Qualify to SQL & create Opportunity"
-                      className="hover:text-[var(--shell-warning)] cursor-pointer"
-                      onClick={() => onQualify(item)}
-                    >
-                      <BadgeCheck size={14} />
-                    </Button>
-                  )}
-                  <Button size="icon-sm" className="hover:text-[var(--shell-foreground)] cursor-pointer" onClick={() => onEdit(item)}><Edit2 size={14} /></Button>
-                  <Button size="icon-sm" className="hover:text-[var(--shell-danger)] cursor-pointer" onClick={() => onDelete(item)}><Trash2 size={14} /></Button>
-                </div>
-              </TableCell>
-            </TableRow>
-          );
-        })}
-      </TableBody>
-    </Table>
+    <DataTable
+      data={leads}
+      columns={columns}
+      rowKey={(row) => row.id}
+      onRowClick={(row) => onView(row)}
+      emptyMessage="No leads found"
+    />
   );
 }

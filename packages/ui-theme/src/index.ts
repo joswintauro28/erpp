@@ -58,6 +58,7 @@ export * from "./components/shared/file-upload";
 export * from "./components/shared/file-viewer";
 export * from "./components/shared/file-preview-modal";
 export * from "./components/shared/search-filter";
+export * from "./components/shared/data-table";
 export * from "./components/shared/status-filter";
 export * from "./components/shared/skeleton-patterns";
 
