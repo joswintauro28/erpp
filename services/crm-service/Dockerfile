@@ -21,6 +21,7 @@ WORKDIR /app/services/crm-service
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PATH="/opt/venv/bin:$PATH" \
+    PYTHONPATH="/app/services/crm-service" \
     PORT=8001
 
 RUN groupadd -g 10001 appgroup && \

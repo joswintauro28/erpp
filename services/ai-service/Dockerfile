@@ -21,6 +21,7 @@ WORKDIR /app/services/ai-service
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PATH="/opt/venv/bin:$PATH" \
+    PYTHONPATH="/app/services/ai-service" \
     PORT=8005
 
 RUN groupadd -g 10001 appgroup && \

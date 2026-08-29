@@ -21,6 +21,7 @@ WORKDIR /app/services/inventory-service
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PATH="/opt/venv/bin:$PATH" \
+    PYTHONPATH="/app/services/inventory-service" \
     PORT=8004
 
 RUN groupadd -g 10001 appgroup && \
