@@ -2,13 +2,12 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2 } from "lucide-react";
 import Sidebar from "@/components/Sidebar";
 import Header from "@/components/Header";
 import ToastContainer from "@/components/ToastContainer";
 import { useAuth } from "@/contexts/AuthContext";
 import { getAccessToken } from "@datavex/auth-middleware";
-import { ConfirmProvider } from "@datavex/ui-theme";
+import { ConfirmProvider, LoadingSpinner } from "@datavex/ui-theme";
 
 const BILLING_URL = process.env.NEXT_PUBLIC_BILLING_APP_URL || "http://localhost:3002";
 const CRM_URL = process.env.NEXT_PUBLIC_CRM_APP_URL || "http://localhost:3001";
@@ -52,8 +51,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   if (!mounted || loading) {
     return (
-      <div className="flex h-screen w-full items-center justify-center bg-[var(--shell-header)]">
-        <Loader2 size={32} className="animate-spin text-accent" />
+      <div className="flex h-screen w-full items-center justify-center bg-background">
+        <LoadingSpinner />
       </div>
     );
   }
@@ -61,8 +60,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   if (!isAuthenticated) {
     return null;
   }
-
-  const sidebarWidth = sidebarCollapsed ? "64px" : "var(--sidebar-width)";
 
   return (
     <ConfirmProvider>

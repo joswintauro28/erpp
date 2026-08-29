@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
-import { NotificationProvider, Toaster, ThemeProvider } from "@datavex/ui-theme";
+import { NotificationProvider, ThemeProvider } from "@datavex/ui-theme";
 
 const plusJakartaSans = localFont({
   src: "./fonts/PlusJakartaSans-VariableFont_wght.ttf",
@@ -37,7 +37,6 @@ export default function RootLayout({
         <ThemeProvider>
           <AuthProvider>
             <NotificationProvider>{children}</NotificationProvider>
-            <Toaster />
           </AuthProvider>
         </ThemeProvider>
       </body>

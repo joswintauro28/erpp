@@ -2,18 +2,8 @@
 
 import { useEffect, useState } from "react";
 import {
-  Package,
-  Warehouse,
-  Truck,
-  AlertTriangle,
-  ClipboardList,
-  Loader2,
-  PackageOpen,
-  Building2,
-  TrendingUp,
-  ArrowRight,
-  Boxes,
-  Plus,
+  Package, Warehouse, Truck, AlertTriangle, ClipboardList,
+  PackageOpen, Building2, TrendingUp, ArrowRight, Boxes, Plus,
 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -22,6 +12,7 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@
 import { api } from "@/services/api";
 import { money, number } from "@/utils/format";
 import { useAuth } from "@/contexts/AuthContext";
+import { PageHeader, KpiCard, SectionHeading, AlertBanner } from "@datavex/ui-theme";
 import Link from "next/link";
 import DashboardLoading from "./loading";
 
@@ -58,48 +49,6 @@ function getGreeting(): string {
   if (h < 12) return "Good morning";
   if (h < 17) return "Good afternoon";
   return "Good evening";
-}
-
-function KpiCard({ label, value, subtitle, icon: Icon, color, index }: {
-  label: string; value: string; subtitle?: string; icon: typeof Package; color: string; index: number;
-}) {
-  return (
-    <div
-      className="animate-kpi flex flex-col gap-2 rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface)] p-5 hover:-translate-y-1 hover:shadow-engineered transition-all duration-300 relative overflow-hidden group"
-      style={{ animationDelay: `${index * 0.05}s` }}
-    >
-      <span 
-        className="absolute left-0 top-0 bottom-0 w-1 transition-all duration-300 group-hover:w-1.5"
-        style={{ backgroundColor: color }}
-      />
-      <div className="flex items-center justify-between">
-        <span className="text-xs font-semibold uppercase tracking-[0.1em] text-[var(--shell-muted)]">
-          {label}
-        </span>
-        <div 
-          className="flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--shell-border)] transition-transform duration-300 group-hover:scale-110"
-          style={{ backgroundColor: `${color}10`, borderColor: `${color}25` }}
-        >
-          <Icon className="h-4 w-4" style={{ color }} />
-        </div>
-      </div>
-      <span className="font-heading text-2xl font-bold tracking-tight text-[var(--shell-foreground)] mt-1">
-        {value}
-      </span>
-      {subtitle && <span className="text-xs text-[var(--shell-muted)] font-medium mt-1">{subtitle}</span>}
-    </div>
-  );
-}
-
-function SectionHeading({ label }: { label: string }) {
-  return (
-    <div className="mb-5 flex items-center gap-2">
-      <h2 className="font-heading text-xs font-light uppercase tracking-[0.12em] text-[var(--shell-muted)]">
-        {label}
-      </h2>
-      <div className="h-px flex-1 bg-[var(--shell-border)]" />
-    </div>
-  );
 }
 
 export default function DashboardPage() {
@@ -140,40 +89,30 @@ export default function DashboardPage() {
   return (
     <div className="space-y-10 lg:space-y-12">
       {/* Welcome Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[var(--shell-border)] pb-5">
-        <div className="flex flex-col gap-1">
-          <h1 className="font-heading text-2xl font-semibold tracking-tight text-[var(--shell-foreground)]">
-            {getGreeting()}, {user?.full_name || user?.email || "Inventory Manager"}
-          </h1>
-          <p className="text-sm text-[var(--shell-muted)]">
-            Real-time stock monitoring, sales order fulfillment pipeline, and supplier procurement.
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Badge variant="outline" className="px-3 py-1 text-xs border-[var(--shell-brand)]/40 text-[var(--shell-brand)] bg-[var(--shell-brand)]/5 font-medium">
-            Inventory Control & Fulfillment Center
-          </Badge>
+      <PageHeader
+        title={`${getGreeting()}, ${user?.full_name || user?.email || "Inventory Manager"}`}
+        subtitle="Real-time stock monitoring, sales order fulfillment pipeline, and supplier procurement."
+        badge="Inventory Control & Fulfillment Center"
+        actions={
           <Link href="/fulfillment">
             <Button className="bg-[var(--shell-brand)] text-white hover:bg-[var(--shell-brand)]/90 gap-1.5 text-xs shadow-sm">
               <ClipboardList className="h-4 w-4" /> Open Fulfillment Queue <ArrowRight className="h-3.5 w-3.5" />
             </Button>
           </Link>
-        </div>
-      </div>
+        }
+      />
 
       {/* Alert Banner */}
       {hasLowStockAlerts && (
-        <div className="flex flex-wrap items-center gap-3 rounded-xl border border-[var(--shell-accent)]/20 bg-gradient-to-r from-[var(--shell-accent)]/5 to-transparent px-5 py-3.5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--shell-accent)]/10">
-            <AlertTriangle className="h-4 w-4 text-[var(--shell-accent)]" />
-          </div>
-          <span className="text-sm font-medium text-[var(--shell-accent-text)]">
-            {kpis?.low_stock_count ?? lowStock.length} item{(kpis?.low_stock_count ?? lowStock.length) !== 1 ? "s" : ""} below reorder threshold require attention
-          </span>
-          <Badge variant="destructive" className="text-xs">
-            Stockout Risk
-          </Badge>
-        </div>
+        <AlertBanner
+          icon={AlertTriangle}
+          message={`${kpis?.low_stock_count ?? lowStock.length} item${(kpis?.low_stock_count ?? lowStock.length) !== 1 ? "s" : ""} below reorder threshold require attention`}
+          badges={
+            <Badge variant="destructive" className="text-xs">
+              Stockout Risk
+            </Badge>
+          }
+        />
       )}
 
       {/* KPI Overview Grid */}
@@ -221,7 +160,7 @@ export default function DashboardPage() {
         <SectionHeading label="Inventory Operations" />
         <div className="grid gap-6 lg:grid-cols-2">
           {/* Low Stock Alerts */}
-          <Card className="hover:shadow-engineered transition-shadow duration-200 border-[var(--shell-border)] bg-[var(--shell-surface)]">
+          <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
@@ -245,10 +184,10 @@ export default function DashboardPage() {
                 <Table>
                   <TableHeader>
                     <TableRow className="text-xs uppercase">
-                      <TableHead>Product Name</TableHead>
-                      <TableHead>SKU</TableHead>
-                      <TableHead className="text-right">Current Stock</TableHead>
-                      <TableHead className="text-right">Reorder Threshold</TableHead>
+                      <TableHead className="h-10 text-[11px] font-semibold uppercase tracking-wider">Product Name</TableHead>
+                      <TableHead className="h-10 text-[11px] font-semibold uppercase tracking-wider">SKU</TableHead>
+                      <TableHead className="h-10 text-[11px] font-semibold uppercase tracking-wider text-right">Current Stock</TableHead>
+                      <TableHead className="h-10 text-[11px] font-semibold uppercase tracking-wider text-right">Reorder Threshold</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -273,7 +212,7 @@ export default function DashboardPage() {
           </Card>
 
           {/* Recent Stock Movements */}
-          <Card className="hover:shadow-engineered transition-shadow duration-200 border-[var(--shell-border)] bg-[var(--shell-surface)]">
+          <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
@@ -297,10 +236,10 @@ export default function DashboardPage() {
                 <Table>
                   <TableHeader>
                     <TableRow className="text-xs uppercase">
-                      <TableHead>Product</TableHead>
-                      <TableHead>Type</TableHead>
-                      <TableHead className="text-right">Qty</TableHead>
-                      <TableHead className="text-right">Date</TableHead>
+                      <TableHead className="h-10 text-[11px] font-semibold uppercase tracking-wider">Product</TableHead>
+                      <TableHead className="h-10 text-[11px] font-semibold uppercase tracking-wider">Type</TableHead>
+                      <TableHead className="h-10 text-[11px] font-semibold uppercase tracking-wider text-right">Qty</TableHead>
+                      <TableHead className="h-10 text-[11px] font-semibold uppercase tracking-wider text-right">Date</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>

@@ -7,14 +7,14 @@ import {
 } from "recharts";
 import {
   TrendingUp, Users, Target, FileText, UserPlus, Layers, Plus,
-  ArrowUp, ArrowDown, Lightbulb, BarChart3, Sparkles,
+  Lightbulb, BarChart3, Sparkles,
 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { api } from "@/services/api";
 import { useAuth } from "@/contexts/AuthContext";
-import { KpiCard, SectionHeading } from "@datavex/ui-theme";
+import { PageHeader, KpiCard, SectionHeading, AlertBanner } from "@datavex/ui-theme";
 import DashboardLoading from "./loading";
 import PipelineChart from "./PipelineChart";
 import Recommendations from "./Recommendations";
@@ -34,20 +34,6 @@ function formatPipelineValue(value: number) {
   if (value >= 1_000_000) return `$${(value / 1_000_000).toFixed(2)}M`;
   if (value >= 1_000) return `$${(value / 1_000).toFixed(0)}K`;
   return `$${value.toFixed(0)}`;
-}
-
-function MiniStat({ icon: Icon, label, value, color }: { icon: typeof FileText; label: string; value: string; color: string }) {
-  return (
-    <div className="flex items-center gap-3 rounded-lg border border-[var(--shell-border)] bg-[var(--shell-surface)] px-3.5 py-2.5">
-      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md" style={{ backgroundColor: `${color}15` }}>
-        <Icon className="h-4 w-4" style={{ color }} />
-      </div>
-      <div className="min-w-0">
-        <p className="text-xs text-[var(--shell-muted)] truncate">{label}</p>
-        <p className="font-heading text-sm font-semibold text-[var(--shell-foreground)]">{value}</p>
-      </div>
-    </div>
-  );
 }
 
 function getGreeting(): string {
@@ -97,40 +83,30 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-10 lg:space-y-12">
-      {/* Welcome Greeting */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[var(--shell-border)] pb-5">
-        <div className="flex flex-col gap-1">
-          <h1 className="font-heading text-2xl font-semibold tracking-tight text-[var(--shell-foreground)]">
-            {getGreeting()}, {user?.full_name || user?.email || "Sales Executive"}
-          </h1>
-          <p className="text-sm text-[var(--shell-muted)]">Here&apos;s what&apos;s moving across your pipeline and accounts today.</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Badge variant="outline" className="px-3 py-1 text-xs border-[var(--shell-brand)]/40 text-[var(--shell-brand)] bg-[var(--shell-brand)]/5 font-medium">
-            CRM Sales Hub
-          </Badge>
-        </div>
-      </div>
+      {/* Welcome Header */}
+      <PageHeader
+        title={`${getGreeting()}, ${user?.full_name || user?.email || "Sales Executive"}`}
+        subtitle="Here's what's moving across your pipeline and accounts today."
+        badge="CRM Sales Hub"
+      />
 
       {/* Alert Banner */}
       {hasAlerts && (
-        <div className="flex flex-wrap items-center gap-3 rounded-xl border border-[var(--shell-accent)]/20 bg-gradient-to-r from-[var(--shell-accent)]/5 to-transparent px-5 py-3.5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--shell-accent)]/10">
-            <Lightbulb className="h-4 w-4 text-[var(--shell-accent)]" />
-          </div>
-          <span className="text-sm font-medium text-[var(--shell-accent-text)]">AI recommendations available</span>
-          <div className="flex flex-wrap gap-2">
+        <AlertBanner
+          icon={Lightbulb}
+          message="AI recommendations available"
+          badges={
             <Badge variant="outline" className="border-[var(--shell-accent)]/40 text-[var(--shell-accent-text)] bg-[var(--shell-accent)]/10 text-xs">
               {recommendations.length} insight{recommendations.length !== 1 ? "s" : ""}
             </Badge>
-          </div>
-        </div>
+          }
+        />
       )}
 
       {/* Overview KPIs */}
       <section>
         <SectionHeading label="Overview" />
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
           {metrics.map((m: any, i: number) => {
             const trendDir = m.is_positive ? ("up" as const) : ("down" as const);
             return (
@@ -182,7 +158,7 @@ export default function DashboardPage() {
         <SectionHeading label="Activity & Insights" />
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           {/* Stage Value Bar Chart */}
-          <Card className="hover:shadow-engineered transition-shadow duration-200 border-[var(--shell-border)] bg-[var(--shell-surface)]">
+          <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <div>
                 <CardTitle className="flex items-center gap-2 text-sm">
@@ -251,7 +227,7 @@ export default function DashboardPage() {
           </Card>
 
           {/* Quick Insights */}
-          <Card className="hover:shadow-engineered transition-shadow duration-200 border-[var(--shell-border)] bg-[var(--shell-surface)]">
+          <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <div>
                 <CardTitle className="flex items-center gap-2 text-sm">
@@ -263,7 +239,17 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 gap-3">
-                {insights.map((insight) => <MiniStat key={insight.label} {...insight} />)}
+                {insights.map((insight) => (
+                  <div key={insight.label} className="flex items-center gap-3 rounded-lg border border-[var(--shell-border)] bg-[var(--shell-surface)] px-3.5 py-2.5">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md" style={{ backgroundColor: `${insight.color}15` }}>
+                      <insight.icon className="h-4 w-4" style={{ color: insight.color }} />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-xs text-[var(--shell-muted)] truncate">{insight.label}</p>
+                      <p className="font-heading text-sm font-semibold text-[var(--shell-foreground)]">{insight.value}</p>
+                    </div>
+                  </div>
+                ))}
               </div>
               {hasAlerts ? (
                 <div className="mt-3 rounded-lg border border-[var(--shell-accent)]/20 bg-[var(--shell-accent)]/5 px-3.5 py-2.5">

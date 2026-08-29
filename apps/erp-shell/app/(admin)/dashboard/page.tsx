@@ -7,7 +7,7 @@ import {
   PieChart, Pie, Cell, BarChart, Bar, LabelList,
 } from "recharts";
 import {
-  ArrowUp, ArrowDown, Wallet, Clock, FileText, Users, TrendingUp,
+  ArrowUp, Wallet, Clock, FileText, Users, TrendingUp,
   AlertTriangle, ShoppingCart, DollarSign, Plus, UserPlus, Package,
   BarChart3, Layers, Target, Lightbulb,
 } from "lucide-react";
@@ -19,7 +19,7 @@ import { api } from "@/services/api";
 import type { DashboardData } from "@/types/dashboard";
 import { statusVariant } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
-import { PageHeader, KpiCard, SectionHeading, handleError } from "@datavex/ui-theme";
+import { PageHeader, KpiCard, SectionHeading, AlertBanner, handleError } from "@datavex/ui-theme";
 import DashboardLoading from "./loading";
 import PipelineChart from "./PipelineChart";
 import Recommendations from "./Recommendations";
@@ -62,7 +62,6 @@ function getGreeting(): string {
   if (h < 17) return "Good afternoon";
   return "Good evening";
 }
-
 
 function MiniStat({ icon: Icon, label, value, color }: { icon: typeof Package; label: string; value: string; color: string }) {
   return (
@@ -161,58 +160,43 @@ export default function Dashboard() {
   return (
     <div className="space-y-10 lg:space-y-12">
       {/* Welcome Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[var(--shell-border)] pb-5">
-        <div className="flex flex-col gap-1">
-          <h1 className="font-heading text-2xl font-semibold tracking-tight text-[var(--shell-foreground)]">
-            {getGreeting()}, {user?.full_name || user?.email || "Executive"}
-          </h1>
-          <p className="text-sm text-[var(--shell-muted)]">
-            Here&apos;s a consolidated summary of your enterprise revenue, sales pipeline, and operations.
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Badge variant="outline" className="px-3 py-1 text-xs border-[var(--shell-brand)]/40 text-[var(--shell-brand)] bg-[var(--shell-brand)]/5 font-medium">
-            Executive Control Shell
-          </Badge>
-        </div>
-      </div>
+      <PageHeader
+        title={`${getGreeting()}, ${user?.full_name || user?.email || "Executive"}`}
+        subtitle="Here's a consolidated summary of your enterprise revenue, sales pipeline, and operations."
+        badge="Executive Control Shell"
+      />
 
       {/* Alert Banner */}
       {(hasAlerts || hasRecommendations) && (
-        <div className="flex flex-wrap items-center gap-3 rounded-xl border border-[var(--shell-accent)]/20 bg-gradient-to-r from-[var(--shell-accent)]/5 to-transparent px-5 py-3.5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--shell-accent)]/10">
-            <AlertTriangle className="h-4 w-4 text-[var(--shell-accent)]" />
-          </div>
-          <span className="text-sm font-medium text-[var(--shell-accent-text)]">Items requiring attention</span>
-          <div className="flex flex-wrap gap-2">
-            {hasOverdue && (
-              <Badge variant="destructive" className="text-xs">
-                {data!.alerts.overdue_invoices} overdue invoice{data!.alerts.overdue_invoices !== 1 ? "s" : ""}
-              </Badge>
-            )}
-            {hasLowStock && (
-              <Badge variant="outline" className="border-[var(--shell-warning)]/30 text-[var(--shell-warning)] text-xs">
-                {data!.alerts.low_stock_products} low-stock item{data!.alerts.low_stock_products !== 1 ? "s" : ""}
-              </Badge>
-            )}
-            {hasRecommendations && (
-              <Badge variant="outline" className="border-[var(--shell-accent)]/40 text-[var(--shell-accent-text)] bg-[var(--shell-accent)]/10 text-xs">
-                <Lightbulb className="h-3 w-3 mr-1 inline text-[var(--shell-accent)]" />
-                {data.recommendations.length} AI insight{data.recommendations.length !== 1 ? "s" : ""}
-              </Badge>
-            )}
-          </div>
-        </div>
+        <AlertBanner
+          icon={AlertTriangle}
+          message="Items requiring attention"
+          badges={
+            <>
+              {hasOverdue && (
+                <Badge variant="destructive" className="text-xs">
+                  {data!.alerts.overdue_invoices} overdue invoice{data!.alerts.overdue_invoices !== 1 ? "s" : ""}
+                </Badge>
+              )}
+              {hasLowStock && (
+                <Badge variant="outline" className="border-[var(--shell-warning)]/30 text-[var(--shell-warning)] text-xs">
+                  {data!.alerts.low_stock_products} low-stock item{data!.alerts.low_stock_products !== 1 ? "s" : ""}
+                </Badge>
+              )}
+              {hasRecommendations && (
+                <Badge variant="outline" className="border-[var(--shell-accent)]/40 text-[var(--shell-accent-text)] bg-[var(--shell-accent)]/10 text-xs">
+                  <Lightbulb className="h-3 w-3 mr-1 inline text-[var(--shell-accent)]" />
+                  {data.recommendations.length} AI insight{data.recommendations.length !== 1 ? "s" : ""}
+                </Badge>
+              )}
+            </>
+          }
+        />
       )}
 
       {/* Primary KPIs */}
       <section>
-        <div className="mb-5 flex items-center gap-2">
-          <h2 className="font-heading text-xs font-light uppercase tracking-[0.12em] text-[var(--shell-muted)]">
-            Overview
-          </h2>
-          <div className="h-px flex-1 bg-[var(--shell-border)]" />
-        </div>
+        <SectionHeading label="Overview" />
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
           <KpiCard
             label="Revenue (MTD)"
@@ -267,12 +251,7 @@ export default function Dashboard() {
 
       {/* Quick Actions */}
       <section>
-        <div className="mb-5 flex items-center gap-2">
-          <h2 className="font-heading text-xs font-light uppercase tracking-[0.12em] text-[var(--shell-muted)]">
-            Quick Actions
-          </h2>
-          <div className="h-px flex-1 bg-[var(--shell-border)]" />
-        </div>
+        <SectionHeading label="Quick Actions" />
         <div className="flex flex-wrap gap-2">
           <Button size="sm" variant="outline" className="gap-1.5 text-xs" onClick={() => router.push("/billing/invoices")}>
             <Plus className="h-3.5 w-3.5" /> New Invoice
@@ -294,15 +273,10 @@ export default function Dashboard() {
 
       {/* Analytics */}
       <section>
-        <div className="mb-5 flex items-center gap-2">
-          <h2 className="font-heading text-xs font-light uppercase tracking-[0.12em] text-[var(--shell-muted)]">
-            Analytics
-          </h2>
-          <div className="h-px flex-1 bg-[var(--shell-border)]" />
-        </div>
+        <SectionHeading label="Analytics" />
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           {/* Revenue Trend */}
-          <Card className="hover:shadow-engineered transition-shadow duration-200 border-[var(--shell-border)] bg-[var(--shell-surface)]">
+          <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <div>
                 <CardTitle className="flex items-center gap-2 text-sm">
@@ -354,7 +328,7 @@ export default function Dashboard() {
           </Card>
 
           {/* Invoice Summary (Donut) */}
-          <Card className="hover:shadow-engineered transition-shadow duration-200 border-[var(--shell-border)] bg-[var(--shell-surface)]">
+          <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2 border-b border-[var(--shell-border)]/20">
               <div>
                 <CardTitle className="flex items-center gap-2 text-sm font-semibold text-[var(--shell-foreground)]">
@@ -439,12 +413,7 @@ export default function Dashboard() {
 
       {/* Pipeline */}
       <section>
-        <div className="mb-5 flex items-center gap-2">
-          <h2 className="font-heading text-xs font-light uppercase tracking-[0.12em] text-[var(--shell-muted)]">
-            Pipeline
-          </h2>
-          <div className="h-px flex-1 bg-[var(--shell-border)]" />
-        </div>
+        <SectionHeading label="Pipeline" />
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           <PipelineChart stages={data.pipelineStages} pipelineValue={data.pipelineValue} />
           <Recommendations recommendations={data.recommendations} />
@@ -453,15 +422,10 @@ export default function Dashboard() {
 
       {/* Transactions & Monitoring */}
       <section>
-        <div className="mb-4 lg:mb-5 flex items-center gap-2">
-          <h2 className="font-heading text-xs font-light uppercase tracking-[0.12em] text-[var(--shell-muted)]">
-            Activity
-          </h2>
-          <div className="h-px flex-1 bg-[var(--shell-border)]" />
-        </div>
+        <SectionHeading label="Activity" />
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Recent Invoices */}
-        <Card className="hover:shadow-engineered transition-shadow duration-200 border-[var(--shell-border)] bg-[var(--shell-surface)]">
+        <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <div>
               <CardTitle className="flex items-center gap-2 text-sm">
@@ -478,10 +442,10 @@ export default function Dashboard() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Invoice</TableHead>
-                  <TableHead>Client</TableHead>
-                  <TableHead className="text-right">Amount</TableHead>
-                  <TableHead>Status</TableHead>
+                  <TableHead className="h-10 text-[11px] font-semibold uppercase tracking-wider">Invoice</TableHead>
+                  <TableHead className="h-10 text-[11px] font-semibold uppercase tracking-wider">Client</TableHead>
+                  <TableHead className="h-10 text-[11px] font-semibold uppercase tracking-wider text-right">Amount</TableHead>
+                  <TableHead className="h-10 text-[11px] font-semibold uppercase tracking-wider">Status</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -507,7 +471,7 @@ export default function Dashboard() {
         </Card>
 
         {/* Low Stock / Alerts */}
-        <Card className="hover:shadow-engineered transition-shadow duration-200 border-[var(--shell-border)] bg-[var(--shell-surface)]">
+        <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <div>
               <CardTitle className="flex items-center gap-2 text-sm">
@@ -547,15 +511,10 @@ export default function Dashboard() {
 
       {/* Bottom Row */}
       <section>
-        <div className="mb-4 lg:mb-5 flex items-center gap-2">
-          <h2 className="font-heading text-xs font-light uppercase tracking-[0.12em] text-[var(--shell-muted)]">
-            Payments & Growth
-          </h2>
-          <div className="h-px flex-1 bg-[var(--shell-border)]" />
-        </div>
+        <SectionHeading label="Payments & Growth" />
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Payment Analytics */}
-        <Card className="hover:shadow-engineered transition-shadow duration-200 border-[var(--shell-border)] bg-[var(--shell-surface)]">
+        <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <div>
               <CardTitle className="flex items-center gap-2 text-sm">
@@ -606,7 +565,7 @@ export default function Dashboard() {
         </Card>
 
         {/* Client Growth */}
-        <Card className="hover:shadow-engineered transition-shadow duration-200 border-[var(--shell-border)] bg-[var(--shell-surface)]">
+        <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <div>
               <CardTitle className="flex items-center gap-2 text-sm">
@@ -663,12 +622,7 @@ export default function Dashboard() {
 
       {/* Footer Stats */}
       <section>
-        <div className="mb-4 lg:mb-5 flex items-center gap-2">
-          <h2 className="font-heading text-xs font-light uppercase tracking-[0.12em] text-[var(--shell-muted)]">
-            Summary
-          </h2>
-          <div className="h-px flex-1 bg-[var(--shell-border)]" />
-        </div>
+        <SectionHeading label="Summary" />
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
           <MiniStat icon={AlertTriangle} label="Overdue Amount" value={f(s?.overdue_amount ?? 0)} color={hasOverdue ? "var(--shell-danger)" : "var(--chart-2)"} />
           <MiniStat icon={ShoppingCart} label="Total Products" value={String(s?.total_products ?? 0)} color="var(--chart-1)" />

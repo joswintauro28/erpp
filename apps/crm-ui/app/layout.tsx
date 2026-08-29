@@ -3,7 +3,6 @@ import localFont from "next/font/local";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { NotificationProvider, ThemeProvider } from "@datavex/ui-theme";
-import ToastContainer from "@/components/ToastContainer";
 
 const plusJakartaSans = localFont({
   src: "./fonts/PlusJakartaSans-VariableFont_wght.ttf",
@@ -39,7 +38,6 @@ export default function RootLayout({
           <AuthProvider>
             <NotificationProvider>
               {children}
-              <ToastContainer />
             </NotificationProvider>
           </AuthProvider>
         </ThemeProvider>

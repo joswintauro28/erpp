@@ -342,3 +342,41 @@
   content: "";
   animation: shimmer-swipe 1.6s infinite ease-in-out;
 }
+
+/* Pulse sweep animation for header accent line */
+@keyframes pulse-sweep {
+  0% { transform: translateX(-50%); }
+  50% { transform: translateX(0%); }
+  100% { transform: translateX(50%); }
+}
+
+.pulse-sweep-line {
+  animation: pulse-sweep 4s ease-in-out infinite;
+}
+
+/* Custom select arrow — replaces native browser chevron */
+select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238C1D24' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 1rem;
+  padding-right: 2.25rem !important;
+}
+
+.dark select {
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23FCD34D' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+}
+
+/* Reduced motion — disable decorative animations */
+@media (prefers-reduced-motion: reduce) {
+  .animate-kpi,
+  .pulse-sweep-line {
+    animation: none !important;
+  }
+  .shimmer-glow::after {
+    animation: none !important;
+  }
+}

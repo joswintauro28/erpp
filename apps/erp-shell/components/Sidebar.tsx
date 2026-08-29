@@ -208,7 +208,7 @@ const navItems: NavItem[] = [
   { name: "Team", href: "/team", icon: Users },
 
   // 8. AI Assistant
-  { name: "AI Assistant", href: "/ai-assistant", icon: Sparkles, soon: true },
+  { name: "AI Assistant", href: "/ai-assistant", icon: Sparkles },
 ];
 
 // Extract all defined navigation hrefs to determine more specific matches
@@ -456,7 +456,7 @@ export default function Sidebar({ collapsed }: { collapsed: boolean }) {
                                   {childActive && <span className="absolute left-0 top-1/2 -translate-y-1/2 h-4 w-0.5 rounded-r-full bg-sidebar-primary" />}
                                   <child.icon className={cn("h-3.5 w-3.5 shrink-0 transition-colors duration-200", childActive ? "text-sidebar-primary-foreground" : "text-sidebar-foreground/40 group-hover/link:text-sidebar-accent-foreground")} />
                                   <span>{child.name}</span>
-                                  {child.soon && <span className="ml-auto text-[8px] font-medium uppercase tracking-wider text-[var(--shell-accent)]">Soon</span>}
+                                  {child.soon && <span className="ml-auto rounded-full border border-sidebar-primary/30 bg-sidebar-primary/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-sidebar-primary">Soon</span>}
                                 </span>
                               );
                             }
@@ -479,7 +479,7 @@ export default function Sidebar({ collapsed }: { collapsed: boolean }) {
                                   {childActive && <span className="absolute left-0 top-1/2 -translate-y-1/2 h-4 w-0.5 rounded-r-full bg-sidebar-primary" />}
                                   <child.icon className={cn("h-3.5 w-3.5 shrink-0 transition-colors duration-200", childActive ? "text-sidebar-primary-foreground" : "text-sidebar-foreground/40 group-hover/link:text-sidebar-accent-foreground")} />
                                   <span>{child.name}</span>
-                                  {child.soon && <span className="ml-auto text-[8px] font-medium uppercase tracking-wider text-[var(--shell-accent)]">Soon</span>}
+                                  {child.soon && <span className="ml-auto rounded-full border border-sidebar-primary/30 bg-sidebar-primary/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-sidebar-primary">Soon</span>}
                                 </a>
                               );
                             }
@@ -488,7 +488,7 @@ export default function Sidebar({ collapsed }: { collapsed: boolean }) {
                                 {childActive && <span className="absolute left-0 top-1/2 -translate-y-1/2 h-4 w-0.5 rounded-r-full bg-sidebar-primary" />}
                                 <child.icon className={cn("h-3.5 w-3.5 shrink-0 transition-colors duration-200", childActive ? "text-sidebar-primary-foreground" : "text-sidebar-foreground/40 group-hover/link:text-sidebar-accent-foreground")} />
                                 <span>{child.name}</span>
-                                {child.soon && <span className="ml-auto text-[8px] font-medium uppercase tracking-wider text-[var(--shell-accent)]">Soon</span>}
+                                {child.soon && <span className="ml-auto rounded-full border border-sidebar-primary/30 bg-sidebar-primary/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-sidebar-primary">Soon</span>}
                               </Link>
                             );
                           })}
@@ -533,7 +533,7 @@ export default function Sidebar({ collapsed }: { collapsed: boolean }) {
                   {item.name}
                 </span>
                 {item.soon && !collapsed && (
-                  <span className="ml-auto text-[8px] font-medium uppercase tracking-wider text-sidebar-foreground/45">Soon</span>
+                  <span className="ml-auto rounded-full border border-sidebar-primary/30 bg-sidebar-primary/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-sidebar-primary">Soon</span>
                 )}
               </div>
             </Link>
@@ -573,7 +573,7 @@ export default function Sidebar({ collapsed }: { collapsed: boolean }) {
                   <span key={`fly-${child.name}`} className={linkClasses}>
                     <child.icon className={cn("h-3.5 w-3.5 shrink-0 transition-colors", childActive ? "text-sidebar-primary-foreground" : "text-sidebar-foreground/45 group-hover/flylink:text-sidebar-accent-foreground")} />
                     <span>{child.name}</span>
-                    {child.soon && <span className="ml-auto text-[8px] font-medium uppercase tracking-wider text-[var(--shell-accent)]">Soon</span>}
+                    {child.soon && <span className="ml-auto rounded-full border border-sidebar-primary/30 bg-sidebar-primary/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-sidebar-primary">Soon</span>}
                   </span>
                 );
               }
@@ -595,7 +595,7 @@ export default function Sidebar({ collapsed }: { collapsed: boolean }) {
                   >
                     <child.icon className={cn("h-3.5 w-3.5 shrink-0 transition-colors", childActive ? "text-sidebar-primary-foreground" : "text-sidebar-foreground/45 group-hover/flylink:text-sidebar-accent-foreground")} />
                     <span>{child.name}</span>
-                    {child.soon && <span className="ml-auto text-[8px] font-medium uppercase tracking-wider text-[var(--shell-accent)]">Soon</span>}
+                    {child.soon && <span className="ml-auto rounded-full border border-sidebar-primary/30 bg-sidebar-primary/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-sidebar-primary">Soon</span>}
                   </a>
                 );
               }
@@ -603,7 +603,7 @@ export default function Sidebar({ collapsed }: { collapsed: boolean }) {
                 <Link key={`fly-${child.name}`} href={child.href} className={linkClasses}>
                   <child.icon className={cn("h-3.5 w-3.5 shrink-0 transition-colors", childActive ? "text-sidebar-primary-foreground" : "text-sidebar-foreground/45 group-hover/flylink:text-sidebar-accent-foreground")} />
                   <span>{child.name}</span>
-                  {child.soon && <span className="ml-auto text-[8px] font-medium uppercase tracking-wider text-[var(--shell-accent)]">Soon</span>}
+                  {child.soon && <span className="ml-auto rounded-full border border-sidebar-primary/30 bg-sidebar-primary/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-sidebar-primary">Soon</span>}
                 </Link>
               );
             })}

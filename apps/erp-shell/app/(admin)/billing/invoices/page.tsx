@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Search, FileText, Eye, Pencil, Download, Receipt, CreditCard, DollarSign, BadgePercent, Loader2, X, Calculator, Building2, CalendarDays, FileSpreadsheet } from "lucide-react";
+import { Plus, FileText, Eye, Pencil, Download, Receipt, CreditCard, DollarSign, BadgePercent, Loader2, X, Calculator, Building2, CalendarDays, FileSpreadsheet } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -19,23 +19,13 @@ import {
 import { MultiStepDialog } from "@/components/multi-step-dialog";
 import { money, statusVariant } from "@/utils/format";
 import { api } from "@/services/api";
-import { handleError } from "@datavex/ui-theme";
+import { PageHeader, SectionHeading, SearchInput, EmptyState, handleError } from "@datavex/ui-theme";
 import type { ApiInvoice, ApiClientRef, InvoiceListView } from "@/types/billing";
 import InvoicesLoading from "./loading";
 
 const statusOptions = ["", "draft", "sent", "partially_paid", "paid", "overdue", "void"] as const;
 
 
-function SectionHeading({ label }: { label: string }) {
-  return (
-    <div className="mb-5 flex items-center gap-2">
-      <h2 className="font-heading text-xs font-medium uppercase tracking-[0.12em] text-[var(--shell-muted)]">
-        {label}
-      </h2>
-      <div className="h-px flex-1 bg-[var(--shell-border)]/20" />
-    </div>
-  );
-}
 
 const summaryCards = [
   { key: "taxable_value" as const, icon: Receipt, label: "Taxable Value", gradient: "from-[var(--shell-brand)]/5 to-transparent", idx: 0 },
@@ -183,15 +173,16 @@ export default function Invoices() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-10 lg:space-y-12">
       {/* Page Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="font-heading text-xl font-semibold tracking-tight text-[var(--shell-foreground)]">Invoices</h1>
-          <p className="mt-0.5 text-sm text-[var(--shell-muted)]">Create, manage, and track all client invoices</p>
-        </div>
-        <Button className="bg-[var(--shell-brand)] hover:bg-[var(--shell-brand)]/90 text-white" onClick={() => setCreateOpen(true)}><Plus className="h-4 w-4" /> Create Invoice</Button>
-      </div>
+      <PageHeader
+        title="Invoices"
+        subtitle="Create, manage, and track all client invoices"
+        badge="Billing Console"
+        actions={
+          <Button className="bg-[var(--shell-brand)] hover:bg-[var(--shell-brand)]/90 text-white" onClick={() => setCreateOpen(true)}><Plus className="h-4 w-4" /> Create Invoice</Button>
+        }
+      />
 
       {/* GST Summary */}
       <section>
@@ -237,10 +228,7 @@ export default function Invoices() {
       <section>
         <SectionHeading label="Invoice List" />
         <div className="mb-5 flex flex-wrap items-center gap-3">
-          <div className="relative flex-1 max-w-xs">
-            <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--shell-muted)]" />
-            <Input placeholder="Search invoices..." className="pl-8 border-[var(--shell-border)] bg-[var(--shell-surface)]" value={search} onChange={(e) => setSearch(e.target.value)} />
-          </div>
+          <SearchInput value={search} onChange={setSearch} placeholder="Search invoices..." className="flex-1 max-w-xs" />
           <Select value={statusFilter} onValueChange={(v) => v !== null && setStatusFilter(v)}>
             <SelectTrigger className="w-36 border-[var(--shell-border)] bg-[var(--shell-surface)]"><SelectValue placeholder="All statuses" /></SelectTrigger>
             <SelectContent className="border-[var(--shell-border)] bg-[var(--shell-surface)]">
@@ -255,34 +243,24 @@ export default function Invoices() {
         <Card>
           <CardContent className="p-0">
             {filtered.length === 0 ? (
-              <div className="flex flex-col items-center gap-3 py-20 text-muted-foreground">
-                <FileText className="h-12 w-12" />
-                <p className="text-base font-medium text-foreground">
-                  {invoices.length === 0 ? "No invoices yet" : "No invoices match your search"}
-                </p>
-                <p className="text-sm">
-                  {invoices.length === 0
-                    ? "Create your first invoice to get started."
-                    : "Try adjusting your search or filters."}
-                </p>
-                {invoices.length === 0 && (
-                  <Button size="sm" className="mt-2" onClick={() => setCreateOpen(true)}>
-                    <Plus className="mr-1 h-4 w-4" /> Create Invoice
-                  </Button>
-                )}
-              </div>
+              <EmptyState
+                icon={FileText}
+                title={invoices.length === 0 ? "No invoices yet" : "No invoices match your search"}
+                description={invoices.length === 0 ? "Create your first invoice to get started." : "Try adjusting your search or filters."}
+                action={invoices.length === 0 ? <Button size="sm" onClick={() => setCreateOpen(true)}><Plus className="mr-1 h-4 w-4" /> Create Invoice</Button> : undefined}
+              />
             ) : (
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Invoice</TableHead>
-                    <TableHead>Client</TableHead>
-                    <TableHead className="text-right">Total</TableHead>
-                    <TableHead className="text-right">Paid</TableHead>
-                    <TableHead className="text-right">Balance</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Due</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead className="h-10 text-[11px] font-semibold uppercase tracking-wider">Invoice</TableHead>
+                    <TableHead className="h-10 text-[11px] font-semibold uppercase tracking-wider">Client</TableHead>
+                    <TableHead className="h-10 text-[11px] font-semibold uppercase tracking-wider text-right">Total</TableHead>
+                    <TableHead className="h-10 text-[11px] font-semibold uppercase tracking-wider text-right">Paid</TableHead>
+                    <TableHead className="h-10 text-[11px] font-semibold uppercase tracking-wider text-right">Balance</TableHead>
+                    <TableHead className="h-10 text-[11px] font-semibold uppercase tracking-wider">Status</TableHead>
+                    <TableHead className="h-10 text-[11px] font-semibold uppercase tracking-wider">Due</TableHead>
+                    <TableHead className="h-10 text-[11px] font-semibold uppercase tracking-wider text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>

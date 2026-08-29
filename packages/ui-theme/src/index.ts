@@ -52,6 +52,8 @@ export * from "./components/shared/kpi-card";
 export * from "./components/shared/section-heading";
 export * from "./components/shared/theme-provider";
 export * from "./components/shared/theme-toggle";
+export * from "./components/shared/ai-chat";
+export * from "./components/shared/alert-banner";
 
 // File management (MinIO presigned URL pattern)
 export * from "./components/shared/file-upload";

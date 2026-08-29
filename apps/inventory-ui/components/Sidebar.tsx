@@ -21,6 +21,7 @@ import {
   Factory,
   ClipboardCheck,
   ShieldCheck,
+  Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
@@ -82,6 +83,9 @@ const navItems: NavItem[] = [
       { name: "Warehouses", href: "/warehouses", icon: Building2 },
     ],
   },
+
+  // AI Assistant
+  { name: "AI Assistant", href: "/ai-assistant", icon: Sparkles },
 ];
 
 function isGroup(item: NavItem): item is NavGroup {

@@ -16,7 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { api } from "@/services/api";
-import { handleError } from "@datavex/ui-theme";
+import { PageHeader, KpiCard, SectionHeading, AlertBanner, handleError } from "@datavex/ui-theme";
 import { money, lakhFormat, statusVariant } from "@/utils/format";
 import type { BillingDashboardData } from "@/types/billing";
 import { useAuth } from "@/contexts/AuthContext";
@@ -42,59 +42,13 @@ function getGreeting(): string {
   return "Good evening";
 }
 
-function KpiCard({ label, value, subtitle, icon: Icon, color, index, loading }: {
-  label: string; value: string; subtitle?: string; icon: typeof Wallet; color: string; index: number; loading?: boolean;
-}) {
-  if (loading) {
-    return (
-      <div className="flex flex-col gap-2 rounded-xl border border-border bg-card p-4">
-        <div className="flex items-center justify-between">
-          <div className="h-3 w-20 shimmer-glow rounded" />
-          <div className="h-7 w-7 rounded-md shimmer-glow" />
-        </div>
-        <div className="h-7 w-28 shimmer-glow rounded mt-1" />
-        <div className="h-3 w-16 shimmer-glow rounded" />
-      </div>
-    );
-  }
-  return (
-    <div
-      className="animate-kpi flex flex-col gap-2 rounded-xl border border-border bg-card p-5 hover:-translate-y-1 hover:shadow-engineered transition-all duration-300 relative overflow-hidden group"
-      style={{ animationDelay: `${index * 0.05}s` }}
-    >
-      <span 
-        className="absolute left-0 top-0 bottom-0 w-1 transition-all duration-300 group-hover:w-1.5"
-        style={{ backgroundColor: color }}
-      />
-      <div className="flex items-center justify-between">
-        <span className="text-xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">
-          {label}
-        </span>
-        <div 
-          className="flex h-8 w-8 items-center justify-center rounded-lg border border-border transition-transform duration-300 group-hover:scale-110"
-          style={{ backgroundColor: `${color}10`, borderColor: `${color}25` }}
-        >
-          <Icon className="h-4 w-4" style={{ color }} />
-        </div>
-      </div>
-      <span className="font-heading text-2xl font-bold tracking-tight text-foreground mt-1">
-        {value}
-      </span>
-      {subtitle && <span className="text-xs text-muted-foreground font-medium mt-1">{subtitle}</span>}
-    </div>
-  );
-}
-
-function SectionHeading({ label }: { label: string }) {
-  return (
-    <div className="mb-5 flex items-center gap-2">
-      <h2 className="font-heading text-xs font-light uppercase tracking-[0.12em] text-muted-foreground">
-        {label}
-      </h2>
-      <div className="h-px flex-1 bg-border" />
-    </div>
-  );
-}
+const tooltipStyle = {
+  background: "var(--shell-popover)",
+  border: "1px solid var(--shell-border)",
+  borderRadius: 8,
+  fontSize: 13,
+  boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+};
 
 export default function BillingDashboard() {
   const router = useRouter();
@@ -147,45 +101,32 @@ export default function BillingDashboard() {
   return (
     <div className="space-y-10 lg:space-y-12">
       {/* Welcome Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[var(--shell-border)] pb-5">
-        <div className="flex flex-col gap-1">
-          <h1 className="font-heading text-2xl font-semibold tracking-tight text-[var(--shell-foreground)]">
-            {getGreeting()}, {user?.full_name || user?.email || "Accountant"}
-          </h1>
-          <p className="text-sm text-[var(--shell-muted)]">
-            Here&apos;s a live view of your revenue stream, receivables, payables, and invoice statuses.
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Badge variant="outline" className="px-3 py-1 text-xs border-[var(--shell-brand)]/40 text-[var(--shell-brand)] bg-[var(--shell-brand)]/5 font-medium">
-            Billing & Finance Console
-          </Badge>
+      <PageHeader
+        title={`${getGreeting()}, ${user?.full_name || user?.email || "Accountant"}`}
+        subtitle="Here's a live view of your revenue stream, receivables, payables, and invoice statuses."
+        badge="Billing & Finance Console"
+        actions={
           <Button size="sm" className="bg-[var(--shell-brand)] text-white hover:bg-[var(--shell-brand)]/90 gap-1.5 text-xs shadow-sm" onClick={() => router.push("/billing/invoices")}>
             <Plus className="h-3.5 w-3.5" /> New Invoice
           </Button>
-        </div>
-      </div>
+        }
+      />
 
       {hasOverdue && (
-        <div className="flex flex-wrap items-center gap-3 rounded-xl border border-accent-foreground/20 bg-gradient-to-r from-accent/5 to-transparent px-5 py-3.5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-accent/10">
-            <AlertTriangle className="h-4 w-4 text-accent-foreground" />
-          </div>
-          <span className="text-sm font-medium text-accent-foreground">
-            {money(d!.overdue)} in overdue invoices require attention
-          </span>
-        </div>
+        <AlertBanner
+          icon={AlertTriangle}
+          message={`${money(d!.overdue)} in overdue invoices require attention`}
+          variant="danger"
+        />
       )}
 
       <section>
         <SectionHeading label="Overview" />
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
           <KpiCard label="Total Revenue" value={lakhFormat(d?.total_revenue ?? 0)} subtitle="All time" icon={Wallet} color="var(--chart-1)" index={0} />
           <KpiCard label="AR" value={lakhFormat(d?.total_ar ?? 0)} subtitle="Accounts Receivable" icon={ArrowDownLeft} color="var(--chart-2)" index={1} />
           <KpiCard label="AP" value={lakhFormat(d?.total_ap ?? 0)} subtitle="Accounts Payable" icon={ArrowUpRight} color="var(--chart-3)" index={2} />
           <KpiCard label="Overdue" value={lakhFormat(d?.overdue ?? 0)} subtitle={hasOverdue ? "Requires action" : "All clear"} icon={AlertTriangle} color={hasOverdue ? "var(--shell-danger)" : "var(--chart-2)"} index={3} />
-        </div>
-        <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
           <KpiCard label="Outstanding" value={lakhFormat(d?.outstanding ?? 0)} subtitle={d?.outstanding ? `${((d.outstanding / Math.max(d.total_revenue, 1)) * 100).toFixed(0)}% of revenue` : "None due"} icon={Clock} color="var(--chart-4)" index={4} />
           <KpiCard label="Total Invoices" value={String(totalInvoices)} subtitle="Issued to date" icon={FileText} color="var(--chart-5)" index={5} />
         </div>
@@ -224,7 +165,7 @@ export default function BillingDashboard() {
                     <XAxis dataKey="month" tick={{ fontSize: 11, fill: "var(--shell-muted)" }} stroke="var(--shell-border)" axisLine={false} tickLine={false} />
                     <YAxis tick={{ fontSize: 11, fill: "var(--shell-muted)" }} stroke="var(--shell-border)" axisLine={false} tickLine={false} tickFormatter={(v) => `${(v / 100000).toFixed(0)}L`} />
                     <Tooltip
-                      contentStyle={{ background: "var(--shell-popover)", border: "1px solid var(--shell-border)", borderRadius: 8, fontSize: 13, boxShadow: "0 4px 12px rgba(0,0,0,0.08)" }}
+                      contentStyle={tooltipStyle}
                       formatter={(value) => [`₹${Number(value).toLocaleString()}`, "Revenue"]}
                       labelStyle={{ fontWeight: 600, marginBottom: 4, color: "var(--shell-foreground)" }}
                     />
@@ -280,7 +221,7 @@ export default function BillingDashboard() {
                         ))}
                       </Pie>
                       <Tooltip
-                        contentStyle={{ background: "var(--shell-popover)", border: "1px solid var(--shell-border)", borderRadius: 8, fontSize: 13, boxShadow: "0 4px 12px rgba(0,0,0,0.08)" }}
+                        contentStyle={tooltipStyle}
                         formatter={(_value: unknown, _name: unknown, entry: unknown) => {
                           const p = (entry as { payload: { count: number; value: number; name: string } }).payload;
                           return [`${p.count} invoices (${p.value}%)`, p.name.replace("_", " ")];
@@ -377,10 +318,10 @@ export default function BillingDashboard() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Invoice</TableHead>
-                  <TableHead>Client</TableHead>
-                  <TableHead className="text-right">Amount</TableHead>
-                  <TableHead>Status</TableHead>
+                  <TableHead className="h-10 text-[11px] font-semibold uppercase tracking-wider">Invoice</TableHead>
+                  <TableHead className="h-10 text-[11px] font-semibold uppercase tracking-wider">Client</TableHead>
+                  <TableHead className="h-10 text-[11px] font-semibold uppercase tracking-wider text-right">Amount</TableHead>
+                  <TableHead className="h-10 text-[11px] font-semibold uppercase tracking-wider">Status</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { Loader2 } from "lucide-react";
 import Sidebar from "@/components/Sidebar";
 import Header from "@/components/Header";
+import ToastContainer from "@/components/ToastContainer";
 import { useAuth } from "@/contexts/AuthContext";
-import { ConfirmProvider } from "@datavex/ui-theme";
+import { ConfirmProvider, LoadingSpinner } from "@datavex/ui-theme";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, loading } = useAuth();
@@ -23,7 +23,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   if (!mounted || loading) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-background">
-        <Loader2 size={32} className="animate-spin text-accent-foreground" />
+        <LoadingSpinner />
       </div>
     );
   }
@@ -43,6 +43,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             {children}
           </main>
         </div>
+        <ToastContainer />
       </div>
     </ConfirmProvider>
   );

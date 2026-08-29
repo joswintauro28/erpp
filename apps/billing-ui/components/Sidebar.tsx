@@ -17,6 +17,7 @@ import {
   Calendar,
   Clock,
   Bell,
+  Sparkles,
   ChevronRight,
   LogOut,
 } from "lucide-react";
@@ -65,6 +66,9 @@ const navItems: NavItem[] = [
       { name: "Dunning", href: "/accounting/dunning", icon: Bell },
     ],
   },
+
+  // AI Assistant
+  { name: "AI Assistant", href: "/ai-assistant", icon: Sparkles },
 ];
 
 function isGroup(item: NavItem): item is NavGroup {
