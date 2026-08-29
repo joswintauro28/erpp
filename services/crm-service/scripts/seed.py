@@ -6,7 +6,9 @@ from datetime import datetime, timedelta, timezone
 
 sys.path.append(os.getcwd())
 
-from app.database import AsyncSessionLocal, engine
+from app.database import AsyncSessionLocal, engine, Base
+# Ensure all model tables exist (needed for newly added models)
+import app.models  # noqa: F401 — registers all models with Base.metadata
 from app.dashboard.models import Metric, PipelineStage, Recommendation, HotLead
 from app.customers.models import Customer
 from app.contacts.models import Contact
@@ -34,6 +36,9 @@ async def seed():
 
             # Clean up existing data first
             from sqlalchemy import text
+            # Create tables that may not exist yet (e.g. newly added ai_assistant_logs)
+            async with engine.begin() as conn:
+                await conn.run_sync(Base.metadata.create_all)
             await db.execute(text("TRUNCATE TABLE ai_logs, contacts, customers, documents, hot_leads, leads, metrics, opportunities, pinned_leads, pipeline_stages, recommendations, reports, requirements, sales_orders CASCADE"))
             await db.commit()
 
