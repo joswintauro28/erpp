@@ -1,6 +1,6 @@
 # DATAVEX ERP — AI Chatbot Implementation Plan
 
-**Created:** 2026-08-28 · **Status:** Planning → Building
+**Created:** 2026-08-28 · **Status:** Phase 1–4 Complete · Phase 5–6 Pending
 
 ---
 
@@ -87,54 +87,54 @@
 **Goal:** Stand up the ai-service with session management, LLM integration, and module context.
 
 ### Task 1.1: Project Scaffold
-- [ ] Create `services/ai-service/` directory structure
-- [ ] `pyproject.toml` with dependencies (fastapi, uvicorn, sqlalchemy, asyncpg, alembic, httpx, pydantic-settings)
-- [ ] `app/main.py` — FastAPI app with CORS, lifespan, router mount
-- [ ] `app/core/config.py` — Settings class (JWT_SECRET, DB_URL, LLM keys)
-- [ ] `app/core/database.py` — AsyncSession factory for `erp_ai`
-- [ ] `app/core/deps.py` — `get_current_user_id` dependency (JWT decode)
-- [ ] `.env.example` — all required env vars with safe placeholders
+- [x] Create `services/ai-service/` directory structure
+- [x] `pyproject.toml` with dependencies (fastapi, uvicorn, sqlalchemy, asyncpg, alembic, httpx, pydantic-settings)
+- [x] `app/main.py` — FastAPI app with CORS, lifespan, router mount
+- [x] `app/core/config.py` — Settings class (JWT_SECRET, DB_URL, LLM keys)
+- [x] `app/core/database.py` — AsyncSession factory for `erp_ai`
+- [x] `app/core/deps.py` — `get_current_user_id` dependency (JWT decode)
+- [x] `.env.example` — all required env vars with safe placeholders
 
 ### Task 1.2: Database Models + Migration
-- [ ] `app/models.py` — SQLAlchemy models:
+- [x] `app/models.py` — SQLAlchemy models:
   - `AISession`: id (UUID), user_id (int), module (enum: admin/crm/billing/inventory), title (str), created_at, updated_at
   - `AIMessage`: id (UUID), session_id (FK→AISession), role (enum: user/assistant/system), content (text), created_at
-- [ ] Alembic init + migration for `erp_ai` database
-- [ ] Seed system prompt messages per module
+- [x] Alembic init + migration for `erp_ai` database
+- [x] Seed system prompt messages per module
 
 ### Task 1.3: Pydantic Schemas
-- [ ] `app/schemas.py` — Request/response models:
+- [x] `app/schemas.py` — Request/response models:
   - `ChatRequest`: message, session_id?, module
   - `ChatResponse`: session_id, message (assistant response)
   - `SessionResponse`: id, title, module, message_count, created_at
   - `HistoryResponse`: messages[] with role, content, created_at
 
 ### Task 1.4: LLM Provider Abstraction
-- [ ] `app/llm/base.py` — Abstract `LLMProvider` with `async chat(messages, model) -> str`
-- [ ] `app/llm/groq.py` — Groq REST API via httpx (default provider)
-- [ ] `app/llm/gemini.py` — Gemini stub for future
-- [ ] `app/llm/factory.py` — `get_provider()` based on `AI_PROVIDER` env var
-- [ ] Env vars: `AI_PROVIDER`, `GROQ_API_KEY`, `GROQ_MODEL`, `GEMINI_API_KEY`
+- [x] `app/llm/base.py` — Abstract `LLMProvider` with `async chat(messages, model) -> str`
+- [x] `app/llm/groq.py` — Groq REST API via httpx (default provider)
+- [x] `app/llm/gemini.py` — Gemini stub for future
+- [x] `app/llm/factory.py` — `get_provider()` based on `AI_PROVIDER` env var
+- [x] Env vars: `AI_PROVIDER`, `GROQ_API_KEY`, `GROQ_MODEL`, `GEMINI_API_KEY`
 
 ### Task 1.5: Module Context Providers
-- [ ] `app/context/base.py` — Abstract `ContextProvider` with `async get_context(user_id) -> dict`
-- [ ] `app/context/crm.py` — Calls crm-service: customers, pipeline, leads
-- [ ] `app/context/billing.py` — Calls billing-service: invoices, payments, outstanding
-- [ ] `app/context/inventory.py` — Calls inventory-service: stock, POs, low-stock alerts
-- [ ] `app/context/admin.py` — Calls core-iam + other services for cross-module KPIs
-- [ ] Each provider returns structured dict for prompt injection
-- [ ] HTTP clients: `app/context/clients.py` — crm_client, billing_client, inventory_client
+- [x] `app/context/base.py` — Abstract `ContextProvider` with `async get_context(user_id) -> dict`
+- [x] `app/context/crm.py` — Calls crm-service: customers, pipeline, leads
+- [x] `app/context/billing.py` — Calls billing-service: invoices, payments, outstanding
+- [x] `app/context/inventory.py` — Calls inventory-service: stock, POs, low-stock alerts
+- [x] `app/context/admin.py` — Calls core-iam + other services for cross-module KPIs
+- [x] Each provider returns structured dict for prompt injection
+- [x] HTTP clients: `app/context/clients.py` — crm_client, billing_client, inventory_client
 
 ### Task 1.6: System Prompt Templates
-- [ ] `app/prompts.py` — Per-module system prompts:
+- [x] `app/prompts.py` — Per-module system prompts:
   - `ADMIN_PROMPT` — cross-module overview, system health
   - `CRM_PROMPT` — customer insights, pipeline analysis, lead scoring
   - `BILLING_PROMPT` — invoice management, payment tracking, GST
   - `INVENTORY_PROMPT` — stock levels, procurement, fulfillment
-- [ ] Each prompt: role definition, context format, guardrails, INR formatting, Indian date format
+- [x] Each prompt: role definition, context format, guardrails, INR formatting, Indian date format
 
 ### Task 1.7: CRUD Operations
-- [ ] `app/crud.py` — Database operations:
+- [x] `app/crud.py` — Database operations:
   - `create_session(user_id, module, title?) -> AISession`
   - `get_session(session_id, user_id) -> AISession?`
   - `list_sessions(user_id, module?) -> list[AISession]`
@@ -143,13 +143,13 @@
   - `get_history(session_id, limit=50) -> list[AIMessage]`
 
 ### Task 1.8: AI Router
-- [ ] `app/router.py` — Endpoints:
+- [x] `app/router.py` — Endpoints:
   - `POST /api/ai/chat` — Send message, get AI response (streaming-ready)
   - `GET /api/ai/sessions` — List user's sessions (filterable by module)
   - `GET /api/ai/history/{session_id}` — Message history
   - `DELETE /api/ai/sessions/{session_id}` — Delete session + messages
   - `GET /api/ai/suggestions/{module}` — Module-specific suggestion chips
-- [ ] Wire router into `main.py`
+- [x] Wire router into `main.py`
 
 ---
 
@@ -158,7 +158,7 @@
 **Goal:** Build a reusable chat UI in `ui-theme` that any app can embed.
 
 ### Task 2.1: AIChat Component
-- [ ] Create `packages/ui-theme/src/components/shared/ai-chat.tsx`
+- [x] Create `packages/ui-theme/src/components/shared/ai-chat.tsx`
   - Props: `module: "admin" | "crm" | "billing" | "inventory"`, `apiBase?: string`
   - State: messages[], sessionId, input, loading
   - Auto-scroll to bottom on new messages
@@ -168,14 +168,14 @@
   - Loading skeleton while waiting for response
 
 ### Task 2.2: AIChat UI Layout
-- [ ] Chat header: module icon + title + session selector
-- [ ] Message list: user (right, brand), assistant (left, card), system (centered, muted)
-- [ ] Input area: textarea + send button, shift+enter newline
-- [ ] Suggestion chips on empty/new sessions
-- [ ] Empty state: module-specific welcome + suggestions
+- [x] Chat header: module icon + title + session selector
+- [x] Message list: user (right, brand), assistant (left, card), system (centered, muted)
+- [x] Input area: textarea + send button, shift+enter newline
+- [x] Suggestion chips on empty/new sessions
+- [x] Empty state: module-specific welcome + suggestions
 
 ### Task 2.3: Export from ui-theme
-- [ ] Export `AIChat` and types from `packages/ui-theme/src/index.ts`
+- [x] Export `AIChat` and types from `packages/ui-theme/src/index.ts`
 
 ---
 
@@ -184,18 +184,18 @@
 **Goal:** Add AI Assistant section at bottom of every sidebar.
 
 ### Task 3.1: Sidebar AI Section
-- [ ] `apps/erp-shell/components/Sidebar.tsx` — pinned bottom section, remove `soon: true`
-- [ ] `apps/crm-ui/components/Sidebar.tsx` — same pattern
-- [ ] `apps/billing-ui/components/Sidebar.tsx` — add section (currently missing)
-- [ ] `apps/inventory-ui/components/Sidebar.tsx` — add section (currently missing)
-- [ ] Visual separator (border-top) from main nav
-- [ ] Collapsed state: Sparkles icon only
+- [x] `apps/erp-shell/components/Sidebar.tsx` — pinned bottom section, remove `soon: true`
+- [x] `apps/crm-ui/components/Sidebar.tsx` — same pattern
+- [x] `apps/billing-ui/components/Sidebar.tsx` — add section (currently missing)
+- [x] `apps/inventory-ui/components/Sidebar.tsx` — add section (currently missing)
+- [x] Visual separator (border-top) from main nav
+- [x] Collapsed state: Sparkles icon only
 
 ### Task 3.2: AI Assistant Pages
-- [ ] `apps/erp-shell/app/(admin)/ai-assistant/page.tsx` → `<AIChat module="admin" />`
-- [ ] `apps/crm-ui/app/(admin)/ai-assistant/page.tsx` → `<AIChat module="crm" />`
-- [ ] `apps/billing-ui/app/(admin)/ai-assistant/page.tsx` → `<AIChat module="billing" />`
-- [ ] `apps/inventory-ui/app/(admin)/ai-assistant/page.tsx` → `<AIChat module="inventory" />`
+- [x] `apps/erp-shell/app/(admin)/ai-assistant/page.tsx` → `<AIChat module="admin" />`
+- [x] `apps/crm-ui/app/(admin)/ai-assistant/page.tsx` → `<AIChat module="crm" />`
+- [x] `apps/billing-ui/app/(admin)/ai-assistant/page.tsx` → `<AIChat module="billing" />`
+- [x] `apps/inventory-ui/app/(admin)/ai-assistant/page.tsx` → `<AIChat module="inventory" />`
 
 ---
 
@@ -204,20 +204,20 @@
 **Goal:** Make the AI aware of live data from each module.
 
 ### Task 4.1: CRM Context
-- [ ] Fetch: active customer count, pipeline value, top 5 open opps, recent leads, tier distribution
-- [ ] Source: ai-service calls crm-service `/api/customers`, `/api/leads`, `/api/opportunities`
+- [x] Fetch: active customer count, pipeline value, top 5 open opps, recent leads, tier distribution
+- [x] Source: ai-service calls crm-service `/api/customers`, `/api/leads`, `/api/opportunities`
 
 ### Task 4.2: Billing Context
-- [ ] Fetch: outstanding total, overdue count, recent payments, revenue trend, GST summary
-- [ ] Source: ai-service calls billing-service `/api/invoices`, `/api/payments/metrics`
+- [x] Fetch: outstanding total, overdue count, recent payments, revenue trend, GST summary
+- [x] Source: ai-service calls billing-service `/api/invoices`, `/api/payments/metrics`
 
 ### Task 4.3: Inventory Context
-- [ ] Fetch: product count, low-stock alerts, pending POs, warehouse summary, recent movements
-- [ ] Source: ai-service calls inventory-service `/api/stock`, `/api/purchase-orders`
+- [x] Fetch: product count, low-stock alerts, pending POs, warehouse summary, recent movements
+- [x] Source: ai-service calls inventory-service `/api/stock`, `/api/purchase-orders`
 
 ### Task 4.4: Admin Context
-- [ ] Fetch: user count, system health, recent activity
-- [ ] Source: ai-service calls core-iam + other services for aggregated KPIs
+- [x] Fetch: user count, system health, recent activity
+- [x] Source: ai-service calls core-iam + other services for aggregated KPIs
 
 ---
 
@@ -226,7 +226,7 @@
 ### Task 5.1: Conversation Memory
 - [ ] Load last N messages from session for context window
 - [ ] Summarize older messages to stay within token limits
-- [ ] Persistent sessions across page reloads
+- [x] Persistent sessions across page reloads
 
 ### Task 5.2: Smart Suggestions
 - [ ] Module-specific suggestion chips (static + dynamic based on context)
@@ -239,7 +239,7 @@
 
 ### Task 5.4: Rate Limiting & Security
 - [ ] Rate limit: 30 requests/minute per user
-- [ ] Sanitize input (strip HTML, limit 4000 chars)
+- [x] Sanitize input (strip HTML, limit 4000 chars)
 - [ ] Validate module against user permissions
 - [ ] Log all interactions for audit
 
@@ -249,12 +249,12 @@
 
 ### Task 6.1: Loading & Error States
 - [ ] Streaming response with typing indicator
-- [ ] Graceful errors (API key missing, LLM timeout, rate limit)
+- [x] Graceful errors (API key missing, LLM timeout, rate limit)
 - [ ] Retry button on failed messages
 
 ### Task 6.2: Mobile Responsive
 - [ ] Full-screen chat on mobile (<md)
-- [ ] Touch-friendly input and scroll
+- [x] Touch-friendly input and scroll
 
 ### Task 6.3: Accessibility
 - [ ] ARIA labels, keyboard navigation, screen reader support
@@ -381,14 +381,14 @@ Add to `nx.json` and root `package.json` workspaces:
 
 ## Success Criteria
 
-- [ ] User can open AI chat from any of 4 workstations
-- [ ] Chat context is module-aware (CRM data for CRM, billing for billing, etc.)
-- [ ] Sessions persist across page reloads (stored in erp_ai DB)
+- [x] User can open AI chat from any of 4 workstations
+- [x] Chat context is module-aware (CRM data for CRM, billing for billing, etc.)
+- [x] Sessions persist across page reloads (stored in erp_ai DB)
 - [ ] Responses grounded in actual data (not hallucinated)
 - [ ] Mobile-responsive chat UI
 - [ ] < 3s first-token latency
-- [ ] All 4 apps compile clean
-- [ ] ai-service has own DB (erp_ai), own Alembic chain, independent deployment
+- [x] All 4 apps compile clean
+- [x] ai-service has own DB (erp_ai), own Alembic chain, independent deployment
 
 ---
 
@@ -403,3 +403,66 @@ Add to `nx.json` and root `package.json` workspaces:
 | Phase 5: Advanced Features | 2–3 days | Phase 2 + 4 |
 | Phase 6: Polish | 1–2 days | All above |
 | **Total** | **8–12 days** | |
+
+---
+
+## Docker Infrastructure Audit — 2026-08-29
+
+**Scope:** Full audit of all Docker infrastructure (compose, Dockerfiles, env, build/seed scripts) across 10 services.
+
+### Issues Found & Fixed
+
+#### 1. Proxy Configuration — Root Cause of Build Failure ✅ FIXED
+**Problem:** `.env.docker` had `HTTP_PROXY=http://http.docker.internal:3128` uncommented. Docker Desktop's built-in proxy is unreliable for Docker builds — it causes TLS errors on Alpine CDN and connection-refused on Debian repos, preventing `dumb-init` and `openssl` from being installed.
+
+**Why previous builds worked:** Docker layer caching meant `apk add`/`apt-get` steps were never re-executed. `--no-cache` forced fresh downloads, which hit the broken proxy.
+
+**Fix:** Commented out proxy settings in `.env.docker` with clear documentation. Builds now use direct connections.
+
+**Files changed:** `infrastructure/local/.env.docker`
+
+#### 2. PYTHONPATH Missing from FastAPI Dockerfiles ✅ FIXED
+**Problem:** Only `ai-service/Dockerfile` had `PYTHONPATH` set. The other 3 FastAPI services (`erp-service`, `inventory-service`, `crm-service`) were missing it, which could cause Alembic to fail finding the `app` module during `alembic upgrade head`.
+
+**Fix:** Added `PYTHONPATH="/app/services/<service-name>"` to all 3 Dockerfiles.
+
+**Files changed:** `services/erp-service/Dockerfile`, `services/inventory-service/Dockerfile`, `services/crm-service/Dockerfile`
+
+#### 3. openssl Missing from erp-service Builder ✅ FIXED
+**Problem:** `erp-service/Dockerfile` didn't install `openssl` in the builder stage, unlike all other Python services. Some pip packages (like `cryptography`) need openssl headers to build.
+
+**Fix:** Added `apt-get install -y --no-install-recommends openssl` to erp-service's builder stage.
+
+**Files changed:** `services/erp-service/Dockerfile`
+
+#### 4. Missing `app/ai_assistant` Module in crm-service ✅ FIXED (prior session)
+**Problem:** CRM seed script imported `from app.ai_assistant.models import AIAssistantLog` but the module didn't exist, causing `ModuleNotFoundError`.
+
+**Fix:** Created `services/crm-service/app/ai_assistant/__init__.py` and `models.py` with the `AIAssistantLog` model matching the existing `ai_logs` table schema.
+
+**Files changed:** `services/crm-service/app/ai_assistant/__init__.py`, `services/crm-service/app/ai_assistant/models.py`, `services/crm-service/app/models.py`, `services/crm-service/scripts/seed.py`
+
+### Status of Other Items
+
+| Item | Status | Notes |
+|------|--------|-------|
+| `dumb-init` in Dockerfiles | ⚠️ Environment | Not a code issue — was proxy blocking Alpine CDN |
+| Frontend Dockerfile deduplication | 💡 Optimization | All 4 copy identical monorepo package.jsons |
+| Docker Bake file | 💡 Optimization | Could replace parallel compose builds |
+| Resource limits (mem/cpus) | 💡 Hardening | No limits set — one service could starve others |
+| Python version consistency | ⚠️ Note | erp/crm = 3.12, ai/inventory = 3.13 (intentional) |
+| NestJS services use `dumb-init` | ✅ OK | FastAPI doesn't need it (uvicorn handles signals) |
+
+### Files Changed in This Audit
+
+```
+infrastructure/local/.env.docker                    # Proxy commented out, documented
+services/erp-service/Dockerfile                      # +PYTHONPATH, +openssl builder
+services/inventory-service/Dockerfile                # +PYTHONPATH
+services/crm-service/Dockerfile                      # +PYTHONPATH
+services/crm-service/app/ai_assistant/__init__.py    # New module (created in prior session)
+services/crm-service/app/ai_assistant/models.py      # AIAssistantLog model (prior session)
+services/crm-service/app/models.py                   # Registered AIAssistantLog import (prior session)
+services/crm-service/scripts/seed.py                 # Fixed TRUNCATE + create_all (prior session)
+services/ai-service/alembic/env.py                   # Added settings import + URL override (prior session)
+```

@@ -1,5 +1,76 @@
 # DATAVEX ERP — Progress & Audit Report
 
+## Cross-App UI/UX Layout Unification — Complete (2026-08-29)
+
+Full visual consistency pass across all 4 frontend apps (`erp-shell`, `billing-ui`, `crm-ui`, `inventory-ui`) and the shared `@datavex/ui-theme` package. Every dashboard now follows an identical layout template; admin layouts, root layouts, sidebars, and loading states are standardized.
+
+### What Was Built/Fixed
+
+| Component | Changes |
+|-----------|--------|
+| `packages/ui-theme/src/components/shared/alert-banner.tsx` | **New** — shared `AlertBanner` component with accent/danger/warning variants |
+| `packages/ui-theme/src/globals.css` | Added custom select arrow styles, `pulse-sweep` animation, `prefers-reduced-motion` support |
+| `packages/ui-theme/src/index.ts` | Added `AlertBanner` export |
+| `apps/erp-shell/app/(admin)/dashboard/page.tsx` | Adopted `PageHeader`, `SectionHeading`, `AlertBanner` from ui-theme; replaced 7 inline section heading blocks |
+| `apps/erp-shell/app/(admin)/dashboard/loading.tsx` | Standardized to consistent section pattern with `space-y-10 lg:space-y-12` |
+| `apps/erp-shell/app/(admin)/layout.tsx` | Replaced raw `Loader2` with `LoadingSpinner` from ui-theme; standardized loading bg |
+| `apps/erp-shell/app/(admin)/billing/invoices/page.tsx` | Replaced local `SectionHeading` with shared; adopted `PageHeader`, `SearchInput`, `EmptyState`; fixed `space-y-8` → `space-y-10 lg:space-y-12`; standardized `TableHead` styling |
+| `apps/erp-shell/components/Sidebar.tsx` | Updated "Soon" badge from plain text to pill style matching crm-ui |
+| `apps/billing-ui/app/(admin)/dashboard/page.tsx` | Deleted local `KpiCard` + `SectionHeading` (~32 lines); adopted shared versions + `PageHeader` + `AlertBanner`; expanded KPI grid to 6-col |
+| `apps/billing-ui/app/(admin)/dashboard/loading.tsx` | Standardized to consistent section pattern |
+| `apps/billing-ui/app/(admin)/layout.tsx` | Replaced raw `Loader2` with `LoadingSpinner` |
+| `apps/crm-ui/app/(admin)/dashboard/page.tsx` | Adopted `PageHeader` + `AlertBanner`; expanded KPI grid to 6-col |
+| `apps/crm-ui/app/(admin)/dashboard/loading.tsx` | Standardized to consistent section pattern |
+| `apps/crm-ui/app/(admin)/layout.tsx` | Replaced raw `Loader2` with `LoadingSpinner`; added `ToastContainer` inside admin layout |
+| `apps/crm-ui/app/layout.tsx` | Removed `ToastContainer` from root layout (moved to admin layout) |
+| `apps/crm-ui/app/globals.css` | Removed duplicate select arrow styles (now in shared theme) |
+| `apps/inventory-ui/app/(admin)/dashboard/page.tsx` | Deleted local `KpiCard` + `SectionHeading` (~32 lines); adopted shared + `PageHeader` + `AlertBanner`; fixed `space-y-6` → `space-y-10 lg:space-y-12` |
+| `apps/inventory-ui/app/(admin)/dashboard/loading.tsx` | Standardized to consistent section pattern |
+| `apps/inventory-ui/app/(admin)/layout.tsx` | Replaced raw `Loader2` with `LoadingSpinner`; added `Toaster` inside admin layout |
+| `apps/inventory-ui/app/layout.tsx` | Removed `Toaster` from root layout (moved to admin layout) |
+
+### Canonical Dashboard Template
+
+All 4 dashboards now follow this identical layout skeleton:
+
+```
+PageHeader (greeting + subtitle + domain badge + actions)
+├── AlertBanner (conditional — only when alerts exist)
+├── OVERVIEW — SectionHeading + KpiCard × 6 (grid-cols-2 sm:grid-cols-3 lg:grid-cols-6)
+├── QUICK ACTIONS — SectionHeading + flex-wrap buttons
+├── ANALYTICS — SectionHeading + 2-col chart cards
+└── ACTIVITY — SectionHeading + 2-col data cards
+
+Spacing: space-y-10 lg:space-y-12
+```
+
+### Consistency Achieved
+
+| Pattern | Before | After |
+|---------|--------|-------|
+| Page headers | 3 hand-rolled patterns | All use `<PageHeader>` from ui-theme |
+| Section headings | 4 different implementations | All use `<SectionHeading>` from ui-theme |
+| KPI cards | 3 competing local clones | All use `<KpiCard>` from ui-theme |
+| Alert banners | 2 different token systems | All use `<AlertBanner>` from ui-theme |
+| Dashboard spacing | 3 different rhythms | All `space-y-10 lg:space-y-12` |
+| KPI grid columns | 4-col vs 6-col | All 6-col on `lg` |
+| Admin loading spinners | 4 different implementations | All use `<LoadingSpinner>` from ui-theme |
+| Loading state backgrounds | `bg-[var(--shell-header)]` vs `bg-background` | All `bg-background` |
+| Toast placement | Misplaced in root layouts | All in admin layouts only |
+| Sidebar "Soon" badges | Plain text vs pill badge | All pill style |
+| Select arrow styling | Only in crm-ui | Shared in ui-theme globals |
+| Reduced motion | Not supported | `prefers-reduced-motion` disables animations |
+| Table headers | Inconsistent styling | All `h-10 text-[11px] font-semibold uppercase tracking-wider` |
+| Card styling | Redundant explicit `border/bg` classes | Clean `<Card>` (primitive handles tokens) |
+
+### Remaining Work
+
+- ~80 non-dashboard pages (list pages, detail pages, forms, settings) across all 4 apps still need header/search/empty-state unification
+- Sidebar nav type alignment (billing-ui/inventory-ui to erp-shell's `NavSection > NavChild` pattern)
+- Active state precision (billing-ui/inventory-ui `isActive` function alignment)
+
+---
+
 ## File Upload/Storage Pipeline — Complete (2026-08-26)
 
 Full MinIO-backed presigned URL file system deployed across the stack. All 15 identified bugs fixed.
