@@ -48,3 +48,76 @@ export interface BalanceSheetItem {
   category: string;
   items: { label: string; amount: number }[];
 }
+
+// ─── Fiscal Periods ───
+
+export interface FiscalPeriod {
+  id: number;
+  name: string;
+  start_date: string;
+  end_date: string;
+  status: "open" | "closed";
+  closed_by: string | null;
+  closed_at: string | null;
+}
+
+// ─── Bank Reconciliation ───
+
+export interface BankTransaction {
+  id: number;
+  date: string;
+  reference: string;
+  description: string;
+  debit: number;
+  credit: number;
+  balance: number;
+  match_status: string;
+  ledger_entry_id: number | null;
+}
+
+export interface ReconciliationAuditLog {
+  id: number;
+  bank_transaction_id: number;
+  action: string;
+  performed_by: string;
+  details: string;
+  created_at: string;
+}
+
+// ─── Dunning ───
+
+export interface DunningRecord {
+  id: number;
+  invoice_id: number;
+  invoice_number: string;
+  client_name: string;
+  amount_due: number;
+  dunning_level: number;
+  last_sent: string;
+  next_action: string;
+  status: string;
+}
+
+// ─── AR Aging ───
+
+export interface AgingBucket {
+  label: string;
+  current: number;
+  days_30: number;
+  days_60: number;
+  days_90: number;
+  days_120_plus: number;
+  total: number;
+}
+
+// ─── Dashboard ───
+
+export interface AccountingDashboard {
+  total_revenue: number;
+  outstanding_receivables: number;
+  overdue_amount: number;
+  net_profit: number;
+  cash_balance: number;
+  recent_entries: LedgerEntry[];
+  monthly_trend: FinancialReport[];
+}

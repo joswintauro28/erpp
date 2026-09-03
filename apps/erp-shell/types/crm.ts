@@ -189,3 +189,64 @@ export interface CrmSummary {
   overdue_at_risk: number;
   owners: number;
 }
+
+// ─── Lead Discovery / Pinned Leads ───
+
+export interface PinnedLead {
+  company_name: string;
+  industry: string;
+  location: string;
+  website: string;
+  estimated_employees: string;
+  estimated_revenue: string;
+  company_overview: string;
+  ai_readiness_score: number;
+  detected_technologies: string[];
+  business_pain_points: string[];
+  recommended_ai_solutions: string[];
+  key_decision_makers: { name: string; title: string; email: string; phone: string; linkedin: string }[];
+  public_contact: { email: string; phone: string; address: string; linkedin: string };
+}
+
+export interface LeadDiscoveryResult {
+  company_name: string;
+  industry: string;
+  location: string;
+  website: string;
+  estimated_employees: string;
+  estimated_revenue: string;
+  company_overview: string;
+  ai_readiness_score: number;
+  detected_technologies: string[];
+  business_pain_points: string[];
+  recommended_ai_solutions: string[];
+  key_decision_makers: { name: string; title: string }[];
+  public_contact: { email: string; phone: string; address: string; linkedin: string };
+}
+
+export interface LeadDiscoverySearchResponse {
+  search: { city: string; industry: string; company_name: string };
+  companies: LeadDiscoveryResult[];
+}
+
+// ─── Contact ───
+
+export interface CrmContactCreate {
+  name: string;
+  role: string;
+  account: string;
+  email: string;
+  phone: string;
+  type: string;
+  owner: string;
+}
+
+// ─── Customer ───
+
+export interface CrmCustomerCreate {
+  account: string;
+  industry: string;
+  tier: string;
+  arr: number;
+  status: string;
+}

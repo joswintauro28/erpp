@@ -1,76 +1,119 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
-import { Search, ArrowUpDown, AlertTriangle } from "lucide-react";
-import { api } from "@/services/api";
-import { handleError } from "@datavex/ui-theme";
-import { Card, CardContent } from "@/components/ui/card";
+import { useEffect, useState, useCallback, useMemo } from "react";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { BookOpen, AlertTriangle, Plus, Loader2, Search, Pencil } from "lucide-react";
+import { api } from "@/services/api";
+import { handleError, PageHeader } from "@datavex/ui-theme";
 import { money } from "@/utils/format";
-import { LoadingSpinner } from "@/components/shared/loading-spinner";
-import type { LedgerEntry } from "@/types/accounting";
+import type { LedgerEntryView, AccountEntry } from "@/types/billing";
 import GeneralLedgerLoading from "./loading";
 
-export default function GeneralLedger() {
-  const [ledger, setLedger] = useState<LedgerEntry[]>([]);
-  const [search, setSearch] = useState("");
-  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+export default function LedgerPage() {
+  const [entries, setEntries] = useState<LedgerEntryView[]>([]);
+  const [accounts, setAccounts] = useState<AccountEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [search, setSearch] = useState("");
+  const [journalOpen, setJournalOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [editId, setEditId] = useState<number | null>(null);
+  const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const d = await api.get<{ ledger: LedgerEntry[] }>("/ledger");
-        setLedger(d.ledger);
-      } catch {
-        setError("Failed to load ledger entries");
-      } finally {
-        setLoading(false);
-      }
+  const [formAccountId, setFormAccountId] = useState("");
+  const [formDebit, setFormDebit] = useState("");
+  const [formCredit, setFormCredit] = useState("");
+  const [formDesc, setFormDesc] = useState("");
+  const [formDate, setFormDate] = useState("");
+
+  const load = useCallback(async () => {
+    try {
+      const [ledgerData, accData] = await Promise.all([
+        api.get<{ ledger: LedgerEntryView[] }>("/ledger"),
+        api.get<{ accounts: AccountEntry[] }>("/accounts"),
+      ]);
+      setEntries(ledgerData.ledger);
+      setAccounts(accData.accounts);
+    } catch {
+      setError("Failed to load data");
+    } finally {
+      setLoading(false);
     }
-    fetchData();
   }, []);
 
-  const filtered = useMemo(() => {
-    if (!search.trim()) return ledger;
-    const q = search.toLowerCase();
-    return ledger.filter(
-      (e) =>
-        e.account_name.toLowerCase().includes(q) ||
-        e.description.toLowerCase().includes(q) ||
-        e.voucher_number.toLowerCase().includes(q) ||
-        e.voucher_type.toLowerCase().includes(q)
-    );
-  }, [search]);
+  useEffect(() => { load(); }, [load]);
 
-  const sorted = useMemo(() => {
-    return [...filtered].sort((a, b) => {
-      const cmp = a.date.localeCompare(b.date);
-      return sortDir === "desc" ? -cmp : cmp;
-    });
-  }, [filtered, sortDir]);
+  const handleCreateJournal = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      await api.post("/ledger", {
+        account_id: Number(formAccountId),
+        debit: Number(formDebit) || 0,
+        credit: Number(formCredit) || 0,
+        description: formDesc || "Manual journal entry",
+        entry_date: formDate || undefined,
+      });
+      setJournalOpen(false);
+      setFormAccountId(""); setFormDebit(""); setFormCredit(""); setFormDesc(""); setFormDate("");
+      load();
+    } catch (err) { handleError(err); } finally { setSaving(false); }
+  };
 
-  const totalDebit = sorted.reduce((s, e) => s + e.debit, 0);
-  const totalCredit = sorted.reduce((s, e) => s + e.credit, 0);
+  const handleEditClick = (entry: LedgerEntryView) => {
+    setEditId(entry.id);
+    setFormAccountId(String(entry.account_code));
+    setFormDebit(String(entry.debit > 0 ? entry.debit : ""));
+    setFormCredit(String(entry.credit > 0 ? entry.credit : ""));
+    setFormDesc(entry.description);
+    setFormDate(entry.entry_date);
+    setEditOpen(true);
+  };
+
+  const handleUpdateEntry = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (editId === null) return;
+    setSaving(true);
+    try {
+      await api.put(`/ledger/${editId}`, {
+        account_id: Number(formAccountId),
+        debit: Number(formDebit) || 0,
+        credit: Number(formCredit) || 0,
+        description: formDesc || "Updated journal entry",
+        entry_date: formDate || undefined,
+      });
+      setEditOpen(false);
+      setEditId(null);
+      setFormAccountId(""); setFormDebit(""); setFormCredit(""); setFormDesc(""); setFormDate("");
+      load();
+    } catch (err) { handleError(err); } finally { setSaving(false); }
+  };
 
   if (loading) return <GeneralLedgerLoading />;
 
+  const q = search.toLowerCase();
+  const filtered = q
+    ? entries.filter((e) =>
+        e.account_name.toLowerCase().includes(q) ||
+        e.description.toLowerCase().includes(q) ||
+        (e.reference_type ?? "").toLowerCase().includes(q) ||
+        e.entry_date.includes(q))
+    : entries;
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="font-heading text-xl font-semibold tracking-tight text-[var(--shell-foreground)]">
-            General Ledger
-          </h1>
-          <p className="mt-0.5 text-sm text-[var(--shell-muted)]">
-            View all journal entries across accounts
-          </p>
-        </div>
-      </div>
+      <PageHeader
+        title="General Ledger"
+        subtitle="View account transactions and balances"
+        actions={<Button onClick={() => setJournalOpen(true)}><Plus className="h-4 w-4" /> Manual Journal</Button>}
+      />
 
       {error && (
         <div className="flex items-center gap-3 rounded-xl border border-destructive/30 bg-destructive/10 px-5 py-3.5">
@@ -79,73 +122,151 @@ export default function GeneralLedger() {
         </div>
       )}
 
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="relative flex-1 max-w-xs">
-          <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--shell-muted)]" />
-          <Input
-            placeholder="Search entries..."
-            className="pl-8"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setSortDir(sortDir === "desc" ? "asc" : "desc")}
-        >
-          <ArrowUpDown className="mr-1.5 h-3 w-3" />
-          {sortDir === "desc" ? "Newest First" : "Oldest First"}
-        </Button>
+      <div className="relative max-w-xs">
+        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          placeholder="Search ledger entries..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="pl-9"
+        />
       </div>
 
       <Card>
-        <CardContent className="p-0">
+        <CardHeader>
+          <CardTitle>Ledger Entries</CardTitle>
+          <CardDescription>{filtered.length} of {entries.length} entries</CardDescription>
+        </CardHeader>
+        <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-24">Date</TableHead>
+                <TableHead>Date</TableHead>
                 <TableHead>Account</TableHead>
-                <TableHead className="max-w-xs">Description</TableHead>
-                <TableHead>Voucher</TableHead>
+                <TableHead>Description</TableHead>
                 <TableHead className="text-right">Debit</TableHead>
                 <TableHead className="text-right">Credit</TableHead>
-                <TableHead className="text-right">Balance</TableHead>
+                <TableHead>Reference</TableHead>
+                <TableHead className="text-right">Action</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {sorted.map((e) => (
+              {filtered.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                    <div className="flex flex-col items-center gap-2">
+                      <BookOpen className="h-8 w-8 text-muted-foreground/50" />
+                      <p>{entries.length === 0 ? "No ledger entries yet" : "No entries match your search"}</p>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : filtered.map((e) => (
                 <TableRow key={e.id}>
-                  <TableCell className="font-mono text-xs text-[var(--shell-muted)]">{e.date}</TableCell>
-                  <TableCell className="text-sm font-medium">{e.account_name}</TableCell>
-                  <TableCell className="text-xs text-[var(--shell-muted)] max-w-xs truncate">{e.description}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className="font-mono text-xs">
-                      {e.voucher_type}
-                    </Badge>
-                    <span className="ml-1.5 font-mono text-xs text-[var(--shell-muted)]">{e.voucher_number}</span>
+                  <TableCell className="text-xs">{e.entry_date}</TableCell>
+                  <TableCell className="text-xs font-medium">{e.account_name}</TableCell>
+                  <TableCell className="text-xs text-muted-foreground">{e.description}</TableCell>
+                  <TableCell className="text-right font-mono text-xs text-destructive">{e.debit > 0 ? money(e.debit) : "-"}</TableCell>
+                  <TableCell className="text-right font-mono text-xs text-[var(--shell-success)]">{e.credit > 0 ? money(e.credit) : "-"}</TableCell>
+                  <TableCell className="text-xs text-muted-foreground">{e.reference_type ? `${e.reference_type}#${e.reference_id}` : "-"}</TableCell>
+                  <TableCell className="text-right">
+                    <Button variant="ghost" size="icon-sm" onClick={() => handleEditClick(e)} title="Edit">
+                      <Pencil className="h-3.5 w-3.5" />
+                    </Button>
                   </TableCell>
-                  <TableCell className="font-mono text-sm text-right text-[var(--shell-success)]">
-                    {e.debit > 0 ? money(e.debit) : "-"}
-                  </TableCell>
-                  <TableCell className="font-mono text-sm text-right text-[var(--shell-action)]">
-                    {e.credit > 0 ? money(e.credit) : "-"}
-                  </TableCell>
-                  <TableCell className="font-mono text-sm text-right">{money(e.balance)}</TableCell>
                 </TableRow>
               ))}
-              <TableRow className="border-t-2 border-[var(--shell-border)] font-semibold">
-                <TableCell colSpan={4} className="text-right text-sm text-[var(--shell-muted)]">
-                  Totals ({filtered.length} entries)
-                </TableCell>
-                <TableCell className="font-mono text-sm text-right text-[var(--shell-success)]">{money(totalDebit)}</TableCell>
-                <TableCell className="font-mono text-sm text-right text-[var(--shell-action)]">{money(totalCredit)}</TableCell>
-                <TableCell />
-              </TableRow>
             </TableBody>
           </Table>
         </CardContent>
       </Card>
+
+      <Dialog open={journalOpen} onOpenChange={setJournalOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Manual Journal Entry</DialogTitle></DialogHeader>
+          <form className="space-y-5" onSubmit={handleCreateJournal}>
+            <div className="space-y-2">
+              <Label htmlFor="jl-account">Account</Label>
+              <Select value={formAccountId} onValueChange={(v) => v !== null && setFormAccountId(v)}>
+                <SelectTrigger id="jl-account"><SelectValue placeholder="Select account" /></SelectTrigger>
+                <SelectContent>
+                  {accounts.map((a) => (
+                    <SelectItem key={a.id} value={String(a.id)}>{a.code} — {a.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="jl-debit">Debit (₹)</Label>
+                <Input id="jl-debit" type="number" min={0} step={0.01} placeholder="0.00" value={formDebit} onChange={(e) => setFormDebit(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="jl-credit">Credit (₹)</Label>
+                <Input id="jl-credit" type="number" min={0} step={0.01} placeholder="0.00" value={formCredit} onChange={(e) => setFormCredit(e.target.value)} />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="jl-desc">Description</Label>
+              <Textarea id="jl-desc" rows={2} placeholder="Journal entry description" value={formDesc} onChange={(e) => setFormDesc(e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="jl-date">Date</Label>
+              <Input id="jl-date" type="date" value={formDate} onChange={(e) => setFormDate(e.target.value)} />
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" size="sm" onClick={() => setJournalOpen(false)}>Cancel</Button>
+              <Button type="submit" size="sm" disabled={saving || !formAccountId || (!formDebit && !formCredit)}>
+                {saving && <Loader2 className="mr-1 h-4 w-4 animate-spin" />}
+                Create Entry
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Edit Journal Entry</DialogTitle></DialogHeader>
+          <form className="space-y-5" onSubmit={handleUpdateEntry}>
+            <div className="space-y-2">
+              <Label htmlFor="jl-edit-account">Account</Label>
+              <Select value={formAccountId} onValueChange={(v) => v !== null && setFormAccountId(v)}>
+                <SelectTrigger id="jl-edit-account"><SelectValue placeholder="Select account" /></SelectTrigger>
+                <SelectContent>
+                  {accounts.map((a) => (
+                    <SelectItem key={a.id} value={String(a.id)}>{a.code} — {a.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="jl-edit-debit">Debit (₹)</Label>
+                <Input id="jl-edit-debit" type="number" min={0} step={0.01} placeholder="0.00" value={formDebit} onChange={(e) => setFormDebit(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="jl-edit-credit">Credit (₹)</Label>
+                <Input id="jl-edit-credit" type="number" min={0} step={0.01} placeholder="0.00" value={formCredit} onChange={(e) => setFormCredit(e.target.value)} />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="jl-edit-desc">Description</Label>
+              <Textarea id="jl-edit-desc" rows={2} placeholder="Journal entry description" value={formDesc} onChange={(e) => setFormDesc(e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="jl-edit-date">Date</Label>
+              <Input id="jl-edit-date" type="date" value={formDate} onChange={(e) => setFormDate(e.target.value)} />
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" size="sm" onClick={() => setEditOpen(false)}>Cancel</Button>
+              <Button type="submit" size="sm" disabled={saving || !formAccountId || (!formDebit && !formCredit)}>
+                {saving && <Loader2 className="mr-1 h-4 w-4 animate-spin" />}
+                Update Entry
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

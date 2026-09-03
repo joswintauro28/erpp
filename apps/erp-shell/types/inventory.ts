@@ -145,3 +145,64 @@ export interface ApiFulfillment {
   updated_at: string;
   items: ApiFulfillmentItem[];
 }
+
+// ─── Work Orders ───
+
+export interface ApiWorkOrder {
+  id: number;
+  organization_id: number;
+  order_number: string;
+  product_id: number;
+  product_name?: string;
+  warehouse_id: number | null;
+  warehouse_name?: string;
+  quantity: number;
+  completed_quantity: number;
+  status: string;
+  priority: string;
+  notes: string | null;
+  scheduled_start: string | null;
+  scheduled_end: string | null;
+  actual_start: string | null;
+  actual_end: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+// ─── Quality Checks ───
+
+export interface ApiQualityCheck {
+  id: number;
+  organization_id: number;
+  product_id: number;
+  product_name?: string;
+  warehouse_id: number | null;
+  warehouse_name?: string;
+  serial_number: string | null;
+  batch_number: string | null;
+  check_type: string;
+  result: string;
+  inspector: string | null;
+  notes: string | null;
+  created_at: string;
+}
+
+// ─── Purchase Requisitions ───
+
+export interface ApiPurchaseRequisition {
+  id: number;
+  organization_id: number;
+  requisition_number: string;
+  product_id: number;
+  product_name?: string;
+  warehouse_id: number | null;
+  warehouse_name?: string;
+  quantity: number;
+  urgency: string;
+  status: string;
+  requested_by: string | null;
+  approved_by: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}

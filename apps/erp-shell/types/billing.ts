@@ -181,3 +181,77 @@ export interface ApiClientRef {
   id: number;
   name: string;
 }
+
+// ─── Payment Metrics ───
+
+export interface PaymentMetrics {
+  total_received: number;
+  total_pending: number;
+  total_refunded: number;
+  total_failed: number;
+  avg_processing_days: number;
+  daily_trend: { date: string; amount: number }[];
+}
+
+// ─── Dashboard KPIs ───
+
+export interface BillingDashboard {
+  total_revenue: number;
+  outstanding: number;
+  overdue: number;
+  total_invoices: number;
+  paid_count: number;
+  pending_count: number;
+  overdue_count: number;
+  payment_metrics: PaymentMetrics;
+  recent_invoices: InvoiceListView[];
+  revenue_trend: { month: string; revenue: number }[];
+}
+
+// ─── Recurring Invoice Template ───
+
+export interface RecurringInvoiceTemplate {
+  id: number;
+  template_name: string;
+  client_id: number;
+  client_name: string;
+  frequency: "weekly" | "monthly" | "quarterly" | "yearly";
+  next_run: string;
+  last_generated: string | null;
+  auto_email: boolean;
+  status: "active" | "paused";
+  items: { description: string; quantity: number; unit_price: number; gst_rate: number }[];
+  total: number;
+}
+
+// ─── Ledger / General Ledger ───
+
+export interface LedgerEntryView {
+  id: number;
+  date: string;
+  entry_date: string;
+  account_id: number;
+  account_code: string;
+  account_name: string;
+  description: string;
+  voucher_type: string;
+  voucher_number: string;
+  debit: number;
+  credit: number;
+  balance: number;
+  reference: string | null;
+  reference_type: string | null;
+  reference_id: number | null;
+  created_at: string;
+}
+
+export interface AccountEntry {
+  id: number;
+  code: string;
+  name: string;
+  type: string;
+  group: string;
+  opening_balance: number;
+  current_balance: number;
+  is_active: boolean;
+}
