@@ -30,8 +30,24 @@ class Settings(BaseSettings):
     )
 
     # Rate limiting
-    AI_RATE_LIMIT: str = "30/minute"
+    AI_RATE_LIMIT: int = 30  # requests per minute per user
+    AI_RATE_WINDOW: int = 60  # window in seconds
+
+    # Input limits
     MAX_INPUT_LENGTH: int = 4000
+
+    # Conversation memory
+    CONTEXT_WINDOW_MESSAGES: int = 20  # max messages to load for LLM context
+    CONTEXT_TOKEN_BUDGET: int = 6000  # approximate token budget for conversation history
+    SUMMARIZE_OLDER_THAN: int = 15  # summarize messages older than this count
+
+    # Module permissions — maps module to required permission codes
+    MODULE_PERMISSIONS: dict = {
+        "admin": [],  # no extra permission needed for admin view
+        "crm": ["crm:read"],
+        "billing": ["billing:read"],
+        "inventory": ["inventory:read"],
+    }
 
 
 settings = Settings()

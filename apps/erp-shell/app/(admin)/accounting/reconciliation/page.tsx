@@ -286,7 +286,7 @@ export default function ReconciliationPage() {
                   {filteredTransactions.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={7} className="text-center py-10 text-sm text-[var(--shell-muted)]">
-                        No transactions found. Click "Import Statement" to upload CSV or XLSX statements.
+                        No transactions found. Click &quot;Import Statement&quot; to upload CSV or XLSX statements.
                       </TableCell>
                     </TableRow>
                   ) : filteredTransactions.map((tx) => (

@@ -6,7 +6,7 @@ This backend service manages the sales pipeline: leads, opportunities, requireme
 
 ## 1. Tech Stack
 - **Framework:** FastAPI (Python 3.13+)
-- **Database ORM:** SQLAlchemy 2.0 (Sync engine via `create_engine` + `SessionLocal`)
+- **Database ORM:** SQLAlchemy 2.0 (AsyncSession via `postgresql+asyncpg`)
 - **Database Target:** `erp_crm` (PostgreSQL)
 - **Port:** 8001
 

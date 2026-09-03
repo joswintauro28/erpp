@@ -17,7 +17,7 @@ import {
 import { SearchInput } from "@/components/shared/search-input";
 import { EmptyState } from "@/components/shared/empty-state";
 import { api } from "@/services/api";
-import { handleError } from "@datavex/ui-theme";
+import { PageHeader, handleError } from "@datavex/ui-theme";
 import { money, formatDate, quotationStatusVariant as statusVariant } from "@/utils/format";
 import { useAuth } from "@/contexts/AuthContext";
 import type { Quotation } from "@/types/billing";
@@ -93,14 +93,12 @@ export default function Quotations() {
   if (loading) return <QuotationsLoading />;
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="font-heading text-xl font-semibold tracking-tight text-[var(--shell-foreground)]">Quotations</h1>
-          <p className="mt-0.5 text-sm text-[var(--shell-muted)]">Create and manage client quotations</p>
-        </div>
-        {canCreate && <Button aria-label="Create Quotation" onClick={() => router.push("/billing/quotations/new")}><Plus className="h-4 w-4" /> New Quotation</Button>}
-      </div>
+    <div className="space-y-10 lg:space-y-12">
+      <PageHeader
+        title="Quotations"
+        subtitle="Create and manage client quotations"
+        actions={canCreate ? <Button aria-label="Create Quotation" onClick={() => router.push("/billing/quotations/new")}><Plus className="h-4 w-4" /> New Quotation</Button> : undefined}
+      />
 
       <div className="flex flex-wrap items-center gap-3">
         <SearchInput value={search} onChange={setSearch} placeholder="Search quotations..." className="flex-1 max-w-xs" />

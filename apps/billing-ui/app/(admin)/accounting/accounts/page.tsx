@@ -13,7 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { LoadingSpinner } from "@/components/shared/loading-spinner";
 import { Receipt, AlertTriangle, Plus, Loader2, Search } from "lucide-react";
 import { api } from "@/services/api";
-import { handleError } from "@datavex/ui-theme";
+import { handleError, PageHeader } from "@datavex/ui-theme";
 import { money } from "@/utils/format";
 import type { AccountEntry } from "@/types/billing";
 import ChartOfAccountsLoading from "./loading";
@@ -70,13 +70,11 @@ export default function AccountsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold text-foreground">Chart of Accounts</h1>
-          <p className="text-sm text-muted-foreground mt-1">Manage your accounting accounts</p>
-        </div>
-        <Button onClick={() => setCreateOpen(true)}><Plus className="h-4 w-4" /> Create Account</Button>
-      </div>
+      <PageHeader
+        title="Chart of Accounts"
+        subtitle="Manage your accounting accounts"
+        actions={<Button onClick={() => setCreateOpen(true)}><Plus className="h-4 w-4" /> Create Account</Button>}
+      />
 
       {error && (
         <div className="flex items-center gap-3 rounded-xl border border-destructive/30 bg-destructive/10 px-5 py-3.5">

@@ -14,7 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { SearchInput } from "@/components/shared/search-input";
 import { EmptyState } from "@/components/shared/empty-state";
 import { api } from "@/services/api";
-import { handleError } from "@datavex/ui-theme";
+import { PageHeader, handleError } from "@datavex/ui-theme";
 import { useToast } from "@/contexts/ToastContext";
 import { money, noteStatusVariant as statusVariant } from "@/utils/format";
 import type { DebitNote } from "@/types/billing";
@@ -102,14 +102,12 @@ export default function DebitNotes() {
   if (loading) return <DebitNotesLoading />;
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="font-heading text-xl font-semibold tracking-tight text-[var(--shell-foreground)]">Debit Notes</h1>
-          <p className="mt-0.5 text-sm text-[var(--shell-muted)]">Manage debit notes issued to clients</p>
-        </div>
-        <Button aria-label="Create Debit Note" onClick={() => setCreateOpen(true)}><Plus className="h-4 w-4" /> Create Debit Note</Button>
-      </div>
+    <div className="space-y-10 lg:space-y-12">
+      <PageHeader
+        title="Debit Notes"
+        subtitle="Manage debit notes issued to clients"
+        actions={<Button aria-label="Create Debit Note" onClick={() => setCreateOpen(true)}><Plus className="h-4 w-4" /> Create Debit Note</Button>}
+      />
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <Card><CardContent className="flex items-center gap-3 px-4 py-3">

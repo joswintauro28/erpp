@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from collections.abc import AsyncIterator
 
 
 class LLMProvider(ABC):
@@ -7,6 +8,11 @@ class LLMProvider(ABC):
     @abstractmethod
     async def chat(self, messages: list[dict], model: str | None = None) -> str:
         """Send messages to LLM and return the assistant response text."""
+        ...
+
+    @abstractmethod
+    async def chat_stream(self, messages: list[dict], model: str | None = None) -> AsyncIterator[str]:
+        """Send messages to LLM and yield response chunks for streaming."""
         ...
 
     @abstractmethod

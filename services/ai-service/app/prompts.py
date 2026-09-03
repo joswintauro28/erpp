@@ -1,4 +1,4 @@
-"""System prompt templates for each module context."""
+"""System prompt templates and dynamic suggestion builder for each module context."""
 
 
 def _base_prompt() -> str:
@@ -14,6 +14,8 @@ def _base_prompt() -> str:
         "- Never suggest destructive actions (deleting records, etc.).\n"
         "- Redirect users to the appropriate UI page for mutations (create/update/delete).\n"
         "- Keep responses focused and actionable.\n"
+        "- When referencing specific records (invoices, products, leads), include their identifiers "
+        "(invoice number, SKU, etc.) so the user can find them in the UI.\n"
     )
 
 
@@ -93,3 +95,73 @@ MODULE_SUGGESTIONS = {
         "What's the fulfillment pipeline status?",
     ],
 }
+
+
+def build_dynamic_suggestions(module: str, context_data: dict | None) -> list[dict]:
+    """Build context-aware dynamic suggestions based on live data.
+    
+    Returns list of dicts: {"text": str, "icon": str, "category": str}
+    """
+    suggestions = []
+
+    if not context_data:
+        return [{"text": t, "icon": "💡", "category": "general"} for t in MODULE_SUGGESTIONS.get(module, [])]
+
+    if module == "crm":
+        total_customers = context_data.get("total_customers", 0)
+        total_leads = context_data.get("total_leads", 0)
+        if total_leads > 0:
+            suggestions.append({"text": f"Show me all {total_leads} leads and their status", "icon": "👥", "category": "insight"})
+        if total_customers > 0:
+            suggestions.append({"text": f"Which of our {total_customers} customers need attention?", "icon": "🏢", "category": "insight"})
+        suggestions.extend([
+            {"text": "Draft a follow-up email for the top lead", "icon": "✉️", "category": "action"},
+            {"text": "What's our lead conversion rate?", "icon": "📊", "category": "insight"},
+        ])
+
+    elif module == "billing":
+        total_invoices = context_data.get("total_invoices", 0)
+        if total_invoices > 0:
+            suggestions.append({"text": f"Analyze all {total_invoices} invoices by status", "icon": "📄", "category": "insight"})
+        payment_metrics = context_data.get("payment_metrics", {})
+        if isinstance(payment_metrics, dict):
+            outstanding = payment_metrics.get("totalOutstanding", 0)
+            if outstanding and outstanding > 0:
+                suggestions.append({"text": f"How can we reduce ₹{outstanding:,.0f} outstanding?", "icon": "💰", "category": "action"})
+        suggestions.extend([
+            {"text": "Generate a payment reminder for overdue invoices", "icon": "⏰", "category": "action"},
+            {"text": "Show me this month's revenue breakdown", "icon": "📊", "category": "insight"},
+        ])
+
+    elif module == "inventory":
+        total_products = context_data.get("total_products", 0)
+        low_stock = context_data.get("low_stock_count", 0)
+        if low_stock > 0:
+            suggestions.append({"text": f"Which {low_stock} products are critically low on stock?", "icon": "⚠️", "category": "insight"})
+            suggestions.append({"text": f"Auto-generate POs for the {low_stock} low-stock items", "icon": "🛒", "category": "action"})
+        if total_products > 0:
+            suggestions.append({"text": f"Show me a summary of all {total_products} products by category", "icon": "📦", "category": "insight"})
+        suggestions.extend([
+            {"text": "What's the fastest-moving product this week?", "icon": "🚀", "category": "insight"},
+            {"text": "Review pending purchase orders", "icon": "📋", "category": "follow_up"},
+        ])
+
+    elif module == "admin":
+        customers = context_data.get("total_customers", 0)
+        invoices = context_data.get("total_invoices", 0)
+        products = context_data.get("total_products", 0)
+        low_stock = context_data.get("low_stock_items", 0)
+        suggestions.append({"text": f"System overview: {customers} customers, {invoices} invoices, {products} products", "icon": "📊", "category": "insight"})
+        if low_stock > 0:
+            suggestions.append({"text": f"Alert: {low_stock} products need restocking", "icon": "⚠️", "category": "insight"})
+        outstanding = context_data.get("outstanding_amount", 0)
+        if outstanding and outstanding > 0:
+            suggestions.append({"text": f"Collect ₹{outstanding:,.0f} outstanding payments", "icon": "💰", "category": "action"})
+        suggestions.append({"text": "What are the top 3 priorities across all modules?", "icon": "🎯", "category": "insight"})
+
+    # If no dynamic suggestions generated, fall back to static
+    if not suggestions:
+        suggestions = [{"text": t, "icon": "💡", "category": "general"} for t in MODULE_SUGGESTIONS.get(module, [])]
+
+    # Always cap at 6 suggestions
+    return suggestions[:6]

@@ -5,7 +5,7 @@ import cookieParser from 'cookie-parser';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  
+
   // Set global API prefix
   app.setGlobalPrefix('api');
 
@@ -25,13 +25,18 @@ async function bootstrap() {
     : [];
 
   app.enableCors({
-    origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+    origin: (
+      origin: string | undefined,
+      callback: (err: Error | null, allow?: boolean) => void,
+    ) => {
       if (!origin) {
         callback(null, true);
       } else if (corsOrigins.includes(origin)) {
         callback(null, true);
-      } else if (origin.match(/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/) ||
-                 corsOrigins.some((o) => origin === o)) {
+      } else if (
+        origin.match(/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/) ||
+        corsOrigins.some((o) => origin === o)
+      ) {
         callback(null, true);
       } else {
         callback(new Error('Not allowed by CORS'));

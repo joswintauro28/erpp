@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AlertTriangle, Loader2, Lock, Unlock, Calendar } from "lucide-react";
 import { api } from "@/services/api";
-import { handleError } from "@datavex/ui-theme";
+import { handleError, PageHeader } from "@datavex/ui-theme";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -70,10 +70,10 @@ export default function PeriodsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold text-foreground">Fiscal Periods</h1>
-        <p className="text-sm text-muted-foreground mt-1">Manage month-end close process</p>
-      </div>
+      <PageHeader
+        title="Fiscal Periods"
+        subtitle="Manage month-end close process"
+      />
 
       {error && (
         <div className="flex items-center gap-3 rounded-xl border border-destructive/30 bg-destructive/10 px-5 py-3.5">

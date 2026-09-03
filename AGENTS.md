@@ -21,7 +21,8 @@ DATAVEX/ERP/ (Root)
 │   ├── crm-service/                       # FastAPI (Python 3.13+, port 8001) — CRM / Sales Pipeline Engine
 │   ├── core-iam/                          # NestJS (Prisma, port 8002) — Central SSO & RBAC Engine
 │   ├── billing-service/                   # NestJS (Prisma, port 8003) — Invoices, Payments, Quotations, Ledger
-│   └── inventory-service/                 # FastAPI (Python 3.13+, port 8004) — Product Catalog, Warehouses, Stock, Suppliers, POs, Serial Tracking
+│   ├── inventory-service/                 # FastAPI (Python 3.13+, port 8004) — Product Catalog, Warehouses, Stock, Suppliers, POs, Serial Tracking
+│   └── ai-service/                        # FastAPI (Python 3.13+, port 8005) — AI Chat, Session Management, LLM Integration
 │
 ├── packages/                              # CENTRAL SHAREABLE PACKAGES
 │   ├── auth-middleware/                   # Shared JWT auth types, API client, token management
@@ -252,7 +253,7 @@ DATAVEX ERP utilizes a decoupled backend architecture where each business domain
 ### 3.5 CRM Service ([services/crm-service](services/crm-service/AGENTS.md)) — Port 8001
 
 - **Framework:** FastAPI (Python 3.13+)
-- **Database ORM:** SQLAlchemy 2.0 (sync, via `create_engine` + `SessionLocal`)
+- **Database ORM:** SQLAlchemy 2.0 (AsyncSession via `postgresql+asyncpg`)
 - **Database Target:** `erp_crm` (PostgreSQL)
 - **Claims-Based Verification:** JWT payload decoded from shared `JWT_SECRET` — no DB queries for auth. Uses `get_current_token_payload` / `get_current_user_id` dependencies.
 - **Auth Pattern:** Token-verification only — no login endpoints, no credential handling. All authentication delegated to core-iam (port 8002).
@@ -275,6 +276,45 @@ All endpoints require `Authorization: Bearer <jwt>` header and validate via shar
 
 ---
 
+### 3.6 AI Service ([services/ai-service](services/ai-service/AGENTS.md)) — Port 8005
+
+- **Framework:** FastAPI (Python 3.13+)
+- **Database ORM:** SQLAlchemy 2.0 (AsyncSession via `postgresql+asyncpg`)
+- **Migrations:** Alembic (own chain, independent deployment)
+- **Database Target:** `erp_ai` (PostgreSQL)
+- **Claims-Based Verification:** JWT payload decoded from shared `JWT_SECRET` — no DB queries for auth.
+- **LLM Provider:** Pluggable — Groq (`httpx` REST calls, default) or Gemini (`google-genai` SDK)
+- **Streaming:** Server-Sent Events (SSE) for real-time chat responses
+
+**Models (3):** AISession (UUID, user_id, module enum, title), AIMessage (role, content, token_count), AIAuditLog (action, details). All models use `user_id` for data isolation.
+
+**Modules & Endpoints**
+
+| Module | Endpoints | Key Features |
+|--------|-----------|-------------|
+| **Chat** | `POST /api/ai/chat` | Send message, receive SSE-streamed response with context |
+| **Sessions** | `GET /api/ai/sessions`, `DELETE /api/ai/sessions/:id` | Session management with module-aware context |
+| **History** | `GET /api/ai/history/:id` | Session message history |
+| **Suggestions** | `GET /api/ai/suggestions` | Module-aware prompt suggestions |
+| **Health** | `GET /api/ai/health` | LLM provider health check |
+| **Dashboard** | `GET /api/ai/dashboard` | Usage analytics and audit logs |
+
+**Context Providers (call other services for live data):**
+- `crm_client.py` → `http://crm-service:8001/api` (customers, leads)
+- `billing_client.py` → `http://billing-service:8003/api` (invoices, payments)
+- `inventory_client.py` → `http://inventory-service:8004/api` (stock, purchase orders)
+
+**Frontend Integration:** All 4 frontend apps route `/api/ai/*` → ai-service (port 8005) via their `proxy.ts`. Shared `<AIChat>` component in `@datavex/ui-theme`.
+
+**Required Environment Variables:**
+```bash
+AI_PROVIDER=groq              # "groq" or "gemini"
+GROQ_API_KEY=gsk_xxxxx        # Required if AI_PROVIDER=groq
+GEMINI_API_KEY=xxxxx          # Required if AI_PROVIDER=gemini
+```
+
+---
+
 ## 4. Shared Packages
 
 ### `packages/auth-middleware` ([AGENTS.md](packages/auth-middleware/AGENTS.md))
@@ -289,7 +329,8 @@ All endpoints require `Authorization: Bearer <jwt>` header and validate via shar
 - **Tailwind CSS v4 Configuration:** `components.json` handles Shadcn CLI setups.
 - **Imports & Resolution:** tsconfig maps `@/*` → `./src/*` inside the package.
 - **Styles:** `src/globals.css` defines all theme tokens via CSS custom properties, mapped to Tailwind via `@theme inline`. Includes `kpi-enter` and `step-in` animations.
-- **Exported components (11):** badge, button, card, dialog, input, label, progress, select, spinner, table, textarea.
+- **Exported components (12):** badge, button, card, dialog, input, label, progress, select, spinner, table, textarea.
+- **Shared components:** ai-chat, empty-state, page-header, search-input, section-heading, status-filter.
 - **Utility:** `cn()` via clsx + tailwind-merge.
 
 ---
@@ -314,12 +355,13 @@ All backend services share the same JWT secret (`JWT_SECRET`) to validate tokens
 - **billing-service** (`.env`): `JWT_SECRET="development-jwt-secret-key-123"`
 - **erp-service** (`config.py` default): `JWT_SECRET: str = "development-jwt-secret-key-123"`
 - **inventory-service** (`config.py` default): `JWT_SECRET: str = "development-jwt-secret-key-123"`
+- **ai-service** (`config.py` default): `JWT_SECRET: str = "development-jwt-secret-key-123"`
 
-> **IMPORTANT:** All four values must match. If core-iam issues tokens with a different secret than a backend service uses to verify, all requests will fail with 401 Unauthorized.
+> **IMPORTANT:** All five values must match. If core-iam issues tokens with a different secret than a backend service uses to verify, all requests will fail with 401 Unauthorized.
 
 ### Run Development Servers
 
-> **⚠️ Known Issue:** `bun nx run-many --target=dev` starts **all 9 services in parallel** (4 Next.js + 5 backends), which can overwhelm system resources and cause Turbopack to hang ("Compiling / ..." forever). Use the selective commands below instead.
+> **⚠️ Known Issue:** `bun nx run-many --target=dev` starts **all 10 services in parallel** (4 Next.js + 6 backends), which can overwhelm system resources and cause Turbopack to hang ("Compiling / ..." forever). Use the selective commands below instead.
 
 | Command | Description |
 |---------|-------------|
@@ -334,6 +376,7 @@ All backend services share the same JWT secret (`JWT_SECRET`) to validate tokens
 | `bun nx run billing-service:dev` | NestJS billing (port 8003) |
 | `bun nx run erp-service:dev` | FastAPI backend (port 8000) — uses custom `run.ps1` |
 | `cd services/erp-service && .\run.ps1` | FastAPI backend alternative startup |
+| `bun nx run ai-service:dev` | AI Service FastAPI (port 8005) |
 
 ### Database Operations
 
@@ -344,6 +387,13 @@ $env:PYTHONPATH="."
 .venv\Scripts\alembic upgrade head      # Apply migrations
 .venv\Scripts\python scripts/reset_db.py # Drop all tables
 .venv\Scripts\python scripts/seed.py     # Seed 241 rows of business data
+```
+
+#### FastAPI AI DB (`services/ai-service`)
+```powershell
+cd services/ai-service
+$env:PYTHONPATH="."
+.venv\Scripts\alembic upgrade head      # Apply migrations
 ```
 
 #### NestJS IAM DB (`services/core-iam`)
@@ -384,6 +434,7 @@ All FastAPI microservices expose interactive OpenAPI 3.0 documentation with buil
 | **ERP Gateway Service** (`erp-service` — 8000) | `http://localhost:8000/docs` | `http://localhost:8000/redoc` | `http://localhost:8000/openapi.json` |
 | **CRM Service** (`crm-service` — 8001) | `http://localhost:8001/docs` | `http://localhost:8001/redoc` | `http://localhost:8001/openapi.json` |
 | **Inventory Service** (`inventory-service` — 8004) | `http://localhost:8004/docs` | `http://localhost:8004/redoc` | `http://localhost:8004/openapi.json` |
+| **AI Service** (`ai-service` — 8005) | `http://localhost:8005/docs` | `http://localhost:8005/redoc` | `http://localhost:8005/openapi.json` |
 
 > **Security Note:** `SecurityHeadersMiddleware` in `erp-service` automatically excludes `/docs`, `/redoc`, and `/openapi.json` from restrictive `Content-Security-Policy` headers to ensure Swagger CDN assets render smoothly.
 
@@ -399,6 +450,7 @@ The application contains a production-optimized local Docker sandbox configured 
 - **Python Isolation & Auto-Migrations**: FastAPI backends run in virtualenvs (`/opt/venv`), run under non-root permissions, and perform Alembic db migrations (`alembic upgrade head`) automatically on startup.
 - **MinIO Object Storage**: S3-compatible object storage for file uploads. `minio` init container auto-creates buckets (`crm-assets`, `inv-docs`, `finance-records`, `erp-backups`) on first start. erp-service is the only service with MinIO client access.
 - **Consolidated Healthchecks**: All containers run custom, lightweight healthchecks (via Node `http` or Python `urllib`) to track container status inside Compose.
+- **AI Service Integration**: AI chat (SSE streaming) runs through ai-service with Groq/Gemini LLM providers. All 4 frontends proxy `/api/ai/*` to ai-service. Nginx configured with `proxy_buffering off` for streaming.
 - **Sequential Boot Sequence**: Standardized `depends_on: condition: service_healthy` triggers ensure Postgres starts first, followed by database migrations, services, frontends, and finally Nginx.
 
 ### Operational Commands:
@@ -434,4 +486,5 @@ The application contains a production-optimized local Docker sandbox configured 
 1. **[docs/SETUP_GUIDE.md](docs/SETUP_GUIDE.md):** Step-by-step walkthrough on environment setup, local configurations, and active login accounts.
 2. **[docs/PROJECT.md](docs/PROJECT.md):** SSO architecture, database allotment strategy, and Zero-Trust subdomains structure.
 3. **[docs/FUTURE_PLAN.md](docs/FUTURE_PLAN.md):** Local sandboxing, VM deployment architectures (Caddy + RDS), and horizontal container scaling roadmaps.
+4. **[TODO.md](TODO.md):** AI chatbot implementation plan and progress tracker.
 4. **[apps/erp-shell/PROGRESS.md](apps/erp-shell/PROGRESS.md):** Status tracker for erp-shell frontend routes, pages, and design iterations.

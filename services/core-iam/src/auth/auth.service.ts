@@ -1,4 +1,10 @@
-import { Injectable, UnauthorizedException, ConflictException, NotFoundException, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  ConflictException,
+  NotFoundException,
+  Logger,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
@@ -27,7 +33,9 @@ export class AuthService {
     });
 
     if (!user) {
-      throw new UnauthorizedException('No account found with this email address');
+      throw new UnauthorizedException(
+        'No account found with this email address',
+      );
     }
 
     if (!user.isActive) {
@@ -35,13 +43,18 @@ export class AuthService {
     }
 
     if (user.lockedUntil && user.lockedUntil > new Date()) {
-      throw new UnauthorizedException('Account is temporarily locked due to too many failed attempts. Please try again later.');
+      throw new UnauthorizedException(
+        'Account is temporarily locked due to too many failed attempts. Please try again later.',
+      );
     }
 
     const isMatch = await bcrypt.compare(pass, user.passwordHash);
     if (!isMatch) {
       const lockThreshold = this.configService.get<number>('LOCK_THRESHOLD', 5);
-      const lockDurationMinutes = this.configService.get<number>('LOCK_DURATION_MINUTES', 15);
+      const lockDurationMinutes = this.configService.get<number>(
+        'LOCK_DURATION_MINUTES',
+        15,
+      );
 
       // M1 fix: atomic increment via Prisma to prevent lost-update races
       const [updatedUser] = await this.prisma.$queryRaw<
@@ -58,7 +71,8 @@ export class AuthService {
         RETURNING failed_login_attempts
       `;
 
-      const newAttempts = updatedUser?.failedLoginAttempts ?? user.failedLoginAttempts + 1;
+      const newAttempts =
+        updatedUser?.failedLoginAttempts ?? user.failedLoginAttempts + 1;
 
       throw new UnauthorizedException('Incorrect password');
     }
@@ -107,9 +121,10 @@ export class AuthService {
     const orgId = membership?.organizationId || null;
     const orgName = membership?.organization?.name || null;
     const roleName = membership?.role?.name || null;
-    
+
     // Extract permission codes
-    const permissions = membership?.role?.rolePermissions.map(rp => rp.permission.code) || [];
+    const permissions =
+      membership?.role?.rolePermissions.map((rp) => rp.permission.code) || [];
 
     return {
       user_id: userId,
@@ -121,9 +136,14 @@ export class AuthService {
     };
   }
 
-  async login(userId: number, email: string, userAgent?: string, ipAddress?: string) {
+  async login(
+    userId: number,
+    email: string,
+    userAgent?: string,
+    ipAddress?: string,
+  ) {
     const accessPayload = await this.generateAccessPayload(userId);
-    
+
     const accessToken = this.jwtService.sign(
       {
         sub: String(userId),
@@ -140,7 +160,10 @@ export class AuthService {
     // Generate refresh token
     const rawRefreshToken = crypto.randomBytes(40).toString('hex');
     const tokenHash = this.computeTokenHash(rawRefreshToken);
-    const refreshExpiresSeconds = this.configService.get<number>('REFRESH_TOKEN_EXPIRE_SECONDS', 604800);
+    const refreshExpiresSeconds = this.configService.get<number>(
+      'REFRESH_TOKEN_EXPIRE_SECONDS',
+      604800,
+    );
     const expiresAt = new Date(Date.now() + refreshExpiresSeconds * 1000);
 
     // Save refresh token to DB
@@ -168,7 +191,9 @@ export class AuthService {
     });
 
     if (existing) {
-      this.logger.warn(`Registration failed. User already exists: ${dto.email}`);
+      this.logger.warn(
+        `Registration failed. User already exists: ${dto.email}`,
+      );
       throw new ConflictException('A user with this email already exists');
     }
 
@@ -193,12 +218,14 @@ export class AuthService {
       });
 
       if (!role) {
-        throw new ConflictException(`Role '${requestedRole}' not found in system database`);
+        throw new ConflictException(
+          `Role '${requestedRole}' not found in system database`,
+        );
       }
 
       // Only create Organization, Memberships, and Settings for Admin / Owner roles
       const isAdminRole = requestedRole === 'Organization Owner';
-      
+
       if (isAdminRole) {
         // 1. Create Organization
         const org = await tx.organization.create({
@@ -254,12 +281,18 @@ export class AuthService {
         });
       }
 
-      this.logger.log(`Successfully registered user: ${user.email} as ${requestedRole}`);
+      this.logger.log(
+        `Successfully registered user: ${user.email} as ${requestedRole}`,
+      );
       return user;
     });
   }
 
-  async refreshAccessToken(rawRefreshToken: string, userAgent?: string, ipAddress?: string) {
+  async refreshAccessToken(
+    rawRefreshToken: string,
+    userAgent?: string,
+    ipAddress?: string,
+  ) {
     const tokenHash = this.computeTokenHash(rawRefreshToken);
 
     const tokenRecord = await this.prisma.refreshToken.findFirst({
@@ -303,7 +336,10 @@ export class AuthService {
     // Issue new refresh token
     const rawNewRefreshToken = crypto.randomBytes(40).toString('hex');
     const newTokenHash = this.computeTokenHash(rawNewRefreshToken);
-    const refreshExpiresSeconds = this.configService.get<number>('REFRESH_TOKEN_EXPIRE_SECONDS', 604800);
+    const refreshExpiresSeconds = this.configService.get<number>(
+      'REFRESH_TOKEN_EXPIRE_SECONDS',
+      604800,
+    );
     const expiresAt = new Date(Date.now() + refreshExpiresSeconds * 1000);
 
     await this.prisma.refreshToken.create({
@@ -324,7 +360,7 @@ export class AuthService {
 
   async revokeRefreshToken(rawRefreshToken: string) {
     const tokenHash = this.computeTokenHash(rawRefreshToken);
-    
+
     await this.prisma.refreshToken.updateMany({
       where: { tokenHash },
       data: { revoked: true },
@@ -384,14 +420,28 @@ export class AuthService {
       email: m.user.email,
       role: m.role?.name || 'User',
       role_id: m.role?.id || null,
-      status: !m.user.isActive ? 'disabled' as const : m.status === 'invited' ? 'invited' as const : 'active' as const,
+      status: !m.user.isActive
+        ? ('disabled' as const)
+        : m.status === 'invited'
+          ? ('invited' as const)
+          : ('active' as const),
       department: m.role?.description || 'Corporate',
-      permissions: (m.role?.rolePermissions || []).map((rp) => rp.permission.code),
+      permissions: (m.role?.rolePermissions || []).map(
+        (rp) => rp.permission.code,
+      ),
       last_active: m.user.lastLogin ? m.user.lastLogin.toISOString() : '',
     }));
   }
 
-  async inviteUserToOrganization(orgId: number, data: { email: string; fullName: string; roleId: number; password?: string }) {
+  async inviteUserToOrganization(
+    orgId: number,
+    data: {
+      email: string;
+      fullName: string;
+      roleId: number;
+      password?: string;
+    },
+  ) {
     let user = await this.prisma.user.findUnique({
       where: { email: data.email },
     });
@@ -404,7 +454,9 @@ export class AuthService {
         },
       });
       if (existingMember) {
-        throw new ConflictException('User is already a member of this organization');
+        throw new ConflictException(
+          'User is already a member of this organization',
+        );
       }
     } else {
       const defaultPassword = data.password || 'User@123!';
@@ -449,12 +501,18 @@ export class AuthService {
       role_id: member.role?.id || null,
       status: 'active' as const,
       department: member.role?.description || 'Corporate',
-      permissions: (member.role?.rolePermissions || []).map((rp) => rp.permission.code),
+      permissions: (member.role?.rolePermissions || []).map(
+        (rp) => rp.permission.code,
+      ),
       last_active: '',
     };
   }
 
-  async toggleUserStatus(orgId: number, targetUserId: number, isActive: boolean) {
+  async toggleUserStatus(
+    orgId: number,
+    targetUserId: number,
+    isActive: boolean,
+  ) {
     const member = await this.prisma.organizationMember.findFirst({
       where: {
         organizationId: orgId,
@@ -545,10 +603,7 @@ export class AuthService {
 
   async listAllPermissions() {
     return this.prisma.permission.findMany({
-      orderBy: [
-        { module: 'asc' },
-        { code: 'asc' },
-      ],
+      orderBy: [{ module: 'asc' }, { code: 'asc' }],
     });
   }
 

@@ -1,25 +1,30 @@
-import { 
-  Controller, 
-  Post, 
-  Body, 
-  Get, 
-  Req, 
-  Res, 
-  Headers, 
-  UnauthorizedException, 
-  HttpCode, 
+import {
+  Controller,
+  Post,
+  Body,
+  Get,
+  Req,
+  Res,
+  Headers,
+  UnauthorizedException,
+  HttpCode,
   HttpStatus,
   UseGuards,
   Put,
   Delete,
-  Param
+  Param,
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import type { Request, Response } from 'express';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
-import { InviteUserDto, UpdateUserRoleDto, UpdateUserStatusDto, UpdateRolePermissionsDto } from './dto/team.dto';
+import {
+  InviteUserDto,
+  UpdateUserRoleDto,
+  UpdateUserStatusDto,
+  UpdateRolePermissionsDto,
+} from './dto/team.dto';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { PermissionsGuard } from './guards/permissions.guard';
@@ -34,9 +39,12 @@ export class AuthController {
   ) {}
 
   private setRefreshTokenCookie(res: Response, token: string) {
-    const expireSeconds = this.configService.get<number>('REFRESH_TOKEN_EXPIRE_SECONDS', 604800);
+    const expireSeconds = this.configService.get<number>(
+      'REFRESH_TOKEN_EXPIRE_SECONDS',
+      604800,
+    );
     const domain = this.configService.get<string>('COOKIE_DOMAIN');
-    
+
     res.cookie('refresh_token', token, {
       httpOnly: true,
       secure: false, // Local dev: set secure to false
@@ -66,18 +74,29 @@ export class AuthController {
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const user = await this.authService.validateUser(loginDto.email, loginDto.password);
-    
+    const user = await this.authService.validateUser(
+      loginDto.email,
+      loginDto.password,
+    );
+
     const userAgent = req.headers['user-agent'];
     const ipAddress = req.ip;
 
-    const result = await this.authService.login(user.id, user.email, userAgent, ipAddress);
-    
+    const result = await this.authService.login(
+      user.id,
+      user.email,
+      userAgent,
+      ipAddress,
+    );
+
     this.setRefreshTokenCookie(res, result.refreshToken);
 
     return {
       access_token: result.accessToken,
-      expires_in: this.configService.get<number>('ACCESS_TOKEN_EXPIRE_SECONDS', 900),
+      expires_in: this.configService.get<number>(
+        'ACCESS_TOKEN_EXPIRE_SECONDS',
+        900,
+      ),
       user_id: result.userId,
     };
   }
@@ -89,17 +108,25 @@ export class AuthController {
     @Res({ passthrough: true }) res: Response,
   ) {
     const user = await this.authService.register(registerDto);
-    
+
     const userAgent = req.headers['user-agent'];
     const ipAddress = req.ip;
 
-    const result = await this.authService.login(user.id, user.email, userAgent, ipAddress);
-    
+    const result = await this.authService.login(
+      user.id,
+      user.email,
+      userAgent,
+      ipAddress,
+    );
+
     this.setRefreshTokenCookie(res, result.refreshToken);
 
     return {
       access_token: result.accessToken,
-      expires_in: this.configService.get<number>('ACCESS_TOKEN_EXPIRE_SECONDS', 900),
+      expires_in: this.configService.get<number>(
+        'ACCESS_TOKEN_EXPIRE_SECONDS',
+        900,
+      ),
       user_id: result.userId,
     };
   }
@@ -119,11 +146,18 @@ export class AuthController {
     const ipAddress = req.ip;
 
     try {
-      const result = await this.authService.refreshAccessToken(refreshToken, userAgent, ipAddress);
+      const result = await this.authService.refreshAccessToken(
+        refreshToken,
+        userAgent,
+        ipAddress,
+      );
       this.setRefreshTokenCookie(res, result.refreshToken);
       return {
         access_token: result.accessToken,
-        expires_in: this.configService.get<number>('ACCESS_TOKEN_EXPIRE_SECONDS', 900),
+        expires_in: this.configService.get<number>(
+          'ACCESS_TOKEN_EXPIRE_SECONDS',
+          900,
+        ),
       };
     } catch (err) {
       this.clearRefreshTokenCookie(res);
@@ -133,10 +167,7 @@ export class AuthController {
 
   @Post('logout')
   @HttpCode(HttpStatus.OK)
-  async logout(
-    @Req() req: Request,
-    @Res({ passthrough: true }) res: Response,
-  ) {
+  async logout(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
     const refreshToken = req.cookies['refresh_token'];
     if (refreshToken) {
       await this.authService.revokeRefreshToken(refreshToken);
@@ -165,7 +196,7 @@ export class AuthController {
   @Permissions('users:manage')
   async inviteUser(
     @Req() req: Request & { user: any },
-    @Body() body: InviteUserDto
+    @Body() body: InviteUserDto,
   ) {
     const orgId = Number(req.user.organization_id);
     return this.authService.inviteUserToOrganization(orgId, body);
@@ -177,7 +208,7 @@ export class AuthController {
   async toggleStatus(
     @Req() req: Request & { user: any },
     @Param('id') id: string,
-    @Body() body: UpdateUserStatusDto
+    @Body() body: UpdateUserStatusDto,
   ) {
     const orgId = Number(req.user.organization_id);
     return this.authService.toggleUserStatus(orgId, Number(id), body.isActive);
@@ -189,7 +220,7 @@ export class AuthController {
   async updateRole(
     @Req() req: Request & { user: any },
     @Param('id') id: string,
-    @Body() body: UpdateUserRoleDto
+    @Body() body: UpdateUserRoleDto,
   ) {
     const orgId = Number(req.user.organization_id);
     return this.authService.updateUserRole(orgId, Number(id), body.roleId);
@@ -200,7 +231,7 @@ export class AuthController {
   @Permissions('users:manage')
   async deleteUser(
     @Req() req: Request & { user: any },
-    @Param('id') id: string
+    @Param('id') id: string,
   ) {
     const orgId = Number(req.user.organization_id);
     return this.authService.deleteUserFromOrganization(orgId, Number(id));
@@ -225,8 +256,11 @@ export class AuthController {
   @Permissions('roles:manage')
   async updateRolePermissions(
     @Param('id') id: string,
-    @Body() body: UpdateRolePermissionsDto
+    @Body() body: UpdateRolePermissionsDto,
   ) {
-    return this.authService.updateRolePermissions(Number(id), body.permissionIds);
+    return this.authService.updateRolePermissions(
+      Number(id),
+      body.permissionIds,
+    );
   }
 }

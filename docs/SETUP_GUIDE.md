@@ -35,7 +35,7 @@ cd ERP
 Running via Docker Compose isolates all PostgreSQL database schemas, routes traffic through Nginx, and compiles Next.js standalone targets automatically.
 
 ### Step 1: Pre-requisites
-Ensure you have **Docker Desktop** (Windows/macOS) or **Docker Engine** (Linux) running, and that ports **80** (nginx), **5432** (PostgreSQL), and **3000-3004**, **8000-8004** (services) are available — stop any local dev servers or other containers using them.
+Ensure you have **Docker Desktop** (Windows/macOS) or **Docker Engine** (Linux) running, and that ports **80** (nginx), **5432** (PostgreSQL), and **3000-3004**, **8000-8005** (services) are available — stop any local dev servers or other containers using them.
 
 ### Step 2: Prepare Environment File
 The Docker stack requires a `.env.docker` file in `infrastructure/local/`. Copy the example if it doesn't exist:
@@ -73,7 +73,7 @@ A convenience script combines Step 2, Step 3, and Dockerfile verification into a
   ```
 
 ### Step 5: Spin Up the Stack
-Use the docker helper script to build and launch all 11 services:
+Use the docker helper script to build and launch all 16 services:
 
 * **Windows (PowerShell):**
   ```powershell
@@ -111,7 +111,7 @@ Verify that all containers are healthy and running:
 ./infrastructure/local/docker-build.sh ps
 ```
 
-All 11 containers should show a running status. If any show "unhealthy", wait a moment and re-run `docker-build.ps1 ps` — some services (especially frontends with Turbopack) may need extra startup time.
+All 16 containers should show a running status. If any show "unhealthy", wait a moment and re-run `docker-build.ps1 ps` — some services (especially frontends with Turbopack) may need extra startup time.
 
 ### Step 8: Verify Login
 Open `http://app.erp.local` (or `http://localhost:3000` if hosts not configured) and log in with the seeded admin credentials:
@@ -320,7 +320,34 @@ Configure each module sequentially. Configure environment properties (`.env`), s
 
 ---
 
-### 6. Frontend Workstations (Next.js Apps)
+### 6. services/ai-service (FastAPI AI Chat)
+1. **Navigate & Setup `.env`**:
+   ```bash
+   cd ../ai-service
+   # Copy example environment:
+   cp .env.example .env
+   # Ensure DATABASE_URL is set to: postgresql+asyncpg://postgres:root@localhost:5432/erp_ai
+   # Set AI_PROVIDER=groq and provide GROQ_API_KEY (or set GEMINI_API_KEY for Gemini)
+   ```
+2. **Configure Virtual Environment & Dependencies**:
+   ```bash
+   python -m venv .venv
+   # Windows:
+   .venv\Scripts\Activate.ps1
+   # Linux/macOS:
+   source .venv/bin/activate
+
+   pip install --upgrade pip
+   pip install -r requirements.txt
+   ```
+3. **Run Migrations**:
+   ```bash
+   PYTHONPATH=. alembic upgrade head
+   ```
+
+---
+
+### 7. Frontend Workstations (Next.js Apps)
 Navigate to each workstation and ensure environment configs match target API layers:
 * `apps/erp-shell/.env` &rarr; points to API gateway `http://localhost:8000`
 * `apps/crm-shell/.env` &rarr; points to port `3001`

@@ -28,7 +28,7 @@ import {
   Filter,
 } from "lucide-react";
 import { api } from "@/services/api";
-import { handleError } from "@datavex/ui-theme";
+import { handleError, PageHeader } from "@datavex/ui-theme";
 import { money } from "@/utils/format";
 
 
@@ -167,45 +167,40 @@ export default function AgingWorkstationPage() {
   return (
     <div className="space-y-6">
       {/* Header & Controls */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
-            Accounts Receivable Aging Workstation
-            <Badge variant="outline" className="text-xs font-mono">v2.0 ERP</Badge>
-          </h1>
-          <p className="text-sm text-muted-foreground mt-0.5">
-            Enterprise AR Aging analysis, customer balances, GL reconciliation & audit timeline
-          </p>
-        </div>
+      <PageHeader
+        title="Accounts Receivable Aging Workstation"
+        subtitle="Enterprise AR Aging analysis, customer balances, GL reconciliation & audit timeline"
+        badge="v2.0 ERP"
+        actions={
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="flex items-center gap-1.5 rounded-lg border bg-background px-3 py-1.5 shadow-sm">
+              <Clock className="h-4 w-4 text-muted-foreground" />
+              <span className="text-xs font-medium text-muted-foreground">As-Of Date:</span>
+              <input
+                type="date"
+                value={asOfDate}
+                onChange={(e) => setAsOfDate(e.target.value)}
+                className="bg-transparent text-xs font-semibold focus:outline-none"
+              />
+            </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="flex items-center gap-1.5 rounded-lg border bg-background px-3 py-1.5 shadow-sm">
-            <Clock className="h-4 w-4 text-muted-foreground" />
-            <span className="text-xs font-medium text-muted-foreground">As-Of Date:</span>
-            <input
-              type="date"
-              value={asOfDate}
-              onChange={(e) => setAsOfDate(e.target.value)}
-              className="bg-transparent text-xs font-semibold focus:outline-none"
-            />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleExport(activeTab === "reconciliation" ? "summary" : activeTab)}
+              disabled={exporting}
+              className="flex items-center gap-1.5 text-xs"
+            >
+              {exporting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
+              Export CSV
+            </Button>
+
+            <Button variant="ghost" size="sm" onClick={loadAll} className="h-8 w-8 p-0">
+              <RefreshCw className="h-4 w-4" />
+            </Button>
           </div>
-
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => handleExport(activeTab === "reconciliation" ? "summary" : activeTab)}
-            disabled={exporting}
-            className="flex items-center gap-1.5 text-xs"
-          >
-            {exporting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
-            Export CSV
-          </Button>
-
-          <Button variant="ghost" size="sm" onClick={loadAll} className="h-8 w-8 p-0">
-            <RefreshCw className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
+        }
+      />
 
       {/* Reconciliation Status Banner */}
       <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border p-4 shadow-sm ${isReconciled ? "border-[var(--shell-success)]/30 bg-[var(--shell-success-surface)]/50 " : "border-[var(--shell-warning)]/30 bg-[var(--shell-warning-surface)]/50 "}`}>

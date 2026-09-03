@@ -27,7 +27,7 @@ import {
 } from "lucide-react";
 import { api } from "@/services/api";
 import { money } from "@/utils/format";
-import { FileUpload, type FileRecord } from "@datavex/ui-theme";
+import { FileUpload, type FileRecord, PageHeader } from "@datavex/ui-theme";
 
 export default function ReconciliationPage() {
   const [activeTab, setActiveTab] = useState<"transactions" | "settings" | "variance" | "audit">("transactions");
@@ -238,21 +238,20 @@ export default function ReconciliationPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b pb-5">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">Bank Reconciliation Hub</h1>
-          <p className="text-sm text-muted-foreground mt-1">Normalize bank statements, execute auto-matching and manual resolutions with complete compliance audit trails.</p>
-        </div>
-        <div className="flex gap-2">
-          <Button size="sm" variant="outline" className="gap-1.5" onClick={() => load()}>
-            <RefreshCw className="h-4 w-4" /> Reload
-          </Button>
-          <Button size="sm" className="gap-1.5 bg-[var(--shell-brand)] text-white hover:bg-[var(--shell-action)]" onClick={() => setImportOpen(true)}>
-            <Upload className="h-4 w-4" /> Import Statement
-          </Button>
-        </div>
-      </div>
+      <PageHeader
+        title="Bank Reconciliation Hub"
+        subtitle="Normalize bank statements, execute auto-matching and manual resolutions with complete compliance audit trails."
+        actions={
+          <div className="flex gap-2">
+            <Button size="sm" variant="outline" className="gap-1.5" onClick={() => load()}>
+              <RefreshCw className="h-4 w-4" /> Reload
+            </Button>
+            <Button size="sm" className="gap-1.5 bg-[var(--shell-brand)] text-white hover:bg-[var(--shell-action)]" onClick={() => setImportOpen(true)}>
+              <Upload className="h-4 w-4" /> Import Statement
+            </Button>
+          </div>
+        }
+      />
 
       {/* Alert Notices */}
       {error && (
@@ -379,7 +378,7 @@ export default function ReconciliationPage() {
                   {filteredTransactions.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={7} className="text-center py-10 text-sm text-muted-foreground">
-                        No transactions found. Click "Import Statement" to upload CSV or XLSX statements.
+                        No transactions found. Click &quot;Import Statement&quot; to upload CSV or XLSX statements.
                       </TableCell>
                     </TableRow>
                   ) : (

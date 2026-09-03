@@ -20,6 +20,8 @@ This directory contains the CRM Workstation / Sales Hub of the DATAVEX ERP syste
 
 ## 3. Proxy Routing (`proxy.ts`)
 - `/api/auth/*` → core-iam (`http://localhost:8002`)
+- `/api/ai/*` → ai-service (`http://localhost:8005`, preserves `/api` prefix)
+- `/api/files/*` → erp-service (`http://localhost:8000`, preserves `/api` prefix)
 - All other `/api/*` → crm-service (`http://localhost:8001`)
 
 ## 4. Document ID Contract

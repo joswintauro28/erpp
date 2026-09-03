@@ -63,7 +63,6 @@ export default function QualityChecksPage() {
 
   useEffect(() => {
     fetchData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [statusFilter]);
 
   const handleRecord = async () => {

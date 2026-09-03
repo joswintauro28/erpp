@@ -23,6 +23,8 @@ This directory contains the main Executive / Super Admin Shell of the DATAVEX ER
 - **API Service (`services/api.ts`):** Re-exports API clients from `@datavex/auth-middleware`.
 - **Gateway Proxy (`proxy.ts` / Next.js middleware):**
   - `/api/auth/*` → core-iam (`http://localhost:8002`, preserving `/api` prefix)
+  - `/api/ai/*` → ai-service (`http://localhost:8005`, preserving `/api` prefix)
+  - `/api/files/*` → erp-service (`http://localhost:8000`, preserving `/api` prefix)
   - All other `/api/*` (products, warehouses, stock, suppliers, purchase-orders, purchase-requisitions, serial-numbers, quality-checks, fulfillment, work-orders, invoices, payments, CRM, dashboard) → erp-service (`http://localhost:8000`, stripping `/api` prefix) acting as the central API Gateway and Aggregator.
 
 ## 3. Dashboard Architecture

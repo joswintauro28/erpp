@@ -44,6 +44,10 @@ class AISession(Base):
         back_populates="session", cascade="all, delete-orphan", order_by="AIMessage.created_at"
     )
 
+    audit_logs: Mapped[list["AIAuditLog"]] = relationship(
+        back_populates="session", cascade="all, delete-orphan"
+    )
+
     __table_args__ = (
         sa.Index("ix_ai_sessions_user_module", "user_id", "module"),
     )
@@ -60,8 +64,40 @@ class AIMessage(Base):
     )
     role: Mapped[str] = mapped_column(sa.String(20), nullable=False)
     content: Mapped[str] = mapped_column(sa.Text, nullable=False)
+    token_count: Mapped[int | None] = mapped_column(sa.Integer, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         sa.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
     )
 
     session: Mapped["AISession"] = relationship(back_populates="messages")
+
+
+class AIAuditLog(Base):
+    """Audit trail for all AI interactions — compliance, analytics, abuse detection."""
+    __tablename__ = "ai_audit_log"
+
+    id: Mapped[int] = mapped_column(sa.BigInteger, primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(sa.Integer, nullable=False, index=True)
+    organization_id: Mapped[int] = mapped_column(sa.Integer, nullable=False, index=True)
+    session_id: Mapped[str | None] = mapped_column(
+        sa.String(36), sa.ForeignKey("ai_sessions.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    module: Mapped[str] = mapped_column(sa.String(20), nullable=False, index=True)
+    action: Mapped[str] = mapped_column(sa.String(50), nullable=False, index=True)
+    # action = "chat" | "stream" | "suggestions" | "history" | "delete_session"
+    input_tokens: Mapped[int] = mapped_column(sa.Integer, nullable=False, default=0)
+    output_tokens: Mapped[int] = mapped_column(sa.Integer, nullable=False, default=0)
+    response_time_ms: Mapped[int] = mapped_column(sa.Integer, nullable=False, default=0)
+    success: Mapped[bool] = mapped_column(sa.Boolean, nullable=False, default=True)
+    error_message: Mapped[str | None] = mapped_column(sa.Text, nullable=True)
+    user_message_preview: Mapped[str | None] = mapped_column(sa.String(200), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        sa.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+    )
+
+    session: Mapped["AISession | None"] = relationship(back_populates="audit_logs")
+
+    __table_args__ = (
+        sa.Index("ix_ai_audit_user_module", "user_id", "module"),
+        sa.Index("ix_ai_audit_created", "created_at"),
+    )

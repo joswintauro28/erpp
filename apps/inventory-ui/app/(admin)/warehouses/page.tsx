@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { api } from "@/services/api";
-import { handleError } from "@datavex/ui-theme";
+import { PageHeader, handleError } from "@datavex/ui-theme";
 import { toastError } from "@/utils/toast";
 
 interface Warehouse {
@@ -108,22 +108,12 @@ export default function WarehousesPage() {
   );
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-4">
-        <div>
-          <h1 className="font-heading text-2xl font-semibold tracking-tight text-[--shell-foreground] flex items-center gap-2">
-            <Building2 className="h-6 w-6 text-[var(--shell-brand)]" />
-            Warehouse Locations & Distribution Hubs
-          </h1>
-          <p className="mt-1 text-sm text-[--shell-muted]">
-            Manage physical warehouse facilities, storage codes, and regional distribution centers.
-          </p>
-        </div>
-        <Button onClick={() => setIsAddOpen(true)} className="bg-[var(--shell-brand)] text-white hover:bg-[var(--shell-action)]">
-          <Plus className="h-4 w-4 mr-2" /> Add New Warehouse
-        </Button>
-      </div>
+    <div className="space-y-10 lg:space-y-12">
+      <PageHeader
+        title="Warehouse Locations & Distribution Hubs"
+        subtitle="Manage physical warehouse facilities, storage codes, and regional distribution centers."
+        actions={<Button onClick={() => setIsAddOpen(true)} className="bg-[var(--shell-brand)] text-white hover:bg-[var(--shell-action)]"><Plus className="h-4 w-4 mr-2" /> Add New Warehouse</Button>}
+      />
 
       {/* Warehouse List */}
       <Card>

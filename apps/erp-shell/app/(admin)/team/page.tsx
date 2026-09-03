@@ -535,7 +535,7 @@ export default function TeamManagement() {
             <CardHeader className="p-5 pb-3 border-b border-[var(--shell-border)]/40 flex flex-row items-center justify-between">
               <div>
                 <CardTitle className="text-sm font-semibold text-[var(--shell-foreground)]">
-                  Permissions Matrix for "{roles.find((r) => r.id === selectedRoleId)?.name || ""}"
+                  Permissions Matrix for &quot;{roles.find((r) => r.id === selectedRoleId)?.name || ""}&quot;
                 </CardTitle>
                 <CardDescription className="text-xs text-[var(--shell-muted)]">Check or uncheck permission actions to alter backend access control scopes</CardDescription>
               </div>
@@ -657,7 +657,7 @@ export default function TeamManagement() {
           <form onSubmit={handleEditRoleSubmit}>
             <DialogHeader className="p-4 border-b border-[var(--shell-border)]/40">
               <DialogTitle className="text-sm font-semibold text-[var(--shell-foreground)]">Change Member Role</DialogTitle>
-              <DialogDescription className="text-xs text-[var(--shell-muted)]">Alter the security role maps for "{editRoleForm.userName}"</DialogDescription>
+              <DialogDescription className="text-xs text-[var(--shell-muted)]">Alter the security role maps for &quot;{editRoleForm.userName}&quot;</DialogDescription>
             </DialogHeader>
             <div className="p-5 space-y-4">
               <div className="space-y-1.5">

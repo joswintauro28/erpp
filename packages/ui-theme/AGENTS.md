@@ -1,25 +1,51 @@
-# DATAVEX ERP — UI Theme Package (`packages/ui-theme`) Agent Context
+# DATAVEX ERP — UI Theme (`packages/ui-theme`) Agent Context
 
-This package provides the central styling directives, Tailwind configuration variables, and Shadcn UI primitives for all frontend workstations.
+Shared Shadcn UI primitives, custom theme, and Tailwind v4 configuration for all DATAVEX ERP frontend applications.
 
-## 1. Specifications
-- **Theme Variables:** Styled around "Refined Crimson & Brushed Gold". CSS variables are defined inside `src/globals.css`.
-  - Deep Maroon (`--sidebar`/`--shell-header`): `#3D1013`
-  - Crimson Red (`--shell-brand`): `#8C1D24`
-  - Brushed Gold (`--shell-accent`): `#E5B83C`
-- **Tailwind Integration:** Configured to integrate with Tailwind CSS v4 via `@theme inline`.
-- **Custom Animations:** Includes keyframe configurations for `kpi-enter` and `step-in` UI entries.
-
-## 2. Exports & Components
-- **Utility:** Exposes the `cn` utility (combines `clsx` and `tailwind-merge`), plus `statusVariant(domain, status)` and toast helpers.
-- **UI Primitives (19):** `badge`, `button`, `card`, `dialog`, `input`, `label`, `progress`, `select`, `spinner`, `table`, `textarea`, `notification-provider`, `notification-bell`, `skeleton`, `tabs`, `toaster`, `confirm-dialog`, `tooltip`, `dropdown-menu`, `switch`, `checkbox`, `avatar`, `separator`, `pagination`, `breadcrumb`.
-- **Shared Composites (11):** `multi-step-dialog`, `empty-state`, `search-input`, `loading-spinner`, `page-header`, `kpi-card`, `section-heading`, `theme-provider`, `theme-toggle`, `file-upload`, `file-viewer`.
-
-## 3. Package Integration
+## 1. Package Identity
 - **Package Name:** `@datavex/ui-theme`
-- **Path Resolution:** Next.js workstations map imports through their workspaces configuration and TS/Next path aliases (Turbopack support enabled via `next.config.ts` mapping).
-- **Import convention:**
-  ```typescript
-  import { Button } from "@datavex/ui-theme/components/button";
-  import { cn } from "@datavex/ui-theme/lib/utils";
-  ```
+- **Role:** Central design system — all frontend apps import components, theme tokens, and utilities from this package.
+
+## 2. Exports
+
+### UI Primitives (12)
+badge, button, card, dialog, input, label, progress, select, spinner, table, textarea
+
+### Shared Components (6)
+- **page-header.tsx** — Standardized page header with title, subtitle, badge, and action slot. Used across all 4 frontend apps.
+- **search-input.tsx** — Search input with icon and debounce.
+- **empty-state.tsx** — Empty state placeholder with icon and message.
+- **section-heading.tsx** — Section divider with label.
+- **status-filter.tsx** — Status filter tabs.
+- **ai-chat.tsx** — AI chat drawer component (SSE streaming, session management, module-aware context).
+
+### Utilities
+- **cn()** — `clsx` + `tailwind-merge` for conditional class merging.
+
+### Re-exports
+- `handleError` — Centralized error handler for API responses.
+- `Button` — Re-exported from `./components/ui/button`.
+
+## 3. Theme Configuration
+- **Design System:** "Refined Crimson & Brushed Gold"
+- **Tokens:** Defined in `src/globals.css` as CSS custom properties, mapped to Tailwind via `@theme inline`.
+- **Key Colors:**
+  - `--sidebar`/`--shell-header`: Deep Maroon (#3D1013)
+  - `--shell-brand`: Crimson Red (#8C1D24)
+  - `--shell-accent`: Milled Brass (#E5B83C)
+  - `--radius-sm`: 4px (buttons)
+  - `--radius-md`: 6px (cards)
+- **Fonts:** Montserrat (headings), Inter (body), JetBrains Mono (code).
+- **Animations:** `kpi-enter`, `step-in`.
+
+## 4. Import Pattern
+All frontend apps use path aliases resolved via tsconfig:
+```ts
+import { PageHeader, EmptyState, cn } from "@datavex/ui-theme";
+import { Badge } from "@/components/ui/badge"; // maps to ui-theme
+```
+
+## 5. Adding New Components
+1. Create component in `src/components/shared/` or `src/components/ui/`.
+2. Export from `src/index.ts`.
+3. Import in consuming apps via `@datavex/ui-theme`.

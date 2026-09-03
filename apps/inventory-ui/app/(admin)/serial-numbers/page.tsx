@@ -25,7 +25,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { api } from "@/services/api";
-import { handleError } from "@datavex/ui-theme";
+import { PageHeader, handleError } from "@datavex/ui-theme";
 import { toastError, toastWarning } from "@/utils/toast";
 
 interface SerialNumber {
@@ -271,22 +271,13 @@ export default function SerialRegistryPage() {
   const getStatusMeta = (status: string) => STATUS_META[status] || { label: status, dot: "bg-zinc-400", badge: "" };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-4">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--shell-accent)]">Hardware Unit Ledger</p>
-          <h1 className="font-heading text-2xl font-semibold tracking-tight text-[--shell-foreground] flex items-center gap-2">
-            Serial Registry
-          </h1>
-          <p className="mt-1 text-sm text-[--shell-muted]">
-            Every serial tag mapped to its model/SKU, tracked across its lifecycle from receipt to retirement.
-          </p>
-        </div>
-        <Button size="sm" onClick={openAdd} className="bg-[var(--shell-brand)] text-white hover:bg-[var(--shell-action)]">
-          <Plus className="h-4 w-4 mr-2" /> Register Unit
-        </Button>
-      </div>
+    <div className="space-y-10 lg:space-y-12">
+      <PageHeader
+        title="Serial Registry"
+        subtitle="Every serial tag mapped to its model/SKU, tracked across its lifecycle from receipt to retirement."
+        badge="Hardware Unit Ledger"
+        actions={<Button size="sm" onClick={openAdd} className="bg-[var(--shell-brand)] text-white hover:bg-[var(--shell-action)]"><Plus className="h-4 w-4 mr-2" /> Register Unit</Button>}
+      />
 
       {/* KPI Strip */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">

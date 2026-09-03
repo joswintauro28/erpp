@@ -6,6 +6,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { api } from "@/services/api";
+import { PageHeader } from "@datavex/ui-theme";
 
 interface Movement {
   id: number;
@@ -56,16 +57,11 @@ export default function StockMovementsPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="border-b border-border pb-4">
-        <h1 className="font-heading text-2xl font-semibold tracking-tight text-[--shell-foreground] flex items-center gap-2">
-          <ArrowRightLeft className="h-6 w-6 text-[var(--shell-brand)]" />
-          Stock Movement Log & Inventory Audit
-        </h1>
-        <p className="mt-1 text-sm text-[--shell-muted]">
-          Every stock transaction logged automatically from customer order dispatches, supplier receipts, and physical audits.
-        </p>
-      </div>
+    <div className="space-y-10 lg:space-y-12">
+      <PageHeader
+        title="Stock Movement Log & Inventory Audit"
+        subtitle="Every stock transaction logged automatically from customer order dispatches, supplier receipts, and physical audits."
+      />
 
       <Card>
         <CardHeader>

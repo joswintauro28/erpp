@@ -264,7 +264,7 @@ function IndustrySelect({
                 }}
                 className="w-full text-left px-3 py-2 text-sm rounded-md hover:bg-[var(--shell-border)] text-[var(--shell-success)] font-medium transition-colors cursor-pointer"
               >
-                Create "{inputValue}"
+                Create &quot;{inputValue}&quot;
               </button>
             ) : (
               <div className="p-2 text-xs text-[var(--shell-muted)]">Type to search/create...</div>

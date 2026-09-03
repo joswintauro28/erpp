@@ -19,7 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { api } from "@/services/api";
-import { handleError } from "@datavex/ui-theme";
+import { PageHeader, handleError } from "@datavex/ui-theme";
 import { toastError } from "@/utils/toast";
 import { number } from "@/utils/format";
 import Link from "next/link";
@@ -143,29 +143,18 @@ export default function StockPage() {
   const totalAvailable = totalStock - totalReserved;
 
   return (
-    <div className="space-y-6">
-      {/* Top Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-4">
-        <div>
-          <h1 className="font-heading text-2xl font-semibold tracking-tight text-[--shell-foreground] flex items-center gap-2">
-            <Warehouse className="h-6 w-6 text-[var(--shell-brand)]" />
-            Stock Levels & Warehouse Inventory
-          </h1>
-          <p className="mt-1 text-sm text-[--shell-muted]">
-            Real-time physical stock levels, reserved items for customer orders, and available inventory.
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={() => setIsAdjustOpen(true)}>
-            <SlidersHorizontal className="h-4 w-4 mr-2" /> Adjust Stock Count
-          </Button>
+    <div className="space-y-10 lg:space-y-12">
+      <PageHeader
+        title="Stock Levels & Warehouse Inventory"
+        subtitle="Real-time physical stock levels, reserved items for customer orders, and available inventory."
+        actions={<div className="flex items-center gap-2"><Button variant="outline" size="sm" onClick={() => setIsAdjustOpen(true)}><SlidersHorizontal className="h-4 w-4 mr-2" /> Adjust Stock Count</Button>
           <Link href="/fulfillment">
             <Button size="sm" className="bg-[var(--shell-brand)] text-white hover:bg-[var(--shell-action)]">
               <ClipboardList className="h-4 w-4 mr-2" /> Fulfill Sales Orders <ArrowRight className="h-3.5 w-3.5 ml-1" />
             </Button>
           </Link>
-        </div>
-      </div>
+        </div>}
+      />
 
       {/* KPI Overview */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

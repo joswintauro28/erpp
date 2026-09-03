@@ -7,7 +7,6 @@ import {
   LayoutDashboard,
   Package,
   Warehouse,
-  ClipboardList,
   Truck,
   ShoppingCart,
   ScanBarcode,
@@ -16,8 +15,6 @@ import {
   Boxes,
   ArrowRightLeft,
   Building2,
-  SlidersHorizontal,
-  BarChart2,
   Factory,
   ClipboardCheck,
   ShieldCheck,
@@ -25,84 +22,93 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
-
-interface NavChild {
-  name: string;
-  href: string;
-  icon: typeof Package;
-}
-
-interface NavGroup {
-  name: string;
-  icon: typeof Package;
-  children: NavChild[];
-}
-
-type NavItem =
-  | { name: string; href: string; icon: typeof Package }
-  | NavGroup;
+import type { NavItem, NavGroup, NavSection, NavChild } from "@/types/navigation";
 
 const navItems: NavItem[] = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-
   {
-    name: "Inventory Management",
+    name: "Inventory",
     icon: Package,
-    children: [
-      { name: "Order Fulfillment", href: "/fulfillment", icon: ClipboardList },
-      { name: "Product Master", href: "/products", icon: Boxes },
-      { name: "Stock Levels", href: "/stock", icon: Warehouse },
-      { name: "Stock Movements", href: "/stock/movements", icon: ArrowRightLeft },
-      { name: "Serial Numbers", href: "/serial-numbers", icon: ScanBarcode },
-      { name: "Quality Checks", href: "/quality-checks", icon: ShieldCheck },
+    sections: [
+      {
+        name: "Inventory Management",
+        children: [
+          { name: "Order Fulfillment", href: "/fulfillment", icon: ClipboardCheck },
+          { name: "Products", href: "/products", icon: Boxes },
+          { name: "Stock Levels", href: "/stock", icon: Warehouse },
+          { name: "Stock Movements", href: "/stock/movements", icon: ArrowRightLeft },
+          { name: "Serial Numbers", href: "/serial-numbers", icon: ScanBarcode },
+          { name: "Quality Checks", href: "/quality-checks", icon: ShieldCheck },
+        ],
+      },
+      {
+        name: "Procurement",
+        children: [
+          { name: "Suppliers", href: "/suppliers", icon: Truck },
+          { name: "Purchase Requisitions", href: "/purchase-requisitions", icon: ClipboardCheck },
+          { name: "Purchase Orders", href: "/purchase-orders", icon: ShoppingCart },
+        ],
+      },
+      {
+        name: "Manufacturing",
+        children: [
+          { name: "Work Orders", href: "/work-orders", icon: Factory },
+        ],
+      },
+      {
+        name: "Locations",
+        children: [
+          { name: "Warehouses", href: "/warehouses", icon: Building2 },
+        ],
+      },
     ],
   },
-
-  {
-    name: "Procurement",
-    icon: ShoppingCart,
-    children: [
-      { name: "Suppliers", href: "/suppliers", icon: Truck },
-      { name: "Purchase Requisitions", href: "/purchase-requisitions", icon: ClipboardCheck },
-      { name: "Purchase Orders", href: "/purchase-orders", icon: ClipboardList },
-    ],
-  },
-
-  {
-    name: "Manufacturing",
-    icon: Factory,
-    children: [
-      { name: "Work Orders", href: "/work-orders", icon: Factory },
-    ],
-  },
-
-  {
-    name: "Locations",
-    icon: Building2,
-    children: [
-      { name: "Warehouses", href: "/warehouses", icon: Building2 },
-    ],
-  },
-
-  // AI Assistant
   { name: "AI Assistant", href: "/ai-assistant", icon: Sparkles },
 ];
 
+// Extract all defined navigation hrefs for smart matching
+const allHrefs = navItems.flatMap((item) => {
+  if ("sections" in item) {
+    return item.sections.flatMap((s) => s.children.map((c) => c.href));
+  }
+  return [item.href];
+}).filter((href) => href && href !== "#");
+
+function flattenSections(sections: NavSection[]): NavChild[] {
+  return sections.flatMap((s) => s.children);
+}
+
 function isGroup(item: NavItem): item is NavGroup {
-  return "children" in item;
+  return "sections" in item;
 }
 
 function isActive(href: string, pathname: string): boolean {
   if (href === "/dashboard") return pathname === "/dashboard" || pathname === "/";
-  return pathname === href;
+  if (href === "#") return false;
+
+  // Exact match
+  if (pathname === href) return true;
+
+  // Detail page match (e.g. /products/123 matching /products)
+  if (pathname.startsWith(href + "/")) {
+    // Exclude if there is a more specific defined route matching the path
+    return !allHrefs.some(
+      (otherHref) =>
+        otherHref !== href &&
+        otherHref.startsWith(href + "/") &&
+        pathname.startsWith(otherHref)
+    );
+  }
+
+  return false;
 }
 
 function groupActive(group: NavGroup, pathname: string): boolean {
-  return group.children.some((c) => isActive(c.href, pathname));
+  return flattenSections(group.sections).some((c) => isActive(c.href, pathname));
 }
 
 function activeChild(group: NavGroup, pathname: string): string | null {
-  for (const child of group.children) {
+  for (const child of flattenSections(group.sections)) {
     if (isActive(child.href, pathname)) return child.href;
   }
   return null;
@@ -111,7 +117,7 @@ function activeChild(group: NavGroup, pathname: string): string | null {
 export default function Sidebar({ collapsed }: { collapsed: boolean }) {
   const pathname = usePathname();
   const { user, logout } = useAuth();
-  const [expanded, setExpanded] = useState<string[]>(["Inventory Management"]);
+  const [expanded, setExpanded] = useState<string[]>(["Inventory"]);
   const [hoveredGroup, setHoveredGroup] = useState<NavGroup | null>(null);
   const [hoverPosition, setHoverPosition] = useState(0);
   const flyoutTimeout = useRef<NodeJS.Timeout | null>(null);
@@ -141,7 +147,7 @@ export default function Sidebar({ collapsed }: { collapsed: boolean }) {
     if (flyoutTimeout.current) clearTimeout(flyoutTimeout.current);
 
     const rect = event.currentTarget.getBoundingClientRect();
-    const flyoutEstimatedHeight = group.children.length * 32 + 40;
+    const flyoutEstimatedHeight = flattenSections(group.sections).length * 32 + 40;
     const windowHeight = window.innerHeight;
 
     if (rect.top + flyoutEstimatedHeight > windowHeight) {
@@ -218,7 +224,6 @@ export default function Sidebar({ collapsed }: { collapsed: boolean }) {
               {/* Section header */}
               {!collapsed ? (
                 <div className="mb-1.5 flex items-center gap-2 px-2.5">
-                  <item.icon className="h-3 w-3 text-sidebar-foreground/40 shrink-0" />
                   <span className="font-heading text-[9px] font-bold uppercase tracking-[0.2em] text-sidebar-foreground/40 select-none">
                     {item.name}
                   </span>
@@ -262,53 +267,69 @@ export default function Sidebar({ collapsed }: { collapsed: boolean }) {
                       {item.name}
                     </span>
                   </div>
-
                   {!collapsed && (
                     <ChevronRight
                       className={cn(
                         "ml-auto h-3.5 w-3.5 shrink-0 transition-transform duration-200",
                         expanded.includes(item.name) && "rotate-90",
-                        groupActive(item, pathname) ? "text-sidebar-primary-foreground" : "text-sidebar-foreground/40"
+                        groupActive(item, pathname)
+                          ? "text-sidebar-primary-foreground"
+                          : "text-sidebar-foreground/40"
                       )}
                     />
                   )}
                 </button>
 
-                {/* Children (expanded state) */}
+                {/* Children with section hierarchy */}
                 {!collapsed && expanded.includes(item.name) && (
-                  <div className="ml-4 mt-1 space-y-1 border-l border-sidebar-border pl-4.5">
-                    {item.children.map((child) => {
-                      const childActive = activeChild(item, pathname) === child.href;
-                      return (
-                        <Link
-                          key={child.href}
-                          href={child.href}
-                          title={child.name}
-                          className={cn(
-                            "relative flex items-center gap-3 rounded-md px-2.5 py-1.5 text-xs transition-all duration-200 group/link",
-                            childActive
-                              ? "text-sidebar-primary-foreground font-medium bg-sidebar-primary/80"
-                              : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                          )}
-                        >
-                          <child.icon
-                            className={cn(
-                              "h-3.5 w-3.5 shrink-0 transition-colors duration-200",
-                              childActive
-                                ? "text-sidebar-primary-foreground"
-                                : "text-sidebar-foreground/40 group-hover/link:text-sidebar-accent-foreground"
-                            )}
-                          />
-                          <span>{child.name}</span>
-                        </Link>
-                      );
-                    })}
+                  <div className="mt-1 space-y-3 border-l border-sidebar-border ml-4 pl-4">
+                    {item.sections.map((section, sIdx) => (
+                      <div key={section.name}>
+                        {sIdx > 0 && (
+                          <div className="mb-2.5 h-px bg-sidebar-border/60 mx-1.5" />
+                        )}
+                        <div className="space-y-0.5">
+                          <span className="block text-[9px] font-semibold uppercase tracking-[0.15em] text-sidebar-foreground/30 px-1.5 py-1 select-none">
+                            {section.name}
+                          </span>
+                          {section.children.map((child) => {
+                            const childActive = activeChild(item, pathname) === child.href;
+                            return (
+                              <Link
+                                key={child.href}
+                                href={child.href}
+                                title={child.name}
+                                className={cn(
+                                  "relative flex items-center gap-3 rounded-sm px-2.5 py-1.5 text-xs transition-all duration-200 group/link",
+                                  childActive
+                                    ? "text-sidebar-primary-foreground font-medium bg-sidebar-primary/80 shadow-sm"
+                                    : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                                )}
+                              >
+                                {childActive && (
+                                  <span className="absolute left-0 top-1/2 -translate-y-1/2 h-4 w-0.5 rounded-r-full bg-sidebar-primary" />
+                                )}
+                                <child.icon
+                                  className={cn(
+                                    "h-3.5 w-3.5 shrink-0 transition-colors duration-200",
+                                    childActive
+                                      ? "text-sidebar-primary-foreground"
+                                      : "text-sidebar-foreground/40 group-hover/link:text-sidebar-accent-foreground"
+                                  )}
+                                />
+                                <span>{child.name}</span>
+                              </Link>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>
             </div>
           ) : (
-            /* Standalone link (Dashboard) */
+            /* Standalone link */
             <Link
               key={`link-${item.name}-${index}`}
               href={item.href}
@@ -357,9 +378,8 @@ export default function Sidebar({ collapsed }: { collapsed: boolean }) {
               {hoveredGroup.name}
             </span>
           </div>
-
           <div className="space-y-1">
-            {hoveredGroup.children.map((child) => {
+            {flattenSections(hoveredGroup.sections).map((child) => {
               const childActive = isActive(child.href, pathname);
               return (
                 <Link
@@ -400,7 +420,6 @@ export default function Sidebar({ collapsed }: { collapsed: boolean }) {
             <div className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-sidebar-border bg-sidebar text-xs font-bold text-sidebar-foreground select-none">
               {initials}
             </div>
-
             <div
               className={cn(
                 "overflow-hidden whitespace-nowrap transition-all duration-300",
@@ -411,7 +430,6 @@ export default function Sidebar({ collapsed }: { collapsed: boolean }) {
               <p className="truncate text-[10px] text-sidebar-foreground/50 mt-0.5">{displayRole}</p>
             </div>
           </div>
-
           {!collapsed && (
             <button
               title="Sign Out"

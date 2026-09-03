@@ -22,7 +22,7 @@ import { Input } from "@/components/ui/input";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { api } from "@/services/api";
-import { handleError } from "@datavex/ui-theme";
+import { PageHeader, handleError } from "@datavex/ui-theme";
 import { toastError, toastWarning } from "@/utils/toast";
 
 interface Operation {
@@ -180,22 +180,12 @@ export default function WorkOrdersPage() {
   }, {});
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-4">
-        <div>
-          <h1 className="font-heading text-2xl font-semibold tracking-tight text-[--shell-foreground] flex items-center gap-2">
-            <Factory className="h-6 w-6 text-[var(--shell-brand)]" />
-            Manufacturing Work Orders
-          </h1>
-          <p className="mt-1 text-sm text-[--shell-muted]">
-            Plan production runs, release raw materials, route operations, and receive finished goods into stock.
-          </p>
-        </div>
-        <Button size="sm" onClick={() => setIsAddOpen(true)} className="bg-[var(--shell-brand)] text-white hover:bg-[var(--shell-action)]">
-          <Plus className="h-4 w-4 mr-2" /> Create Work Order
-        </Button>
-      </div>
+    <div className="space-y-10 lg:space-y-12">
+      <PageHeader
+        title="Manufacturing Work Orders"
+        subtitle="Plan production runs, release raw materials, route operations, and receive finished goods into stock."
+        actions={<Button size="sm" onClick={() => setIsAddOpen(true)} className="bg-[var(--shell-brand)] text-white hover:bg-[var(--shell-action)]"><Plus className="h-4 w-4 mr-2" /> Create Work Order</Button>}
+      />
 
       {/* KPI row */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">

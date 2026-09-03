@@ -18,7 +18,7 @@ import {
   Trash2,
   Layers,
 } from "lucide-react";
-import { Button, Badge, Card, CardContent, CardHeader, CardTitle, Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, handleError } from "@datavex/ui-theme";
+import { Button, Badge, Card, CardContent, CardHeader, CardTitle, Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, PageHeader, handleError } from "@datavex/ui-theme";
 import { api } from "@/services/api";
 import { toastError, toastWarning } from "@/utils/toast";
 import FulfillmentWorkflowModal, { FulfillmentOrder } from "@/components/FulfillmentWorkflowModal";
@@ -165,30 +165,19 @@ export default function OrderFulfillmentPage() {
   };
 
   return (
-    <div className="p-6 space-y-6 max-w-7xl mx-auto">
-      {/* Header Banner */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
-            <Boxes className="h-6 w-6 text-[var(--shell-brand)]" />
-            Sales Order Fulfillment Workstation
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Manage stock verification, reservations, pick lists, packing, dispatch, and billing handoffs.
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={fetchOrders}>
-            <RefreshCw className="h-4 w-4 mr-2" /> Refresh
-          </Button>
+    <div className="p-6 space-y-10 lg:space-y-12 max-w-7xl mx-auto">
+      <PageHeader
+        title="Sales Order Fulfillment Workstation"
+        subtitle="Manage stock verification, reservations, pick lists, packing, dispatch, and billing handoffs."
+        actions={<div className="flex items-center gap-2"><Button variant="outline" size="sm" onClick={fetchOrders}><RefreshCw className="h-4 w-4 mr-2" /> Refresh</Button>
           <Button variant="outline" size="sm" onClick={() => setIsBatchOpen(true)}>
             <Layers className="h-4 w-4 mr-2" /> Create Wave Batch ({reservedOrders.length})
           </Button>
           <Button size="sm" onClick={() => setIsIngestOpen(true)} className="bg-[var(--shell-brand)] text-white hover:bg-[var(--shell-action)]">
             <Plus className="h-4 w-4 mr-2" /> Ingest Approved Sales Order
           </Button>
-        </div>
-      </div>
+        </div>}
+      />
 
       {/* KPI Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">

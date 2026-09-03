@@ -10,6 +10,9 @@ import {
   Plus,
   ChevronDown,
   MessageSquare,
+  BarChart3,
+  Zap,
+  X,
 } from "lucide-react";
 import { cn } from "../../lib/utils";
 
@@ -22,6 +25,7 @@ interface AIChatMessage {
   role: "user" | "assistant" | "system";
   content: string;
   created_at?: string;
+  streaming?: boolean;
 }
 
 interface AISession {
@@ -31,6 +35,20 @@ interface AISession {
   message_count: number;
   created_at: string;
   updated_at?: string;
+}
+
+interface DynamicSuggestion {
+  text: string;
+  icon?: string;
+  category?: string;
+}
+
+interface AnalyticsData {
+  total_messages: number;
+  total_sessions: number;
+  total_tokens_used: number;
+  avg_response_time_ms: number;
+  messages_today: number;
 }
 
 interface AIChatProps {
@@ -124,7 +142,6 @@ function renderMarkdown(text: string): React.ReactNode {
   };
 
   const renderInline = (s: string): React.ReactNode => {
-    // Bold: **text**
     const parts: React.ReactNode[] = [];
     const regex = /\*\*(.*?)\*\*|`([^`]+)`/g;
     let lastIndex = 0;
@@ -166,7 +183,6 @@ function renderMarkdown(text: string): React.ReactNode {
       continue;
     }
 
-    // Heading detection
     if (trimmed.startsWith("### ")) {
       flushList();
       elements.push(
@@ -225,6 +241,10 @@ export function AIChat({ module, apiBase = "", className }: AIChatProps) {
   const [sessions, setSessions] = useState<AISession[]>([]);
   const [showSessionList, setShowSessionList] = useState(false);
   const [loadedSessions, setLoadedSessions] = useState(false);
+  const [dynamicSuggestions, setDynamicSuggestions] = useState<DynamicSuggestion[]>([]);
+  const [contextSummary, setContextSummary] = useState<string | null>(null);
+  const [showAnalytics, setShowAnalytics] = useState(false);
+  const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -250,13 +270,49 @@ export function AIChat({ module, apiBase = "", className }: AIChatProps) {
         setLoadedSessions(true);
       }
     } catch {
-      // Silently fail — sessions are a nice-to-have
+      // Silently fail
     }
   }, [base, module]);
 
   useEffect(() => {
     fetchSessions();
   }, [fetchSessions]);
+
+  // Fetch dynamic suggestions
+  const fetchDynamicSuggestions = useCallback(async () => {
+    try {
+      const res = await fetch(`${base}/api/ai/suggestions/${module}/dynamic`, {
+        credentials: "include",
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setDynamicSuggestions(data.suggestions || []);
+        setContextSummary(data.context_summary || null);
+      }
+    } catch {
+      // Fall back to static suggestions
+    }
+  }, [base, module]);
+
+  useEffect(() => {
+    if (messages.length === 0) {
+      fetchDynamicSuggestions();
+    }
+  }, [messages.length, fetchDynamicSuggestions]);
+
+  // Fetch analytics (lazy — only when panel opened)
+  const fetchAnalytics = useCallback(async () => {
+    try {
+      const res = await fetch(`${base}/api/ai/analytics/overview`, {
+        credentials: "include",
+      });
+      if (res.ok) {
+        setAnalytics(await res.json());
+      }
+    } catch {
+      // ignore
+    }
+  }, [base]);
 
   // Load session history
   const loadSession = useCallback(
@@ -284,8 +340,9 @@ export function AIChat({ module, apiBase = "", className }: AIChatProps) {
     setSessionId(null);
     setInput("");
     setShowSessionList(false);
+    fetchDynamicSuggestions();
     textareaRef.current?.focus();
-  }, []);
+  }, [fetchDynamicSuggestions]);
 
   // Delete session
   const deleteSession = useCallback(
@@ -306,13 +363,9 @@ export function AIChat({ module, apiBase = "", className }: AIChatProps) {
     [base, sessionId, newChat],
   );
 
-  // Send message
-  const sendMessage = useCallback(
-    async (text?: string) => {
-      const msg = (text || input).trim();
-      if (!msg || loading) return;
-
-      setInput("");
+  // Send message (non-streaming fallback)
+  const sendMessageNonStreaming = useCallback(
+    async (msg: string) => {
       const userMsg: AIChatMessage = {
         id: `user-${Date.now()}`,
         role: "user",
@@ -330,6 +383,7 @@ export function AIChat({ module, apiBase = "", className }: AIChatProps) {
             message: msg,
             session_id: sessionId,
             module,
+            stream: false,
           }),
         });
 
@@ -348,7 +402,6 @@ export function AIChat({ module, apiBase = "", className }: AIChatProps) {
         setMessages((prev) => [...prev, assistantMsg]);
         if (data.session_id && !sessionId) {
           setSessionId(data.session_id);
-          // Refresh session list
           fetchSessions();
         }
       } catch (err: unknown) {
@@ -367,7 +420,142 @@ export function AIChat({ module, apiBase = "", className }: AIChatProps) {
         textareaRef.current?.focus();
       }
     },
-    [input, loading, sessionId, module, base, fetchSessions],
+    [base, sessionId, module, fetchSessions],
+  );
+
+  // Send message with SSE streaming
+  const sendMessageStreaming = useCallback(
+    async (msg: string) => {
+      const userMsg: AIChatMessage = {
+        id: `user-${Date.now()}`,
+        role: "user",
+        content: msg,
+      };
+      const assistantId = `asst-${Date.now()}`;
+      setMessages((prev) => [
+        ...prev,
+        userMsg,
+        { id: assistantId, role: "assistant", content: "", streaming: true },
+      ]);
+      setLoading(true);
+
+      try {
+        const res = await fetch(`${base}/api/ai/chat/stream`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({
+            message: msg,
+            session_id: sessionId,
+            module,
+            stream: true,
+          }),
+        });
+
+        if (!res.ok) {
+          const errBody = await res.json().catch(() => ({}));
+          throw new Error(errBody.detail || `HTTP ${res.status}`);
+        }
+
+        const reader = res.body?.getReader();
+        if (!reader) throw new Error("No response body");
+
+        const decoder = new TextDecoder();
+        let buffer = "";
+        let fullContent = "";
+        let newSessionId = sessionId;
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split("\n");
+          buffer = lines.pop() || "";
+
+          let eventType = "";
+          for (const line of lines) {
+            if (line.startsWith("event: ")) {
+              eventType = line.slice(7).trim();
+            } else if (line.startsWith("data: ")) {
+              const dataStr = line.slice(6);
+              try {
+                const data = JSON.parse(dataStr);
+
+                if (eventType === "metadata") {
+                  newSessionId = data.session_id || newSessionId;
+                  if (data.message_id) {
+                    // Update the assistant message id
+                    setMessages((prev) =>
+                      prev.map((m) =>
+                        m.id === assistantId ? { ...m, id: data.message_id } : m,
+                      ),
+                    );
+                  }
+                } else if (eventType === "content") {
+                  fullContent += data.content || "";
+                  const snapshot = fullContent;
+                  setMessages((prev) =>
+                    prev.map((m) =>
+                      m.id === assistantId || m.id === data.message_id
+                        ? { ...m, content: snapshot }
+                        : m,
+                    ),
+                  );
+                } else if (eventType === "done") {
+                  // Mark streaming complete
+                  setMessages((prev) =>
+                    prev.map((m) =>
+                      m.id === assistantId ? { ...m, streaming: false } : m,
+                    ),
+                  );
+                } else if (eventType === "error") {
+                  setMessages((prev) =>
+                    prev.map((m) =>
+                      m.id === assistantId
+                        ? { ...m, content: `⚠️ ${data.error || "Stream error"}`, streaming: false }
+                        : m,
+                    ),
+                  );
+                }
+              } catch {
+                // skip malformed JSON
+              }
+            }
+          }
+        }
+
+        if (newSessionId && !sessionId) {
+          setSessionId(newSessionId);
+          fetchSessions();
+        }
+      } catch (err: unknown) {
+        const errorMsg =
+          err instanceof Error ? err.message : "AI service temporarily unavailable.";
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === assistantId
+              ? { ...m, content: `⚠️ ${errorMsg}`, streaming: false }
+              : m,
+          ),
+        );
+      } finally {
+        setLoading(false);
+        textareaRef.current?.focus();
+      }
+    },
+    [base, sessionId, module, fetchSessions],
+  );
+
+  // Main send — tries streaming first, falls back to non-streaming
+  const sendMessage = useCallback(
+    async (text?: string) => {
+      const msg = (text || input).trim();
+      if (!msg || loading) return;
+      setInput("");
+      await sendMessageStreaming(msg);
+    },
+    [input, loading, sendMessageStreaming],
   );
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -378,26 +566,57 @@ export function AIChat({ module, apiBase = "", className }: AIChatProps) {
   };
 
   const isEmpty = messages.length === 0;
+  const displaySuggestions = dynamicSuggestions.length > 0
+    ? dynamicSuggestions.map((s) => s.text)
+    : meta.suggestions;
 
   return (
-    <div className={cn("flex flex-col h-full", className)}>
+    <div className={cn("flex flex-col h-full", className)} role="main" aria-label={meta.title}>
       {/* ── Header ─────────────────────────────────────────────────── */}
-      <div className="flex items-center justify-between border-b border-[var(--shell-border)] bg-[var(--shell-surface)] px-4 py-3 shrink-0">
-        <div className="flex items-center gap-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-md bg-[var(--shell-primary)] text-sm text-white">
+      <header
+        className="flex items-center justify-between border-b border-[var(--shell-border)] bg-[var(--shell-surface)] px-3 sm:px-4 py-3 shrink-0"
+        role="banner"
+      >
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+          <div
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-[var(--shell-primary)] text-sm text-white"
+            aria-hidden="true"
+          >
             <Sparkles size={14} />
           </div>
-          <div>
-            <h2 className="text-sm font-semibold text-[var(--shell-foreground)]">
+          <div className="min-w-0">
+            <h1 className="text-sm font-semibold text-[var(--shell-foreground)] truncate">
               {meta.title}
-            </h2>
-            <p className="text-[10px] text-[var(--shell-muted)]">
+            </h1>
+            <p className="text-[10px] text-[var(--shell-muted)] hidden sm:block">
               Module-aware · Powered by Groq
+              {contextSummary && (
+                <span className="ml-1 text-[var(--shell-accent)]">· {contextSummary}</span>
+              )}
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+          {/* Analytics toggle */}
+          <button
+            type="button"
+            onClick={() => {
+              setShowAnalytics(!showAnalytics);
+              if (!showAnalytics) fetchAnalytics();
+            }}
+            className={cn(
+              "rounded-md p-1.5 transition-colors cursor-pointer",
+              showAnalytics
+                ? "bg-[var(--shell-primary)] text-white"
+                : "text-[var(--shell-muted)] hover:bg-[var(--shell-bg)]",
+            )}
+            aria-label="Toggle analytics panel"
+            aria-pressed={showAnalytics}
+          >
+            <BarChart3 size={14} />
+          </button>
+
           {/* Session selector */}
           {loadedSessions && sessions.length > 0 && (
             <div className="relative">
@@ -405,14 +624,21 @@ export function AIChat({ module, apiBase = "", className }: AIChatProps) {
                 type="button"
                 onClick={() => setShowSessionList(!showSessionList)}
                 className="flex items-center gap-1.5 rounded-md border border-[var(--shell-border)] px-2 py-1 text-[11px] text-[var(--shell-muted)] hover:bg-[var(--shell-bg)] transition-colors cursor-pointer"
+                aria-label={`${sessions.length} past sessions`}
+                aria-expanded={showSessionList}
+                aria-haspopup="listbox"
               >
                 <MessageSquare size={12} />
-                <span>{sessions.length} sessions</span>
+                <span className="hidden sm:inline">{sessions.length} sessions</span>
                 <ChevronDown size={12} />
               </button>
 
               {showSessionList && (
-                <div className="absolute right-0 top-full mt-1 z-50 w-64 rounded-md border border-[var(--shell-border)] bg-[var(--shell-surface)] shadow-lg overflow-hidden">
+                <div
+                  className="absolute right-0 top-full mt-1 z-50 w-64 rounded-md border border-[var(--shell-border)] bg-[var(--shell-surface)] shadow-lg overflow-hidden"
+                  role="listbox"
+                  aria-label="Past sessions"
+                >
                   <div className="p-2 border-b border-[var(--shell-border)]">
                     <span className="text-[10px] font-medium uppercase tracking-wider text-[var(--shell-muted)]">
                       Past Sessions
@@ -422,6 +648,8 @@ export function AIChat({ module, apiBase = "", className }: AIChatProps) {
                     {sessions.map((s) => (
                       <div
                         key={s.id}
+                        role="option"
+                        aria-selected={s.id === sessionId}
                         className={cn(
                           "group flex items-center justify-between px-3 py-2 text-xs hover:bg-[var(--shell-bg)] transition-colors cursor-pointer",
                           s.id === sessionId && "bg-[var(--shell-bg)]",
@@ -444,6 +672,7 @@ export function AIChat({ module, apiBase = "", className }: AIChatProps) {
                             deleteSession(s.id);
                           }}
                           className="opacity-0 group-hover:opacity-100 text-[var(--shell-muted)] hover:text-red-400 transition-opacity ml-2 cursor-pointer"
+                          aria-label={`Delete session: ${s.title}`}
                         >
                           <Trash2 size={12} />
                         </button>
@@ -458,35 +687,99 @@ export function AIChat({ module, apiBase = "", className }: AIChatProps) {
           <button
             type="button"
             onClick={newChat}
-            className="flex items-center gap-1.5 rounded-md border border-[var(--shell-border)] px-2.5 py-1 text-[11px] font-medium text-[var(--shell-muted)] hover:bg-[var(--shell-bg)] transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 rounded-md border border-[var(--shell-border)] px-2 sm:px-2.5 py-1 text-[11px] font-medium text-[var(--shell-muted)] hover:bg-[var(--shell-bg)] transition-colors cursor-pointer"
+            aria-label="Start new chat"
           >
             <Plus size={12} />
-            New Chat
+            <span className="hidden sm:inline">New Chat</span>
           </button>
         </div>
-      </div>
+      </header>
+
+      {/* ── Analytics Panel ────────────────────────────────────────── */}
+      {showAnalytics && analytics && (
+        <div
+          className="shrink-0 border-b border-[var(--shell-border)] bg-[var(--shell-surface)] px-4 py-3"
+          role="region"
+          aria-label="Usage analytics"
+        >
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-[var(--shell-muted)]">
+              Usage Analytics
+            </span>
+            <button
+              type="button"
+              onClick={() => setShowAnalytics(false)}
+              className="text-[var(--shell-muted)] hover:text-[var(--shell-foreground)] cursor-pointer"
+              aria-label="Close analytics"
+            >
+              <X size={12} />
+            </button>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="text-center">
+              <div className="text-lg font-bold text-[var(--shell-foreground)]">
+                {analytics.total_messages}
+              </div>
+              <div className="text-[10px] text-[var(--shell-muted)]">Total Messages</div>
+            </div>
+            <div className="text-center">
+              <div className="text-lg font-bold text-[var(--shell-foreground)]">
+                {analytics.total_sessions}
+              </div>
+              <div className="text-[10px] text-[var(--shell-muted)]">Sessions</div>
+            </div>
+            <div className="text-center">
+              <div className="text-lg font-bold text-[var(--shell-foreground)]">
+                {analytics.messages_today}
+              </div>
+              <div className="text-[10px] text-[var(--shell-muted)]">Today</div>
+            </div>
+            <div className="text-center">
+              <div className="text-lg font-bold text-[var(--shell-foreground)]">
+                {analytics.avg_response_time_ms > 0
+                  ? `${(analytics.avg_response_time_ms / 1000).toFixed(1)}s`
+                  : "—"}
+              </div>
+              <div className="text-[10px] text-[var(--shell-muted)]">Avg Response</div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Messages Area ──────────────────────────────────────────── */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
+      <div
+        className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-4 custom-scrollbar"
+        role="log"
+        aria-label="Chat messages"
+        aria-live="polite"
+      >
         {isEmpty && (
-          <div className="flex flex-col items-center justify-center h-full text-center py-12">
-            <div className="text-4xl mb-4">{meta.icon}</div>
-            <h3 className="text-sm font-semibold text-[var(--shell-foreground)] mb-2">
+          <div className="flex flex-col items-center justify-center h-full text-center py-8 sm:py-12">
+            <div className="text-4xl mb-4" aria-hidden="true">{meta.icon}</div>
+            <h2 className="text-sm font-semibold text-[var(--shell-foreground)] mb-2">
               Welcome to {meta.title}
-            </h3>
-            <p className="text-xs text-[var(--shell-muted)] max-w-md mb-6 leading-relaxed">
+            </h2>
+            <p className="text-xs text-[var(--shell-muted)] max-w-md mb-6 leading-relaxed px-4">
               {meta.welcome}
             </p>
 
             {/* Suggestion chips */}
-            <div className="flex flex-wrap justify-center gap-2 max-w-lg">
-              {meta.suggestions.map((s, i) => (
+            <div
+              className="flex flex-wrap justify-center gap-2 max-w-lg px-4"
+              role="group"
+              aria-label="Suggested prompts"
+            >
+              {displaySuggestions.map((s, i) => (
                 <button
                   key={i}
                   type="button"
                   onClick={() => sendMessage(s)}
                   className="rounded-full border border-[var(--shell-border)] bg-[var(--shell-surface)] px-3 py-1.5 text-[11px] text-[var(--shell-muted)] hover:bg-[var(--shell-bg)] hover:text-[var(--shell-foreground)] transition-colors cursor-pointer"
                 >
+                  {dynamicSuggestions[i]?.icon && (
+                    <span className="mr-1">{dynamicSuggestions[i].icon}</span>
+                  )}
                   {s}
                 </button>
               ))}
@@ -502,6 +795,8 @@ export function AIChat({ module, apiBase = "", className }: AIChatProps) {
               msg.role === "user" ? "flex-row-reverse" : "",
               msg.role === "system" && "justify-center",
             )}
+            role="article"
+            aria-label={`${msg.role} message`}
           >
             {msg.role !== "system" && (
               <div
@@ -511,6 +806,7 @@ export function AIChat({ module, apiBase = "", className }: AIChatProps) {
                     ? "bg-[var(--shell-primary)] text-white"
                     : "bg-[var(--shell-bg)] text-[var(--shell-muted)]",
                 )}
+                aria-hidden="true"
               >
                 {msg.role === "user" ? <User size={12} /> : <Bot size={12} />}
               </div>
@@ -518,7 +814,7 @@ export function AIChat({ module, apiBase = "", className }: AIChatProps) {
 
             <div
               className={cn(
-                "rounded-2xl px-3.5 py-2.5 max-w-[80%]",
+                "rounded-2xl px-3.5 py-2.5 max-w-[85%] sm:max-w-[80%]",
                 msg.role === "user"
                   ? "bg-[var(--shell-primary)] text-white rounded-tr-none"
                   : msg.role === "system"
@@ -526,14 +822,23 @@ export function AIChat({ module, apiBase = "", className }: AIChatProps) {
                     : "bg-[var(--shell-surface)] border border-[var(--shell-border)] text-[var(--shell-foreground)] rounded-tl-none",
               )}
             >
-              {renderMarkdown(msg.content)}
+              {msg.content ? renderMarkdown(msg.content) : msg.streaming ? (
+                <div className="flex gap-1 items-center">
+                  <span className="w-1.5 h-1.5 bg-[var(--shell-muted)] rounded-full animate-bounce [animation-delay:0ms]" />
+                  <span className="w-1.5 h-1.5 bg-[var(--shell-muted)] rounded-full animate-bounce [animation-delay:150ms]" />
+                  <span className="w-1.5 h-1.5 bg-[var(--shell-muted)] rounded-full animate-bounce [animation-delay:300ms]" />
+                  <span className="ml-1.5 text-[11px] text-[var(--shell-muted)]">
+                    Thinking...
+                  </span>
+                </div>
+              ) : null}
             </div>
           </div>
         ))}
 
-        {/* Typing indicator */}
-        {loading && (
-          <div className="flex gap-2.5 items-start">
+        {/* Typing indicator (for non-streaming mode) */}
+        {loading && messages.length > 0 && !messages[messages.length - 1]?.streaming && (
+          <div className="flex gap-2.5 items-start" aria-label="AI is typing" role="status">
             <div className="p-1.5 rounded-full bg-[var(--shell-bg)] text-[var(--shell-muted)] mt-0.5">
               <Bot size={12} />
             </div>
@@ -554,9 +859,17 @@ export function AIChat({ module, apiBase = "", className }: AIChatProps) {
       </div>
 
       {/* ── Input Area ─────────────────────────────────────────────── */}
-      <div className="shrink-0 border-t border-[var(--shell-border)] bg-[var(--shell-surface)] p-3">
+      <footer
+        className="shrink-0 border-t border-[var(--shell-border)] bg-[var(--shell-surface)] p-3"
+        role="form"
+        aria-label="Message input"
+      >
         <div className="flex gap-2 items-end">
+          <label htmlFor={`chat-input-${module}`} className="sr-only">
+            Type your message
+          </label>
           <textarea
+            id={`chat-input-${module}`}
             ref={textareaRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
@@ -566,20 +879,25 @@ export function AIChat({ module, apiBase = "", className }: AIChatProps) {
             disabled={loading}
             className="flex-1 resize-none rounded-lg border border-[var(--shell-border)] bg-[var(--shell-bg)] px-3 py-2 text-[13px] text-[var(--shell-foreground)] placeholder:text-[var(--shell-muted)]/50 focus:outline-none focus:ring-1 focus:ring-[var(--shell-primary)] disabled:opacity-50 max-h-24"
             style={{ minHeight: "38px" }}
+            aria-describedby={`chat-hint-${module}`}
           />
           <button
             type="button"
             onClick={() => sendMessage()}
             disabled={loading || !input.trim()}
             className="flex h-[38px] w-[38px] items-center justify-center rounded-lg bg-[var(--shell-primary)] text-white transition-colors hover:bg-[var(--shell-primary)]/90 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shrink-0"
+            aria-label="Send message"
           >
             <Send size={14} />
           </button>
         </div>
-        <p className="text-[9px] text-[var(--shell-muted)]/60 mt-1.5 text-center">
+        <p
+          id={`chat-hint-${module}`}
+          className="text-[9px] text-[var(--shell-muted)]/60 mt-1.5 text-center"
+        >
           Shift+Enter for new line · Enter to send
         </p>
-      </div>
+      </footer>
     </div>
   );
 }

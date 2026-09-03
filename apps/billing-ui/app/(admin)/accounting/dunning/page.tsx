@@ -6,7 +6,7 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@
 import { Badge } from "@/components/ui/badge";
 import { AlertTriangle, Loader2, Bell, BellOff } from "lucide-react";
 import { api } from "@/services/api";
-import { handleError } from "@datavex/ui-theme";
+import { handleError, PageHeader } from "@datavex/ui-theme";
 import { money } from "@/utils/format";
 
 const levelColors: Record<number, string> = {
@@ -52,16 +52,11 @@ export default function DunningPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold text-foreground">Dunning & Collections</h1>
-          <p className="text-sm text-muted-foreground mt-1">Overdue invoice escalation tracking</p>
-        </div>
-        <Badge variant="neutral" className="text-xs gap-1.5">
-          <Bell className="h-3 w-3" />
-          Auto-escalated daily
-        </Badge>
-      </div>
+      <PageHeader
+        title="Dunning & Collections"
+        subtitle="Overdue invoice escalation tracking"
+        actions={<Badge variant="neutral" className="text-xs gap-1.5"><Bell className="h-3 w-3" /> Auto-escalated daily</Badge>}
+      />
 
       {error && (
         <div className="flex items-center gap-3 rounded-xl border border-destructive/30 bg-destructive/10 px-5 py-3.5">

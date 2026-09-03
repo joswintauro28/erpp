@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { BookOpen, AlertTriangle, Plus, Loader2, Search, Pencil } from "lucide-react";
 import { api } from "@/services/api";
-import { handleError } from "@datavex/ui-theme";
+import { handleError, PageHeader } from "@datavex/ui-theme";
 import { money } from "@/utils/format";
 import type { LedgerEntryView, AccountEntry } from "@/types/billing";
 import GeneralLedgerLoading from "./loading";
@@ -109,13 +109,11 @@ export default function LedgerPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold text-foreground">General Ledger</h1>
-          <p className="text-sm text-muted-foreground mt-1">View account transactions and balances</p>
-        </div>
-        <Button onClick={() => setJournalOpen(true)}><Plus className="h-4 w-4" /> Manual Journal</Button>
-      </div>
+      <PageHeader
+        title="General Ledger"
+        subtitle="View account transactions and balances"
+        actions={<Button onClick={() => setJournalOpen(true)}><Plus className="h-4 w-4" /> Manual Journal</Button>}
+      />
 
       {error && (
         <div className="flex items-center gap-3 rounded-xl border border-destructive/30 bg-destructive/10 px-5 py-3.5">

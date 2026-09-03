@@ -1,4 +1,12 @@
-import { IsEmail, IsNotEmpty, IsString, IsNumber, IsBoolean, IsArray, IsOptional } from 'class-validator';
+import {
+  IsEmail,
+  IsNotEmpty,
+  IsString,
+  IsNumber,
+  IsBoolean,
+  IsArray,
+  IsOptional,
+} from 'class-validator';
 
 export class InviteUserDto {
   @IsEmail({}, { message: 'Invalid email format' })

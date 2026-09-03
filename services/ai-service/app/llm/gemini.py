@@ -1,4 +1,5 @@
 import logging
+from collections.abc import AsyncIterator
 
 from app.core.config import settings
 from app.llm.base import LLMProvider
@@ -19,13 +20,9 @@ class GeminiProvider(LLMProvider):
             from google import genai
             self._client = genai.Client(api_key=settings.GEMINI_API_KEY)
 
-    async def chat(self, messages: list[dict], model: str | None = None) -> str:
+    def _build_contents(self, messages: list[dict]):
         from google.genai import types as genai_types
 
-        self._ensure_client()
-        model = model or "gemini-2.5-flash"
-
-        # Build contents from messages (skip system, handle user/assistant)
         contents = []
         system_instruction = None
         for msg in messages:
@@ -41,6 +38,14 @@ class GeminiProvider(LLMProvider):
                     role="model",
                     parts=[genai_types.Part.from_text(text=msg["content"])],
                 ))
+        return contents, system_instruction
+
+    async def chat(self, messages: list[dict], model: str | None = None) -> str:
+        from google.genai import types as genai_types
+
+        self._ensure_client()
+        model = model or "gemini-2.5-flash"
+        contents, system_instruction = self._build_contents(messages)
 
         if not contents:
             raise ValueError("No user messages to send to Gemini")
@@ -59,12 +64,36 @@ class GeminiProvider(LLMProvider):
         )
         return response.text
 
+    async def chat_stream(self, messages: list[dict], model: str | None = None) -> AsyncIterator[str]:
+        from google.genai import types as genai_types
+
+        self._ensure_client()
+        model = model or "gemini-2.5-flash"
+        contents, system_instruction = self._build_contents(messages)
+
+        if not contents:
+            raise ValueError("No user messages to send to Gemini")
+
+        config = genai_types.GenerateContentConfig(
+            temperature=0.7,
+            max_output_tokens=2048,
+        )
+        if system_instruction:
+            config.system_instruction = system_instruction
+
+        async for chunk in await self._client.aio.models.generate_content_stream(
+            model=model,
+            contents=contents,
+            config=config,
+        ):
+            if chunk.text:
+                yield chunk.text
+
     async def health_check(self) -> bool:
         if not settings.GEMINI_API_KEY:
             return False
         try:
             self._ensure_client()
-            # Simple test: list models
             await self._client.aio.models.list()
             return True
         except Exception:

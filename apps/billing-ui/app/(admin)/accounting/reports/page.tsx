@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { BarChart3, TrendingUp, TrendingDown, AlertTriangle, DollarSign, Receipt, Wallet, Banknote, ArrowUpRight, ArrowDownRight, Minus } from "lucide-react";
 import ReportsLoading from "./loading";
 import { api } from "@/services/api";
-import { handleError, Button } from "@datavex/ui-theme";
+import { handleError, Button, PageHeader } from "@datavex/ui-theme";
 import { money } from "@/utils/format";
 
 type Tab = "pl" | "balance-sheet" | "cash-flow" | "cogs";
@@ -113,10 +113,10 @@ export default function ReportsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold text-foreground">Financial Reports</h1>
-        <p className="text-sm text-muted-foreground mt-1">Generate and view financial statements</p>
-      </div>
+      <PageHeader
+        title="Financial Reports"
+        subtitle="Generate and view financial statements"
+      />
 
       {error && (
         <div className="flex items-center gap-3 rounded-xl border border-destructive/30 bg-destructive/10 px-5 py-3.5">

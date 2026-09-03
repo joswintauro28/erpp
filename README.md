@@ -21,7 +21,8 @@ DATAVEX/ERP/ (Root)
 │   ├── crm-service/                       # FastAPI (Port 8001) — CRM / Sales Pipeline Engine
 │   ├── core-iam/                          # NestJS (Port 8002) — Central Single Sign-On & RBAC Engine
 │   ├── billing-service/                   # NestJS (Port 8003) — Invoices, Payments, Quotations, and General Ledger
-│   └── inventory-service/                 # FastAPI (Port 8004) — Products, Stock, Suppliers, and PO tracking
+│   ├── inventory-service/                 # FastAPI (Port 8004) — Products, Stock, Suppliers, and PO tracking
+│   └── ai-service/                        # FastAPI (Port 8005) — AI Chat, Session Management, LLM Integration
 │
 ├── packages/                              # CENTRAL SHAREABLE PACKAGES
 │   ├── auth-middleware/                   # Shared JWT auth types, API client, and token management
@@ -481,6 +482,7 @@ Each service operates on its own dedicated PostgreSQL database target. In local 
 | `erp_inventory` | `inventory-service` | Product catalog items, stock records, warehouses, and PO listings |
 | `erp_crm` | `crm-service` | Sales leads, client accounts, opportunities, sales orders & quotations |
 | `erp_db` | `erp-service` | Central business gateway stats |
+| `erp_ai` | `ai-service` | AI chat sessions, messages, audit logs |
 
 ---
 

@@ -18,7 +18,7 @@ import { SearchInput } from "@/components/shared/search-input";
 import { LoadingSpinner } from "@/components/shared/loading-spinner";
 import { EmptyState } from "@/components/shared/empty-state";
 import { api } from "@/services/api";
-import { handleError } from "@datavex/ui-theme";
+import { PageHeader, handleError } from "@datavex/ui-theme";
 import { useToast } from "@/contexts/ToastContext";
 import { money } from "@/utils/format";
 import type { BillingPayment } from "@/types/billing";
@@ -125,14 +125,12 @@ export default function Payments() {
   if (loading) return <PaymentsLoading />;
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="font-heading text-xl font-semibold tracking-tight text-[var(--shell-foreground)]">Payments</h1>
-          <p className="mt-0.5 text-sm text-[var(--shell-muted)]">Record and manage payments received</p>
-        </div>
-        <Button aria-label="Record Payment" onClick={() => setRecordOpen(true)}><Plus className="h-4 w-4" /> Record Payment</Button>
-      </div>
+    <div className="space-y-10 lg:space-y-12">
+      <PageHeader
+        title="Payments"
+        subtitle="Record and manage payments received"
+        actions={<Button aria-label="Record Payment" onClick={() => setRecordOpen(true)}><Plus className="h-4 w-4" /> Record Payment</Button>}
+      />
 
       {metrics && (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-5">

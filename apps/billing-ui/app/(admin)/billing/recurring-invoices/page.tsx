@@ -15,7 +15,7 @@ import {
 import { SearchInput } from "@/components/shared/search-input";
 import { EmptyState } from "@/components/shared/empty-state";
 import { api } from "@/services/api";
-import { handleError } from "@datavex/ui-theme";
+import { PageHeader, handleError } from "@datavex/ui-theme";
 import { useToast } from "@/contexts/ToastContext";
 import { money } from "@/utils/format";
 import type { RecurringInvoice } from "@/types/billing";
@@ -182,14 +182,12 @@ export default function RecurringInvoices() {
   if (loading) return <RecurringInvoicesLoading />;
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="font-heading text-xl font-semibold tracking-tight text-[var(--shell-foreground)]">Recurring Invoices</h1>
-          <p className="mt-0.5 text-sm text-[var(--shell-muted)]">Manage automated recurring billing schedules</p>
-        </div>
-        <Button aria-label="Create Schedule" onClick={() => setCreateOpen(true)}><Plus className="h-4 w-4" /> Create Schedule</Button>
-      </div>
+    <div className="space-y-10 lg:space-y-12">
+      <PageHeader
+        title="Recurring Invoices"
+        subtitle="Manage automated recurring billing schedules"
+        actions={<Button aria-label="Create Schedule" onClick={() => setCreateOpen(true)}><Plus className="h-4 w-4" /> Create Schedule</Button>}
+      />
 
       <div className="flex flex-wrap items-center gap-3">
         <SearchInput value={search} onChange={setSearch} placeholder="Search recurring invoices..." className="flex-1 max-w-xs" />

@@ -114,7 +114,6 @@ export default function PurchaseRequisitionsPage() {
 
   useEffect(() => {
     fetchData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [statusFilter]);
 
   const handleCreate = async () => {
