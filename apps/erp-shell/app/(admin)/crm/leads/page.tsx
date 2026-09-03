@@ -119,7 +119,7 @@ export default function LeadsPage() {
               <Download size={14} className="mr-1.5" /> Export
             </Button>
             <Button
-              onClick={() => router.push("/lead-discovery")}
+              onClick={() => router.push("/crm/lead-discovery")}
               className="bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-slate-950 font-semibold border border-[var(--shell-warning)]/40 shadow-[0_0_12px_rgba(245,158,11,0.25)] hover:shadow-[0_0_18px_rgba(245,158,11,0.5)] transition-all duration-300"
               size="sm"
             >
