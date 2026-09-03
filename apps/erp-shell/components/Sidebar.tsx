@@ -197,8 +197,8 @@ const navItems: NavItem[] = [
       {
         name: "Activity",
         children: [
-          { name: "Communication Logs", href: "/email-logs", icon: Mail },
-          { name: "Audit Logs", href: "/audit-logs", icon: FileClock },
+          { name: "Communication Logs", href: "/email-logs", icon: Mail, soon: true },
+          { name: "Audit Logs", href: "/audit-logs", icon: FileClock, soon: true },
         ],
       },
     ],
