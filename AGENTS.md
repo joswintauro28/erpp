@@ -233,7 +233,9 @@ DATAVEX ERP utilizes a decoupled backend architecture where each business domain
 - **Database ORM:** SQLAlchemy 2.0 (AsyncSession via `postgresql+asyncpg`)
 - **Migrations:** Alembic
 - **Database Target:** `erp_db` (PostgreSQL)
-- **Claims-Based Verification:** `decode_access_token` decodes JWT locally via shared `JWT_SECRET` + HS256 — no DB queries. `require_permission` dependency defined but not yet applied to any route (all endpoints use basic `get_current_user_id` with `owner_id` scoping).
+- **Claims-Based Verification:** `decode_access_token` decodes JWT locally via shared `JWT_SECRET` + HS256 — no DB queries. `require_permission` dependency defined for RBAC enforcement. All endpoints use `get_current_token_payload` or `get_current_user_id` with `owner_id` scoping.
+- **Request Logging:** `RequestLoggingMiddleware` adds unique `X-Request-ID` to every request/response, logs method, path, status code, duration (ms), and flags slow requests (>2s).
+- **Standardized API Contracts:** `app/core/schemas.py` defines `PaginatedResponse`, `SuccessResponse`, `ErrorResponse`, `HealthResponse` for consistent API responses across all endpoints. Error responses include `success`, `error`, `detail`, and `request_id` fields.
 - **Monolithic `/auth` endpoints decommissioned** — auth handled entirely by core-iam.
 - **Inter-service Integration:** Dashboard and Notification modules forward the raw JWT to billing-service (port 8003) and inventory-service (port 8004) via `_raw_token` in the JWT payload.
 - **Active Models (3):** Client, Lead, Product — all with `owner_id` data isolation.

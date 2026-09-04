@@ -10,7 +10,9 @@ This backend service acts as the central business logic gateway and handles lead
 - **Port:** 8000
 
 ## 2. Architecture & Design Patterns
-- **Auth Pattern:** Token verification via `decode_access_token` and shared `JWT_SECRET`. Enforces isolation via the standard `owner_id` context.
+- **Auth Pattern:** Token verification via `decode_access_token` and shared `JWT_SECRET`. Enforces isolation via the standard `owner_id` context. `require_permission(code)` dependency available for RBAC enforcement.
+- **Request Logging:** `RequestLoggingMiddleware` generates unique `X-Request-ID` for every request, logs method, path, status code, duration, and flags slow requests (>2s). Request IDs are propagated in error responses.
+- **Standardized API Contracts:** `core/schemas.py` provides `PaginatedResponse[T]`, `SuccessResponse`, `ErrorResponse`, `HealthResponse`, `PaginationMeta`, `paginate()` helper, and `parse_pagination()` for consistent responses.
 - **Proxy Routers (passthrough to downstream microservices):**
   - `crm/router.py` (`prefix="/crm"`) — Generic CRUD passthrough for all CRM entities (customers, contacts, leads, documents, opportunities, etc.) + specific endpoints (lead-discovery, AI assistant, reports dashboard, lead convert) → crm-service (8001). Includes lead-to-internal mapping (`_map_lead`, `_reverse_map_lead`). Validated via `VALID_ENTITIES` set (20 entity types).
   - `billing/router.py` — Full passthrough for invoices, payments, quotations, credit/debit notes, accounting, bank reconciliation → billing-service (8003).
