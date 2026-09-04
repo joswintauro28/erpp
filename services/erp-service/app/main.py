@@ -9,6 +9,7 @@ from fastapi.openapi.utils import get_openapi
 from app.core.config import settings
 from app.core.exceptions import TooManyRequestsException
 from app.core.middleware import SecurityHeadersMiddleware
+from app.core.request_logging import RequestLoggingMiddleware
 
 # Import feature routers
 from app.client.router import router as clients_router
@@ -77,6 +78,9 @@ app.openapi = custom_openapi
 # Security middleware
 app.add_middleware(SecurityHeadersMiddleware)
 
+# Request logging with request IDs
+app.add_middleware(RequestLoggingMiddleware)
+
 # CORS
 app.add_middleware(
     CORSMiddleware,
@@ -89,20 +93,20 @@ app.add_middleware(
 
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request, exc):
+    request_id = getattr(getattr(request, "state", None), "request_id", None)
+    body = {"success": False, "error": exc.detail, "request_id": request_id}
     if exc.status_code == 429:
-        return JSONResponse(status_code=429, content={"detail": exc.detail})
-    return JSONResponse(
-        status_code=exc.status_code,
-        content={"detail": exc.detail},
-    )
+        return JSONResponse(status_code=429, content=body)
+    return JSONResponse(status_code=exc.status_code, content=body)
 
 
 @app.exception_handler(Exception)
 async def unhandled_exception_handler(request, exc):
-    logging.error(f"Unhandled exception: {str(exc)}", exc_info=True)
+    request_id = getattr(getattr(request, "state", None), "request_id", None)
+    logging.error(f"Unhandled exception [{request_id}]: {str(exc)}", exc_info=True)
     return JSONResponse(
         status_code=500,
-        content={"detail": "Internal server error"},
+        content={"success": False, "error": "Internal server error", "request_id": request_id},
     )
 
 
@@ -122,8 +126,10 @@ app.include_router(files_router)
 
 @app.get("/health", tags=["system"])
 async def health_check():
-    return {"status": "healthy"}
+    from app.core.schemas import HealthResponse
+    return HealthResponse()
 
 @app.get("/", tags=["system"])
 async def root():
-    return {"message": "DATAVEX ERP API Running", "status": "healthy"}
+    from app.core.schemas import SuccessResponse
+    return SuccessResponse(message="DATAVEX ERP API Running")
