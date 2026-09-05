@@ -6,7 +6,7 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@
 import { Badge } from "@/components/ui/badge";
 import { AlertTriangle, Loader2, Bell, BellOff } from "lucide-react";
 import { api } from "@/services/api";
-import { handleError } from "@datavex/ui-theme";
+import { handleError, KpiCard } from "@datavex/ui-theme";
 import { money } from "@/utils/format";
 
 const levelColors: Record<number, string> = {
@@ -64,9 +64,9 @@ export default function DunningPage() {
       )}
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <Card><CardContent className="pt-6"><p className="text-xs text-[var(--shell-muted)]">Active Dunning Records</p><p className="font-heading text-lg font-semibold text-[var(--shell-foreground)] mt-1">{dunning.length}</p></CardContent></Card>
-        <Card><CardContent className="pt-6"><p className="text-xs text-[var(--shell-muted)]">Level 3 (Final Notice)</p><p className="font-heading text-lg font-semibold text-destructive mt-1">{dunning.filter((r) => r.level === 3).length}</p></CardContent></Card>
-        <Card className="border-[var(--shell-accent)]/30 bg-[var(--shell-accent)]/5"><CardContent className="pt-6"><p className="text-xs text-[var(--shell-muted)]">Total Amount in Collections</p><p className="font-heading text-lg font-semibold text-[var(--shell-foreground)] mt-1">{money(totalDue)}</p></CardContent></Card>
+        <KpiCard label="Active Dunning Records" value={dunning.length} subtitle="escalated invoices" icon={Bell} color="var(--chart-1)" index={0} />
+        <KpiCard label="Level 3 (Final Notice)" value={dunning.filter((r) => r.level === 3).length} subtitle="critical escalations" icon={AlertTriangle} color="var(--shell-danger)" index={1} />
+        <KpiCard label="Total Amount in Collections" value={money(totalDue)} subtitle="outstanding balance" icon={BellOff} color="var(--shell-warning)" index={2} />
       </div>
 
       <Card>

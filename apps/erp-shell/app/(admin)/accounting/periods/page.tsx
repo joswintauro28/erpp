@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AlertTriangle, Loader2, Lock, Unlock, Calendar } from "lucide-react";
 import { api } from "@/services/api";
-import { handleError, PageHeader } from "@datavex/ui-theme";
+import { handleError, PageHeader, KpiCard } from "@datavex/ui-theme";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -84,24 +84,9 @@ export default function PeriodsPage() {
 
       {status && (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <Card>
-            <CardContent className="pt-6">
-              <p className="text-xs text-muted-foreground">Current Month</p>
-              <p className="font-heading text-lg font-semibold text-foreground mt-1">{status.current_month}</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-6">
-              <p className="text-xs text-muted-foreground">Last Closed</p>
-              <p className="font-heading text-lg font-semibold text-foreground mt-1">{status.last_closed_period?.label ?? status.last_closed_period ?? "None"}</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-6">
-              <p className="text-xs text-muted-foreground">Open Periods</p>
-              <p className="font-heading text-lg font-semibold text-foreground mt-1">{status.total_open}</p>
-            </CardContent>
-          </Card>
+          <KpiCard label="Current Month" value={status.current_month} subtitle="active period" icon={Calendar} color="var(--chart-1)" index={0} />
+          <KpiCard label="Last Closed" value={status.last_closed_period?.label ?? status.last_closed_period ?? "None"} subtitle="previous close" icon={Lock} color="var(--chart-2)" index={1} />
+          <KpiCard label="Open Periods" value={status.total_open} subtitle="awaiting closure" icon={Unlock} color="var(--shell-warning)" index={2} />
         </div>
       )}
 

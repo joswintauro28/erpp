@@ -7,6 +7,7 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { KpiCard } from "@datavex/ui-theme";
 
 import type { WorkflowRule } from "@/types/settings";
 
@@ -54,51 +55,9 @@ export default function WorkflowAutomation() {
 
       {/* Dashboard-Aligned KPI Grid */}
       <div className="grid grid-cols-3 gap-6">
-        {[
-          {
-            label: "Active Rules",
-            value: String(rules.filter((r) => r.is_active).length),
-            subtitle: "Running active triggers",
-            icon: Play,
-            color: "var(--shell-accent)", // Milled Gold
-            index: 0,
-          },
-          {
-            label: "Paused Rules",
-            value: String(rules.filter((r) => !r.is_active).length),
-            subtitle: "Temporarily deactivated",
-            icon: Pause,
-            color: "var(--shell-muted)",
-            index: 1,
-          },
-          {
-            label: "Total Configured",
-            value: String(rules.length),
-            subtitle: "Total automation rules",
-            icon: Repeat,
-            color: "var(--shell-brand)", // Crimson Red
-            index: 2,
-          },
-        ].map((kpi) => (
-          <div
-            key={kpi.label}
-            className="animate-kpi flex flex-col gap-1.5 rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface)] p-5 transition-all duration-200 hover:-translate-y-1 hover:shadow-lg"
-            style={{ animationDelay: `${kpi.index * 0.05}s` }}
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-medium uppercase tracking-[0.08em] text-[var(--shell-muted)]">
-                {kpi.label}
-              </span>
-              <div className="flex h-7 w-7 items-center justify-center rounded-md border border-[var(--shell-border)]/40 bg-[var(--shell-surface-alt)]">
-                <kpi.icon className="h-3.5 w-3.5" style={{ color: kpi.color }} />
-              </div>
-            </div>
-            <span className="font-heading text-2xl font-semibold tracking-tight text-[var(--shell-foreground)]">
-              {kpi.value}
-            </span>
-            <span className="text-xs text-[var(--shell-muted)]">{kpi.subtitle}</span>
-          </div>
-        ))}
+        <KpiCard label="Active Rules" value={rules.filter((r) => r.is_active).length} subtitle="Running active triggers" icon={Play} color="var(--shell-accent)" index={0} />
+        <KpiCard label="Paused Rules" value={rules.filter((r) => !r.is_active).length} subtitle="Temporarily deactivated" icon={Pause} color="var(--shell-muted)" index={1} />
+        <KpiCard label="Total Configured" value={rules.length} subtitle="Total automation rules" icon={Repeat} color="var(--shell-brand)" index={2} />
       </div>
 
       {/* Search and Filters */}

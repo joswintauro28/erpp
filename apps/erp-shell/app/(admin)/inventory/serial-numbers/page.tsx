@@ -25,7 +25,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { api } from "@/services/api";
-import { handleError } from "@datavex/ui-theme";
+import { handleError, KpiCard } from "@datavex/ui-theme";
 import { toastError, toastWarning } from "@/utils/toast";
 
 interface SerialNumber {
@@ -261,11 +261,11 @@ export default function SerialRegistryPage() {
   }, [serials, search, statusFilter]);
 
   const kpis = [
-    { label: "REGISTERED UNITS", value: stats.total, icon: ScanBarcode, tone: "text-[var(--shell-brand)]" },
-    { label: "IN STOCK", value: stats.in_stock, icon: PackageOpen, tone: "text-[var(--shell-success)]" },
-    { label: "RESERVED", value: stats.reserved, icon: ShieldCheck, tone: "text-[var(--shell-info)]" },
-    { label: "SOLD", value: stats.sold, icon: PackageCheck, tone: "text-muted-foreground" },
-    { label: "RETURNS & REPAIRS", value: (stats.returned || 0) + (stats.repair || 0) + (stats.damaged || 0), icon: Wrench, tone: "text-[var(--shell-warning)]" },
+    { label: "Registered Units", value: stats.total ?? 0, icon: ScanBarcode, color: "var(--chart-1)" },
+    { label: "In Stock", value: stats.in_stock ?? 0, icon: PackageOpen, color: "var(--shell-success)" },
+    { label: "Reserved", value: stats.reserved ?? 0, icon: ShieldCheck, color: "var(--chart-2)" },
+    { label: "Sold", value: stats.sold ?? 0, icon: PackageCheck, color: "var(--chart-4)" },
+    { label: "Returns & Repairs", value: (stats.returned || 0) + (stats.repair || 0) + (stats.damaged || 0), icon: Wrench, color: "var(--shell-warning)" },
   ];
 
   const getStatusMeta = (status: string) => STATUS_META[status] || { label: status, dot: "bg-zinc-400", badge: "" };
@@ -291,15 +291,7 @@ export default function SerialRegistryPage() {
       {/* KPI Strip */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
         {kpis.map((k, idx) => (
-          <Card key={k.label} className="kpi-enter border-border" style={{ animationDelay: `${idx * 60}ms` }}>
-            <CardContent className="p-4 flex items-start justify-between gap-2">
-              <div>
-                <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[--shell-muted]">{k.label}</p>
-                <p className="text-2xl font-bold tracking-tight mt-1">{k.value ?? 0}</p>
-              </div>
-              <k.icon className={`h-5 w-5 ${k.tone}`} />
-            </CardContent>
-          </Card>
+          <KpiCard key={k.label} label={k.label} value={k.value} icon={k.icon} color={k.color} index={idx} />
         ))}
       </div>
 

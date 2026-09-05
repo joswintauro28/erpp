@@ -1,11 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import {
-  Search, CreditCard, DollarSign, Receipt,
-  ArrowUpRight, ArrowDownLeft, Wallet, XCircle, Ban,
-  Building2,
-} from "lucide-react";
+import { CreditCard, Plus, Ban, Loader2, Receipt, DollarSign, Building2, AlertTriangle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -15,51 +11,29 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { MultiStepDialog } from "@/components/multi-step-dialog";
-import { searchBilling, money } from "@/utils/format";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+} from "@/components/ui/dialog";
 import { api } from "@/services/api";
-import { handleError } from "@datavex/ui-theme";
+import { toastSuccess, toastError } from "@/utils/toast";
+import { SearchInput, EmptyState, PageHeader, handleError, KpiCard } from "@datavex/ui-theme";
+import { money } from "@/utils/format";
 import type { BillingPayment } from "@/types/billing";
 import PaymentsLoading from "./loading";
 
-interface PaymentMetrics {
-  today: number; thisMonth: number; outstanding: number; refunds: number; failed: number;
-}
-
-function SectionHeading({ label }: { label: string }) {
-  return (
-    <div className="mb-5 flex items-center gap-2">
-      <h2 className="font-heading text-xs font-medium uppercase tracking-[0.12em] text-[var(--shell-muted)]">
-        {label}
-      </h2>
-      <div className="h-px flex-1 bg-[var(--shell-border)]/20" />
-    </div>
-  );
-}
-
-const CHART_VARS = [
-  "var(--chart-1)", "var(--chart-2)", "var(--chart-3)",
-  "var(--shell-warning)", "var(--shell-danger)",
-];
-
-const metricCards = [
-  { key: "today" as const, icon: ArrowDownLeft, label: "Today", gradient: "from-[var(--shell-brand)]/5 to-transparent", idx: 0 },
-  { key: "thisMonth" as const, icon: DollarSign, label: "This Month", gradient: "from-[var(--shell-accent)]/5 to-transparent", idx: 1 },
-  { key: "outstanding" as const, icon: ArrowUpRight, label: "Outstanding", gradient: "from-amber-500/5 to-transparent", idx: 2 },
-  { key: "refunds" as const, icon: Ban, label: "Refunds", gradient: "from-orange-500/5 to-transparent", idx: 3 },
-  { key: "failed" as const, icon: XCircle, label: "Failed", gradient: "from-red-500/5 to-transparent", idx: 4 },
-];
-
 export default function Payments() {
   const [payments, setPayments] = useState<BillingPayment[]>([]);
-  const [metrics, setMetrics] = useState<PaymentMetrics>({ today: 0, thisMonth: 0, outstanding: 0, refunds: 0, failed: 0 });
+  const [metrics, setMetrics] = useState<{ today: number; this_month: number; outstanding: number; refunds: number; failed: number } | null>(null);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [recordOpen, setRecordOpen] = useState(false);
-  const [payStep, setPayStep] = useState(0);
+  const [refunding, setRefunding] = useState<number | null>(null);
+  const [refundConfirmId, setRefundConfirmId] = useState<number | null>(null);
+  const [saving, setSaving] = useState(false);
   const [formInvoice, setFormInvoice] = useState("");
   const [formAmount, setFormAmount] = useState("");
   const [formMethod, setFormMethod] = useState("Bank_Transfer");
+  const [formDate, setFormDate] = useState(new Date().toISOString().split("T")[0]);
   const [formRef, setFormRef] = useState("");
   const [formNotes, setFormNotes] = useState("");
   const [invoices, setInvoices] = useState<{ id: number; number: string; client: string; balance: number }[]>([]);
@@ -72,26 +46,13 @@ export default function Payments() {
   const loadData = () => {
     setLoading(true);
     Promise.all([
-      api.get<any[]>("/payments"),
-      api.get<any>("/payments/metrics").catch(() => ({})),
+      api.get<BillingPayment[]>("/payments"),
+      api.get<{ today: number; this_month: number; outstanding: number; refunds: number; failed: number }>("/payments/metrics"),
       api.get<any[]>("/invoices?status=sent,partially_paid,overdue").catch(() => []),
     ])
-      .then(([pmts, m, invs]) => {
-        setPayments(pmts.map((p: any) => ({
-          id: p.id, payment_id: p.payment_id,
-          invoice_number: p.invoice_number ?? `INV-${p.invoice_id}`,
-          client_name: p.client_name ?? "Unknown",
-          amount: Number(p.amount), refunded_amount: Number(p.refunded_amount ?? 0),
-          method: p.method ?? "Unknown", reference: p.reference ?? "",
-          date: p.date ?? "",
-        })));
-        setMetrics({
-          today: Number(m?.today ?? 0),
-          thisMonth: Number(m?.this_month ?? m?.thisMonth ?? 0),
-          outstanding: Number(m?.outstanding ?? 0),
-          refunds: Number(m?.refunds ?? 0),
-          failed: Number(m?.failed ?? 0),
-        });
+      .then(([p, m, invs]) => {
+        setPayments(p);
+        setMetrics(m);
         setInvoices(invs.map((i: any) => ({
           id: i.id,
           number: i.invoice_number ?? `INV-${i.id}`,
@@ -99,212 +60,154 @@ export default function Payments() {
           balance: Number(i.balance_due ?? i.total ?? 0),
         })));
       })
-      .catch(() => { setPayments([]); })
+      .catch(() => { setPayments([]); setMetrics(null); })
       .finally(() => setLoading(false));
   };
 
   useEffect(() => { loadData(); }, []);
 
-  const filtered = useMemo(() => searchBilling(payments, search), [payments, search]);
+  const filtered = useMemo(() => {
+    if (!search.trim()) return payments;
+    const q = search.toLowerCase();
+    return payments.filter(
+      (p) =>
+        p.invoice_number.toLowerCase().includes(q) ||
+        p.client_name.toLowerCase().includes(q) ||
+        p.method.toLowerCase().includes(q),
+    );
+  }, [payments, search]);
 
   const handleRecordPayment = async (e: React.FormEvent) => {
     e.preventDefault();
     const selected = invoices.find((i) => i.number === formInvoice);
     if (!formAmount || !formInvoice || !selected) return;
+    setSaving(true);
     try {
-      // billing-service CreatePaymentDto expects camelCase fields and
-      // PaymentMethod enum values (Bank_Transfer, Credit_Card, ...).
       await api.post("/payments", {
         invoiceId: selected.id,
         amount: Number(formAmount),
         paymentMethod: formMethod,
+        paymentDate: formDate || undefined,
         referenceId: formRef || undefined,
         notes: formNotes || undefined,
       });
       setRecordOpen(false);
-      setPayStep(0);
-      setFormInvoice("");
-      setFormAmount("");
-      setFormMethod("Bank_Transfer");
-      setFormRef("");
-      setFormNotes("");
+      setFormInvoice(""); setFormAmount(""); setFormMethod("Bank_Transfer");
+      setFormDate(new Date().toISOString().split("T")[0]);
+      setFormRef(""); setFormNotes("");
+      toastSuccess("Payment recorded successfully");
       loadData();
     } catch {
-      // error handled by api interceptor
+      toastError("Failed to record payment. Please try again.");
+    } finally {
+      setSaving(false);
     }
   };
 
   const handleRefund = async (id: number) => {
+    setRefunding(id);
+    setRefundConfirmId(null);
     try {
       await api.post(`/payments/${id}/refund`);
+      toastSuccess("Refund issued successfully");
       loadData();
     } catch {
-      // error handled by api interceptor
+      toastError("Failed to issue refund. Please try again.");
+    } finally {
+      setRefunding(null);
     }
   };
 
-  if (loading) {
-    return <PaymentsLoading />;
-  }
+  if (loading) return <PaymentsLoading />;
 
   return (
-    <div className="space-y-8">
-      {/* Page Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="font-heading text-xl font-semibold tracking-tight text-[var(--shell-foreground)]">
-            Payments
-          </h1>
-          <p className="mt-0.5 text-sm text-[var(--shell-muted)]">
-            Track collections, refunds, and payment links
-          </p>
-        </div>
-        <Button className="bg-[var(--shell-brand)] hover:bg-[var(--shell-brand)]/90 text-white" onClick={() => setRecordOpen(true)}>
-          <Wallet className="h-4 w-4" />
-          Record Payment
-        </Button>
-      </div>
+    <div className="space-y-10 lg:space-y-12">
+      <PageHeader
+        title="Payments"
+        subtitle="Record and manage payments received"
+        actions={<Button aria-label="Record Payment" onClick={() => setRecordOpen(true)}><Plus className="h-4 w-4" /> Record Payment</Button>}
+      />
 
-      {/* Metrics */}
-      <section>
-        <SectionHeading label="Payment Metrics" />
+      {metrics && (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-5">
-          {(() => {
-            const values: Record<string, string> = {
-              today: money(metrics.today),
-              thisMonth: money(metrics.thisMonth),
-              outstanding: money(metrics.outstanding),
-              refunds: money(metrics.refunds),
-              failed: String(metrics.failed),
-            };
-            return metricCards.map((card) => {
-              const Icon = card.icon;
-              const isDestructive = card.key === "refunds" || card.key === "failed";
-              return (
-                <div
-                  key={card.key}
-                  className="animate-kpi relative flex flex-col gap-1.5 rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface)] p-4.5 transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1)] overflow-hidden"
-                  style={{ animationDelay: `${card.idx * 0.05}s` }}
-                >
-                  <div className={`absolute inset-0 bg-gradient-to-br ${card.gradient} pointer-events-none`} />
-                  <div className="relative z-10 flex items-center justify-between">
-                    <span className="text-xs font-medium uppercase tracking-[0.08em] text-[var(--shell-muted)]">
-                      {card.label}
-                    </span>
-                    <div className="flex h-7 w-7 items-center justify-center rounded-md border border-[var(--shell-border)] bg-[var(--shell-bg)]">
-                      <Icon className="h-3.5 w-3.5" style={{ color: CHART_VARS[card.idx] }} />
-                    </div>
-                  </div>
-                  <span className={`relative z-10 font-heading text-lg font-semibold tracking-tight ${isDestructive ? "text-[var(--shell-brand)]" : "text-[var(--shell-foreground)]"}`}>
-                    {values[card.key]}
-                  </span>
-                </div>
-              );
-            });
-          })()}
+          <KpiCard label="Today" value={money(metrics.today)} subtitle="collected today" icon={DollarSign} color="var(--chart-1)" index={0} />
+          <KpiCard label="This Month" value={money(metrics.this_month)} subtitle="MTD collections" icon={Receipt} color="var(--chart-2)" index={1} />
+          <KpiCard label="Outstanding" value={money(metrics.outstanding)} subtitle="pending payments" icon={CreditCard} color="var(--shell-danger)" index={2} />
+          <KpiCard label="Refunds" value={money(metrics.refunds)} subtitle="refunded amount" icon={Ban} color="var(--shell-danger)" index={3} />
+          <KpiCard label="Failed" value={metrics.failed} subtitle="failed attempts" icon={AlertTriangle} color="var(--shell-danger)" index={4} />
         </div>
-      </section>
+      )}
 
-      {/* Payment List */}
-      <section>
-        <SectionHeading label="Payment History" />
-        <div className="mb-5 flex flex-wrap items-center gap-3">
-          <div className="relative flex-1 max-w-xs">
-            <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--shell-muted)]" />
-            <Input
-              placeholder="Search payments..."
-              className="pl-8 border-[var(--shell-border)] bg-[var(--shell-surface)]"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
+      <SearchInput value={search} onChange={setSearch} placeholder="Search payments..." className="max-w-xs" />
+
+      <Card>
+        <CardContent className="p-0">
+          {filtered.length === 0 ? (
+            <EmptyState
+              icon={CreditCard}
+              title={payments.length === 0 ? "No payments yet" : "No payments match your search"}
             />
-          </div>
-        </div>
-
-        <Card>
-          <CardContent className="p-0">
-            {filtered.length === 0 ? (
-              <div className="flex flex-col items-center gap-2 py-16 text-muted-foreground">
-                <CreditCard className="h-10 w-10" />
-                <p className="text-sm">No payments found</p>
-              </div>
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Payment ID</TableHead>
-                    <TableHead>Invoice</TableHead>
-                    <TableHead>Client</TableHead>
-                    <TableHead className="text-right">Amount</TableHead>
-                    <TableHead>Method</TableHead>
-                    <TableHead>Reference</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Payment ID</TableHead>
+                  <TableHead>Invoice</TableHead>
+                  <TableHead>Client</TableHead>
+                  <TableHead className="text-right">Amount</TableHead>
+                  <TableHead>Method</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Reference</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filtered.map((p) => (
+                  <TableRow key={p.id}>
+                    <TableCell><span className="font-mono text-xs font-medium">{p.payment_id}</span></TableCell>
+                    <TableCell className="font-mono text-xs">{p.invoice_number}</TableCell>
+                    <TableCell className="text-[var(--shell-muted)]">{p.client_name}</TableCell>
+                    <TableCell className="font-mono text-sm text-right">{money(p.amount)}</TableCell>
+                    <TableCell className="capitalize text-xs">{p.method.replace("_", " ")}</TableCell>
+                    <TableCell className="text-xs text-[var(--shell-muted)]">{p.date}</TableCell>
+                    <TableCell className="text-xs text-[var(--shell-muted)]">{p.reference}</TableCell>
+                    <TableCell>
+                      <div className="flex justify-end">
+                        <Button
+                          variant="ghost" size="icon-sm"
+                          onClick={() => setRefundConfirmId(p.id)}
+                          disabled={refunding === p.id}
+                          title="Refund"
+                        >
+                          {refunding === p.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Ban className="h-3.5 w-3.5 text-[var(--shell-warning)]" />}
+                        </Button>
+                      </div>
+                    </TableCell>
                   </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filtered.map((p) => (
-                    <TableRow key={p.id}>
-                      <TableCell className="font-mono text-xs">{p.payment_id}</TableCell>
-                      <TableCell className="font-mono text-xs">{p.invoice_number}</TableCell>
-                      <TableCell>{p.client_name}</TableCell>
-                      <TableCell className="font-mono text-sm font-medium text-right">
-                        {money(p.amount)}
-                        {p.refunded_amount > 0 && (
-                          <span className="ml-1 text-xs text-destructive">
-                            (-{money(p.refunded_amount)})
-                          </span>
-                        )}
-                      </TableCell>
-                      <TableCell>{p.method}</TableCell>
-                      <TableCell className="font-mono text-xs text-muted-foreground">{p.reference}</TableCell>
-                      <TableCell className="text-xs text-muted-foreground">{p.date}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center justify-end gap-1">
-                          {p.refunded_amount === 0 && (
-                            <Button variant="ghost" size="icon-sm" onClick={() => handleRefund(p.id)} title="Refund">
-                              <Ban className="h-3.5 w-3.5 text-[var(--shell-warning)]" />
-                            </Button>
-                          )}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            )}
-          </CardContent>
-        </Card>
-      </section>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
 
-      {/* Record Payment Dialog */}
-      <MultiStepDialog
-        open={recordOpen}
-        onOpenChange={(v) => { if (!v) { setPayStep(0); setRecordOpen(v); } }}
-        title="Record Payment"
-        steps={[
-          { title: "Invoice", description: "Select invoice and enter amount" },
-          { title: "Method", description: "Payment method and reference" },
-        ]}
-        currentStep={payStep}
-        onStepChange={setPayStep}
-        onSubmit={handleRecordPayment}
-        submitLabel="Record Payment"
-      >
-        {payStep === 0 && (
-          <div className="space-y-5">
+      {/* Record Payment Dialog — with invoice balance reference and card-grouped form */}
+      <Dialog open={recordOpen} onOpenChange={setRecordOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Record Payment</DialogTitle>
+          </DialogHeader>
+          <form className="space-y-5" onSubmit={handleRecordPayment}>
             <div className="rounded-lg border border-[var(--shell-border)] bg-[var(--shell-surface)] p-4">
               <div className="mb-3 flex items-center gap-2">
                 <Receipt className="h-3.5 w-3.5 text-[var(--shell-brand)]" />
                 <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--shell-foreground)]">Select Invoice</span>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="payment-invoice">Invoice</Label>
+                <Label htmlFor="bi-pay-invoice">Invoice</Label>
                 <Select value={formInvoice} onValueChange={(v) => v !== null && setFormInvoice(v)}>
-                  <SelectTrigger id="payment-invoice"><SelectValue placeholder="Select an invoice" /></SelectTrigger>
+                  <SelectTrigger id="bi-pay-invoice"><SelectValue placeholder="Select an invoice" /></SelectTrigger>
                   <SelectContent>
-                    {invoices.length === 0 && (
-                      <SelectItem value="-" disabled>No invoices available</SelectItem>
-                    )}
                     {invoices.map((inv) => (
                       <SelectItem key={inv.id} value={inv.number}>
                         {inv.number} — {inv.client}
@@ -320,20 +223,26 @@ export default function Payments() {
                 </div>
               )}
             </div>
+
             <div className="rounded-lg border border-[var(--shell-border)] bg-[var(--shell-surface)] p-4">
               <div className="mb-3 flex items-center gap-2">
-                <DollarSign className="h-3.5 w-3.5 text-[var(--shell-accent)]" />
-                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--shell-foreground)]">Payment Amount</span>
+                <DollarSign className="h-3.5 w-3.5 text-[--shell-accent]" />
+                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[--shell-foreground]">Payment Details</span>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="payment-amount">Amount (₹)</Label>
-                <Input id="payment-amount" type="number" min={0} step={0.01} placeholder="0.00" required value={formAmount} onChange={(e) => setFormAmount(e.target.value)} />
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="bi-pay-amount">Amount (₹)</Label>
+                    <Input id="bi-pay-amount" type="number" min={0} step={0.01} placeholder="0.00" required value={formAmount} onChange={(e) => setFormAmount(e.target.value)} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="bi-pay-date">Payment Date</Label>
+                    <Input id="bi-pay-date" type="date" value={formDate} onChange={(e) => setFormDate(e.target.value)} />
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-        )}
-        {payStep === 1 && (
-          <div className="space-y-5">
+
             <div className="rounded-lg border border-[var(--shell-border)] bg-[var(--shell-surface)] p-4">
               <div className="mb-3 flex items-center gap-2">
                 <Building2 className="h-3.5 w-3.5 text-[var(--shell-accent)]" />
@@ -341,9 +250,9 @@ export default function Payments() {
               </div>
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="payment-method">Method</Label>
+                  <Label htmlFor="bi-pay-method">Method</Label>
                   <Select value={formMethod} onValueChange={(v) => v !== null && setFormMethod(v)}>
-                    <SelectTrigger id="payment-method"><SelectValue /></SelectTrigger>
+                    <SelectTrigger id="bi-pay-method"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="Bank_Transfer">Bank Transfer</SelectItem>
                       <SelectItem value="UPI">UPI</SelectItem>
@@ -354,18 +263,54 @@ export default function Payments() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="payment-ref">Reference</Label>
-                  <Input id="payment-ref" placeholder="Transaction ID / Reference" value={formRef} onChange={(e) => setFormRef(e.target.value)} />
+                  <Label htmlFor="bi-pay-ref">Reference</Label>
+                  <Input id="bi-pay-ref" placeholder="Transaction ID / Reference" value={formRef} onChange={(e) => setFormRef(e.target.value)} />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="payment-notes">Notes</Label>
-                  <Textarea id="payment-notes" rows={2} placeholder="Optional notes" value={formNotes} onChange={(e) => setFormNotes(e.target.value)} />
+                  <Label htmlFor="bi-pay-notes">Notes</Label>
+                  <Textarea id="bi-pay-notes" rows={2} placeholder="Optional notes" value={formNotes} onChange={(e) => setFormNotes(e.target.value)} />
                 </div>
               </div>
             </div>
-          </div>
-        )}
-      </MultiStepDialog>
+
+            <DialogFooter>
+              <Button type="button" variant="outline" size="sm" onClick={() => setRecordOpen(false)}>Cancel</Button>
+              <Button type="submit" size="sm" disabled={saving}>
+                {saving && <Loader2 className="mr-1 h-4 w-4 animate-spin" />}
+                Record Payment
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Refund Confirmation Dialog */}
+      <Dialog open={refundConfirmId !== null} onOpenChange={(open) => { if (!open) setRefundConfirmId(null); }}>
+        <DialogContent>
+          <DialogHeader>
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--shell-warning-surface)] text-[var(--shell-warning)]">
+                <AlertTriangle className="h-5 w-5" />
+              </div>
+              <DialogTitle>Confirm Refund</DialogTitle>
+            </div>
+          </DialogHeader>
+          <p className="text-sm text-[--shell-muted] pt-1">
+            Are you sure you want to issue a refund for this payment? This action will reverse the payment and update the invoice balance accordingly.
+          </p>
+          <DialogFooter className="mt-4">
+            <Button variant="outline" size="sm" onClick={() => setRefundConfirmId(null)}>Cancel</Button>
+            <Button
+              className="bg-amber-600 hover:bg-amber-700 text-white"
+              onClick={() => refundConfirmId !== null && handleRefund(refundConfirmId)}
+              disabled={refunding !== null}
+            >
+              {refunding !== null ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Ban className="mr-2 h-4 w-4" />}
+              Issue Refund
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

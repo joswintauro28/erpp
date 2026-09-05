@@ -22,7 +22,7 @@ import { Input } from "@/components/ui/input";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { api } from "@/services/api";
-import { handleError } from "@datavex/ui-theme";
+import { handleError, KpiCard } from "@datavex/ui-theme";
 import { toastError, toastWarning } from "@/utils/toast";
 
 interface Operation {
@@ -198,14 +198,11 @@ export default function WorkOrdersPage() {
 
       {/* KPI row */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-        {(["DRAFT", "RELEASED", "IN_PROGRESS", "COMPLETED", "CANCELLED"] as const).map((s) => (
-          <Card key={s}>
-            <CardContent className="p-4 flex items-center justify-between">
-              <span className="text-xs font-semibold uppercase text-muted-foreground">{STATUS_BADGES[s].label}</span>
-              <span className="text-xl font-bold text-[var(--shell-brand)]">{counts[s] || 0}</span>
-            </CardContent>
-          </Card>
-        ))}
+        <KpiCard label="Draft" value={counts["DRAFT"] || 0} subtitle="not started" icon={Layers} color="var(--chart-4)" index={0} />
+        <KpiCard label="Released" value={counts["RELEASED"] || 0} subtitle="approved for production" icon={Send} color="var(--chart-2)" index={1} />
+        <KpiCard label="In Progress" value={counts["IN_PROGRESS"] || 0} subtitle="being manufactured" icon={Play} color="var(--shell-warning)" index={2} />
+        <KpiCard label="Completed" value={counts["COMPLETED"] || 0} subtitle="production finished" icon={CheckCircle2} color="var(--shell-success)" index={3} />
+        <KpiCard label="Cancelled" value={counts["CANCELLED"] || 0} subtitle="terminated" icon={XCircle} color="var(--shell-danger)" index={4} />
       </div>
 
       {/* Filters */}

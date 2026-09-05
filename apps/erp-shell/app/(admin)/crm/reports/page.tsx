@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
-import { TrendingUp, Award, Users, BarChart3, ShieldAlert, RotateCw, PackageOpen, Search, Filter, Plus, Download } from "lucide-react";
+import { TrendingUp, Award, Users, BarChart3, ShieldAlert, RotateCw, PackageOpen, Search, Filter, Plus, Download, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
@@ -9,7 +9,7 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { Spinner } from "@/components/ui/spinner";
 import { exportToCSV } from "@/utils/exportCsv";
 import { toastError } from "@/utils/toast";
-import { useConfirm, handleError } from "@datavex/ui-theme";
+import { useConfirm, handleError, KpiCard, PageHeader, SectionHeading } from "@datavex/ui-theme";
 import { api } from "@/services/api";
 import ReportTable from "./ReportTable";
 import ReportCreateModal from "./ReportCreateModal";
@@ -34,8 +34,8 @@ export default function ReportsPage() {
   const fetchReportData = useCallback(async () => {
     try {
       const [dashboardResult, reportsResult] = await Promise.all([
-        api.get<any>("/reports/dashboard"),
-        api.get<any>("/reports"),
+        api.get<any>("/crm/reports/dashboard"),
+        api.get<any>("/crm/reports"),
       ]);
       setData(dashboardResult);
       setReportsData(reportsResult);
@@ -53,7 +53,7 @@ export default function ReportsPage() {
   const handleDelete = async (record: any) => {
     if (!(await confirm({ title: "Delete report", message: "Are you sure you want to delete this report?", destructive: true }))) return;
     try {
-      await api.delete("/reports/" + record.id_str);
+      await api.delete("/crm/reports/" + record.id_str);
       fetchReportData();
     } catch {}
   };
@@ -87,123 +87,104 @@ export default function ReportsPage() {
 
   return (
     <div className="space-y-10 lg:space-y-12">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="font-heading text-xs font-light uppercase tracking-[0.12em] text-[var(--shell-muted)]">INSIGHTS</p>
-          <h2 className="text-xl font-semibold tracking-tight text-[var(--shell-foreground)] mt-1">CRM Analytics & Performance Reports</h2>
-          <p className="text-sm text-[var(--shell-muted)] mt-1">Real-time visual reports of sales pipeline, conversion funnels, and representative performance.</p>
-        </div>
-        <Button variant="outline" size="sm" onClick={fetchReportData}>
-          <RotateCw className={"h-4 w-4 mr-1.5" + (loading ? " animate-spin" : "")} /> Refresh
-        </Button>
-      </div>
+      <PageHeader
+        title="CRM Analytics & Reports"
+        subtitle="Real-time performance reports and pipeline insights."
+        badge="CRM Sales Hub"
+        actions={
+          <Button variant="outline" size="sm" onClick={fetchReportData} className="gap-1.5 text-xs">
+            <RotateCw className={"h-3.5 w-3.5" + (loading ? " animate-spin" : "")} /> Refresh
+          </Button>
+        }
+      />
 
-      <div>
-        <div className="mb-5 flex items-center gap-2">
-          <h2 className="font-heading text-xs font-light uppercase tracking-[0.12em] text-[var(--shell-muted)]">OVERVIEW</h2>
-          <div className="h-px flex-1 bg-[var(--shell-border)]" />
-        </div>
+      <section>
+        <SectionHeading label="Overview" />
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-          <div className="rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface)] p-4 space-y-2 hover:shadow-engineered transition-shadow">
-            <p className="text-xs font-medium uppercase tracking-[0.08em] text-[var(--shell-muted)] flex items-center gap-1"><TrendingUp size={14} className="text-[var(--shell-brand)]" /> WIN RATE</p>
-            <p className="font-heading text-2xl font-semibold tracking-tight text-[var(--shell-foreground)]">{summary.win_rate}%</p>
-            <p className="text-xs text-[var(--shell-muted)]">deals won ratio</p>
-          </div>
-          <div className="rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface)] p-4 space-y-2 hover:shadow-engineered transition-shadow">
-            <p className="text-xs font-medium uppercase tracking-[0.08em] text-[var(--shell-muted)] flex items-center gap-1"><Users size={14} className="text-[var(--shell-brand)]" /> LEAD CONVERSION</p>
-            <p className="font-heading text-2xl font-semibold tracking-tight text-[var(--shell-foreground)]">{summary.lead_conv_rate}%</p>
-            <p className="text-xs text-[var(--shell-muted)]">qualified leads</p>
-          </div>
-          <div className="rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface)] p-4 space-y-2 hover:shadow-engineered transition-shadow">
-            <p className="text-xs font-medium uppercase tracking-[0.08em] text-[var(--shell-muted)] flex items-center gap-1"><Award size={14} className="text-[var(--shell-brand)]" /> TOTAL REVENUE</p>
-            <p className="font-heading text-2xl font-semibold tracking-tight text-[var(--shell-foreground)]">{formatCurrency(summary.total_sales_value)}</p>
-            <p className="text-xs text-[var(--shell-muted)]">confirmed sales value</p>
-          </div>
-          <div className="rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface)] p-4 space-y-2 hover:shadow-engineered transition-shadow">
-            <p className="text-xs font-medium uppercase tracking-[0.08em] text-[var(--shell-muted)] flex items-center gap-1"><BarChart3 size={14} className="text-[var(--shell-brand)]" /> ACTIVE PIPELINE DEALS</p>
-            <p className="font-heading text-2xl font-semibold tracking-tight text-[var(--shell-foreground)]">{summary.total_opportunities}</p>
-            <p className="text-xs text-[var(--shell-muted)]">open opportunities</p>
-          </div>
+          <KpiCard label="Win Rate" value={`${summary.win_rate}%`} subtitle="deals won ratio" icon={TrendingUp} color="var(--chart-1)" index={0} />
+          <KpiCard label="Lead Conversion" value={`${summary.lead_conv_rate}%`} subtitle="qualified leads" icon={Users} color="var(--chart-2)" index={1} />
+          <KpiCard label="Total Revenue" value={formatCurrency(summary.total_sales_value)} subtitle="confirmed sales value" icon={Award} color="var(--chart-3)" index={2} />
+          <KpiCard label="Active Pipeline Deals" value={summary.total_opportunities} subtitle="open opportunities" icon={Target} color="var(--chart-4)" index={3} />
         </div>
-      </div>
+      </section>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Revenue by Sales Representative</CardTitle>
-            <CardDescription>Performance breakdown of deals closed</CardDescription>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-5">
-            {rep_sales.length > 0 ? (
-              rep_sales.map((item: any, idx: number) => (
-                <div key={idx}>
-                  <div className="flex justify-between text-sm font-semibold mb-1">
-                    <span className="text-[var(--shell-foreground)]">{item.rep}</span>
-                    <span className="text-[var(--shell-brand)]">{formatCurrency(item.amount)}</span>
+      <section>
+        <SectionHeading label="Analytics" />
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <CardTitle>Revenue by Sales Representative</CardTitle>
+              <CardDescription>Performance breakdown of deals closed</CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-5">
+              {rep_sales.length > 0 ? (
+                rep_sales.map((item: any, idx: number) => (
+                  <div key={idx}>
+                    <div className="flex justify-between text-sm font-semibold mb-1">
+                      <span className="text-[var(--shell-foreground)]">{item.rep}</span>
+                      <span className="text-[var(--shell-brand)]">{formatCurrency(item.amount)}</span>
+                    </div>
+                    <Progress value={(item.amount / maxRepSales) * 100} />
                   </div>
-                  <Progress value={(item.amount / maxRepSales) * 100} />
+                ))
+              ) : (
+                <EmptyState icon={PackageOpen} title="No closed sales found" />
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Lead Status Distribution</CardTitle>
+              <CardDescription>Current status breakdown of leads in system</CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-5">
+              {lead_status.length > 0 ? (
+                lead_status.map((item: any, idx: number) => (
+                  <div key={idx}>
+                    <div className="flex justify-between text-sm font-semibold mb-1">
+                      <span className="text-[var(--shell-foreground)]">{item.status}</span>
+                      <span className="text-[var(--shell-muted)]">{item.count} leads</span>
+                    </div>
+                    <Progress value={(item.count / maxLeadCount) * 100} className="[&>div]:bg-[var(--shell-info)]" />
+                  </div>
+                ))
+              ) : (
+                <EmptyState icon={PackageOpen} title="No leads found" />
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle>Opportunity Pipeline Stages</CardTitle>
+            <CardDescription>Active funnel stages of deals in progress</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {opp_stages.length > 0 ? (
+                opp_stages.map((item: any, idx: number) => (
+                  <div key={idx} className="rounded-lg border border-[var(--shell-border)] bg-[var(--shell-bg)] p-4">
+                    <p className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--shell-muted)]">{item.stage}</p>
+                    <p className="font-heading text-2xl font-semibold tracking-tight text-[var(--shell-foreground)] mt-1">{item.count}</p>
+                    <div className="mt-2">
+                      <Progress value={(item.count / maxOppCount) * 100} className="h-1 [&>div]:bg-[var(--shell-success)]" />
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="col-span-full">
+                  <EmptyState icon={PackageOpen} title="No active opportunities" />
                 </div>
-              ))
-            ) : (
-              <EmptyState icon={PackageOpen} title="No closed sales found" />
-            )}
+              )}
+            </div>
           </CardContent>
         </Card>
+      </section>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Lead Status Distribution</CardTitle>
-            <CardDescription>Current status breakdown of leads in system</CardDescription>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-5">
-            {lead_status.length > 0 ? (
-              lead_status.map((item: any, idx: number) => (
-                <div key={idx}>
-                  <div className="flex justify-between text-sm font-semibold mb-1">
-                    <span className="text-[var(--shell-foreground)]">{item.status}</span>
-                    <span className="text-[var(--shell-muted)]">{item.count} leads</span>
-                  </div>
-                  <Progress value={(item.count / maxLeadCount) * 100} className="[&>div]:bg-[var(--shell-info)]" />
-                </div>
-              ))
-            ) : (
-              <EmptyState icon={PackageOpen} title="No leads found" />
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Opportunity Pipeline Stages</CardTitle>
-          <CardDescription>Active funnel stages of deals in progress</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {opp_stages.length > 0 ? (
-              opp_stages.map((item: any, idx: number) => (
-                <div key={idx} className="rounded-lg border border-[var(--shell-border)] bg-[var(--shell-bg)] p-4">
-                  <p className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--shell-muted)]">{item.stage}</p>
-                  <p className="font-heading text-2xl font-semibold tracking-tight text-[var(--shell-foreground)] mt-1">{item.count}</p>
-                  <div className="mt-2">
-                    <Progress value={(item.count / maxOppCount) * 100} className="h-1 [&>div]:bg-[var(--shell-success)]" />
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="col-span-full">
-                <EmptyState icon={PackageOpen} title="No active opportunities" />
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
-      <div>
-        <div className="mb-5 flex items-center gap-2">
-          <h2 className="font-heading text-xs font-light uppercase tracking-[0.12em] text-[var(--shell-muted)]">RECORDS</h2>
-          <div className="h-px flex-1 bg-[var(--shell-border)]" />
-        </div>
+      <section>
+        <SectionHeading label="Report Records" />
         <Card>
           <div className="flex items-center justify-between border-b border-[var(--shell-border)] p-4">
             <div className="relative flex-1 max-w-xs">
@@ -212,11 +193,11 @@ export default function ReportsPage() {
             </div>
             <div className="flex items-center gap-3">
               <Filter size={15} className="text-[var(--shell-muted)] shrink-0" />
-              <Button variant="outline" size="sm" onClick={() => exportToCSV(filteredReports, "reports")}>
-                <Download size={14} className="mr-1.5" /> Export
+              <Button variant="outline" size="sm" onClick={() => exportToCSV(filteredReports, "reports")} className="gap-1.5 text-xs">
+                <Download size={14} /> Export
               </Button>
-              <Button size="sm" onClick={() => setIsModalOpen(true)}>
-                <Plus size={14} className="mr-1.5" /> New Report
+              <Button size="sm" onClick={() => setIsModalOpen(true)} className="bg-[var(--shell-brand)] text-white hover:bg-[var(--shell-brand)]/90 gap-1.5 text-xs shadow-sm">
+                <Plus size={14} /> New Report
               </Button>
             </div>
           </div>
@@ -229,7 +210,7 @@ export default function ReportsPage() {
             />
           </div>
         </Card>
-      </div>
+      </section>
 
       <ReportCreateModal isOpen={isModalOpen} onClose={() => { setIsModalOpen(false); setEditRecord(null); }} editRecord={editRecord} onSuccess={fetchReportData} />
       <ReportDetailsModal record={selectedRecord} isOpen={isDetailsOpen} onClose={() => { setIsDetailsOpen(false); setSelectedRecord(null); }} />

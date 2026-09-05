@@ -28,7 +28,7 @@ import {
   Filter,
 } from "lucide-react";
 import { api } from "@/services/api";
-import { handleError, PageHeader } from "@datavex/ui-theme";
+import { handleError, PageHeader, KpiCard } from "@datavex/ui-theme";
 import { money } from "@/utils/format";
 
 
@@ -231,66 +231,11 @@ export default function AgingWorkstationPage() {
 
       {/* Executive KPI Summary Cards */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
-        <Card className="shadow-sm">
-          <CardContent className="pt-5">
-            <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
-              <span>Gross AR Invoices</span>
-              <FileText className="h-4 w-4 text-muted-foreground" />
-            </div>
-            <p className="font-heading text-xl font-bold">{money(summary?.kpis?.totalGrossAR || 0)}</p>
-            <p className="text-[11px] text-muted-foreground mt-1">{summary?.kpis?.openInvoicesCount || 0} open invoices</p>
-          </CardContent>
-        </Card>
-
-        <Card className="shadow-sm">
-          <CardContent className="pt-5">
-            <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
-              <span>Unapplied Credits</span>
-              <DollarSign className="h-4 w-4 text-[var(--shell-success)]" />
-            </div>
-            <p className="font-heading text-xl font-bold text-[var(--shell-success)] ">
-              {money(summary?.kpis?.unappliedCredits || 0)}
-            </p>
-            <p className="text-[11px] text-muted-foreground mt-1">Advance customer credits</p>
-          </CardContent>
-        </Card>
-
-        <Card className="shadow-sm border-primary/30 bg-primary/5">
-          <CardContent className="pt-5">
-            <div className="flex items-center justify-between text-xs text-primary font-medium mb-1">
-              <span>Net AR Outstanding</span>
-              <TrendingUp className="h-4 w-4 text-primary" />
-            </div>
-            <p className="font-heading text-xl font-bold text-primary">
-              {money(summary?.kpis?.netAROutstanding || 0)}
-            </p>
-            <p className="text-[11px] text-muted-foreground mt-1">Net receivable value</p>
-          </CardContent>
-        </Card>
-
-        <Card className="shadow-sm">
-          <CardContent className="pt-5">
-            <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
-              <span>Open Customers</span>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </div>
-            <p className="font-heading text-xl font-bold">{summary?.kpis?.openCustomersCount || 0}</p>
-            <p className="text-[11px] text-muted-foreground mt-1">Active debit accounts</p>
-          </CardContent>
-        </Card>
-
-        <Card className="shadow-sm">
-          <CardContent className="pt-5">
-            <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
-              <span>Overdue &gt;30 Days</span>
-              <AlertTriangle className="h-4 w-4 text-[var(--shell-warning)]" />
-            </div>
-            <p className="font-heading text-xl font-bold text-[var(--shell-warning)] ">
-              {summary?.kpis?.overdue30PlusRatio || 0}%
-            </p>
-            <p className="text-[11px] text-muted-foreground mt-1">Overdue exposure ratio</p>
-          </CardContent>
-        </Card>
+        <KpiCard label="Gross AR Invoices" value={money(summary?.kpis?.totalGrossAR || 0)} subtitle={`${summary?.kpis?.openInvoicesCount || 0} open invoices`} icon={FileText} color="var(--chart-1)" index={0} />
+        <KpiCard label="Unapplied Credits" value={money(summary?.kpis?.unappliedCredits || 0)} subtitle="Advance customer credits" icon={DollarSign} color="var(--shell-success)" index={1} />
+        <KpiCard label="Net AR Outstanding" value={money(summary?.kpis?.netAROutstanding || 0)} subtitle="Net receivable value" icon={TrendingUp} color="var(--chart-5)" index={2} />
+        <KpiCard label="Open Customers" value={summary?.kpis?.openCustomersCount || 0} subtitle="Active debit accounts" icon={Users} color="var(--chart-2)" index={3} />
+        <KpiCard label="Overdue >30 Days" value={`${summary?.kpis?.overdue30PlusRatio || 0}%`} subtitle="Overdue exposure ratio" icon={AlertTriangle} color="var(--shell-warning)" index={4} />
       </div>
 
       {/* Navigation Tabs */}

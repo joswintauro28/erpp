@@ -18,6 +18,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { api } from "@/services/api";
+import { KpiCard } from "@datavex/ui-theme";
 import type { TeamMember } from "@/types/settings";
 
 const roleColors: Record<string, string> = {
@@ -326,59 +327,10 @@ export default function TeamManagement() {
         <div className="space-y-6 animate-fade-in">
           {/* Dashboard-Aligned KPI Grid */}
           <div className="grid grid-cols-4 gap-6">
-            {[
-              {
-                label: "Total Members",
-                value: String(members.length),
-                subtitle: "Registered profiles",
-                icon: Users,
-                color: "var(--shell-foreground)",
-                index: 0,
-              },
-              {
-                label: "Active Users",
-                value: String(members.filter((m) => m.status === "active").length),
-                subtitle: "Authorized to login",
-                icon: CheckCircle2,
-                color: "#10b981",
-                index: 1,
-              },
-              {
-                label: "Deactivated Users",
-                value: String(members.filter((m) => m.status === "disabled").length),
-                subtitle: "Access revoked",
-                icon: PowerOff,
-                color: "var(--shell-brand)",
-                index: 2,
-              },
-              {
-                label: "Available Roles",
-                value: String(roles.length),
-                subtitle: "Configured access groups",
-                icon: Shield,
-                color: "var(--shell-accent)",
-                index: 3,
-              },
-            ].map((kpi) => (
-              <div
-                key={kpi.label}
-                className="animate-kpi flex flex-col gap-1.5 rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface)] p-5 transition-all duration-200 hover:-translate-y-1 hover:shadow-lg"
-                style={{ animationDelay: `${kpi.index * 0.05}s` }}
-              >
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--shell-muted)]">
-                    {kpi.label}
-                  </span>
-                  <div className="flex h-7 w-7 items-center justify-center rounded-md border border-[var(--shell-border)]/40 bg-[var(--shell-surface-alt)]">
-                    <kpi.icon className="h-3.5 w-3.5" style={{ color: kpi.color }} />
-                  </div>
-                </div>
-                <span className="font-heading text-2xl font-semibold tracking-tight text-[var(--shell-foreground)]">
-                  {kpi.value}
-                </span>
-                <span className="text-xs text-[var(--shell-muted)]">{kpi.subtitle}</span>
-              </div>
-            ))}
+            <KpiCard label="Total Members" value={members.length} subtitle="Registered profiles" icon={Users} color="var(--chart-1)" index={0} />
+            <KpiCard label="Active Users" value={members.filter((m) => m.status === "active").length} subtitle="Authorized to login" icon={CheckCircle2} color="var(--shell-success)" index={1} />
+            <KpiCard label="Deactivated Users" value={members.filter((m) => m.status === "disabled").length} subtitle="Access revoked" icon={PowerOff} color="var(--shell-danger)" index={2} />
+            <KpiCard label="Available Roles" value={roles.length} subtitle="Configured access groups" icon={Shield} color="var(--shell-accent)" index={3} />
           </div>
 
           {/* Search bar */}
