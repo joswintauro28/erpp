@@ -1,19 +1,18 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Plus, Download, Search, Filter } from "lucide-react";
+import { Plus, Download, Search, Filter, ClipboardList, Eye, AlertTriangle, Users } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { exportToCSV } from "@/utils/exportCsv";
 import { toastError } from "@/utils/toast";
-import { useConfirm, handleError } from "@datavex/ui-theme";
+import { useConfirm, handleError, KpiCard, PageHeader, SectionHeading } from "@datavex/ui-theme";
 import RequirementTable from "./RequirementTable";
 import { Spinner } from "@/components/ui/spinner";
 import { api } from "@/services/api";
 import RequirementCreateModal from "./RequirementCreateModal";
 import RequirementDetailsModal from "./RequirementDetailsModal";
-
 
 export default function RequirementsPage() {
   const [data, setData] = useState({ summary: { total_requirements: 0, open: 0, overdue_at_risk: 0, owners: 0 }, requirements: [] });
@@ -52,37 +51,34 @@ export default function RequirementsPage() {
 
   return (
     <div className="space-y-10 lg:space-y-12">
-      <div className="flex items-center justify-end gap-3">
-        <Button variant="outline" size="sm" onClick={() => exportToCSV(items, "requirements")}><Download className="h-4 w-4" /> Export</Button>
-        <Button size="sm" onClick={() => setIsModalOpen(true)}><Plus className="h-4 w-4" /> New Requirement</Button>
-      </div>
+      <PageHeader
+        title="Requirements Log"
+        subtitle="Capture and track client requirements and change requests."
+        badge="CRM Sales Hub"
+        actions={
+          <>
+            <Button variant="outline" size="sm" onClick={() => exportToCSV(items, "requirements")} className="gap-1.5 text-xs">
+              <Download size={14} /> Export
+            </Button>
+            <Button size="sm" onClick={() => setIsModalOpen(true)} className="bg-[var(--shell-brand)] text-white hover:bg-[var(--shell-brand)]/90 gap-1.5 text-xs shadow-sm">
+              <Plus size={14} /> New Requirement
+            </Button>
+          </>
+        }
+      />
 
-      <div>
-        <div className="mb-5 flex items-center gap-2">
-          <h2 className="font-heading text-xs font-light uppercase tracking-[0.12em] text-[var(--shell-muted)]">OVERVIEW</h2>
-          <div className="h-px flex-1 bg-[var(--shell-border)]" />
-        </div>
+      <section>
+        <SectionHeading label="Overview" />
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-          {[
-            { label: "TOTAL REQUIREMENTS", value: data.summary?.total_requirements, trend: "requirements logged" },
-            { label: "OPEN", value: data.summary?.open, trend: "under review" },
-            { label: "OVERDUE / AT RISK", value: data.summary?.overdue_at_risk, trend: data.summary?.overdue_at_risk > 0 ? "cancelled" : "none critical" },
-            { label: "REPRESENTATIVES", value: data.summary?.owners, trend: "active reps" },
-          ].map((m) => (
-            <div key={m.label} className="rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface)] p-4 space-y-2 hover:shadow-engineered transition-shadow">
-              <p className="text-xs font-medium uppercase tracking-[0.08em] text-[var(--shell-muted)]">{m.label}</p>
-              <p className="font-heading text-2xl font-semibold tracking-tight text-[var(--shell-foreground)]">{m.value ?? 0}</p>
-              <p className="text-xs text-[var(--shell-muted)]">{m.trend}</p>
-            </div>
-          ))}
+          <KpiCard label="Total Requirements" value={data.summary?.total_requirements ?? 0} subtitle="requirements logged" icon={ClipboardList} color="var(--chart-1)" index={0} />
+          <KpiCard label="Open" value={data.summary?.open ?? 0} subtitle="under review" icon={Eye} color="var(--chart-2)" index={1} />
+          <KpiCard label="Overdue / At Risk" value={data.summary?.overdue_at_risk ?? 0} subtitle={data.summary?.overdue_at_risk > 0 ? "cancelled" : "none critical"} icon={AlertTriangle} color="var(--shell-danger)" index={2} />
+          <KpiCard label="Representatives" value={data.summary?.owners ?? 0} subtitle="active reps" icon={Users} color="var(--chart-4)" index={3} />
         </div>
-      </div>
+      </section>
 
-      <div>
-        <div className="mb-5 flex items-center gap-2">
-          <h2 className="font-heading text-xs font-light uppercase tracking-[0.12em] text-[var(--shell-muted)]">RECORDS</h2>
-          <div className="h-px flex-1 bg-[var(--shell-border)]" />
-        </div>
+      <section>
+        <SectionHeading label="Requirement Records" />
         <Card className="hover:shadow-engineered transition-shadow duration-200 border-[var(--shell-border)] bg-[var(--shell-surface)]">
           <div className="flex items-center gap-3 border-b border-[var(--shell-border)] p-4">
             <div className="relative flex-1">
@@ -92,15 +88,15 @@ export default function RequirementsPage() {
             <Filter className="h-4 w-4 text-[var(--shell-muted)]" />
           </div>
           <div className="overflow-x-auto">
-            <RequirementTable 
-              requirements={filtered} 
-              onView={(rec) => { setSelectedRecordForDetails(rec); setIsDetailsOpen(true); }} 
-              onEdit={(rec) => { setEditRecord(rec); setIsModalOpen(true); }} 
-              onDelete={handleDelete} 
+            <RequirementTable
+              requirements={filtered}
+              onView={(rec) => { setSelectedRecordForDetails(rec); setIsDetailsOpen(true); }}
+              onEdit={(rec) => { setEditRecord(rec); setIsModalOpen(true); }}
+              onDelete={handleDelete}
             />
           </div>
         </Card>
-      </div>
+      </section>
 
       <RequirementCreateModal isOpen={isModalOpen} onClose={() => { setIsModalOpen(false); setEditRecord(null); }} editRecord={editRecord} onSuccess={fetchData} />
       <RequirementDetailsModal record={selectedRecordForDetails} isOpen={isDetailsOpen} onClose={() => { setIsDetailsOpen(false); setSelectedRecordForDetails(null); }} onSuccess={fetchData} />

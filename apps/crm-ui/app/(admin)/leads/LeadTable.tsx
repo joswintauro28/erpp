@@ -99,16 +99,17 @@ export default function LeadTable({ leads, onView, onEdit, onDelete, onQualify }
           <div className="flex gap-2 items-center">
             {onQualify && isMql && row.status !== "Converted" && row.nurture_status !== "SQL" && (
               <Button
+                variant="ghost"
                 size="icon-sm"
                 title="Qualify to SQL"
-                className="text-muted-foreground hover:text-yellow-600 cursor-pointer"
+                className="cursor-pointer"
                 onClick={(e) => { e.stopPropagation(); onQualify(row); }}
               >
-                <BadgeCheck size={14} />
+                <BadgeCheck size={14} className="text-yellow-600" />
               </Button>
             )}
-            <Button size="icon-sm" className="text-muted-foreground hover:text-foreground cursor-pointer" onClick={(e) => { e.stopPropagation(); onEdit(row); }}><Edit2 size={14} /></Button>
-            <Button size="icon-sm" className="text-muted-foreground hover:text-destructive cursor-pointer" onClick={(e) => { e.stopPropagation(); onDelete(row); }}><Trash2 size={14} /></Button>
+            <Button variant="ghost" size="icon-sm" className="cursor-pointer" onClick={(e) => { e.stopPropagation(); onEdit(row); }}><Edit2 size={14} className="text-[var(--shell-brand)]" /></Button>
+            <Button variant="ghost" size="icon-sm" className="cursor-pointer" onClick={(e) => { e.stopPropagation(); onDelete(row); }}><Trash2 size={14} className="text-[var(--shell-danger)]" /></Button>
           </div>
         );
       },

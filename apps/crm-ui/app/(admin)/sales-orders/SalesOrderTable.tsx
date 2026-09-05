@@ -70,19 +70,20 @@ export default function SalesOrderTable({ salesOrders, onView, onEdit, onDelete,
             </TableCell>
             <TableCell>{item.owner}</TableCell>
             <TableCell>
-              <div className="flex gap-2 text-[var(--shell-muted)] items-center">
+              <div className="flex gap-2 items-center">
                 {onApprove && canApprove && (
                   <Button
+                    variant="ghost"
                     size="icon-sm"
                     title="Approve order — runs Billing credit check then publishes to Inventory (O2–O4)"
-                    className="hover:text-[var(--shell-success)] cursor-pointer"
+                    className="cursor-pointer"
                     onClick={() => onApprove(item)}
                   >
-                    <BadgeCheck size={14} />
+                    <BadgeCheck size={14} className="text-[var(--shell-success)]" />
                   </Button>
                 )}
-                <Button size="icon-sm" className="hover:text-[var(--shell-foreground)] cursor-pointer" onClick={() => onEdit(item)}><Edit2 size={14} /></Button>
-                <Button size="icon-sm" className="hover:text-[var(--shell-danger)] cursor-pointer" onClick={() => onDelete(item)}><Trash2 size={14} /></Button>
+                <Button variant="ghost" size="icon-sm" className="cursor-pointer" onClick={() => onEdit(item)}><Edit2 size={14} className="text-[var(--shell-brand)]" /></Button>
+                <Button variant="ghost" size="icon-sm" className="cursor-pointer" onClick={() => onDelete(item)}><Trash2 size={14} className="text-[var(--shell-danger)]" /></Button>
               </div>
             </TableCell>
           </TableRow>

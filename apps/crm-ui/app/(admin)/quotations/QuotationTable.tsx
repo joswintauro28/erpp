@@ -110,8 +110,8 @@ export default function QuotationTable({ quotations, onView, onEdit, onDelete, o
                   >
                     <ShoppingCart size={14} />
                   </Button>
-                  <Button size="icon-sm" className="hover:text-[var(--shell-foreground)] cursor-pointer" onClick={() => onEdit(quote)} title="Edit"><Edit2 size={14} /></Button>
-                  <Button size="icon-sm" className="hover:text-[var(--shell-danger)] cursor-pointer" onClick={() => onDelete(quote)} title="Delete"><Trash2 size={14} /></Button>
+                  <Button variant="ghost" size="icon-sm" className="cursor-pointer" onClick={() => onEdit(quote)} title="Edit"><Edit2 size={14} className="text-[var(--shell-brand)]" /></Button>
+                  <Button variant="ghost" size="icon-sm" className="cursor-pointer" onClick={() => onDelete(quote)} title="Delete"><Trash2 size={14} className="text-[var(--shell-danger)]" /></Button>
                 </div>
               </TableCell>
             </TableRow>

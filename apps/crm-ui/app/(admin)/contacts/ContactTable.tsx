@@ -40,9 +40,9 @@ export default function ContactTable({ contacts, onView, onEdit, onDelete }: Con
       header: "",
       className: "w-20",
       render: (row) => (
-        <div className="flex gap-2 text-muted-foreground">
-          <Button size="icon-sm" className="hover:text-foreground cursor-pointer" onClick={(e) => { e.stopPropagation(); onEdit(row); }} title="Edit"><Edit2 size={14} /></Button>
-          <Button size="icon-sm" className="hover:text-destructive cursor-pointer" onClick={(e) => { e.stopPropagation(); onDelete(row); }} title="Delete"><Trash2 size={14} /></Button>
+                <div className="flex gap-2">
+                  <Button variant="ghost" size="icon-sm" className="cursor-pointer" onClick={(e) => { e.stopPropagation(); onEdit(row); }} title="Edit"><Edit2 size={14} className="text-[var(--shell-brand)]" /></Button>
+                  <Button variant="ghost" size="icon-sm" className="cursor-pointer" onClick={(e) => { e.stopPropagation(); onDelete(row); }} title="Delete"><Trash2 size={14} className="text-[var(--shell-danger)]" /></Button>
         </div>
       ),
     },

@@ -49,10 +49,10 @@ const navItems: NavItem[] = [
     icon: BarChart3,
     children: [
       { name: "Reports", href: "/reports", icon: BarChart3 },
-      { name: "AI Assistant", href: "/ai-assistant", icon: Sparkles },
       { name: "Lead Discovery", href: "/lead-discovery", icon: Search },
     ],
   },
+  { name: "AI Assistant", href: "/ai-assistant", icon: Sparkles },
 ];
 
 function isGroup(item: NavItem): item is NavGroup {

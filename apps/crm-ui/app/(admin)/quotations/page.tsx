@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
-import { Plus, Download, Search, Filter, RotateCw } from "lucide-react";
+import { Plus, Download, Search, Filter, RotateCw, FileText, Eye, AlertTriangle, Users } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,7 +8,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { api } from "@/services/api";
 import { exportToCSV } from "@/utils/exportCsv";
 import { toastSuccess, toastError, errorMessage } from "@/utils/toast";
-import { useConfirm, handleError } from "@datavex/ui-theme";
+import { useConfirm, handleError, KpiCard, PageHeader, SectionHeading } from "@datavex/ui-theme";
 import QuotationCreateModal from "./QuotationCreateModal";
 import QuotationDetailsModal from "./QuotationDetailsModal";
 import QuotationTable from "./QuotationTable";
@@ -47,7 +47,6 @@ export default function QuotationsPage() {
   };
 
   const handleFinalize = (record: any) => {
-    // User-flow enforcement (O1): conversion requires an Accepted quote.
     if (record.status !== "Accepted") {
       toastError("Quote not accepted yet", "Mark the quotation as Accepted before converting to a Sales Order.");
       return;
@@ -80,54 +79,37 @@ export default function QuotationsPage() {
 
   return (
     <div className="space-y-10 lg:space-y-12">
-      <div>
-        <div className="mb-5 flex items-center gap-2">
-          <h2 className="font-heading text-xs font-light uppercase tracking-[0.12em] text-[var(--shell-muted)]">OVERVIEW</h2>
-          <div className="h-px flex-1 bg-[var(--shell-border)]" />
-        </div>
-        <div className="grid gap-4 sm:grid-cols-4">
-          <div className="rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface)] p-4 space-y-2 hover:shadow-engineered transition-shadow">
-            <p className="text-xs font-medium uppercase tracking-[0.08em] text-[var(--shell-muted)]">TOTAL QUOTATIONS</p>
-            <p className="font-heading text-2xl font-semibold tracking-tight text-[var(--shell-foreground)]">{data.summary.total_quotations}</p>
-            <p className="text-xs text-[var(--shell-muted)]">active quotes</p>
-          </div>
-          <div className="rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface)] p-4 space-y-2 hover:shadow-engineered transition-shadow">
-            <p className="text-xs font-medium uppercase tracking-[0.08em] text-[var(--shell-muted)]">OPEN</p>
-            <p className="font-heading text-2xl font-semibold tracking-tight text-[var(--shell-foreground)]">{data.summary.open}</p>
-            <p className="text-xs text-[var(--shell-muted)]">pending response</p>
-          </div>
-          <div className="rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface)] p-4 space-y-2 hover:shadow-engineered transition-shadow">
-            <p className="text-xs font-medium uppercase tracking-[0.08em] text-[var(--shell-muted)]">NEEDS ATTENTION</p>
-            <p className="font-heading text-2xl font-semibold tracking-tight text-[var(--shell-foreground)]">{data.summary.overdue_at_risk}</p>
-            <p className="text-xs text-[var(--shell-muted)]">{data.summary.overdue_at_risk > 0 ? "expired quotes" : "all valid"}</p>
-          </div>
-          <div className="rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface)] p-4 space-y-2 hover:shadow-engineered transition-shadow">
-            <p className="text-xs font-medium uppercase tracking-[0.08em] text-[var(--shell-muted)]">REPRESENTATIVES</p>
-            <p className="font-heading text-2xl font-semibold tracking-tight text-[var(--shell-foreground)]">{data.summary.owners}</p>
-            <p className="text-xs text-[var(--shell-muted)]">active reps</p>
-          </div>
-        </div>
-      </div>
+      <PageHeader
+        title="Quotation Manager"
+        subtitle="Create, send, and track client quotations and proposals."
+        badge="CRM Sales Hub"
+        actions={
+          <>
+            <Button variant="outline" size="sm" onClick={fetchData} className="gap-1.5 text-xs">
+              <RotateCw className={"h-3.5 w-3.5" + (loading ? " animate-spin" : "")} /> Refresh
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => exportToCSV(filtered, "quotations")} className="gap-1.5 text-xs">
+              <Download size={14} /> Export
+            </Button>
+            <Button size="sm" onClick={() => setIsCpqOpen(true)} className="bg-[var(--shell-brand)] text-white hover:bg-[var(--shell-brand)]/90 gap-1.5 text-xs shadow-sm">
+              <Plus size={14} /> New Quotation (CPQ)
+            </Button>
+          </>
+        }
+      />
 
-      <div>
-        <div className="mb-5 flex items-center gap-2">
-          <h2 className="font-heading text-xs font-light uppercase tracking-[0.12em] text-[var(--shell-muted)]">RECORDS</h2>
-          <div className="h-px flex-1 bg-[var(--shell-border)]" />
+      <section>
+        <SectionHeading label="Overview" />
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <KpiCard label="Total Quotations" value={data.summary.total_quotations} subtitle="active quotes" icon={FileText} color="var(--chart-1)" index={0} />
+          <KpiCard label="Open" value={data.summary.open} subtitle="pending response" icon={Eye} color="var(--chart-2)" index={1} />
+          <KpiCard label="Needs Attention" value={data.summary.overdue_at_risk} subtitle={data.summary.overdue_at_risk > 0 ? "expired quotes" : "all valid"} icon={AlertTriangle} color="var(--shell-danger)" index={2} />
+          <KpiCard label="Representatives" value={data.summary.owners} subtitle="active reps" icon={Users} color="var(--chart-4)" index={3} />
         </div>
+      </section>
 
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <Button variant="outline" size="sm" onClick={fetchData}>
-              <RotateCw className={"h-4 w-4 mr-1.5" + (loading ? " animate-spin" : "")} /> Refresh
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => exportToCSV(filtered, "quotations")}>
-              <Download size={14} className="mr-1.5" /> Export
-            </Button>
-            <Button size="sm" onClick={() => setIsCpqOpen(true)}>
-              <Plus size={14} className="mr-1.5" /> New Quotation (CPQ)
-            </Button>
-          </div>
-        </div>
+      <section>
+        <SectionHeading label="Quotation Records" />
 
         <Card className="hover:shadow-engineered transition-shadow duration-200 border-[var(--shell-border)] bg-[var(--shell-surface)]">
           <div className="flex items-center gap-3 p-4 border-b border-[var(--shell-border)]">
@@ -146,7 +128,7 @@ export default function QuotationsPage() {
             onApprovalDecision={handleApprovalDecision}
           />
         </Card>
-      </div>
+      </section>
 
       <QuotationCpqModal isOpen={isCpqOpen} onClose={() => setIsCpqOpen(false)} onSuccess={fetchData} />
       <QuotationCreateModal isOpen={isModalOpen} onClose={() => { setIsModalOpen(false); setEditRecord(null); }} editRecord={editRecord} onSuccess={fetchData} />

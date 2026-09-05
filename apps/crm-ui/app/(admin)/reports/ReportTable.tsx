@@ -45,9 +45,9 @@ export default function ReportTable({ reports, onView, onEdit, onDelete }: Repor
             <TableCell><Badge variant={statusVariant("report", item.status)}>{item.status}</Badge></TableCell>
             <TableCell>{item.owner}</TableCell>
             <TableCell>
-              <div className="flex gap-2 text-[var(--shell-muted)]">
-                <Button size="icon-sm" className="hover:text-[var(--shell-foreground)] cursor-pointer" onClick={() => onEdit(item)}><Edit2 size={14} /></Button>
-                <Button size="icon-sm" className="hover:text-[var(--shell-danger)] cursor-pointer" onClick={() => onDelete(item)}><Trash2 size={14} /></Button>
+              <div className="flex gap-2">
+                <Button variant="ghost" size="icon-sm" className="cursor-pointer" onClick={() => onEdit(item)}><Edit2 size={14} className="text-[var(--shell-brand)]" /></Button>
+                <Button variant="ghost" size="icon-sm" className="cursor-pointer" onClick={() => onDelete(item)}><Trash2 size={14} className="text-[var(--shell-danger)]" /></Button>
               </div>
             </TableCell>
           </TableRow>
