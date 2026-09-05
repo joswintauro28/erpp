@@ -322,11 +322,11 @@ export default function Invoices() {
                             <div className="flex items-center justify-end gap-0.5">
                               {inv.status === "draft" && (
                                 <Button variant="ghost" size="sm" className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => router.push(`/billing/invoices/${inv.id}`)} aria-label="Edit invoice">
-                                  <Pencil className="h-3.5 w-3.5" />
+                                  <Pencil className="h-3.5 w-3.5 text-[var(--shell-brand)]" />
                                 </Button>
                               )}
                               <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => router.push(`/billing/invoices/${inv.id}`)} aria-label="View invoice">
-                                <Eye className="h-3.5 w-3.5" />
+                                <Eye className="h-3.5 w-3.5 text-[var(--shell-brand)]" />
                               </Button>
                             </div>
                           </TableCell>

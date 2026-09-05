@@ -426,10 +426,10 @@ export default function SerialRegistryPage() {
                         <TableCell className="text-right">
                           <div className="flex items-center justify-end gap-1">
                             <Button variant="ghost" size="xs" onClick={() => openEdit(s)}>
-                              <Edit3 className="h-3.5 w-3.5 text-muted-foreground hover:text-[var(--shell-brand)]" />
+                              <Edit3 className="h-3.5 w-3.5 text-[var(--shell-brand)]" />
                             </Button>
                             <Button variant="ghost" size="xs" onClick={() => setSerialToDelete(s)}>
-                              <Trash2 className="h-3.5 w-3.5 text-muted-foreground hover:text-destructive" />
+                              <Trash2 className="h-3.5 w-3.5 text-[var(--shell-danger)]" />
                             </Button>
                           </div>
                         </TableCell>

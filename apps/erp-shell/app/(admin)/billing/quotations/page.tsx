@@ -147,7 +147,7 @@ export default function Quotations() {
                           aria-label="View quotation"
                           title="View quotation"
                         >
-                          <Eye className="h-3.5 w-3.5" />
+                          <Eye className="h-3.5 w-3.5 text-[var(--shell-brand)]" />
                         </Button>
                         {canEdit && qt.status === "draft" && (
                           <Button
@@ -157,7 +157,7 @@ export default function Quotations() {
                             aria-label="Send quotation"
                             title="Send quotation"
                           >
-                            {actionLoading === qt.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
+                            {actionLoading === qt.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5 text-[var(--shell-brand)]" />}
                           </Button>
                         )}
                         {canEdit && qt.status === "sent" && (
@@ -168,7 +168,7 @@ export default function Quotations() {
                             aria-label="Mark as rejected"
                             title="Mark as rejected"
                           >
-                            {actionLoading === qt.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Ban className="h-3.5 w-3.5" />}
+                            {actionLoading === qt.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Ban className="h-3.5 w-3.5 text-[var(--shell-danger)]" />}
                           </Button>
                         )}
                         {canEdit && qt.status === "accepted" && !qt.converted_invoice_id && (
@@ -179,7 +179,7 @@ export default function Quotations() {
                             aria-label="Convert to invoice"
                             title="Convert to invoice"
                           >
-                            {actionLoading === qt.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Receipt className="h-3.5 w-3.5" />}
+                            {actionLoading === qt.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Receipt className="h-3.5 w-3.5 text-emerald-600" />}
                           </Button>
                         )}
                         {canDelete && qt.status === "draft" && (
@@ -189,7 +189,7 @@ export default function Quotations() {
                             aria-label="Delete quotation"
                             title="Delete quotation"
                           >
-                            <Trash2 className="h-3.5 w-3.5" />
+                            <Trash2 className="h-3.5 w-3.5 text-[var(--shell-danger)]" />
                           </Button>
                         )}
                       </div>

@@ -307,11 +307,11 @@ export default function WorkOrdersPage() {
                         )}
                         {!["COMPLETED", "CANCELLED"].includes(wo.status) && (
                           <Button variant="ghost" size="xs" title="Cancel" onClick={() => runAction(wo.id, "cancel")}>
-                            <XCircle className="h-3.5 w-3.5 text-muted-foreground hover:text-destructive" />
+                            <XCircle className="h-3.5 w-3.5 text-[var(--shell-danger)]" />
                           </Button>
                         )}
                         <Button variant="ghost" size="xs" onClick={() => setOrderToDelete(wo)}>
-                          <Trash2 className="h-3.5 w-3.5 text-muted-foreground hover:text-destructive" />
+                          <Trash2 className="h-3.5 w-3.5 text-[var(--shell-danger)]" />
                         </Button>
                       </div>
                     </TableCell>

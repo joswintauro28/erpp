@@ -45,16 +45,17 @@ export default function SalesOrderTable({ salesOrders, onView, onEdit, onDelete,
         <div className="flex gap-2 items-center">
           {row.status !== "Approved" && row.status !== "Stock Hold" && (
             <Button
+              variant="ghost"
               size="icon-sm"
               title="Approve sales order"
-              className="text-muted-foreground hover:text-emerald-600 cursor-pointer"
+              className="cursor-pointer"
               onClick={(e) => { e.stopPropagation(); onApprove(row); }}
             >
-              <Check size={14} />
+              <Check size={14} className="text-emerald-600" />
             </Button>
           )}
-          <Button size="icon-sm" className="text-muted-foreground hover:text-foreground cursor-pointer" onClick={(e) => { e.stopPropagation(); onEdit(row); }}><Edit2 size={14} /></Button>
-          <Button size="icon-sm" className="text-muted-foreground hover:text-destructive cursor-pointer" onClick={(e) => { e.stopPropagation(); onDelete(row); }}><Trash2 size={14} /></Button>
+          <Button variant="ghost" size="icon-sm" className="cursor-pointer" onClick={(e) => { e.stopPropagation(); onEdit(row); }}><Edit2 size={14} className="text-[var(--shell-brand)]" /></Button>
+          <Button variant="ghost" size="icon-sm" className="cursor-pointer" onClick={(e) => { e.stopPropagation(); onDelete(row); }}><Trash2 size={14} className="text-[var(--shell-danger)]" /></Button>
         </div>
       ),
     },

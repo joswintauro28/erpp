@@ -117,17 +117,18 @@ export default function QuotationTable({ quotations, onView, onEdit, onDelete, o
 
             {isAccepted && (
               <Button
+                variant="ghost"
                 size="icon-sm"
                 title="Convert to Sales Order"
-                className="text-muted-foreground hover:text-emerald-600 cursor-pointer"
+                className="cursor-pointer"
                 onClick={(e) => { e.stopPropagation(); onFinalize(row); }}
               >
-                <Check size={14} />
+                <Check size={14} className="text-emerald-600" />
               </Button>
             )}
 
-            <Button size="icon-sm" className="text-muted-foreground hover:text-foreground cursor-pointer" onClick={(e) => { e.stopPropagation(); onEdit(row); }}><Edit2 size={14} /></Button>
-            <Button size="icon-sm" className="text-muted-foreground hover:text-destructive cursor-pointer" onClick={(e) => { e.stopPropagation(); onDelete(row); }}><Trash2 size={14} /></Button>
+            <Button variant="ghost" size="icon-sm" className="cursor-pointer" onClick={(e) => { e.stopPropagation(); onEdit(row); }}><Edit2 size={14} className="text-[var(--shell-brand)]" /></Button>
+            <Button variant="ghost" size="icon-sm" className="cursor-pointer" onClick={(e) => { e.stopPropagation(); onDelete(row); }}><Trash2 size={14} className="text-[var(--shell-danger)]" /></Button>
           </div>
         );
       },
