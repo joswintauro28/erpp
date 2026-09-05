@@ -73,7 +73,7 @@ export default function LeadCreateModal({ isOpen, onClose, onSuccess, editRecord
     if (name === 'phone' && !/^\+?[0-9\s()+-]*$/.test(value)) {
       return;
     }
-    setFormData((prev: any) => ({
+    setFormData((prev: Record<string, string>) => ({
       ...prev,
       [name]: value
     }));
@@ -103,9 +103,9 @@ export default function LeadCreateModal({ isOpen, onClose, onSuccess, editRecord
 
     try {
       if (editRecord) {
-        await api.put(`/leads/${editRecord.id_str}`, payload);
+        await api.put(`/crm/leads/${editRecord.id_str}`, payload);
       } else {
-        await api.post('/leads', payload);
+        await api.post('/crm/leads', payload);
       }
       onSuccess();
       onClose();

@@ -75,9 +75,9 @@ export default function ReportCreateModal({
 
     try {
       if (editRecord) {
-        await api.put(`/reports/${editRecord.id_str}`, formData);
+        await api.put(`/crm/reports/${editRecord.id_str}`, formData);
       } else {
-        await api.post("/reports", formData);
+        await api.post("/crm/reports", formData);
       }
       onSuccess();
       onClose();

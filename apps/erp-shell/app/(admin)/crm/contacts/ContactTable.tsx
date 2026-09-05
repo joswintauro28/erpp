@@ -2,8 +2,8 @@
 
 import { Edit2, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { statusVariant } from "@/lib/utils";
 
 interface ContactTableProps {
@@ -28,26 +28,26 @@ export default function ContactTable({ contacts, onView, onEdit, onDelete }: Con
         <TableRow>
           <TableHead>ID</TableHead>
           <TableHead>NAME</TableHead>
-          <TableHead>ROLE</TableHead>
-          <TableHead>ACCOUNT</TableHead>
           <TableHead>EMAIL</TableHead>
           <TableHead>PHONE</TableHead>
-          <TableHead>TYPE</TableHead>
-          <TableHead>LAST CONTACT</TableHead>
+          <TableHead>ROLE</TableHead>
+          <TableHead>STATUS</TableHead>
+          <TableHead>OWNER</TableHead>
+          <TableHead>UPDATED</TableHead>
           <TableHead />
         </TableRow>
       </TableHeader>
       <TableBody>
         {contacts.map((item: any) => (
           <TableRow key={item.id}>
-            <TableCell className="text-[var(--shell-muted)] cursor-pointer" onClick={() => onView(item)}>{item.id_str}</TableCell>
-            <TableCell className="font-medium text-[var(--shell-foreground)] cursor-pointer" onClick={() => onView(item)}>{item.name}</TableCell>
-            <TableCell>{item.role}</TableCell>
-            <TableCell>{item.account}</TableCell>
-            <TableCell>{item.email}</TableCell>
-            <TableCell>{item.phone}</TableCell>
-            <TableCell><Badge variant={statusVariant("contact", item.type)}>{item.type}</Badge></TableCell>
-            <TableCell className="text-[var(--shell-muted)]">{item.last_contact}</TableCell>
+            <TableCell className="text-[var(--shell-muted)] cursor-pointer text-xs" onClick={() => onView(item)}>{item.id_str}</TableCell>
+            <TableCell className="font-medium text-[var(--shell-foreground)] cursor-pointer" onClick={() => onView(item)}>{item.first_name} {item.last_name}</TableCell>
+            <TableCell className="text-xs text-[var(--shell-muted)]">{item.email}</TableCell>
+            <TableCell className="text-xs text-[var(--shell-muted)]">{item.phone}</TableCell>
+            <TableCell className="text-xs">{item.role}</TableCell>
+            <TableCell><Badge variant={statusVariant("contact", item.status)}>{item.status}</Badge></TableCell>
+            <TableCell className="text-xs text-[var(--shell-muted)]">{item.owner}</TableCell>
+            <TableCell className="text-xs text-[var(--shell-muted)]">{item.updated_at}</TableCell>
             <TableCell>
               <div className="flex gap-2 text-[var(--shell-muted)]">
                 <Button size="icon-sm" className="hover:text-[var(--shell-foreground)] cursor-pointer" onClick={() => onEdit(item)} title="Edit"><Edit2 size={14} /></Button>

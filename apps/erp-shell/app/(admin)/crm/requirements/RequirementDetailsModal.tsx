@@ -66,8 +66,8 @@ export default function RequirementDetailsModal({
         ],
       };
 
-      await api.post("/quotations", payload);
-      await api.delete(`/requirements/${record.id_str}`);
+      await api.post("/crm/quotations", payload);
+      await api.delete(`/crm/requirements/${record.id_str}`);
 
       if (onSuccess) onSuccess();
       onClose();

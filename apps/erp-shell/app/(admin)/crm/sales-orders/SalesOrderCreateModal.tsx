@@ -93,9 +93,9 @@ export default function SalesOrderCreateModal({
     try {
       const payload = { ...formData, file_id: fileId };
       if (editRecord) {
-        await api.put(`/sales-orders/${editRecord.id_str}`, payload);
+        await api.put(`/crm/sales-orders/${editRecord.id_str}`, payload);
       } else {
-        await api.post("/sales-orders", payload);
+        await api.post("/crm/sales-orders", payload);
       }
       onSuccess();
       onClose();

@@ -48,8 +48,8 @@ export default function SalesOrderDetailsModal({
     setLoadingRelated(true);
     try {
       const [reqData, qData] = await Promise.all([
-        api.get<any>(`/requirements?account=${encodeURIComponent(record.account)}`),
-        api.get<any>(`/quotations?account=${encodeURIComponent(record.account)}`),
+        api.get<any>(`/crm/requirements?account=${encodeURIComponent(record.account)}`),
+        api.get<any>(`/crm/quotations?account=${encodeURIComponent(record.account)}`),
       ]);
       setRelatedRequirements(reqData.requirements || []);
       setRelatedQuotations(qData.quotations || []);
@@ -77,7 +77,7 @@ export default function SalesOrderDetailsModal({
     setInvoiceError("");
 
     try {
-      const check = await api.post<any>(`/sales-orders/${record.id_str}/check-stock`);
+      const check = await api.post<any>(`/crm/sales-orders/${record.id_str}/check-stock`);
 
       const payload = {
         ...record,
@@ -85,7 +85,7 @@ export default function SalesOrderDetailsModal({
         file_id: invoiceFileId || record.file_id,
       };
 
-      await api.put(`/sales-orders/${record.id_str}`, payload);
+      await api.put(`/crm/sales-orders/${record.id_str}`, payload);
 
       if (check.available) {
         toastSuccess("Stock available — order confirmed.");
@@ -108,7 +108,7 @@ export default function SalesOrderDetailsModal({
 
   const handleAddAsCustomer = async () => {
     try {
-      const custData = await api.get<any>("/customers");
+      const custData = await api.get<any>("/crm/customers");
       const exists = custData.customers?.some((c: any) => c.account === record.account);
       if (exists) {
         toastInfo("This account is already added as a customer!");
@@ -117,7 +117,7 @@ export default function SalesOrderDetailsModal({
 
       let cleanArr = parseInt(String(record.value || "").replace(/[^0-9]/g, "")) || 0;
       if (cleanArr > 2147483647) cleanArr = 2147483647;
-      await api.post("/customers", {
+      await api.post("/crm/customers", {
         account: record.account,
         industry: "Software",
         tier: "Silver",

@@ -83,9 +83,9 @@ export default function RequirementCreateModal({
 
     try {
       if (editRecord) {
-        await api.put(`/requirements/${editRecord.id_str}`, payload);
+        await api.put(`/crm/requirements/${editRecord.id_str}`, payload);
       } else {
-        await api.post("/requirements", payload);
+        await api.post("/crm/requirements", payload);
       }
       onSuccess();
       onClose();

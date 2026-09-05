@@ -147,9 +147,9 @@ export default function DocumentCreateModal({
 
     try {
       if (editRecord) {
-        await api.put(`/documents/${editRecord.id_str}`, submissionData);
+        await api.put(`/crm/documents/${editRecord.id_str}`, submissionData);
       } else {
-        await api.post("/documents", submissionData);
+        await api.post("/crm/documents", submissionData);
       }
       onSuccess();
       onClose();

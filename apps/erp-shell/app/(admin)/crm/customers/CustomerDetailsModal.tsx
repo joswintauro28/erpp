@@ -1,16 +1,19 @@
 "use client";
 
-import React from "react";
-import { X, Building2, ShieldCheck, DollarSign, User } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Button } from '@/components/ui/button';
+import React, { useState, useMemo } from 'react';
+import { api } from '@/services/api';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { statusVariant } from "@/lib/utils";
+  DialogDescription,
+} from '@/components/ui/dialog';
+import { Badge } from '@/components/ui/badge';
+import { Label } from '@/components/ui/label';
+import { Building2, Mail, Phone, Wallet, ShieldCheck, Clock, Users } from 'lucide-react';
+import { formatCurrency } from './CustomerTable';
 
 interface CustomerDetailsModalProps {
   record: any;
@@ -18,117 +21,133 @@ interface CustomerDetailsModalProps {
   onClose: () => void;
 }
 
-
-const formatCurrency = (value: number) =>
-  new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(value || 0);
-
-export default function CustomerDetailsModal({
-  record,
-  isOpen,
-  onClose,
-}: CustomerDetailsModalProps) {
-  if (!record) return null;
-
-  return (
-    <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
-      <DialogContent className="sm:max-w-lg bg-[var(--shell-surface)] border-[var(--shell-border)] text-[var(--shell-foreground)]">
-        <DialogHeader className="flex flex-row items-center justify-between border-b border-[var(--shell-border)] pb-3">
-          <div className="flex items-center gap-2">
-            <Building2 className="size-5 text-[var(--shell-brand)]" />
-            <DialogTitle className="text-lg font-semibold tracking-tight text-[var(--shell-foreground)]">
-              Customer Details
-            </DialogTitle>
-          </div>
-        </DialogHeader>
-
-        <div className="space-y-6 py-4">
-          <div className="flex items-start justify-between">
+export default function CustomerDetailsModal({ record, isOpen, onClose }: CustomerDetailsModalProps) {
+  const content = useMemo(() => {
+    const rec = record || {};
+    return (
+      <div className="space-y-6">
+        {/* Header Card */}
+        <div className="rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface)] p-5 space-y-4">
+          <div className="flex items-center gap-4">
+            <div className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-[var(--shell-brand)]/10 border border-[var(--shell-brand)]/20">
+              <span className="font-heading text-xl font-bold text-[var(--shell-brand)]">
+                {rec.account?.charAt(0).toUpperCase()}
+              </span>
+            </div>
             <div>
-              <h3 className="text-xl font-bold tracking-tight text-[var(--shell-foreground)]">
-                {record.account}
+              <h3 className="font-heading text-xl font-semibold text-[var(--shell-foreground)]">
+                {rec.account}
               </h3>
-              <p className="text-xs text-[var(--shell-muted)] mt-1">
-                ID: {record.id_str}
-              </p>
-            </div>
-            <Badge variant={statusVariant("customer", record.status)} className="px-2.5 py-0.5 text-xs font-semibold">
-              {record.status}
-            </Badge>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4 border border-[var(--shell-border)] rounded-xl bg-[var(--shell-surface-alt)] p-4">
-            <div className="space-y-1">
-              <span className="text-[10px] font-semibold uppercase tracking-wider text-[var(--shell-muted)] block">
-                Industry
-              </span>
-              <span className="text-sm font-medium text-[var(--shell-foreground)]">
-                {record.industry || "N/A"}
-              </span>
-            </div>
-
-            <div className="space-y-1">
-              <span className="text-[10px] font-semibold uppercase tracking-wider text-[var(--shell-muted)] block">
-                Tier
-              </span>
-              <span className="text-sm font-medium text-[var(--shell-foreground)]">
-                {record.tier || "N/A"}
-              </span>
-            </div>
-
-            <div className="space-y-1">
-              <span className="text-[10px] font-semibold uppercase tracking-wider text-[var(--shell-muted)] block">
-                ARR (Annual Revenue)
-              </span>
-              <span className="text-sm font-semibold text-[var(--shell-foreground)] flex items-center gap-0.5">
-                {formatCurrency(record.arr)}
-              </span>
-            </div>
-
-            <div className="space-y-1">
-              <span className="text-[10px] font-semibold uppercase tracking-wider text-[var(--shell-muted)] block">
-                Credit Limit
-              </span>
-              <span
-                className={`text-sm font-semibold flex items-center gap-0.5 ${
-                  record.credit_limit != null && record.credit_limit > 0
-                    ? "text-[var(--shell-foreground)]"
-                    : "text-[var(--shell-success)]"
-                }`}
-                title={record.credit_limit ? "Enforced on sales order approval" : "No limit configured — orders are not blocked"}
-              >
-                {record.credit_limit != null && record.credit_limit > 0
-                  ? `₹${Number(record.credit_limit).toLocaleString("en-IN")}`
-                  : "Unlimited"}
-              </span>
-            </div>
-
-            <div className="space-y-1">
-              <span className="text-[10px] font-semibold uppercase tracking-wider text-[var(--shell-muted)] block">
-                Account Owner
-              </span>
-              <span className="text-sm font-medium text-[var(--shell-foreground)] flex items-center gap-1">
-                <User className="size-3.5 text-[var(--shell-muted)]" />
-                {record.owner || "N/A"}
-              </span>
+              <p className="text-xs text-[var(--shell-muted)]">{rec.industry}</p>
             </div>
           </div>
 
-          <div className="flex justify-between items-center text-xs text-[var(--shell-muted)] pt-2 border-t border-[var(--shell-border)]">
-            <span>Last Updated: {record.updated_at || "N/A"}</span>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="flex items-center gap-2">
+              <Wallet className="h-4 w-4 text-[var(--shell-muted)]" />
+              <span className="text-xs text-[var(--shell-muted)]">ARR:</span>
+              <span className="text-sm font-semibold text-[var(--shell-foreground)]">
+                {formatCurrency(rec.arr ?? 0)}
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="h-4 w-4 text-[var(--shell-muted)]" />
+              <span className="text-xs text-[var(--shell-muted)]">Tier:</span>
+              <Badge className="text-xs">{rec.tier}</Badge>
+            </div>
           </div>
         </div>
 
-        <div className="flex justify-end gap-3 pt-3 border-t border-[var(--shell-border)]">
-          <Button
-            variant="outline"
-            onClick={onClose}
-            className="h-9 text-xs border-[var(--shell-border)] bg-transparent hover:bg-[var(--shell-surface-alt)] text-[var(--shell-foreground)]"
-          >
+        {/* Contact Details */}
+        <div className="rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface)] p-5">
+          <div className="flex items-center gap-2 mb-4">
+            <Mail className="h-4 w-4 text-[var(--shell-muted)]" />
+            <span className="text-xs font-bold uppercase tracking-wider text-[var(--shell-foreground)]">Contact Information</span>
+          </div>
+          <div className="space-y-3">
+            <div className="flex items-center gap-3">
+              <Mail className="h-4 w-4 text-[var(--shell-muted)]" />
+              <span className="text-xs text-[var(--shell-muted)]">Email:</span>
+              <span className="text-sm text-[var(--shell-foreground)]">{rec.email}</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <Phone className="h-4 w-4 text-[var(--shell-muted)]" />
+              <span className="text-xs text-[var(--shell-muted)]">Phone:</span>
+              <span className="text-sm text-[var(--shell-foreground)]">{rec.phone}</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <Building2 className="h-4 w-4 text-[var(--shell-muted)]" />
+              <span className="text-xs text-[var(--shell-muted)]">Industry:</span>
+              <span className="text-sm text-[var(--shell-foreground)]">{rec.industry}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Account Details */}
+        <div className="rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface)] p-5">
+          <div className="flex items-center gap-2 mb-4">
+            <Users className="h-4 w-4 text-[var(--shell-muted)]" />
+            <span className="text-xs font-bold uppercase tracking-wider text-[var(--shell-foreground)]">Account Details</span>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Status</Label>
+              <Badge>{rec.status}</Badge>
+            </div>
+            <div>
+              <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Owner</Label>
+              <p className="text-sm text-[var(--shell-foreground)]">{rec.owner}</p>
+            </div>
+            <div>
+              <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Credit Limit (INR)</Label>
+              <p className="text-sm text-[var(--shell-foreground)]">
+                {rec.credit_limit != null ? `₹${Number(rec.credit_limit).toLocaleString("en-IN")}` : "No limit configured"}
+              </p>
+            </div>
+            <div>
+              <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Customer ID</Label>
+              <p className="text-sm font-mono text-[var(--shell-foreground)]">{rec.id_str}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Notes & Timeline */}
+        <div className="rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface)] p-5">
+          <div className="flex items-center gap-2 mb-4">
+            <Clock className="h-4 w-4 text-[var(--shell-muted)]" />
+            <span className="text-xs font-bold uppercase tracking-wider text-[var(--shell-foreground)]">Timeline</span>
+          </div>
+          <div className="space-y-2 text-xs text-[var(--shell-muted)]">
+            <div className="flex justify-between py-1">
+              <span>Created</span>
+              <span>{record?.created_at}</span>
+            </div>
+            <div className="flex justify-between py-1">
+              <span>Updated</span>
+              <span>{record?.updated_at}</span>
+            </div>
+          </div>
+          {rec.notes && (
+            <div className="mt-4 pt-4 border-t border-[var(--shell-border)]">
+              <p className="text-xs font-semibold uppercase tracking-wider text-[var(--shell-muted)] mb-1">Notes</p>
+              <p className="text-sm text-[var(--shell-foreground)]">{rec.notes}</p>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }, [record]);
+
+  return (
+    <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Customer Details</DialogTitle>
+          <DialogDescription>Viewing customer account record</DialogDescription>
+        </DialogHeader>
+        {content}
+        <div className="flex justify-end gap-3 mt-4">
+          <Button type="button" variant="outline" size="sm" onClick={onClose}>
             Close
           </Button>
         </div>

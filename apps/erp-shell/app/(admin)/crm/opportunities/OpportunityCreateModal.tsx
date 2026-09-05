@@ -23,11 +23,12 @@ export default function OpportunityCreateModal({ isOpen, onClose, onSuccess, edi
   const [formData, setFormData] = useState<any>({
     name: '',
     account: '',
-    value: '',
     stage: 'Discovery',
-    probability: '60%',
-    close_date: '',
+    value: '',
+    probability: '10',
     owner: '',
+    close_date: '',
+    notes: '',
   });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -38,27 +39,23 @@ export default function OpportunityCreateModal({ isOpen, onClose, onSuccess, edi
         setFormData({
           name: editRecord.name || '',
           account: editRecord.account || '',
-          value: editRecord.value || '',
           stage: editRecord.stage || 'Discovery',
-          probability: editRecord.probability || '60%',
-          close_date: editRecord.close_date || '',
+          value: editRecord.value !== undefined ? String(editRecord.value) : '',
+          probability: editRecord.probability || '10',
           owner: editRecord.owner || '',
+          close_date: editRecord.close_date || '',
+          notes: editRecord.notes || '',
         });
       } else {
-        const futureDate = new Date();
-        futureDate.setDate(futureDate.getDate() + 30);
-        const yyyy = futureDate.getFullYear();
-        const mm = String(futureDate.getMonth() + 1).padStart(2, "0");
-        const dd = String(futureDate.getDate()).padStart(2, "0");
-
         setFormData({
           name: '',
           account: '',
-          value: '',
           stage: 'Discovery',
-          probability: '60%',
-          close_date: `${yyyy}-${mm}-${dd}`,
+          value: '',
+          probability: '10',
           owner: '',
+          close_date: '',
+          notes: '',
         });
       }
       setError('');
@@ -67,7 +64,7 @@ export default function OpportunityCreateModal({ isOpen, onClose, onSuccess, edi
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFormData((prev: any) => ({
+    setFormData((prev: Record<string, string>) => ({
       ...prev,
       [name]: value
     }));
@@ -78,11 +75,23 @@ export default function OpportunityCreateModal({ isOpen, onClose, onSuccess, edi
     setSubmitting(true);
     setError('');
 
+    if (!formData.name.trim()) {
+      setError('Opportunity name is required.');
+      setSubmitting(false);
+      return;
+    }
+
+    const payload = {
+      ...formData,
+      value: formData.value ? Number(formData.value) : null,
+      probability: Number(formData.probability) || 0,
+    };
+
     try {
       if (editRecord) {
-        await api.put(`/opportunities/${editRecord.id_str}`, formData);
+        await api.put(`/crm/opportunities/${editRecord.id_str}`, payload);
       } else {
-        await api.post('/opportunities', formData);
+        await api.post('/crm/opportunities', payload);
       }
       onSuccess();
       onClose();
@@ -109,23 +118,12 @@ export default function OpportunityCreateModal({ isOpen, onClose, onSuccess, edi
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Opportunity (Deal) Name</Label>
+              <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Opportunity Name</Label>
               <Input name="name" value={formData.name} onChange={handleChange} required />
             </div>
             <div>
-              <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Company Name (Account)</Label>
+              <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Account</Label>
               <Input name="account" value={formData.account} onChange={handleChange} required />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Estimated Value</Label>
-              <Input name="value" value={formData.value} onChange={handleChange} placeholder="e.g. 500000 or ₹5,00,000" required />
-            </div>
-            <div>
-              <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Probability</Label>
-              <Input name="probability" value={formData.probability} onChange={handleChange} placeholder="e.g. 60%" required />
             </div>
           </div>
 
@@ -137,30 +135,39 @@ export default function OpportunityCreateModal({ isOpen, onClose, onSuccess, edi
                 value={formData.stage}
                 onChange={handleChange}
                 className="h-9 w-full rounded-md border border-[var(--shell-border)] bg-[var(--shell-bg)] px-3 text-xs text-[var(--shell-foreground)]"
-                required
               >
                 <option value="Discovery">Discovery</option>
+                <option value="Needs Analysis">Needs Analysis</option>
                 <option value="Proposal">Proposal</option>
                 <option value="Negotiation">Negotiation</option>
-                <option value="Won">Won</option>
-                <option value="Lost">Lost</option>
+                <option value="Closed Won">Closed Won</option>
+                <option value="Closed Lost">Closed Lost</option>
               </select>
             </div>
             <div>
-              <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Close Date</Label>
-              <input
-                type="date"
-                name="close_date"
-                value={formData.close_date}
-                onChange={handleChange}
-                className="h-9 w-full rounded-md border border-[var(--shell-border)] bg-[var(--shell-bg)] px-3 text-xs text-[var(--shell-foreground)]"
-                required
-              />
+              <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Value (INR)</Label>
+              <Input type="number" name="value" value={formData.value} onChange={handleChange} />
             </div>
+            <div>
+              <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Probability</Label>
+              <Input name="probability" value={formData.probability} onChange={handleChange} placeholder="e.g. 60%" />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
             <div>
               <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Owner</Label>
               <Input name="owner" value={formData.owner} onChange={handleChange} required />
             </div>
+            <div>
+              <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Close Date</Label>
+              <Input type="date" name="close_date" value={formData.close_date} onChange={handleChange} />
+            </div>
+          </div>
+
+          <div>
+            <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Notes</Label>
+            <Input name="notes" value={formData.notes} onChange={handleChange} placeholder="Opportunity notes..." />
           </div>
 
           <div className="flex justify-end gap-3 mt-4">
