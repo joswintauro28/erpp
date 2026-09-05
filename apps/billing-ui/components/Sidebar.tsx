@@ -301,9 +301,6 @@ export default function Sidebar({ collapsed }: { collapsed: boolean }) {
                                     : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                                 )}
                               >
-                                {childActive && (
-                                  <span className="absolute left-0 top-1/2 -translate-y-1/2 h-4 w-0.5 rounded-r-full bg-sidebar-primary" />
-                                )}
                                 <child.icon
                                   className={cn(
                                     "h-3.5 w-3.5 shrink-0 transition-colors duration-200",
