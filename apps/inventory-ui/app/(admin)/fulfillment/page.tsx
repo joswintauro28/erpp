@@ -18,7 +18,7 @@ import {
   Trash2,
   Layers,
 } from "lucide-react";
-import { Button, Badge, Card, CardContent, CardHeader, CardTitle, Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, PageHeader, handleError } from "@datavex/ui-theme";
+import { Button, Badge, Card, CardContent, CardHeader, CardTitle, Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, PageHeader, handleError, KpiCard, SectionHeading } from "@datavex/ui-theme";
 import { api } from "@/services/api";
 import { toastError, toastWarning } from "@/utils/toast";
 import FulfillmentWorkflowModal, { FulfillmentOrder } from "@/components/FulfillmentWorkflowModal";
@@ -180,62 +180,16 @@ export default function OrderFulfillmentPage() {
       />
 
       {/* KPI Cards Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-        <Card className="border-border">
-          <CardHeader className="p-4 flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs font-semibold text-muted-foreground uppercase">Order Queue</CardTitle>
-            <ClipboardList className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent className="p-4 pt-0">
-            <div className="text-2xl font-bold">{queuedCount}</div>
-            <p className="text-xs text-muted-foreground mt-1">Awaiting Stock Check</p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-border">
-          <CardHeader className="p-4 flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs font-semibold text-muted-foreground uppercase">Reserved</CardTitle>
-            <CheckCircle2 className="h-4 w-4 text-[var(--shell-info)]" />
-          </CardHeader>
-          <CardContent className="p-4 pt-0">
-            <div className="text-2xl font-bold text-[var(--shell-info)]">{reservedCount}</div>
-            <p className="text-xs text-muted-foreground mt-1">Stock Locked & Allocated</p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-border">
-          <CardHeader className="p-4 flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs font-semibold text-muted-foreground uppercase">Pick & Pack</CardTitle>
-            <PackageCheck className="h-4 w-4 text-[var(--shell-warning)]" />
-          </CardHeader>
-          <CardContent className="p-4 pt-0">
-            <div className="text-2xl font-bold text-[var(--shell-warning)]">{pickPackCount}</div>
-            <p className="text-xs text-muted-foreground mt-1">In Warehouse Process</p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-border">
-          <CardHeader className="p-4 flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs font-semibold text-muted-foreground uppercase">Dispatched</CardTitle>
-            <Truck className="h-4 w-4 text-[var(--shell-success)]" />
-          </CardHeader>
-          <CardContent className="p-4 pt-0">
-            <div className="text-2xl font-bold text-[var(--shell-success)]">{dispatchedCount}</div>
-            <p className="text-xs text-muted-foreground mt-1">Shipped & Stock Deducted</p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-border">
-          <CardHeader className="p-4 flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs font-semibold text-muted-foreground uppercase">Stock Shortages</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-destructive" />
-          </CardHeader>
-          <CardContent className="p-4 pt-0">
-            <div className="text-2xl font-bold text-destructive">{shortageCount}</div>
-            <p className="text-xs text-muted-foreground mt-1">Reorder PO Required</p>
-          </CardContent>
-        </Card>
-      </div>
+      <section>
+        <SectionHeading label="Overview" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+          <KpiCard label="Order Queue" value={queuedCount} subtitle="Awaiting Stock Check" icon={ClipboardList} color="var(--chart-1)" index={0} />
+          <KpiCard label="Reserved" value={reservedCount} subtitle="Stock Locked & Allocated" icon={CheckCircle2} color="var(--shell-info)" index={1} />
+          <KpiCard label="Pick & Pack" value={pickPackCount} subtitle="In Warehouse Process" icon={PackageCheck} color="var(--shell-warning)" index={2} />
+          <KpiCard label="Dispatched" value={dispatchedCount} subtitle="Shipped & Stock Deducted" icon={Truck} color="var(--shell-success)" index={3} />
+          <KpiCard label="Stock Shortages" value={shortageCount} subtitle="Reorder PO Required" icon={AlertTriangle} color="var(--shell-danger)" index={4} />
+        </div>
+      </section>
 
       {/* Filter Tabs */}
       <div className="flex items-center gap-2 border-b border-border pb-2 overflow-x-auto">
@@ -345,7 +299,7 @@ export default function OrderFulfillmentPage() {
                           size="xs"
                           onClick={() => setOrderToDelete(o)}
                         >
-                          <Trash2 className="h-3.5 w-3.5 text-muted-foreground hover:text-destructive" />
+                          <Trash2 className="h-3.5 w-3.5 text-[var(--shell-danger)]" />
                         </Button>
                       </div>
                     </td>

@@ -19,7 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { api } from "@/services/api";
-import { PageHeader, handleError } from "@datavex/ui-theme";
+import { PageHeader, handleError, KpiCard, SectionHeading } from "@datavex/ui-theme";
 import { toastError } from "@/utils/toast";
 import { number } from "@/utils/format";
 import Link from "next/link";
@@ -157,37 +157,14 @@ export default function StockPage() {
       />
 
       {/* KPI Overview */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <Card>
-          <CardHeader className="p-4 pb-1">
-            <span className="text-xs font-medium uppercase text-muted-foreground">Total Physical Stock</span>
-          </CardHeader>
-          <CardContent className="p-4 pt-1">
-            <div className="text-2xl font-bold">{number(totalStock)} units</div>
-            <p className="text-xs text-muted-foreground">Combined across all warehouses</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="p-4 pb-1">
-            <span className="text-xs font-medium uppercase text-muted-foreground">Reserved for Orders</span>
-          </CardHeader>
-          <CardContent className="p-4 pt-1">
-            <div className="text-2xl font-bold text-[var(--shell-warning)]">{number(totalReserved)} units</div>
-            <p className="text-xs text-muted-foreground">Locked in Order Fulfillment pipeline</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="p-4 pb-1">
-            <span className="text-xs font-medium uppercase text-muted-foreground">Available to Sell</span>
-          </CardHeader>
-          <CardContent className="p-4 pt-1">
-            <div className="text-2xl font-bold text-[var(--shell-success)]">{number(totalAvailable)} units</div>
-            <p className="text-xs text-muted-foreground font-medium">Ready for immediate sales</p>
-          </CardContent>
-        </Card>
-      </div>
+      <section>
+        <SectionHeading label="Overview" />
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <KpiCard label="Total Physical Stock" value={`${number(totalStock)} units`} subtitle="Combined across all warehouses" icon={Boxes} color="var(--chart-1)" index={0} />
+          <KpiCard label="Reserved for Orders" value={`${number(totalReserved)} units`} subtitle="Locked in Order Fulfillment pipeline" icon={ClipboardList} color="var(--shell-warning)" index={1} />
+          <KpiCard label="Available to Sell" value={`${number(totalAvailable)} units`} subtitle="Ready for immediate sales" icon={Warehouse} color="var(--shell-success)" index={2} />
+        </div>
+      </section>
 
       {/* Stock Table */}
       <Card>

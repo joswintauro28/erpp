@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { api } from "@/services/api";
-import { PageHeader, handleError } from "@datavex/ui-theme";
+import { PageHeader, handleError, KpiCard, SectionHeading } from "@datavex/ui-theme";
 import { toastError } from "@/utils/toast";
 
 interface QualityCheck {
@@ -121,16 +121,15 @@ export default function QualityChecksPage() {
       />
 
       {/* KPI row */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {(["PENDING", "PASS", "FAIL", "HOLD"] as const).map((s) => (
-          <Card key={s}>
-            <CardContent className="p-4 flex items-center justify-between">
-              <span className="text-xs font-semibold uppercase text-muted-foreground">{STATUS_BADGES[s].label}</span>
-              <span className="text-xl font-bold text-[var(--shell-brand)]">{counts[s] || 0}</span>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      <section>
+        <SectionHeading label="Overview" />
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <KpiCard label="Pending QC" value={counts["PENDING"] || 0} icon={PauseCircle} color="var(--shell-warning)" index={0} />
+          <KpiCard label="Passed" value={counts["PASS"] || 0} icon={CheckCircle2} color="var(--shell-success)" index={1} />
+          <KpiCard label="Failed" value={counts["FAIL"] || 0} icon={XCircle} color="var(--shell-danger)" index={2} />
+          <KpiCard label="On Hold" value={counts["HOLD"] || 0} icon={ShieldCheck} color="var(--chart-2)" index={3} />
+        </div>
+      </section>
 
       {/* Filters */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">

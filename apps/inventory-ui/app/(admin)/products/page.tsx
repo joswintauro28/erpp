@@ -223,14 +223,14 @@ export default function ProductsPage() {
                             setQcRequired(!!p.qc_required);
                           }}
                         >
-                          <Edit3 className="h-3.5 w-3.5 text-muted-foreground hover:text-[var(--shell-brand)]" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="xs"
-                          onClick={() => setProductToDelete(p)}
-                        >
-                          <Trash2 className="h-3.5 w-3.5 text-muted-foreground hover:text-destructive" />
+  <Edit3 className="h-3.5 w-3.5 text-[var(--shell-brand)]" />
+</Button>
+<Button
+  variant="ghost"
+  size="xs"
+  onClick={() => setProductToDelete(p)}
+>
+  <Trash2 className="h-3.5 w-3.5 text-[var(--shell-danger)]" />
                         </Button>
                       </div>
                     </TableCell>

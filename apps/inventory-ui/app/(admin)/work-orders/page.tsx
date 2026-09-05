@@ -22,7 +22,7 @@ import { Input } from "@/components/ui/input";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { api } from "@/services/api";
-import { PageHeader, handleError } from "@datavex/ui-theme";
+import { PageHeader, handleError, KpiCard, SectionHeading } from "@datavex/ui-theme";
 import { toastError, toastWarning } from "@/utils/toast";
 
 interface Operation {
@@ -188,16 +188,16 @@ export default function WorkOrdersPage() {
       />
 
       {/* KPI row */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-        {(["DRAFT", "RELEASED", "IN_PROGRESS", "COMPLETED", "CANCELLED"] as const).map((s) => (
-          <Card key={s}>
-            <CardContent className="p-4 flex items-center justify-between">
-              <span className="text-xs font-semibold uppercase text-muted-foreground">{STATUS_BADGES[s].label}</span>
-              <span className="text-xl font-bold text-[var(--shell-brand)]">{counts[s] || 0}</span>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      <section>
+        <SectionHeading label="Overview" />
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+          <KpiCard label="Draft" value={counts["DRAFT"] || 0} icon={Factory} color="var(--chart-1)" index={0} />
+          <KpiCard label="Released" value={counts["RELEASED"] || 0} icon={Layers} color="var(--shell-info)" index={1} />
+          <KpiCard label="In Progress" value={counts["IN_PROGRESS"] || 0} icon={Wrench} color="var(--shell-warning)" index={2} />
+          <KpiCard label="Completed" value={counts["COMPLETED"] || 0} icon={CheckCircle2} color="var(--shell-success)" index={3} />
+          <KpiCard label="Cancelled" value={counts["CANCELLED"] || 0} icon={XCircle} color="var(--shell-danger)" index={4} />
+        </div>
+      </section>
 
       {/* Filters */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
@@ -301,11 +301,11 @@ export default function WorkOrdersPage() {
                         )}
                         {!["COMPLETED", "CANCELLED"].includes(wo.status) && (
                           <Button variant="ghost" size="xs" title="Cancel" onClick={() => runAction(wo.id, "cancel")}>
-                            <XCircle className="h-3.5 w-3.5 text-muted-foreground hover:text-destructive" />
+                            <XCircle className="h-3.5 w-3.5 text-[var(--shell-danger)]" />
                           </Button>
                         )}
                         <Button variant="ghost" size="xs" onClick={() => setOrderToDelete(wo)}>
-                          <Trash2 className="h-3.5 w-3.5 text-muted-foreground hover:text-destructive" />
+                          <Trash2 className="h-3.5 w-3.5 text-[var(--shell-danger)]" />
                         </Button>
                       </div>
                     </TableCell>

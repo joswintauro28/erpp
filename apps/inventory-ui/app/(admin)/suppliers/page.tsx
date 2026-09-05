@@ -200,14 +200,14 @@ export default function SuppliersPage() {
                             setStatus((s.status || (s.is_active !== false ? "ACTIVE" : "INACTIVE")).toUpperCase());
                           }}
                         >
-                          <Edit3 className="h-3.5 w-3.5 text-muted-foreground hover:text-[var(--shell-brand)]" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="xs"
-                          onClick={() => setSupplierToDelete(s)}
-                        >
-                          <Trash2 className="h-3.5 w-3.5 text-muted-foreground hover:text-destructive" />
+  <Edit3 className="h-3.5 w-3.5 text-[var(--shell-brand)]" />
+</Button>
+<Button
+  variant="ghost"
+  size="xs"
+  onClick={() => setSupplierToDelete(s)}
+>
+  <Trash2 className="h-3.5 w-3.5 text-[var(--shell-danger)]" />
                         </Button>
                       </div>
                     </TableCell>

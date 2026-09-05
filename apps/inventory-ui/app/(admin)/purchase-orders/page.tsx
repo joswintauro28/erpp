@@ -270,7 +270,7 @@ export default function PurchaseOrdersPage() {
                               setEditStatus(po.status);
                             }}
                           >
-                            <Edit3 className="h-3.5 w-3.5 text-muted-foreground hover:text-[var(--shell-brand)]" />
+                            <Edit3 className="h-3.5 w-3.5 text-[var(--shell-brand)]" />
                           </Button>
                           <Button
                             variant="ghost"
@@ -278,14 +278,14 @@ export default function PurchaseOrdersPage() {
                             title="Putaway (P5)"
                             onClick={() => openPutaway(po)}
                           >
-                            <MapPin className="h-3.5 w-3.5 text-muted-foreground hover:text-[var(--shell-success)]" />
+                            <MapPin className="h-3.5 w-3.5 text-[var(--shell-success)]" />
                           </Button>
                           <Button
                             variant="ghost"
                             size="xs"
                             onClick={() => setOrderToDelete(po)}
                           >
-                            <Trash2 className="h-3.5 w-3.5 text-muted-foreground hover:text-destructive" />
+                            <Trash2 className="h-3.5 w-3.5 text-[var(--shell-danger)]" />
                           </Button>
                         </div>
                       </TableCell>

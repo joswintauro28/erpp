@@ -178,14 +178,14 @@ export default function WarehousesPage() {
                             setState(w.state || "Karnataka");
                           }}
                         >
-                          <Edit3 className="h-3.5 w-3.5 text-muted-foreground hover:text-[var(--shell-brand)]" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="xs"
-                          onClick={() => setWarehouseToDelete(w)}
-                        >
-                          <Trash2 className="h-3.5 w-3.5 text-muted-foreground hover:text-destructive" />
+  <Edit3 className="h-3.5 w-3.5 text-[var(--shell-brand)]" />
+</Button>
+<Button
+  variant="ghost"
+  size="xs"
+  onClick={() => setWarehouseToDelete(w)}
+>
+  <Trash2 className="h-3.5 w-3.5 text-[var(--shell-danger)]" />
                         </Button>
                       </div>
                     </TableCell>

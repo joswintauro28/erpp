@@ -290,7 +290,7 @@ export default function PurchaseRequisitionsPage() {
                         )}
                         {["DRAFT", "REJECTED", "CANCELLED"].includes(r.status) && (
                           <Button variant="ghost" size="xs" onClick={() => setReqToDelete(r)}>
-                            <Trash2 className="h-3.5 w-3.5 text-muted-foreground hover:text-destructive" />
+                            <Trash2 className="h-3.5 w-3.5 text-[var(--shell-danger)]" />
                           </Button>
                         )}
                       </div>
