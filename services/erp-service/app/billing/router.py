@@ -377,6 +377,25 @@ async def list_ledger(
     return await get_ledger(token)
 
 
+@router.post("/ledger", response_model=dict, status_code=201)
+async def create_ledger_entry(
+    body: dict,
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await billing_client._post("/ledger", token, body)
+
+
+@router.put("/ledger/{entry_id}", response_model=dict)
+async def update_ledger_entry(
+    entry_id: int,
+    body: dict,
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await billing_client._put(f"/ledger/{entry_id}", token, body)
+
+
 @router.get("/reports", response_model=dict)
 async def list_reports(
     payload: dict = Depends(get_current_token_payload),

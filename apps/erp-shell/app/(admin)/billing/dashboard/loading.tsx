@@ -1,0 +1,11 @@
+"use client";
+
+import { Spinner } from "@/components/ui/spinner";
+
+export default function BillingDashboardLoading() {
+  return (
+    <div className="flex h-full items-center justify-center py-20">
+      <Spinner />
+    </div>
+  );
+}

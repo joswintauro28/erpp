@@ -15,10 +15,9 @@ import { Badge } from "@/components/ui/badge";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
-import { LoadingSpinner } from "@/components/shared/loading-spinner";
+import { LoadingSpinner, handleError } from "@datavex/ui-theme";
 import { api } from "@/services/api";
-import { handleError } from "@datavex/ui-theme";
-import { money, formatDate, statusVariant } from "@/utils/format";
+import { money, formatDate, quotationStatusVariant as statusVariant } from "@/utils/format";
 import { useAuth } from "@/contexts/AuthContext";
 import type { QuotationDetailView } from "@/types/billing";
 
@@ -101,16 +100,20 @@ export default function QuotationDetail() {
   const canEdit = permissions.includes("quotations.edit");
   const canDelete = permissions.includes("quotations.delete");
 
+  // Live calculations for details view
   const financialSummary = useMemo(() => {
     if (!quotation) return { subtotal: 0, totalGst: 0, grandTotal: 0, taxGroups: [] };
     const subtotal = quotation.items.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0);
     const totalGst = quotation.items.reduce((sum, item) => sum + (item.quantity * item.unit_price * (item.gst_rate / 100)), 0);
+
+    // Group items by GST rate
     const groups: Record<number, number> = {};
     quotation.items.forEach((item) => {
       const rate = item.gst_rate;
       const itemTaxable = item.quantity * item.unit_price;
       groups[rate] = (groups[rate] || 0) + itemTaxable;
     });
+
     const taxGroups = Object.keys(groups).map((rateStr) => {
       const rate = Number(rateStr);
       const taxable = groups[rate];
@@ -118,9 +121,23 @@ export default function QuotationDetail() {
       const sgstRate = rate / 2;
       const cgstAmount = taxable * (cgstRate / 100);
       const sgstAmount = taxable * (sgstRate / 100);
-      return { rate, taxable, cgstRate, sgstRate, cgstAmount, sgstAmount, totalGst: cgstAmount + sgstAmount };
+      return {
+        rate,
+        taxable,
+        cgstRate,
+        sgstRate,
+        cgstAmount,
+        sgstAmount,
+        totalGst: cgstAmount + sgstAmount
+      };
     });
-    return { subtotal, totalGst, grandTotal: quotation.total, taxGroups };
+
+    return {
+      subtotal,
+      totalGst,
+      grandTotal: quotation.total,
+      taxGroups
+    };
   }, [quotation]);
 
   if (loading) return <LoadingSpinner />;
@@ -145,13 +162,14 @@ export default function QuotationDetail() {
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto px-4 sm:px-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-[var(--shell-border)] pb-5 print:hidden">
+      {/* Header Actions */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-[--shell-border] pb-5 print:hidden">
         <div className="flex items-center gap-4">
-          <Button variant="outline" size="icon" className="rounded-full border-[var(--shell-border)] hover:bg-[var(--shell-surface)]" aria-label="Back to quotations" title="Back to quotations" onClick={() => router.push("/billing/quotations")}>
+          <Button variant="outline" size="icon" className="rounded-full border-[--shell-border] hover:bg-[--shell-surface-alt]" aria-label="Back to quotations" title="Back to quotations" onClick={() => router.push("/billing/quotations")}>
             <ArrowLeft className="h-4 w-4" />
           </Button>
           {canEdit && quotation.status === "draft" && (
-            <Button variant="outline" size="icon" className="rounded-full border-[var(--shell-border)] hover:bg-[var(--shell-surface)]" aria-label="Edit quotation" title="Edit quotation" onClick={() => router.push(`/billing/quotations/${quotation.id}/edit`)}>
+            <Button variant="outline" size="icon" className="rounded-full border-[--shell-border] hover:bg-[--shell-surface-alt]" aria-label="Edit quotation" title="Edit quotation" onClick={() => router.push(`/billing/quotations/${quotation.id}/edit`)}>
               <Pencil className="h-4 w-4" />
             </Button>
           )}
@@ -160,7 +178,7 @@ export default function QuotationDetail() {
               <h1 className="font-heading text-2xl font-bold tracking-tight text-[var(--shell-foreground)] truncate">
                 {quotation.quote_number}
               </h1>
-              <Badge variant={statusVariant("quotation", quotation.status)} className="capitalize shrink-0 px-2.5 py-0.5 font-semibold text-xs tracking-wider">
+              <Badge variant={statusVariant(quotation.status)} className="capitalize shrink-0 px-2.5 py-0.5 font-semibold text-xs tracking-wider">
                 {quotation.status}
               </Badge>
             </div>
@@ -182,7 +200,7 @@ export default function QuotationDetail() {
           <div className="min-w-0 flex-1">
             <h4 className="text-sm font-semibold text-[var(--shell-foreground)]">Converted to Invoice</h4>
             <p className="text-xs text-[var(--shell-muted)] mt-0.5">
-              This quotation has been accepted and successfully converted into an active invoice.
+              This quotation has been accepted and successfully converted into active invoice.
             </p>
           </div>
           <Button size="sm" variant="outline" className="border-[var(--shell-success)]/20 text-[var(--shell-success)] hover:bg-[var(--shell-success)]/10 ml-auto" onClick={() => router.push(`/billing/invoices/${quotation.converted_invoice_id}`)}>
@@ -192,9 +210,12 @@ export default function QuotationDetail() {
       )}
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        {/* Main Document Body */}
         <div className="lg:col-span-2 space-y-6 print:col-span-3">
+          {/* Printable Corporate Document Card */}
           <Card className="border-[var(--shell-border)] overflow-hidden shadow-engineered relative border-t-4 border-t-[var(--shell-accent)]">
             <CardContent className="p-8 sm:p-10 space-y-8">
+              {/* Top Banner Row */}
               <div className="flex justify-between items-start gap-4">
                 <div>
                   <h2 className="font-heading text-lg font-bold tracking-tight text-[var(--shell-brand)]">DATAVEX ERP</h2>
@@ -214,6 +235,7 @@ export default function QuotationDetail() {
                 </div>
               </div>
 
+              {/* Bill To Block */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-[var(--shell-bg)] p-4.5 rounded-xl border border-[var(--shell-border)]/40">
                 <div>
                   <span className="text-[10px] uppercase font-bold tracking-widest text-[var(--shell-muted)]">Client Billing Address</span>
@@ -232,6 +254,7 @@ export default function QuotationDetail() {
                 </div>
               </div>
 
+              {/* Line Items Table */}
               <div>
                 <Table className="border border-[var(--shell-border)] rounded-xl overflow-hidden">
                   <TableHeader className="bg-[var(--shell-bg)]">
@@ -265,12 +288,13 @@ export default function QuotationDetail() {
                 </Table>
               </div>
 
+              {/* Bottom Financial Columns */}
               <div className="flex flex-col md:flex-row justify-between gap-6 pt-4 border-t border-[var(--shell-border)]">
                 <div className="max-w-md">
                   <span className="text-[10px] uppercase font-bold tracking-widest text-[var(--shell-muted)]">Corporate Terms & Declaration</span>
                   <p className="text-[11px] text-[var(--shell-muted)] mt-2 leading-relaxed">
-                    All prices are quoted in local currency inclusive of standard regional taxes as indicated.
-                    This quotation is valid until the stated expiration date. Upon acceptance, client agrees to
+                    All prices are quoted in local currency inclusive of standard regional taxes as indicated. 
+                    This quotation is valid until the stated expiration date. Upon acceptance, client agrees to 
                     terms of settlement within the designated period.
                   </p>
                 </div>
@@ -279,6 +303,7 @@ export default function QuotationDetail() {
                     <span>Subtotal (Taxable)</span>
                     <span className="font-mono">{money(financialSummary.subtotal)}</span>
                   </div>
+                  
                   {financialSummary.taxGroups.map((group) => (
                     <div key={group.rate} className="space-y-1 pl-2 border-l border-[var(--shell-accent)]/50 my-1">
                       <div className="flex justify-between text-[11px] text-[var(--shell-muted)]">
@@ -291,6 +316,7 @@ export default function QuotationDetail() {
                       </div>
                     </div>
                   ))}
+
                   <div className="flex justify-between text-[var(--shell-muted)] border-b border-[var(--shell-border)]/50 pb-2 pt-1">
                     <span>Total GST</span>
                     <span className="font-mono">{money(financialSummary.totalGst)}</span>
@@ -304,6 +330,7 @@ export default function QuotationDetail() {
             </CardContent>
           </Card>
 
+          {/* Notes Card */}
           {quotation.notes && (
             <Card className="border-[var(--shell-border)] shadow-engineered">
               <CardContent className="p-6">
@@ -316,8 +343,9 @@ export default function QuotationDetail() {
             </Card>
           )}
 
+          {/* Process Workflow Actions */}
           {actions.length > 0 && (
-            <Card className="border-[var(--shell-border)] shadow-engineered bg-gradient-to-br from-[var(--shell-bg)] to-transparent print:hidden">
+            <Card className="border-[--shell-border] shadow-engineered bg-gradient-to-br from-[--shell-bg] to-transparent print:hidden">
               <CardContent className="p-6 space-y-4">
                 <h4 className="text-xs font-bold uppercase tracking-wider text-[var(--shell-foreground)]">Manage Process Flow</h4>
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -332,14 +360,14 @@ export default function QuotationDetail() {
                       disabled={actionLoading === act.action}
                       className="flex items-start gap-4 rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface)] p-4 text-left transition-all hover:-translate-y-0.5 hover:shadow-md disabled:opacity-50 disabled:pointer-events-none group"
                     >
-                      <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-[var(--shell-border)] bg-[var(--shell-bg)] shrink-0 group-hover:scale-105 transition-transform duration-200">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-[var(--shell-border)] bg-[var(--shell-surface-alt)] shrink-0 group-hover:scale-105 transition-transform duration-200">
                         {actionLoading === act.action
                           ? <Loader2 className="h-4 w-4 animate-spin text-[var(--shell-brand)]" />
                           : <act.icon className={`h-4 w-4 ${act.variant === "destructive" ? "text-[var(--shell-danger)]" : "text-[var(--shell-brand)]"}`} />
                         }
                       </div>
                       <div className="min-w-0">
-                        <p className={`text-sm font-semibold ${act.variant === "destructive" ? "text-[var(--shell-danger)] font-bold" : "text-[var(--shell-foreground)]"}`}>
+                        <p className={`text-sm font-semibold ${act.variant === "destructive" ? "text-[var(--shell-danger)] font-bold" : "text-foreground"}`}>
                           {act.label}
                         </p>
                         <p className="text-xs text-[var(--shell-muted)] mt-0.5">{act.description}</p>
@@ -351,6 +379,7 @@ export default function QuotationDetail() {
             </Card>
           )}
 
+          {/* Conversion Wizard */}
           {canEdit && quotation.status === "accepted" && !quotation.converted_invoice_id && (
             <Card className="border-[var(--shell-success)]/20 shadow-md bg-gradient-to-r from-[var(--shell-success-surface)]0/5 to-transparent print:hidden">
               <CardContent className="p-6 flex flex-col sm:flex-row items-center gap-4 justify-between">
@@ -382,7 +411,9 @@ export default function QuotationDetail() {
           )}
         </div>
 
+        {/* Sidebar Flow & Details */}
         <div className="space-y-6 print:hidden">
+          {/* Status Tracker */}
           <Card className="border-[var(--shell-border)] shadow-engineered">
             <CardContent className="p-6">
               <h4 className="text-xs font-bold uppercase tracking-wider text-[var(--shell-foreground)] border-b border-[var(--shell-border)] pb-3 mb-4">
@@ -393,6 +424,8 @@ export default function QuotationDetail() {
                   const Icon = step.icon;
                   const isPast = idx < statusIdx;
                   const isCurrent = idx === statusIdx;
+                  const isActiveState = isPast || isCurrent;
+                  
                   return (
                     <div key={step.key} className="flex items-start gap-3.5 pb-6 last:pb-0 relative">
                       {idx < STATUS_FLOW.length - 1 && (
@@ -411,7 +444,11 @@ export default function QuotationDetail() {
                       </div>
                       <div className="min-w-0 pt-0.5">
                         <p className={`text-xs font-bold ${
-                          isCurrent ? "text-[var(--shell-brand)]" : isPast ? "text-[var(--shell-foreground)]" : "text-muted-foreground/40"
+                          isCurrent
+                            ? "text-[var(--shell-brand)]"
+                            : isPast
+                              ? "text-[var(--shell-foreground)]"
+                              : "text-muted-foreground/40"
                         }`}>
                           {step.label}
                           {isCurrent && " (Current)"}
@@ -433,6 +470,7 @@ export default function QuotationDetail() {
             </CardContent>
           </Card>
 
+          {/* Client summary info */}
           <Card className="border-[var(--shell-border)] shadow-engineered">
             <CardContent className="p-6">
               <h4 className="text-xs font-bold uppercase tracking-wider text-[var(--shell-foreground)] border-b border-[var(--shell-border)] pb-3 mb-4">
@@ -453,8 +491,9 @@ export default function QuotationDetail() {
         </div>
       </div>
 
+      {/* Delete Dialog */}
       {canDelete && <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
-        <DialogContent className="border-[var(--shell-border)] bg-card">
+        <DialogContent className="border-[--shell-border] bg-card">
           <DialogHeader>
             <div className="flex items-center gap-3">
               <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--shell-danger-surface)] text-[var(--shell-danger)]">
@@ -464,7 +503,7 @@ export default function QuotationDetail() {
             </div>
           </DialogHeader>
           <p className="text-sm text-[var(--shell-muted)] leading-relaxed pt-2">
-            Are you sure you want to permanently delete quotation <strong>{quotation.quote_number}</strong>?
+            Are you sure you want to permanently delete quotation <strong>{quotation.quote_number}</strong>? 
             This will permanently remove the record and all associated items from the ledger. This action cannot be reversed.
           </p>
           <DialogFooter className="mt-4">

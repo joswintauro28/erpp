@@ -266,6 +266,16 @@ async def get_quotation_approval(
     return await crm_client._get(f"/quotations/{id}/approval", token)
 
 
+@router.put("/quotations/{id}/approval")
+async def decide_quotation_approval(
+    id: int,
+    body: dict,
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = _get_token(payload)
+    return await crm_client._put(f"/quotations/{id}/approval", token, body)
+
+
 @router.post("/opportunities/{id_str}/stage")
 async def update_opportunity_stage(
     id_str: str,
@@ -292,6 +302,15 @@ async def check_sales_order_stock(
 ):
     token = _get_token(payload)
     return await crm_client.check_sales_order_stock(id_str, token)
+
+
+@router.post("/quotations/{id}/convert")
+async def convert_quotation_to_invoice(
+    id: int,
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = _get_token(payload)
+    return await crm_client._post(f"/quotations/{id}/convert", token, {})
 
 
 @router.delete("/{entity_type}/{id_str}")

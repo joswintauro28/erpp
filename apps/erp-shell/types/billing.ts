@@ -82,6 +82,7 @@ export interface CreditNote {
   client_name: string;
   date: string;
   amount: number;
+  reason: string | null;
   status: "issued" | "draft";
 }
 
@@ -93,6 +94,7 @@ export interface DebitNote {
   client_name: string;
   date: string;
   amount: number;
+  reason: string | null;
   status: "issued" | "draft";
 }
 
@@ -116,10 +118,12 @@ export interface ApiItem {
 export interface ApiPayment {
   id: number; amount: number; payment_method: string | null;
   payment_date: string | null; reference_id: string | null; status: string;
+  invoice_id: number | null; created_at: string | null; reference_number: string | null;
 }
 
 export interface ApiInvoice {
   id: number; invoice_number: string | null; client_id: number;
+  client_name: string;
   total: number; paid_amount: number; balance_due: number;
   status: string; issue_date: string | null; due_date: string | null;
   gst_treatment: string; place_of_supply: string | null;
@@ -140,19 +144,21 @@ export interface InvoiceListView {
 
 export interface InvoiceDetailView {
   id: number; invoice_number: string; client_id: number; client_name: string;
-  total: number; paid_amount: number; balance_due: number;
+  type: string;
+  total: number; subtotal: number; paid_amount: number; balance_due: number;
   status: string; issue_date: string; due_date: string;
   gst_treatment: string; place_of_supply: string;
   cgst: number; sgst: number; igst: number;
-  taxable_value: number; notes: string;
+  tax_total: number; taxable_value: number; notes: string;
   discount: number; discount_type: string | null;
   items: InvoiceItemView[]; payments: ApiPayment[];
+  creditNotes?: CreditNote[]; debitNotes?: DebitNote[];
 }
 
 export interface InvoiceItemView {
-  product: string; description: string; quantity: number;
-  unit_price: number; gst_percent: number;
-  cgst: number; sgst: number; igst: number; total: number;
+  product_id: number | null; description: string; quantity: number;
+  unit_price: number; gst_rate: number;
+  cgst: number; sgst: number; igst: number; amount: number;
 }
 export interface QuotationDetailView {
   id: number;
@@ -243,6 +249,46 @@ export interface LedgerEntryView {
   reference_type: string | null;
   reference_id: number | null;
   created_at: string;
+}
+
+// ─── Billing Dashboard ───
+
+export interface DashboardPaymentMetrics {
+  today: number;
+  this_month: number;
+  refunds: number;
+  failed: number;
+}
+
+export interface DashboardSummaryItem {
+  status: string;
+  count: number;
+  percentage: number;
+}
+
+export interface DashboardRecentInvoice {
+  id: number;
+  invoice_number: string;
+  client_name: string;
+  total: number;
+  status: string;
+}
+
+export interface DashboardRevenueTrend {
+  month: string;
+  revenue: number;
+}
+
+export interface BillingDashboardData {
+  total_revenue: number;
+  outstanding: number;
+  overdue: number;
+  total_ar: number;
+  total_ap: number;
+  payment_metrics: DashboardPaymentMetrics;
+  summary: DashboardSummaryItem[];
+  recent_invoices: DashboardRecentInvoice[];
+  revenue_trend: DashboardRevenueTrend[];
 }
 
 export interface AccountEntry {
