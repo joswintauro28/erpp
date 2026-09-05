@@ -177,7 +177,7 @@ const MAPS: Record<string, Record<string, StatusVariantKey>> = {
  * Resolve the semantic Badge variant for a domain status.
  * Unknown statuses fall back to `neutral`.
  */
-export function statusVariant(domain: string, status: string): StatusVariantKey {
+export function statusVariant(domain: string, status: string | undefined | null): StatusVariantKey {
   const map = MAPS[domain] ?? {}
-  return map[norm(status)] ?? "neutral"
+  return map[norm(status ?? "")] ?? "neutral"
 }

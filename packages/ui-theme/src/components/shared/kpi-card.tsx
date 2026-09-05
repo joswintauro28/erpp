@@ -10,6 +10,20 @@ export interface KpiCardProps {
   color?: string;
   index?: number;
   loading?: boolean;
+  active?: boolean;
+  onClick?: () => void;
+}
+
+/** Maps a CSS color to a subtle gradient background class */
+function gradientBg(color: string): string {
+  if (color.includes("danger") || color.includes("destructive")) return "from-red-500/5";
+  if (color.includes("success")) return "from-emerald-500/5";
+  if (color.includes("chart-1")) return "from-violet-500/5";
+  if (color.includes("chart-2")) return "from-blue-500/5";
+  if (color.includes("chart-3")) return "from-amber-500/5";
+  if (color.includes("chart-4")) return "from-cyan-500/5";
+  if (color.includes("chart-5")) return "from-pink-500/5";
+  return "from-gray-500/5";
 }
 
 export function KpiCard({
@@ -21,6 +35,8 @@ export function KpiCard({
   color = "var(--chart-1)",
   index = 0,
   loading = false,
+  active = false,
+  onClick,
 }: KpiCardProps) {
   if (loading) {
     return (
@@ -35,48 +51,62 @@ export function KpiCard({
     );
   }
 
+  const gradient = gradientBg(color);
+
   return (
     <div
-      className="animate-kpi flex flex-col gap-2 rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface)] p-5 hover:-translate-y-1 hover:shadow-engineered transition-all duration-300 relative overflow-hidden group backdrop-blur-sm"
+      className={`animate-kpi relative flex flex-col gap-1.5 rounded-xl border p-4.5 transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1)] overflow-hidden group backdrop-blur-sm ${
+        active
+          ? "border-[var(--shell-brand)] bg-[var(--shell-surface-alt)]/50 ring-1 ring-[var(--shell-brand)]"
+          : "border-[var(--shell-border)] bg-[var(--shell-surface)]"
+      } ${onClick ? "cursor-pointer" : ""}`}
       style={{ animationDelay: `${index * 0.05}s` }}
+      onClick={onClick}
     >
-      <span
-        className="absolute left-0 top-0 bottom-0 w-1 transition-all duration-300 group-hover:w-1.5"
-        style={{ backgroundColor: color }}
-      />
-      <div className="flex items-center justify-between">
-        <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--shell-muted)]">
+      {/* Gradient background overlay */}
+      <div className={`absolute inset-0 bg-gradient-to-br ${gradient} pointer-events-none`} />
+
+      {/* Header: label + icon */}
+      <div className="relative z-10 flex items-center justify-between">
+        <span
+          className="text-[10px] font-bold uppercase tracking-[0.1em]"
+          style={{ color }}
+        >
           {label}
         </span>
         <div
-          className="flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--shell-border)] transition-transform duration-300 group-hover:scale-110"
+          className="flex h-7 w-7 items-center justify-center rounded-lg border transition-transform duration-300 group-hover:scale-110"
           style={{ backgroundColor: `${color}15`, borderColor: `${color}30` }}
         >
-          <Icon className="h-4 w-4" style={{ color }} />
+          <Icon className="h-3.5 w-3.5" style={{ color }} />
         </div>
       </div>
-      <span className="font-heading text-2xl font-bold tracking-tight text-[var(--shell-foreground)] mt-0.5">
+
+      {/* Value */}
+      <span className="relative z-10 font-heading text-xl font-bold tracking-tight text-[var(--shell-foreground)] mt-0.5">
         {value}
       </span>
-      <div className="flex items-center gap-2 mt-1">
+
+      {/* Trend + subtitle */}
+      <div className="relative z-10 flex items-center gap-2 mt-0.5">
         {trend && (
           <span
-            className={`flex items-center gap-0.5 text-xs font-bold px-1.5 py-0.5 rounded-full ${
+            className={`flex items-center gap-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
               trend.dir === "up"
                 ? "bg-[var(--shell-success)]/10 text-[var(--shell-success)] border border-[var(--shell-success)]/20"
                 : "bg-[var(--shell-danger)]/10 text-[var(--shell-danger)] border border-[var(--shell-danger)]/20"
             }`}
           >
             {trend.dir === "up" ? (
-              <ArrowUp className="h-3.5 w-3.5" />
+              <ArrowUp className="h-3 w-3" />
             ) : (
-              <ArrowDown className="h-3.5 w-3.5" />
+              <ArrowDown className="h-3 w-3" />
             )}
             {trend.pct}
           </span>
         )}
         {subtitle && (
-          <span className="text-xs text-[var(--shell-muted)] font-medium">
+          <span className="text-[11px] text-[var(--shell-muted)] font-medium">
             {subtitle}
           </span>
         )}

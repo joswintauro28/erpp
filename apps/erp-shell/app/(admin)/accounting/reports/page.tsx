@@ -98,18 +98,20 @@ export default function ReportsPage() {
     netIncome: report.pl.reduce((s: number, r: any) => s + r.net_profit, 0),
   } : null;
 
-  const cfTotals = report?.cash_flow?.reduce((s, r: any) => ({
-    opInflow: s.opInflow + r.operating_activities.cash_inflow,
-    opOutflow: s.opOutflow + r.operating_activities.cash_outflow,
-    opNet: s.opNet + r.operating_activities.net_cash,
-    invInflow: s.invInflow + r.investing_activities.cash_inflow,
-    invOutflow: s.invOutflow + r.investing_activities.cash_outflow,
-    invNet: s.invNet + r.investing_activities.net_cash,
-    finInflow: s.finInflow + r.financing_activities.cash_inflow,
-    finOutflow: s.finOutflow + r.financing_activities.cash_outflow,
-    finNet: s.finNet + r.financing_activities.net_cash,
-    netChange: s.netChange + r.net_change_in_cash,
-  }), { opInflow: 0, opOutflow: 0, opNet: 0, invInflow: 0, invOutflow: 0, invNet: 0, finInflow: 0, finOutflow: 0, finNet: 0, netChange: 0 }) ?? null;
+  const cfTotals = report?.cash_flow?.length
+    ? report.cash_flow.reduce((s, r: any) => ({
+        opInflow: s.opInflow + r.operating_activities.cash_inflow,
+        opOutflow: s.opOutflow + r.operating_activities.cash_outflow,
+        opNet: s.opNet + r.operating_activities.net_cash,
+        invInflow: s.invInflow + r.investing_activities.cash_inflow,
+        invOutflow: s.invOutflow + r.investing_activities.cash_outflow,
+        invNet: s.invNet + r.investing_activities.net_cash,
+        finInflow: s.finInflow + r.financing_activities.cash_inflow,
+        finOutflow: s.finOutflow + r.financing_activities.cash_outflow,
+        finNet: s.finNet + r.financing_activities.net_cash,
+        netChange: s.netChange + r.net_change_in_cash,
+      }), { opInflow: 0, opOutflow: 0, opNet: 0, invInflow: 0, invOutflow: 0, invNet: 0, finInflow: 0, finOutflow: 0, finNet: 0, netChange: 0 })
+    : null;
 
   return (
     <div className="space-y-6">

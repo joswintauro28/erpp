@@ -193,7 +193,7 @@ export function NotificationProvider({
         const token = getAccessToken();
         if (!token) return;
         // L10: use shared api client for auto-retry on 401
-        await api.put(`/api/notifications/${id}/read`);
+        await api.put(`/notifications/${id}/read`);
       } catch {
         // optimistic update stands; next refresh reconciles
       }
@@ -207,7 +207,7 @@ export function NotificationProvider({
         const token = getAccessToken();
         if (!token) return;
         // L10: use shared api client for auto-retry on 401
-        await api.put(`/api/notifications/read-all`);
+        await api.put(`/notifications/read-all`);
       } catch {
         // optimistic
       }
