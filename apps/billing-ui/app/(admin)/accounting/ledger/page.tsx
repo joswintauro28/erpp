@@ -170,7 +170,7 @@ export default function LedgerPage() {
                   <TableCell className="text-xs text-muted-foreground">{e.reference_type ? `${e.reference_type}#${e.reference_id}` : "-"}</TableCell>
                   <TableCell className="text-right">
                     <Button variant="ghost" size="icon-sm" onClick={() => handleEditClick(e)} title="Edit">
-                      <Pencil className="h-3.5 w-3.5" />
+                      <Pencil className="h-3.5 w-3.5 text-[var(--shell-brand)]" />
                     </Button>
                   </TableCell>
                 </TableRow>

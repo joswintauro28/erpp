@@ -18,7 +18,7 @@ import { SearchInput } from "@/components/shared/search-input";
 import { LoadingSpinner } from "@/components/shared/loading-spinner";
 import { EmptyState } from "@/components/shared/empty-state";
 import { api } from "@/services/api";
-import { PageHeader, handleError } from "@datavex/ui-theme";
+import { PageHeader, KpiCard, SectionHeading, handleError } from "@datavex/ui-theme";
 import { useToast } from "@/contexts/ToastContext";
 import { money } from "@/utils/format";
 import type { BillingPayment } from "@/types/billing";
@@ -133,28 +133,16 @@ export default function Payments() {
       />
 
       {metrics && (
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-5">
-          <Card><CardContent className="pt-6">
-            <p className="text-xs text-[--shell-muted]">Today</p>
-            <p className="font-heading text-lg font-semibold text-[--shell-foreground]">{money(metrics.today)}</p>
-          </CardContent></Card>
-          <Card><CardContent className="pt-6">
-            <p className="text-xs text-[--shell-muted]">This Month</p>
-            <p className="font-heading text-lg font-semibold text-[--shell-foreground]">{money(metrics.this_month)}</p>
-          </CardContent></Card>
-          <Card><CardContent className="pt-6">
-            <p className="text-xs text-[--shell-muted]">Outstanding</p>
-            <p className="font-heading text-lg font-semibold text-[--shell-danger]">{money(metrics.outstanding)}</p>
-          </CardContent></Card>
-          <Card><CardContent className="pt-6">
-            <p className="text-xs text-[--shell-muted]">Refunds</p>
-            <p className="font-heading text-lg font-semibold text-[--shell-danger]">{money(metrics.refunds)}</p>
-          </CardContent></Card>
-          <Card><CardContent className="pt-6">
-            <p className="text-xs text-[--shell-muted]">Failed</p>
-            <p className="font-heading text-lg font-semibold text-[--shell-danger]">{metrics.failed}</p>
-          </CardContent></Card>
-        </div>
+        <section>
+          <SectionHeading label="Overview" />
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+            <KpiCard label="Today" value={money(metrics.today)} icon={DollarSign} color="var(--chart-2)" index={0} />
+            <KpiCard label="This Month" value={money(metrics.this_month)} icon={Receipt} color="var(--chart-2)" index={1} />
+            <KpiCard label="Outstanding" value={money(metrics.outstanding)} icon={AlertTriangle} color="var(--shell-danger)" index={2} />
+            <KpiCard label="Refunds" value={money(metrics.refunds)} icon={Ban} color="var(--shell-danger)" index={3} />
+            <KpiCard label="Failed" value={metrics.failed} icon={Ban} color="var(--shell-danger)" index={4} />
+          </div>
+        </section>
       )}
 
       <SearchInput value={search} onChange={setSearch} placeholder="Search payments..." className="max-w-xs" />

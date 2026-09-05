@@ -14,7 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { SearchInput } from "@/components/shared/search-input";
 import { EmptyState } from "@/components/shared/empty-state";
 import { api } from "@/services/api";
-import { PageHeader, handleError } from "@datavex/ui-theme";
+import { PageHeader, KpiCard, SectionHeading, handleError } from "@datavex/ui-theme";
 import { useToast } from "@/contexts/ToastContext";
 import { money, noteStatusVariant as statusVariant } from "@/utils/format";
 import type { DebitNote } from "@/types/billing";
@@ -109,24 +109,15 @@ export default function DebitNotes() {
         actions={<Button aria-label="Create Debit Note" onClick={() => setCreateOpen(true)}><Plus className="h-4 w-4" /> Create Debit Note</Button>}
       />
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <Card><CardContent className="flex items-center gap-3 px-4 py-3">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-[--chart-1]/10"><FileText className="h-4 w-4 text-[--chart-1]" /></div>
-          <div className="min-w-0"><p className="font-heading text-base font-semibold leading-tight">{notes.length}</p><p className="text-[11px] font-medium text-[--shell-muted] leading-tight mt-0.5">Total Notes</p></div>
-        </CardContent></Card>
-        <Card><CardContent className="flex items-center gap-3 px-4 py-3">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-[--chart-2]/10"><Receipt className="h-4 w-4 text-[--chart-2]" /></div>
-          <div className="min-w-0"><p className="font-heading text-base font-semibold leading-tight">{money(notes.reduce((sum, n) => sum + n.amount, 0))}</p><p className="text-[11px] font-medium text-[--shell-muted] leading-tight mt-0.5">Total Amount</p></div>
-        </CardContent></Card>
-        <Card><CardContent className="flex items-center gap-3 px-4 py-3">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-[--shell-success]/10"><FileText className="h-4 w-4 text-[--shell-success]" /></div>
-          <div className="min-w-0"><p className="font-heading text-base font-semibold leading-tight">{notes.filter(n => n.status === "issued").length}</p><p className="text-[11px] font-medium text-[--shell-muted] leading-tight mt-0.5">Issued Notes</p></div>
-        </CardContent></Card>
-        <Card><CardContent className="flex items-center gap-3 px-4 py-3">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-[--chart-4]/10"><Receipt className="h-4 w-4 text-[--chart-4]" /></div>
-          <div className="min-w-0"><p className="font-heading text-base font-semibold leading-tight">{money(notes.filter(n => n.status === "issued").reduce((sum, n) => sum + n.amount, 0))}</p><p className="text-[11px] font-medium text-[--shell-muted] leading-tight mt-0.5">Issued Amount</p></div>
-        </CardContent></Card>
-      </div>
+      <section>
+        <SectionHeading label="Overview" />
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <KpiCard label="Total Notes" value={notes.length} icon={FileText} color="var(--chart-1)" index={0} />
+          <KpiCard label="Total Amount" value={money(notes.reduce((sum, n) => sum + n.amount, 0))} icon={Receipt} color="var(--chart-2)" index={1} />
+          <KpiCard label="Issued Notes" value={notes.filter(n => n.status === "issued").length} icon={FileText} color="var(--shell-success)" index={2} />
+          <KpiCard label="Issued Amount" value={money(notes.filter(n => n.status === "issued").reduce((sum, n) => sum + n.amount, 0))} icon={Receipt} color="var(--chart-4)" index={3} />
+        </div>
+      </section>
 
       <SearchInput value={search} onChange={setSearch} placeholder="Search debit notes..." className="max-w-xs" />
 

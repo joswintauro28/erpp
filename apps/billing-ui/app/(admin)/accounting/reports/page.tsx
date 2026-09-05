@@ -4,10 +4,10 @@ import { useEffect, useState } from "react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { BarChart3, TrendingUp, TrendingDown, AlertTriangle, DollarSign, Receipt, Wallet, Banknote, ArrowUpRight, ArrowDownRight, Minus } from "lucide-react";
+import { BarChart3, TrendingUp, TrendingDown, AlertTriangle, DollarSign, Receipt, Wallet, Banknote, ArrowUpRight, ArrowDownRight, Minus, CheckCircle2 } from "lucide-react";
 import ReportsLoading from "./loading";
 import { api } from "@/services/api";
-import { handleError, Button, PageHeader } from "@datavex/ui-theme";
+import { handleError, Button, PageHeader, KpiCard, SectionHeading } from "@datavex/ui-theme";
 import { money } from "@/utils/format";
 
 type Tab = "pl" | "balance-sheet" | "cash-flow" | "cogs";
@@ -154,40 +154,16 @@ export default function ReportsPage() {
         <>
           {tab === "pl" && (
             <>
-              <div className="grid grid-cols-2 gap-4 sm:grid-cols-5">
-                <Card><CardContent className="pt-6">
-                  <div className="flex items-center gap-2 mb-1">
-                    <DollarSign className="h-3.5 w-3.5 text-chart-1" />
-                    <p className="text-xs text-muted-foreground">Revenue</p>
-                  </div>
-                  <p className="font-heading text-lg font-semibold text-foreground">{money(plTotals!.revenue)}</p>
-                </CardContent></Card>
-                <Card><CardContent className="pt-6">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Receipt className="h-3.5 w-3.5 text-chart-3" />
-                    <p className="text-xs text-muted-foreground">COGS</p>
-                  </div>
-                  <p className="font-heading text-lg font-semibold text-foreground">{money(plTotals!.cogs)}</p>
-                </CardContent></Card>
-                <Card><CardContent className="pt-6">
-                  <div className="flex items-center gap-2 mb-1">
-                    <TrendingUp className="h-3.5 w-3.5 text-[var(--shell-success)]" />
-                    <p className="text-xs text-muted-foreground">Gross Profit</p>
-                  </div>
-                  <p className={`font-heading text-lg font-semibold ${plTotals!.grossProfit >= 0 ? "text-[var(--shell-success)]" : "text-destructive"}`}>{money(plTotals!.grossProfit)}</p>
-                </CardContent></Card>
-                <Card><CardContent className="pt-6">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Wallet className="h-3.5 w-3.5 text-chart-4" />
-                    <p className="text-xs text-muted-foreground">Expenses</p>
-                  </div>
-                  <p className="font-heading text-lg font-semibold text-destructive">{money(plTotals!.expenses)}</p>
-                </CardContent></Card>
-                <Card><CardContent className="pt-6">
-                  <p className="text-xs text-muted-foreground mb-1">Net Income</p>
-                  <p className={`font-heading text-lg font-semibold ${plTotals!.netIncome >= 0 ? "text-[var(--shell-success)]" : "text-destructive"}`}>{money(plTotals!.netIncome)}</p>
-                </CardContent></Card>
-              </div>
+              <section>
+                <SectionHeading label="Overview" />
+                <div className="grid grid-cols-2 gap-4 sm:grid-cols-5">
+                  <KpiCard label="Revenue" value={money(plTotals!.revenue)} icon={DollarSign} color="var(--chart-1)" index={0} />
+                  <KpiCard label="COGS" value={money(plTotals!.cogs)} icon={Receipt} color="var(--chart-3)" index={1} />
+                  <KpiCard label="Gross Profit" value={money(plTotals!.grossProfit)} icon={TrendingUp} color="var(--shell-success)" index={2} />
+                  <KpiCard label="Expenses" value={money(plTotals!.expenses)} icon={Wallet} color="var(--shell-danger)" index={3} />
+                  <KpiCard label="Net Income" value={money(plTotals!.netIncome)} icon={BarChart3} color="var(--shell-brand)" index={4} />
+                </div>
+              </section>
 
               <Card>
                 <CardHeader>
@@ -343,40 +319,15 @@ export default function ReportsPage() {
               {detailedCf ? (
                 <>
                   {/* Summary Cards */}
-                  <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                    <Card className="border-border/60 bg-muted/10 shadow-sm">
-                      <CardContent className="pt-6">
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">Opening Cash Balance</p>
-                        <p className="font-heading text-lg font-bold text-foreground">{money(detailedCf.opening_balance)}</p>
-                        <p className="text-[10px] text-muted-foreground mt-1">At start of period</p>
-                      </CardContent>
-                    </Card>
-                    <Card className="border-border/60 bg-muted/10 shadow-sm">
-                      <CardContent className="pt-6">
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">Net Cash Movement</p>
-                        <p className={`font-heading text-lg font-bold ${detailedCf.net_increase_decrease >= 0 ? "text-[var(--shell-success)]" : "text-destructive"}`}>
-                          {detailedCf.net_increase_decrease >= 0 ? "+" : ""}{money(detailedCf.net_increase_decrease)}
-                        </p>
-                        <p className="text-[10px] text-muted-foreground mt-1">From all activities</p>
-                      </CardContent>
-                    </Card>
-                    <Card className="border-accent/40 bg-accent/5 shadow-sm">
-                      <CardContent className="pt-6">
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-accent-foreground mb-1">GL Closing Balance</p>
-                        <p className="font-heading text-lg font-bold text-foreground">{money(detailedCf.closing_cash_balance)}</p>
-                        <p className="text-[10px] text-muted-foreground mt-1">General Ledger balance</p>
-                      </CardContent>
-                    </Card>
-                    <Card className={`border-border/60 shadow-sm ${detailedCf.reconciliation.difference === 0 ? "bg-[var(--shell-success-surface)]0/5 border-[var(--shell-success)]/20" : "bg-destructive/5 border-destructive/20"}`}>
-                      <CardContent className="pt-6">
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">Reconciliation Status</p>
-                        <p className={`font-heading text-lg font-bold ${detailedCf.reconciliation.difference === 0 ? "text-[var(--shell-success)]" : "text-destructive"}`}>
-                          {detailedCf.reconciliation.difference === 0 ? "Fully Reconciled" : `${money(Math.abs(detailedCf.reconciliation.difference))} Diff`}
-                        </p>
-                        <p className="text-[10px] text-muted-foreground mt-1">GL vs Bank Statement</p>
-                      </CardContent>
-                    </Card>
-                  </div>
+                  <section>
+                    <SectionHeading label="Cash Flow Overview" />
+                    <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                      <KpiCard label="Opening Cash Balance" value={money(detailedCf.opening_balance)} subtitle="At start of period" icon={Wallet} color="var(--chart-2)" index={0} />
+                      <KpiCard label="Net Cash Movement" value={`${detailedCf.net_increase_decrease >= 0 ? "+" : ""}${money(detailedCf.net_increase_decrease)}`} subtitle="From all activities" icon={TrendingUp} color="var(--shell-success)" index={1} />
+                      <KpiCard label="GL Closing Balance" value={money(detailedCf.closing_cash_balance)} subtitle="General Ledger balance" icon={DollarSign} color="var(--chart-5)" index={2} />
+                      <KpiCard label="Reconciliation Status" value={detailedCf.reconciliation.difference === 0 ? "Fully Reconciled" : `${money(Math.abs(detailedCf.reconciliation.difference))} Diff`} subtitle="GL vs Bank Statement" icon={detailedCf.reconciliation.difference === 0 ? CheckCircle2 : AlertTriangle} color={detailedCf.reconciliation.difference === 0 ? "var(--shell-success)" : "var(--shell-danger)"} index={3} />
+                    </div>
+                  </section>
 
                   {/* IAS 7 / ASC 230 Cash Flow Statement */}
                   <Card className="shadow-sm">
@@ -689,44 +640,15 @@ export default function ReportsPage() {
 
             <div className="space-y-6">
               {/* Summary Cards */}
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
-                <Card>
-                  <CardHeader className="py-3">
-                    <CardTitle className="text-xs text-muted-foreground">Total COGS</CardTitle>
-                  </CardHeader>
-                  <CardContent className="pt-0">
-                    <p className="font-heading text-xl font-bold text-foreground">{money(cogsData?.summary?.total_cogs || 0)}</p>
-                    <p className="text-[11px] text-muted-foreground mt-1">Cost of items sold</p>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardHeader className="py-3">
-                    <CardTitle className="text-xs text-muted-foreground">Gross Profit</CardTitle>
-                  </CardHeader>
-                  <CardContent className="pt-0">
-                    <p className="font-heading text-xl font-bold text-[var(--shell-success)]">{money(cogsData?.summary?.gross_profit || 0)}</p>
-                    <p className="text-[11px] text-[var(--shell-success)] mt-1">{cogsData?.summary?.gross_margin_pct || 0}% Gross Margin</p>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardHeader className="py-3">
-                    <CardTitle className="text-xs text-muted-foreground">Operating Margin</CardTitle>
-                  </CardHeader>
-                  <CardContent className="pt-0">
-                    <p className="font-heading text-xl font-bold text-[var(--shell-info)]">{cogsData?.summary?.operating_margin_pct || 0}%</p>
-                    <p className="text-[11px] text-muted-foreground mt-1">Net of operating expenses</p>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardHeader className="py-3">
-                    <CardTitle className="text-xs text-muted-foreground">Inventory Turnover</CardTitle>
-                  </CardHeader>
-                  <CardContent className="pt-0">
-                    <p className="font-heading text-xl font-bold text-purple-600">{cogsData?.summary?.inventory_turnover || 0}x</p>
-                    <p className="text-[11px] text-muted-foreground mt-1">Annualized turnover ratio</p>
-                  </CardContent>
-                </Card>
-              </div>
+              <section>
+                <SectionHeading label="COGS Summary" />
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
+                  <KpiCard label="Total COGS" value={money(cogsData?.summary?.total_cogs || 0)} subtitle="Cost of items sold" icon={Receipt} color="var(--shell-danger)" index={0} />
+                  <KpiCard label="Gross Profit" value={money(cogsData?.summary?.gross_profit || 0)} subtitle={`${cogsData?.summary?.gross_margin_pct || 0}% Gross Margin`} icon={TrendingUp} color="var(--shell-success)" index={1} />
+                  <KpiCard label="Operating Margin" value={`${cogsData?.summary?.operating_margin_pct || 0}%`} subtitle="Net of operating expenses" icon={BarChart3} color="var(--chart-2)" index={2} />
+                  <KpiCard label="Inventory Turnover" value={`${cogsData?.summary?.inventory_turnover || 0}x`} subtitle="Annualized turnover ratio" icon={Wallet} color="var(--chart-5)" index={3} />
+                </div>
+              </section>
 
               {/* Invoice Level COGS Table */}
               <Card>

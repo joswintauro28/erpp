@@ -6,7 +6,7 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@
 import { Badge } from "@/components/ui/badge";
 import { AlertTriangle, Loader2, Bell, BellOff } from "lucide-react";
 import { api } from "@/services/api";
-import { handleError, PageHeader } from "@datavex/ui-theme";
+import { handleError, PageHeader, KpiCard, SectionHeading } from "@datavex/ui-theme";
 import { money } from "@/utils/format";
 
 const levelColors: Record<number, string> = {
@@ -65,28 +65,14 @@ export default function DunningPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <Card>
-          <CardContent className="pt-6">
-            <p className="text-xs text-muted-foreground">Active Dunning Records</p>
-            <p className="font-heading text-lg font-semibold text-foreground mt-1">{dunning.length}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <p className="text-xs text-muted-foreground">Level 3 (Final Notice)</p>
-            <p className="font-heading text-lg font-semibold text-destructive mt-1">
-              {dunning.filter((r) => r.level === 3).length}
-            </p>
-          </CardContent>
-        </Card>
-        <Card className="border-accent/30 bg-accent/5">
-          <CardContent className="pt-6">
-            <p className="text-xs text-muted-foreground">Total Amount in Collections</p>
-            <p className="font-heading text-lg font-semibold text-accent-foreground mt-1">{money(totalDue)}</p>
-          </CardContent>
-        </Card>
-      </div>
+      <section>
+        <SectionHeading label="Overview" />
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <KpiCard label="Active Dunning Records" value={dunning.length} icon={Bell} color="var(--chart-1)" index={0} />
+          <KpiCard label="Level 3 (Final Notice)" value={dunning.filter((r) => r.level === 3).length} icon={BellOff} color="var(--shell-danger)" index={1} />
+          <KpiCard label="Total in Collections" value={money(totalDue)} icon={AlertTriangle} color="var(--shell-accent)" index={2} />
+        </div>
+      </section>
 
       <Card>
         <CardHeader>
