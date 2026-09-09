@@ -5,7 +5,7 @@ import { FormEvent, useState } from "react";
 import { Eye, EyeOff, Loader2, LogIn, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
-import { getAccessToken } from "@datavex/auth-middleware";
+import { getAccessToken, setAccessToken } from "@datavex/auth-middleware";
 
 const BILLING_APP_URL = process.env.NEXT_PUBLIC_BILLING_APP_URL || "http://localhost:3002";
 const CRM_APP_URL = process.env.NEXT_PUBLIC_CRM_APP_URL || "http://localhost:3001";
@@ -41,6 +41,7 @@ export default function LoginPage() {
 
     setIsLoading(true);
     setError("");
+    setAccessToken(null);
 
     try {
       const user = await login(email, password);
