@@ -63,7 +63,7 @@ export default function DashboardPage() {
   const metrics = data.metrics ?? [];
   const stages = data.pipeline_stages ?? [];
   const recommendations = data.recommendations ?? [];
-  const pipelineValue = stages.length > 0 ? stages.reduce((s: number, st: any) => s + st.value, 0) : 0;
+  const pipelineValue = stages.length > 0 ? stages.reduce((s: number, st: any) => s + (Number(st.value) || 0), 0) : 0;
   const hasAlerts = recommendations.length > 0;
 
   const metricIcons = [TrendingUp, Target, Users, Layers] as const;

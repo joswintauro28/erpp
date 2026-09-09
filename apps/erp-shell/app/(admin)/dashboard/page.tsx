@@ -115,7 +115,7 @@ export default function Dashboard() {
 
         const crmDash = crm ?? { metrics: [], pipeline_stages: [], recommendations: [] };
         const stages = crmDash.pipeline_stages ?? [];
-        const pv = stages.length > 0 ? stages.reduce((s: number, st: any) => s + st.value, 0) : 0;
+        const pv = stages.length > 0 ? stages.reduce((s: number, st: any) => s + (Number(st.value) || 0), 0) : 0;
 
         setData({
           stats,
