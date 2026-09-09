@@ -1,18 +1,19 @@
 "use client";
 
-import { Button } from '@/components/ui/button';
-import React, { useState, useMemo } from 'react';
-import { api } from '@/services/api';
+import React, { useState, useMemo, useEffect } from "react";
+import { api } from "@/services/api";
+import { FileText, Mail, Phone, Building2, Calendar, Users, DollarSign, CheckCircle } from "lucide-react";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogDescription,
-} from '@/components/ui/dialog';
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Label } from '@/components/ui/label';
-import { FileText, Mail, Phone, Building2, Calendar, Users, DollarSign, CheckCircle, Clock } from 'lucide-react';
+import { Label } from "@/components/ui/label";
+import { FileViewer, FilePreviewModal, type FileRecord } from "@datavex/ui-theme";
 
 function formatCurrency(value: number | string) {
   const num = typeof value === "string" ? parseFloat(value) : value;
@@ -30,6 +31,26 @@ interface QuotationDetailsModalProps {
 export default function QuotationDetailsModal({ record, isOpen, onClose, onSuccess, initialShowForm = "" }: QuotationDetailsModalProps) {
   const [loading, setLoading] = useState(false);
   const [formType, setFormType] = useState(initialShowForm || "");
+  const [attachedFiles, setAttachedFiles] = useState<FileRecord[]>([]);
+  const [previewFile, setPreviewFile] = useState<{ id: number; name: string; mimeType: string } | null>(null);
+
+  // Fetch attached files when modal opens
+  useEffect(() => {
+    if (!isOpen || !record?.id) {
+      setAttachedFiles([]);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const files = await api.get<FileRecord[]>(`/files?owner_type=quotation&owner_id=${record.id}`);
+        if (!cancelled) setAttachedFiles(files || []);
+      } catch {
+        if (!cancelled) setAttachedFiles([]);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [isOpen, record?.id]);
 
   const handleConvert = async () => {
     if (!record) return;
@@ -42,6 +63,15 @@ export default function QuotationDetailsModal({ record, isOpen, onClose, onSucce
       console.error(e);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDeleteFile = async (file: FileRecord) => {
+    try {
+      await api.delete(`/files/${file.id}`);
+      setAttachedFiles((prev) => prev.filter((f) => f.id !== file.id));
+    } catch {
+      // silent
     }
   };
 
@@ -195,6 +225,24 @@ export default function QuotationDetailsModal({ record, isOpen, onClose, onSucce
           </div>
         )}
 
+        {/* Attached Files from MinIO */}
+        {attachedFiles.length > 0 && (
+          <div className="rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface)] p-5">
+            <div className="flex items-center gap-2 mb-4">
+              <FileText className="h-4 w-4 text-[var(--shell-muted)]" />
+              <span className="text-xs font-bold uppercase tracking-wider text-[var(--shell-foreground)]">
+                Attached Documents ({attachedFiles.length})
+              </span>
+            </div>
+            <FileViewer
+              files={attachedFiles}
+              onDelete={handleDeleteFile}
+              onPreview={(f) => setPreviewFile({ id: f.id, name: f.original_name, mimeType: f.mime_type })}
+              showActions={true}
+            />
+          </div>
+        )}
+
         {/* Conversion CTA */}
         {rec.status === "Accepted" && !rec.converted_invoice_id && (
           <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-4">
@@ -209,7 +257,7 @@ export default function QuotationDetailsModal({ record, isOpen, onClose, onSucce
         )}
       </div>
     );
-  }, [record]);
+  }, [record, attachedFiles]);
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
@@ -225,6 +273,15 @@ export default function QuotationDetailsModal({ record, isOpen, onClose, onSucce
           </Button>
         </div>
       </DialogContent>
+
+      {/* File Preview Modal */}
+      <FilePreviewModal
+        fileId={previewFile?.id ?? null}
+        fileName={previewFile?.name}
+        mimeType={previewFile?.mimeType}
+        open={!!previewFile}
+        onClose={() => setPreviewFile(null)}
+      />
     </Dialog>
   );
 }

@@ -1,9 +1,9 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { X, PackageOpen, FileText, Download } from 'lucide-react';
+import { PackageOpen, FileText, Download } from 'lucide-react';
 import { api } from '@/services/api';
-import { FileUpload, type FileRecord } from '@datavex/ui-theme';
+import { FileUpload, FileViewer, FilePreviewModal, type FileRecord } from '@datavex/ui-theme';
 import {
   Dialog,
   DialogContent,
@@ -40,6 +40,10 @@ export default function QuotationDetailsModal({ record, isOpen, onClose, onSucce
   });
   const [soFileId, setSoFileId] = useState<number | null>(null);
 
+  // Attached files from MinIO
+  const [attachedFiles, setAttachedFiles] = useState<FileRecord[]>([]);
+  const [previewFile, setPreviewFile] = useState<{ id: number; name: string; mimeType: string } | null>(null);
+
   useEffect(() => {
     if (isOpen && record) {
       setShowSalesOrderForm(initialShowForm === 'sales-order');
@@ -51,10 +55,32 @@ export default function QuotationDetailsModal({ record, isOpen, onClose, onSucce
         owner: record.owner || '',
       });
       setSoFileId(null);
+
+      // Fetch attached files
+      let cancelled = false;
+      (async () => {
+        try {
+          const files = await api.get<FileRecord[]>(`/files?owner_type=quotation&owner_id=${record.id}`);
+          if (!cancelled) setAttachedFiles(files || []);
+        } catch {
+          if (!cancelled) setAttachedFiles([]);
+        }
+      })();
+      return () => { cancelled = true; };
     }
+    setAttachedFiles([]);
   }, [isOpen, initialShowForm, record]);
 
   if (!isOpen || !record) return null;
+
+  const handleDeleteFile = async (file: FileRecord) => {
+    try {
+      await api.delete(`/files/${file.id}`);
+      setAttachedFiles((prev) => prev.filter((f) => f.id !== file.id));
+    } catch {
+      // silent
+    }
+  };
 
   const handleSalesOrderSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -106,11 +132,11 @@ export default function QuotationDetailsModal({ record, isOpen, onClose, onSucce
             .account { margin: 4px 0 0 0; color: #b45309; font-weight: 600; font-size: 14px; }
             .metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
             .metric-box { background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 16px; }
-            .metric-label { font-size: 11px; color: var(--shell-muted); font-weight: 500; text-transform: uppercase; margin-bottom: 4px; }
+            .metric-label { font-size: 11px; color: #94a3b8; font-weight: 500; text-transform: uppercase; margin-bottom: 4px; }
             .metric-val { font-size: 18px; font-weight: 700; color: #0f172a; }
             .details-list { font-size: 13px; margin-top: 16px; }
             .details-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f1f5f9; }
-            .details-label { color: var(--shell-muted); }
+            .details-label { color: #94a3b8; }
             .details-val { font-weight: 500; color: #334155; }
           </style>
         </head>
@@ -143,7 +169,7 @@ export default function QuotationDetailsModal({ record, isOpen, onClose, onSucce
               </div>
               <div class="details-item">
                 <span class="details-label">Status</span>
-                <span class="details-val" style="color: ${record.status === 'Accepted' ? 'var(--shell-success)' : 'var(--shell-muted)'}">${record.status || 'Draft'}</span>
+                <span class="details-val" style="color: ${record.status === 'Accepted' ? '#10b981' : '#94a3b8'}">${record.status || 'Draft'}</span>
               </div>
             </div>
           </div>
@@ -280,25 +306,27 @@ export default function QuotationDetailsModal({ record, isOpen, onClose, onSucce
                   <div className={`text-xs font-semibold ${f.accent ? "text-[var(--shell-warning)]" : "text-[var(--shell-foreground)]"}`}>{f.value || '--'}</div>
                 </div>
               ))}
-
-              {record.file_name && record.file_id && (
-                <div>
-                  <div className="text-[10px] font-semibold uppercase text-[var(--shell-muted)] mb-1">Attached Document</div>
-                  <a
-                    href={`/api/files/${record.file_id}/stream`}
-                    download={record.file_name}
-                    className="inline-flex items-center gap-1 text-xs font-medium text-[var(--shell-brand)] hover:underline cursor-pointer"
-                  >
-                    <Download className="size-3.5" /> Download
-                  </a>
-                </div>
-              )}
             </div>
 
             <div className="flex flex-col gap-4">
               <div className="text-xs font-semibold uppercase text-[var(--shell-muted)]">Document Preview</div>
               {renderQuotationFrame()}
             </div>
+          </div>
+        )}
+
+        {/* Attached Files from MinIO (shown in view mode) */}
+        {!showSalesOrderForm && attachedFiles.length > 0 && (
+          <div className="mt-4 rounded-lg border border-[var(--shell-border)] bg-[var(--shell-surface)] p-4">
+            <div className="text-[10px] font-semibold uppercase text-[var(--shell-muted)] mb-2">
+              Attached Documents ({attachedFiles.length})
+            </div>
+            <FileViewer
+              files={attachedFiles}
+              onDelete={handleDeleteFile}
+              onPreview={(f) => setPreviewFile({ id: f.id, name: f.original_name, mimeType: f.mime_type })}
+              showActions={true}
+            />
           </div>
         )}
 
@@ -313,6 +341,15 @@ export default function QuotationDetailsModal({ record, isOpen, onClose, onSucce
           </div>
         )}
       </DialogContent>
+
+      {/* File Preview Modal */}
+      <FilePreviewModal
+        fileId={previewFile?.id ?? null}
+        fileName={previewFile?.name}
+        mimeType={previewFile?.mimeType}
+        open={!!previewFile}
+        onClose={() => setPreviewFile(null)}
+      />
     </Dialog>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FileText, FileSpreadsheet, ArrowRight } from "lucide-react";
 import {
   Dialog,
@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { api } from "@/services/api";
+import { FileViewer, FilePreviewModal, type FileRecord } from "@datavex/ui-theme";
 
 interface RequirementDetailsModalProps {
   record: any;
@@ -38,7 +39,38 @@ export default function RequirementDetailsModal({
     owner: "",
   });
 
+  // Attached files from MinIO
+  const [attachedFiles, setAttachedFiles] = useState<FileRecord[]>([]);
+  const [previewFile, setPreviewFile] = useState<{ id: number; name: string; mimeType: string } | null>(null);
+
+  // Fetch attached files when modal opens
+  useEffect(() => {
+    if (!isOpen || !record?.id) {
+      setAttachedFiles([]);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const files = await api.get<FileRecord[]>(`/files?owner_type=requirement&owner_id=${record.id}`);
+        if (!cancelled) setAttachedFiles(files || []);
+      } catch {
+        if (!cancelled) setAttachedFiles([]);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [isOpen, record?.id]);
+
   if (!isOpen || !record) return null;
+
+  const handleDeleteFile = async (file: FileRecord) => {
+    try {
+      await api.delete(`/files/${file.id}`);
+      setAttachedFiles((prev) => prev.filter((f) => f.id !== file.id));
+    } catch {
+      // silent
+    }
+  };
 
   const handleQuotationSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -148,6 +180,24 @@ export default function RequirementDetailsModal({
         {!showQuotationForm ? (
           <div className="space-y-6">
             {renderFrameContent()}
+
+            {/* Attached Files from MinIO */}
+            {attachedFiles.length > 0 && (
+              <div className="rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface)] p-5">
+                <div className="flex items-center gap-2 mb-4">
+                  <FileText className="h-4 w-4 text-[var(--shell-muted)]" />
+                  <span className="text-xs font-bold uppercase tracking-wider text-[var(--shell-foreground)]">
+                    Attached Documents ({attachedFiles.length})
+                  </span>
+                </div>
+                <FileViewer
+                  files={attachedFiles}
+                  onDelete={handleDeleteFile}
+                  onPreview={(f) => setPreviewFile({ id: f.id, name: f.original_name, mimeType: f.mime_type })}
+                  showActions={true}
+                />
+              </div>
+            )}
 
             <div className="flex items-center justify-between border-t border-[var(--shell-border)] pt-4">
               <Button
@@ -264,6 +314,15 @@ export default function RequirementDetailsModal({
           </div>
         )}
       </DialogContent>
+
+      {/* File Preview Modal */}
+      <FilePreviewModal
+        fileId={previewFile?.id ?? null}
+        fileName={previewFile?.name}
+        mimeType={previewFile?.mimeType}
+        open={!!previewFile}
+        onClose={() => setPreviewFile(null)}
+      />
     </Dialog>
   );
 }
