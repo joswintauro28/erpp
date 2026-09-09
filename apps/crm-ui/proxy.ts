@@ -27,7 +27,7 @@ export function proxy(request: NextRequest) {
     url = new URL(`/api${path}${search}`, IAM_URL);
   } else if (path.startsWith("/ai/")) {
     url = new URL(`/api${path}${search}`, AI_URL);
-  } else if (path.startsWith("/files/")) {
+  } else if (path === "/files" || path.startsWith("/files/")) {
     url = new URL(`/api${path}${search}`, ERP_URL);
   } else {
     url = new URL(`/api${path}${search}`, CRM_URL);

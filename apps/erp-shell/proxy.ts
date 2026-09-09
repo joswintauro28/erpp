@@ -21,7 +21,7 @@ export function proxy(request: NextRequest) {
   } else if (path.startsWith("/ai/")) {
     // AI endpoints go to ai-service (port 8005, preserves /api prefix)
     url = new URL(`/api${path}${search}`, AI_URL);
-  } else if (path.startsWith("/files/")) {
+  } else if (path === "/files" || path.startsWith("/files/")) {
     // File endpoints require /api prefix (router uses prefix="/api/files")
     url = new URL(`/api${path}${search}`, BACKEND_URL);
   } else {
