@@ -1,202 +1,135 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
-import { Droplets, TrendingUp, Target, AlertTriangle, Plus } from "lucide-react";
+import { useState } from "react";
+import { GripVertical, Lock, Unlock } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { api } from "@/services/api";
+import { toastError, errorMessage } from "@/utils/toast";
 import { cn } from "@/lib/utils";
 
-interface Opportunity {
-  id: number;
-  id_str: string;
-  name: string;
-  account: string | null;
-  stage: string;
-  value: number;
-  probability: number;
-  owner: string;
-  close_date: string;
-  notes: string | null;
-}
+export const PIPELINE_STAGES = ["Discovery", "Quote", "Negotiation", "Won", "Lost"] as const;
+export type PipelineStage = (typeof PIPELINE_STAGES)[number];
+
+const STAGE_META: Record<PipelineStage, { color: string; dot: string; label: string }> = {
+  Discovery: { color: "bg-muted text-muted-foreground border-border", dot: "bg-slate-400", label: "Discovery" },
+  Quote: { color: "bg-[var(--shell-info-surface)] text-[var(--shell-info)] border-sky-300", dot: "bg-[var(--shell-info-surface)]0", label: "Quote" },
+  Negotiation: { color: "bg-violet-50 text-violet-700 border-violet-300", dot: "bg-violet-500", label: "Negotiation" },
+  Won: { color: "bg-[var(--shell-success-surface)] text-[var(--shell-success)] border-[var(--shell-success)]/30", dot: "bg-[var(--shell-success-surface)]0", label: "Closed Won" },
+  Lost: { color: "bg-[var(--shell-danger-surface)] text-[var(--shell-danger)] border-[var(--shell-danger)]/30", dot: "bg-[var(--shell-danger-surface)]0", label: "Lost" },
+};
+
+const formatCurrency = (value: number) =>
+  new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(value);
 
 interface OpportunityKanbanProps {
-  opportunities: Opportunity[];
-  onView: (rec: Opportunity) => void;
+  opportunities: any[];
+  onView: (record: any) => void;
   onStageChange: () => void;
 }
 
-const STAGE_CONFIG: Record<string, { color: string; bg: string; label: string }> = {
-  "Discovery": { color: "#6366f1", bg: "bg-indigo-500/10", label: "Discovery" },
-  "Needs Analysis": { color: "#8b5cf6", bg: "bg-purple-500/10", label: "Needs Analysis" },
-  "Proposal": { color: "#f59e0b", bg: "bg-amber-500/10", label: "Proposal" },
-  "Negotiation": { color: "#10b981", bg: "bg-emerald-500/10", label: "Negotiation" },
-  "Closed Won": { color: "#10b981", bg: "bg-emerald-500/10", label: "Closed Won" },
-  "Closed Lost": { color: "#ef4444", bg: "bg-red-500/10", label: "Closed Lost" },
-};
+export default function OpportunityKanban({ opportunities, onView, onStageChange }: OpportunityKanbanProps) {
+  const [dragId, setDragId] = useState<string | null>(null);
+  const [overStage, setOverStage] = useState<PipelineStage | null>(null);
+  const [busyStage, setBusyStage] = useState<string | null>(null);
 
-const INITIAL_STAGES = ["Discovery", "Needs Analysis"];
-
-interface StageState {
-  stage: string;
-  items: Opportunity[];
-}
-
-export default function OpportunityKanban({ opportunities: initialOpps, onView, onStageChange }: OpportunityKanbanProps) {
-  const [stages, setStages] = useState<StageState[]>(() => {
-    const grouped = initialOpps.reduce<Record<string, Opportunity[]>>((acc, opp) => {
-      const s = opp.stage || "Discovery";
-      if (!acc[s]) acc[s] = [];
-      acc[s].push(opp);
-      return acc;
-    }, {});
-
-    const allStages = Array.from(new Set([...Object.keys(grouped), ...INITIAL_STAGES]));
-    return allStages.map((stage) => ({
-      stage,
-      items: grouped[stage] || [],
-    }));
-  });
-
-  const handleDragStart = useCallback((e: React.DragEvent, opp: Opportunity) => {
-    e.dataTransfer.setData("application/json", JSON.stringify(opp));
-    e.dataTransfer.effectAllowed = "move";
-  }, []);
-
-  const handleDragOver = useCallback((e: React.DragEvent) => {
+  const handleDrop = async (stage: PipelineStage, e: React.DragEvent) => {
     e.preventDefault();
-    e.dataTransfer.dropEffect = "move";
-  }, []);
+    setOverStage(null);
+    if (!dragId) return;
+    setBusyStage(dragId);
+    try {
+      await api.post(`/crm/opportunities/${dragId}/stage`, { stage });
+      if (onStageChange) onStageChange();
+    } catch (err) {
+      toastError("Stage update failed", errorMessage(err));
+    } finally {
+      setBusyStage(null);
+      setDragId(null);
+    }
+  };
 
-  const handleDrop = useCallback((e: React.DragEvent, targetStage: string) => {
-    e.preventDefault();
-    const raw = e.dataTransfer.getData("application/json");
-    if (!raw) return;
-
-    let opp: Opportunity;
-    try { opp = JSON.parse(raw); } catch { return; }
-
-    const sourceIdx = stages.findIndex((s) => s.stage === opp.stage);
-    const targetIdx = stages.findIndex((s) => s.stage === targetStage);
-
-    if (sourceIdx === -1 || targetIdx === -1 || sourceIdx === targetIdx) return;
-
-    setStages((prev) =>
-      prev.map((s, idx) => {
-        if (idx === sourceIdx) return { ...s, items: s.items.filter((o) => o.id !== opp.id) };
-        if (idx === targetIdx) return { ...s, items: [...s.items, { ...opp, stage: targetStage }] };
-        return s;
-      })
-    );
-    onStageChange();
-  }, [stages, onStageChange]);
-
-  const columns = useMemo(() => stages.map((s) => ({
-    id: s.stage,
-    title: s.stage,
-    color: STAGE_CONFIG[s.stage]?.color || "#6b7280",
-    bg: STAGE_CONFIG[s.stage]?.bg || "bg-gray-500/10",
-    items: s.items,
-    total: s.items.length,
-  })), [stages]);
-
-  const totalValue = useMemo(() => {
-    return initialOpps.reduce((sum, opp) => sum + (opp.value || 0), 0);
-  }, [initialOpps]);
+  const totalFor = (stage: PipelineStage) =>
+    opportunities
+      .filter((o) => (o.stage || "Discovery") === stage)
+      .reduce((sum, o) => sum + (Number(String(o.value || 0).replace(/[^0-9.]/g, "")) || 0), 0);
 
   return (
-    <div className="space-y-4">
-      {/* Summary Bar */}
-      <div className="flex flex-wrap gap-4 items-center justify-between bg-[var(--shell-surface)] rounded-lg border border-[var(--shell-border)] px-4 py-3">
-        <div className="flex items-center gap-3 text-sm">
-          <span className="text-[var(--shell-muted)]">Pipeline:</span>
-          <span className="font-heading font-semibold text-[var(--shell-foreground)]">
-            {new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(totalValue)}
-          </span>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          {columns.map((col) => (
-            <div key={col.id} className="flex items-center gap-1.5 text-xs">
-              <span className="h-2.5 w-2.5 rounded-full" style={{ background: col.color }} />
-              <span className="text-[var(--shell-muted)]">{col.title}:</span>
-              <span className="font-medium text-[var(--shell-foreground)]">{col.total}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Kanban Columns */}
-      <div className="flex gap-4 overflow-x-auto pb-4 custom-scrollbar">
-        {columns.map((col) => (
+    <div className="flex gap-3 overflow-x-auto pb-3 min-h-[320px]">
+      {PIPELINE_STAGES.map((stage) => {
+        const meta = STAGE_META[stage];
+        const cards = opportunities.filter((o) => (o.stage || "Discovery") === stage);
+        const isOver = overStage === stage;
+        return (
           <div
-            key={col.id}
+            key={stage}
+            onDragOver={(e) => { e.preventDefault(); setOverStage(stage); }}
+            onDragLeave={() => setOverStage((s) => (s === stage ? null : s))}
+            onDrop={(e) => handleDrop(stage, e)}
             className={cn(
-              "flex flex-col min-w-[280px] flex-1 rounded-xl border transition-colors",
-              col.items.length > 0 ? "bg-[var(--shell-surface)] border-[var(--shell-border)]" : "bg-muted/30 border-dashed border-[var(--shell-border)]/50"
+              "flex w-[240px] shrink-0 flex-col rounded-xl border bg-[var(--shell-surface)] transition-all duration-150",
+              isOver ? "border-[var(--shell-warning)]/40 ring-2 ring-[var(--shell-warning)]/60" : "border-[var(--shell-border)]"
             )}
           >
-            {/* Column Header */}
-            <div className={cn("flex items-center gap-2 px-3 py-3 border-b", col.items.length > 0 ? "border-[var(--shell-border)]" : "border-transparent")}>
-              <span className={cn("h-3 w-3 rounded-full", col.bg)} style={{ background: col.color }} />
-              <span className="text-sm font-semibold text-[var(--shell-foreground)]">{col.title}</span>
-              <span className="ml-auto text-xs font-mono text-[var(--shell-muted)] bg-[var(--shell-border)]/20 px-2 py-0.5 rounded-full">
-                {col.total}
-              </span>
+            <div className={cn("flex items-center justify-between rounded-t-xl border-b px-3 py-2.5", meta.color)}>
+              <div className="flex items-center gap-2">
+                <span className={cn("h-2 w-2 rounded-full", meta.dot)} />
+                <span className="text-xs font-bold uppercase tracking-wide">{meta.label}</span>
+                <span className="rounded-full bg-card/70 px-1.5 py-0.5 text-[10px] font-bold tabular-nums">{cards.length}</span>
+              </div>
+              <span className="text-[10px] font-semibold tabular-nums opacity-80">{formatCurrency(totalFor(stage))}</span>
             </div>
 
-            {/* Cards */}
-            <div className="flex flex-col gap-3 p-3 min-h-[200px] overflow-y-auto custom-scrollbar">
-              {col.items.length === 0 ? (
-                <div className="flex h-full items-center justify-center text-xs text-[var(--shell-muted)] border border-dashed border-[var(--shell-border)]/50 rounded-lg">
-                  <Droplets className="h-4 w-4 mr-1 opacity-50" /> No opportunities
+            <div className="flex flex-1 flex-col gap-2 p-2">
+              {cards.length === 0 && (
+                <div className="flex flex-1 items-center justify-center rounded-lg border border-dashed border-[var(--shell-border)] p-4 text-[10px] uppercase tracking-wider text-[var(--shell-muted)]">
+                  Drop here
                 </div>
-              ) : (
-                col.items.map((opp) => (
-                  <div
-                    key={opp.id}
-                    draggable
-                    onDragStart={(e) => handleDragStart(e, opp)}
-                    onDragOver={handleDragOver}
-                    onDrop={(e) => handleDrop(e, col.id)}
-                    onClick={() => onView(opp)}
-                    className="group relative rounded-lg border border-[var(--shell-border)]/60 bg-[var(--shell-bg)] p-3 cursor-pointer transition-all hover:border-[var(--shell-brand)]/40 hover:shadow-sm cursor-grab active:cursor-grabbing"
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium text-[var(--shell-foreground)] truncate">{opp.name}</p>
-                        <p className="text-xs text-[var(--shell-muted)] mt-0.5 truncate">{opp.account || "No account"}</p>
-                      </div>
-                      <span className="shrink-0">
-                        <span className="inline-flex items-center gap-1 rounded-full bg-[var(--shell-brand)]/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-[var(--shell-brand)]">
-                          <Target className="h-2.5 w-2.5" />
-                          {opp.probability}%
-                        </span>
-                      </span>
-                    </div>
-
-                    <div className="mt-2 flex items-center justify-between">
-                      <span className="text-xs font-medium text-[var(--shell-foreground)]">
-                        {new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(opp.value)}
-                      </span>
-                      <span className="text-[10px] text-[var(--shell-muted)]">{opp.close_date}</span>
-                    </div>
-
-                    {/* Owner Badge */}
-                    {opp.owner && (
-                      <div className="mt-2 flex items-center gap-1.5 text-xs text-[var(--shell-muted)]">
-                        <div className="h-5 w-5 rounded-full bg-[var(--shell-border)] flex items-center justify-center text-[9px] font-bold text-[var(--shell-foreground)]">
-                          {opp.owner.charAt(0).toUpperCase()}
-                        </div>
-                        <span className="truncate">{opp.owner}</span>
-                      </div>
-                    )}
-
-                    {/* Drag indicator */}
-                    <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-[var(--shell-brand)]/40 via-transparent to-[var(--shell-brand)]/40 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  </div>
-                ))
               )}
+              {cards.map((o: any) => {
+                const isDragging = dragId === o.id_str;
+                const isBusy = busyStage === o.id_str;
+                return (
+                  <div
+                    key={o.id}
+                    draggable
+                    onDragStart={() => setDragId(o.id_str)}
+                    onDragEnd={() => { setDragId(null); setOverStage(null); }}
+                    onClick={() => onView(o)}
+                    className={cn(
+                      "group cursor-grab rounded-lg border border-[var(--shell-border)] bg-card p-2.5 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5 active:cursor-grabbing",
+                      isDragging && "opacity-40",
+                      isBusy && "opacity-60"
+                    )}
+                    title={`${o.name} — drag to move stage`}
+                  >
+                    <div className="mb-1 flex items-start justify-between gap-1">
+                      <p className="m-0 text-xs font-semibold text-[var(--shell-foreground)] leading-snug">{o.name}</p>
+                      <GripVertical className="h-3.5 w-3.5 shrink-0 text-[var(--shell-muted)] opacity-0 transition-opacity group-hover:opacity-100" />
+                    </div>
+                    <p className="m-0 text-[10px] text-[var(--shell-muted)]">{o.account}</p>
+                    <div className="mt-2 flex items-center justify-between">
+                      <span className="text-xs font-bold tabular-nums">{formatCurrency(o.value)}</span>
+                      <div className="flex items-center gap-1">
+                        <span className="text-[10px] text-[var(--shell-muted)]">{o.probability || "20%"}</span>
+                        {stage === "Won" ? (
+                          <Unlock className="h-3 w-3 text-[var(--shell-success)]" />
+                        ) : (
+                          <Lock className="h-3 w-3 text-[var(--shell-muted)]/50" />
+                        )}
+                      </div>
+                    </div>
+                    {o.discovery_notes && (
+                      <p className="mt-1.5 line-clamp-2 m-0 border-t border-dashed border-[var(--shell-border)] pt-1 text-[10px] italic text-[var(--shell-muted)]">
+                        {o.discovery_notes}
+                      </p>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
-        ))}
-      </div>
+        );
+      })}
     </div>
   );
 }

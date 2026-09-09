@@ -13,7 +13,11 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Label } from '@/components/ui/label';
 import { FileText, Mail, Phone, Building2, Calendar, Users, DollarSign, CheckCircle, Clock } from 'lucide-react';
-import { formatCurrency } from './QuotationTable';
+
+function formatCurrency(value: number | string) {
+  const num = typeof value === "string" ? parseFloat(value) : value;
+  return new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(num || 0);
+}
 
 interface QuotationDetailsModalProps {
   record: any;
