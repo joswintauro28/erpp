@@ -3,7 +3,7 @@
 import { Edit2, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
+import { DataTable, type Column } from "@datavex/ui-theme";
 import { statusVariant } from "@/lib/utils";
 
 interface ContactTableProps {
@@ -14,49 +14,47 @@ interface ContactTableProps {
 }
 
 export default function ContactTable({ contacts, onView, onEdit, onDelete }: ContactTableProps) {
-  if (!contacts?.length) {
-    return (
-      <div className="flex flex-col items-center justify-center py-16 text-[var(--shell-muted)]">
-        <p className="text-sm">No contacts found.</p>
-      </div>
-    );
-  }
+  const columns: Column<any>[] = [
+    {
+      key: "id_str",
+      header: "ID",
+      render: (row) => <span className="text-muted-foreground">{row.id_str}</span>,
+    },
+    {
+      key: "name",
+      header: "Name",
+      render: (row) => <span className="font-medium text-foreground">{row.name}</span>,
+    },
+    { key: "role", header: "Role", hideOnMobile: true },
+    { key: "account", header: "Account" },
+    { key: "email", header: "Email", hideOnMobile: true },
+    { key: "phone", header: "Phone", hideOnMobile: true },
+    {
+      key: "type",
+      header: "Type",
+      render: (row) => <Badge variant={statusVariant("contact", row.type) as any}>{row.type}</Badge>,
+    },
+    { key: "last_contact", header: "Last Contact", hideOnMobile: true },
+    {
+      key: "actions",
+      header: "",
+      className: "w-20",
+      render: (row) => (
+        <div className="flex gap-2">
+          <Button variant="ghost" size="icon-sm" className="cursor-pointer" onClick={(e) => { e.stopPropagation(); onEdit(row); }} title="Edit"><Edit2 size={14} className="text-[var(--shell-brand)]" /></Button>
+          <Button variant="ghost" size="icon-sm" className="cursor-pointer" onClick={(e) => { e.stopPropagation(); onDelete(row); }} title="Delete"><Trash2 size={14} className="text-[var(--shell-danger)]" /></Button>
+        </div>
+      ),
+    },
+  ];
 
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>ID</TableHead>
-          <TableHead>NAME</TableHead>
-          <TableHead>EMAIL</TableHead>
-          <TableHead>PHONE</TableHead>
-          <TableHead>ROLE</TableHead>
-          <TableHead>STATUS</TableHead>
-          <TableHead>OWNER</TableHead>
-          <TableHead>UPDATED</TableHead>
-          <TableHead />
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {contacts.map((item: any) => (
-          <TableRow key={item.id}>
-            <TableCell className="text-[var(--shell-muted)] cursor-pointer text-xs" onClick={() => onView(item)}>{item.id_str}</TableCell>
-            <TableCell className="font-medium text-[var(--shell-foreground)] cursor-pointer" onClick={() => onView(item)}>{item.first_name} {item.last_name}</TableCell>
-            <TableCell className="text-xs text-[var(--shell-muted)]">{item.email}</TableCell>
-            <TableCell className="text-xs text-[var(--shell-muted)]">{item.phone}</TableCell>
-            <TableCell className="text-xs">{item.role}</TableCell>
-            <TableCell><Badge variant={statusVariant("contact", item.status)}>{item.status}</Badge></TableCell>
-            <TableCell className="text-xs text-[var(--shell-muted)]">{item.owner}</TableCell>
-            <TableCell className="text-xs text-[var(--shell-muted)]">{item.updated_at}</TableCell>
-            <TableCell>
-              <div className="flex gap-2">
-                <Button variant="ghost" size="icon-sm" className="cursor-pointer" onClick={() => onEdit(item)} title="Edit"><Edit2 size={14} className="text-[var(--shell-brand)]" /></Button>
-                <Button variant="ghost" size="icon-sm" className="cursor-pointer" onClick={() => onDelete(item)} title="Delete"><Trash2 size={14} className="text-[var(--shell-danger)]" /></Button>
-              </div>
-            </TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+    <DataTable
+      data={contacts}
+      columns={columns}
+      rowKey={(row) => row.id}
+      onRowClick={(row) => onView(row)}
+      emptyMessage="No contacts found"
+    />
   );
 }
