@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Download, ExternalLink, FileIcon, Image, FileText, Trash2 } from "lucide-react";
+import { Download, Eye, FileIcon, Image, FileText, Trash2 } from "lucide-react";
 import { cn } from "../../lib/utils";
 import { Button } from "../ui/button";
 import { api } from "@datavex/auth-middleware";
@@ -10,6 +10,8 @@ import type { FileRecord } from "./file-upload";
 interface FileViewerProps {
   files: FileRecord[];
   onDelete?: (record: FileRecord) => void;
+  /** Called when the user clicks Preview. When omitted, files open in a new tab. */
+  onPreview?: (record: FileRecord) => void;
   className?: string;
   showActions?: boolean;
 }
@@ -53,7 +55,7 @@ async function openPreview(record: FileRecord) {
   }
 }
 
-export function FileViewer({ files, onDelete, className, showActions = true }: FileViewerProps) {
+export function FileViewer({ files, onDelete, onPreview, className, showActions = true }: FileViewerProps) {
   if (files.length === 0) return null;
 
   return (
@@ -75,14 +77,14 @@ export function FileViewer({ files, onDelete, className, showActions = true }: F
           </div>
           {showActions && (
             <div className="flex shrink-0 gap-1">
-              {record.mime_type.startsWith("image/") && (
+              {(record.mime_type.startsWith("image/") || record.mime_type.includes("pdf")) && (
                 <Button
                   variant="ghost"
                   size="icon-xs"
-                  onClick={() => openPreview(record)}
-                  title="Preview"
+                  onClick={() => (onPreview ? onPreview(record) : openPreview(record))}
+                  title={onPreview ? "Preview" : "Open in new tab"}
                 >
-                  <ExternalLink className="h-3.5 w-3.5" />
+                  <Eye className="h-3.5 w-3.5" />
                 </Button>
               )}
               <Button
