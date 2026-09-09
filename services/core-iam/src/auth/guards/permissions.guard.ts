@@ -3,6 +3,7 @@ import {
   CanActivate,
   ExecutionContext,
   UnauthorizedException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
@@ -39,13 +40,9 @@ export class PermissionsGuard implements CanActivate {
       // Attach user info payload to request object for downstream controllers
       request.user = payload;
 
-      // DENY-BY-DEFAULT: routes without @Permissions() are locked.
-      // This prevents accidentally unprotected admin endpoints (audit C1).
-      // Login/register/refresh/logout are NOT guarded — they are free to call.
+      // No @Permissions() decorator → auth-only endpoint (JWT verified above, allow through)
       if (!requiredPermissions || requiredPermissions.length === 0) {
-        throw new UnauthorizedException(
-          'This endpoint requires explicit @Permissions() annotation',
-        );
+        return true;
       }
 
       // Organization Owners (admins/super-admins) bypass all permission restrictions
@@ -60,10 +57,15 @@ export class PermissionsGuard implements CanActivate {
       );
 
       if (!hasPermission) {
-        throw new UnauthorizedException('Insufficient permissions');
+        throw new ForbiddenException('Insufficient permissions');
       }
       return true;
     } catch (err) {
+      // Re-throw known NestJS exceptions (auth failures, permissiondenied)
+      if (err instanceof UnauthorizedException || err instanceof ForbiddenException) {
+        throw err;
+      }
+      // Only JWT verification errors reach here
       throw new UnauthorizedException('Invalid or expired authorization token');
     }
   }

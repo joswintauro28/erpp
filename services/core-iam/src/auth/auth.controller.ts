@@ -178,7 +178,6 @@ export class AuthController {
 
   @Get('users/me')
   @UseGuards(PermissionsGuard)
-  @Permissions('users:read')
   async getMe(@Req() req: Request & { user: any }) {
     return this.authService.getUserMe(Number(req.user.sub));
   }
