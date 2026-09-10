@@ -56,6 +56,11 @@ const WORKSTATION_PORTS: Record<string, string> = {
 
 function getWorkstationUrl(defaultUrl: string): string {
   if (typeof window === "undefined") return defaultUrl;
+
+  if (process.env.NEXT_PUBLIC_DEPLOY_MODE === "single-domain") {
+    return defaultUrl;
+  }
+
   const host = window.location.hostname;
   if (host === "app.erp.local" || host.endsWith(".erp.local")) {
     const port = defaultUrl.match(/:(\d+)/)?.[1];

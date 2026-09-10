@@ -22,6 +22,9 @@ function getLoginUrl(): string {
   if (host === "localhost" || host === "127.0.0.1") {
     return `http://${host}:3000/login?redirect=${currentUrl}`;
   }
+  if (process.env.NEXT_PUBLIC_DEPLOY_MODE === "single-domain") {
+    return `/admin/login?redirect=${currentUrl}`;
+  }
   const shellUrl = process.env.NEXT_PUBLIC_SHELL_APP_URL || "http://app.erp.local";
   return `${shellUrl}/login?redirect=${currentUrl}`;
 }
