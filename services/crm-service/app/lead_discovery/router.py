@@ -1,6 +1,8 @@
 import json
 import re
 import logging
+import ipaddress
+import socket
 from datetime import datetime
 from urllib.parse import urlparse
 from typing import List, Optional
@@ -16,6 +18,45 @@ from . import scraper
 from app.core.idgen import next_document_id
 
 router = APIRouter(prefix="/api/lead-discovery", tags=["lead-discovery"])
+
+
+def _is_private_ip(hostname: str) -> bool:
+    """Check if a hostname resolves to a private/internal/cloud-metadata IP."""
+    try:
+        resolved = socket.getaddrinfo(hostname, None, socket.AF_UNSPEC)
+        for family, _, _, _, sockaddr in resolved:
+            ip = ipaddress.ip_address(sockaddr[0])
+            if (
+                ip.is_private
+                or ip.is_loopback
+                or ip.is_link_local
+                or ip.is_reserved
+                or ip.is_multicast
+            ):
+                return True
+        return False
+    except (socket.gaierror, ValueError):
+        return True  # Fail closed: if we can't resolve, block it
+
+
+def _validate_scrape_url(url: str) -> str:
+    """Validate and normalize a URL, blocking private/internal IPs."""
+    parsed = urlparse(url)
+    if parsed.scheme not in ("http", "https"):
+        raise HTTPException(status_code=400, detail="Only HTTP(S) URLs are allowed")
+    if not parsed.hostname:
+        raise HTTPException(status_code=400, detail="Invalid URL: no hostname")
+
+    blocked_hosts = {"localhost", "127.0.0.1", "0.0.0.0", "::1", "[::1]"}
+    if parsed.hostname.lower() in blocked_hosts:
+        raise HTTPException(status_code=400, detail="Access to localhost is forbidden")
+
+    if _is_private_ip(parsed.hostname):
+        raise HTTPException(
+            status_code=400,
+            detail="Access to private/internal networks and cloud metadata is forbidden",
+        )
+    return url
 
 
 @router.post("/search", response_model=schemas.SearchResponse)
@@ -105,6 +146,8 @@ async def scrape_url_endpoint(request: ScrapeUrlRequest, db: AsyncSession = Depe
     url = request.url.strip()
     if not url.startswith("http"):
         url = "https://" + url
+
+    url = _validate_scrape_url(url)
 
     try:
         text, contacts = await scraper.fetch_webpage_text(url)
