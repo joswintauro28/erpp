@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "postgresql+asyncpg://postgres:root@localhost:5432/erp_ai"
 
     # JWT (must match core-iam and all other services)
-    JWT_SECRET: str = "development-jwt-secret-key-123"
+    JWT_SECRET: str
     JWT_ALGORITHM: str = "HS256"
 
     # LLM Provider
