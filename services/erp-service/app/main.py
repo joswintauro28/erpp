@@ -10,6 +10,7 @@ from app.core.config import settings
 from app.core.exceptions import TooManyRequestsException
 from app.core.middleware import SecurityHeadersMiddleware
 from app.core.request_logging import RequestLoggingMiddleware
+from app.core.rate_limiter import limiter, rate_limit_exceeded_handler
 
 # Import feature routers
 from app.client.router import router as clients_router
@@ -50,6 +51,9 @@ app = FastAPI(
     redoc_url="/redoc",
     openapi_url="/openapi.json",
 )
+
+app.state.limiter = limiter
+app.add_exception_handler(429, rate_limit_exceeded_handler)
 
 def custom_openapi():
     if app.openapi_schema:
