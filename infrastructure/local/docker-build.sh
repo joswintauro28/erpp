@@ -1,58 +1,93 @@
 #!/bin/bash
-# DATAVEX ERP — Docker Build & Start Helper
-# Usage: ./docker-build.sh [build|up|down|rebuild|logs|ps|prune] [service_name]
+# DATAVEX ERP — Docker Build & Start Helper (Bash)
+# Usage: ./docker-build.sh [up|build|down|restart|rebuild|logs|ps|prune] [service_name] [--mode single-domain|prod]
 
-# Resolve script directory path
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 COMPOSE_FILE="$DIR/docker-compose.yml"
 ENV_FILE="$DIR/.env.docker"
 
-if [ ! -f "$COMPOSE_FILE" ]; then
-    echo "Error: docker-compose.yml not found at $COMPOSE_FILE" >&2
-    exit 1
+if [ ! -f "$ENV_FILE" ]; then
+    echo "Warning: .env.docker not found at $ENV_FILE"
+    echo "Copying .env.docker.example to .env.docker..."
+    cp "$DIR/.env.docker.example" "$ENV_FILE"
 fi
 
 COMMAND="${1:-up}"
-SERVICE="${2:-}"
+SERVICE=""
+MODE="subdomain"
+EXTRA_ARGS=()
+
+# Parse arguments
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --mode=*)
+            MODE="${1#*=}"
+            shift
+            ;;
+        --mode)
+            MODE="$2"
+            shift 2
+            ;;
+        up|build|down|restart|rebuild|logs|ps|prune)
+            COMMAND="$1"
+            shift
+            ;;
+        *)
+            if [ -z "$SERVICE" ]; then
+                SERVICE="$1"
+            else
+                EXTRA_ARGS+=("$1")
+            fi
+            shift
+            ;;
+    esac
+done
 
 # Base compose args
 BASE_ARGS=("-f" "$COMPOSE_FILE" "--env-file" "$ENV_FILE")
 
+# Append single-domain / prod override
+if [ "$MODE" = "single-domain" ] || [ "$MODE" = "prod" ]; then
+    OVERRIDE_FILE="$DIR/docker-compose.prod.yaml"
+    if [ ! -f "$OVERRIDE_FILE" ]; then
+        echo "Error: docker-compose.prod.yaml not found at $OVERRIDE_FILE" >&2
+        exit 1
+    fi
+    BASE_ARGS+=("-f" "$OVERRIDE_FILE")
+    echo "  [MODE] single-domain (path-based routing at http://erp.local)"
+else
+    echo "  [MODE] subdomain (routing at *.erp.local)"
+fi
+
 case "$COMMAND" in
     build)
-        docker compose "${BASE_ARGS[@]}" build $SERVICE
+        docker compose "${BASE_ARGS[@]}" build $SERVICE "${EXTRA_ARGS[@]}"
         ;;
     up)
-        docker compose "${BASE_ARGS[@]}" up -d $SERVICE
+        docker compose "${BASE_ARGS[@]}" up -d $SERVICE "${EXTRA_ARGS[@]}"
         ;;
-    down|stop)
-        # Default: stop containers but keep volumes (data safe)
-        docker compose "${BASE_ARGS[@]}" down --remove-orphans
+    down)
+        docker compose "${BASE_ARGS[@]}" down "${EXTRA_ARGS[@]}"
         ;;
-    destroy)
-        # Destructive: stop + remove volumes + remove images
-        echo "WARNING: This will DELETE all databases and stored files."
-        read -p "Type YES to confirm: " confirm
-        if [ "$confirm" != "YES" ]; then echo "Aborted."; exit 0; fi
-        docker compose "${BASE_ARGS[@]}" down --volumes --rmi all --remove-orphans
+    restart)
+        docker compose "${BASE_ARGS[@]}" restart $SERVICE "${EXTRA_ARGS[@]}"
         ;;
     rebuild)
-        docker compose "${BASE_ARGS[@]}" build --no-cache $SERVICE
-        docker compose "${BASE_ARGS[@]}" up -d $SERVICE
+        docker compose "${BASE_ARGS[@]}" build $SERVICE "${EXTRA_ARGS[@]}" && \
+        docker compose "${BASE_ARGS[@]}" up -d $SERVICE "${EXTRA_ARGS[@]}"
         ;;
     logs)
-        docker compose "${BASE_ARGS[@]}" logs -f $SERVICE
+        docker compose "${BASE_ARGS[@]}" logs -f $SERVICE "${EXTRA_ARGS[@]}"
         ;;
     ps)
-        docker compose "${BASE_ARGS[@]}" ps
+        docker compose "${BASE_ARGS[@]}" ps "${EXTRA_ARGS[@]}"
         ;;
     prune)
-        # Prune: stop + remove dangling images (keeps volumes)
-        docker compose "${BASE_ARGS[@]}" down --remove-orphans
+        docker builder prune -f
         docker image prune -f
         ;;
     *)
-        echo "Usage: $0 {build|up|down|rebuild|logs|ps|prune} [service_name]"
+        echo "Usage: $0 {up|build|down|restart|rebuild|logs|ps|prune} [service_name] [--mode single-domain|prod]"
         exit 1
         ;;
 esac

@@ -29,7 +29,9 @@ env_file="$DIR/.env.docker"
 if [ -f "$env_file" ]; then
     echo "  OK - Environment file: $env_file"
 else
-    echo "Warning: Environment file not found at $env_file" >&2
+    echo "  Creating .env.docker from template..."
+    cp "$DIR/.env.docker.example" "$env_file"
+    echo "  OK - Created: $env_file"
 fi
 
 # Step 4: Verify project structure
@@ -44,6 +46,7 @@ dockerfiles=(
     "../../services/erp-service/Dockerfile"
     "../../services/crm-service/Dockerfile"
     "../../services/inventory-service/Dockerfile"
+    "../../services/ai-service/Dockerfile"
 )
 
 all_ok=true
@@ -61,10 +64,9 @@ echo ""
 echo "╔══════════════════════════════════════════════╗"
 echo "║   Setup Complete!                            ║"
 echo "║                                              ║"
-echo "║   Start with:                                ║"
+echo "║   Mode A: Subdomain (*.erp.local):           ║"
 echo "║     ./docker-build.sh up                     ║"
 echo "║                                              ║"
-echo "║   Or manually:                               ║"
-echo "║     docker compose -f ./docker-compose.yml   ║"
-echo "║       --env-file .env.docker up -d           ║"
+echo "║   Mode B: Single-Domain (erp.local):         ║"
+echo "║     ./docker-build.sh up --mode prod         ║"
 echo "╚══════════════════════════════════════════════╝"

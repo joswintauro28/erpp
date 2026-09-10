@@ -6,7 +6,8 @@ $hostsEntries = @(
     "127.0.0.1 crm.erp.local",
     "127.0.0.1 billing.erp.local",
     "127.0.0.1 inventory.erp.local",
-    "127.0.0.1 minio.erp.local"
+    "127.0.0.1 minio.erp.local",
+    "127.0.0.1 erp.local"
 )
 
 $hostsPath = "$env:SystemRoot\System32\drivers\etc\hosts"
@@ -43,9 +44,10 @@ if ($added -eq 0) {
     Write-Host "`nAdded $added entries to hosts file. DNS should resolve immediately."
 }
 
-Write-Host "`nDATAVEX ERP subdomains ready:"
-Write-Host "  http://app.erp.local        → Executive Shell"
-Write-Host "  http://crm.erp.local        → CRM Workstation"
-Write-Host "  http://billing.erp.local    → Billing Workstation"
-Write-Host "  http://inventory.erp.local  → Inventory Workstation"
-Write-Host "  http://minio.erp.local      → MinIO Object Storage"
+Write-Host "`nDATAVEX ERP endpoints ready:"
+Write-Host "  http://app.erp.local        → Executive Shell (Subdomain)"
+Write-Host "  http://crm.erp.local        → CRM Workstation (Subdomain)"
+Write-Host "  http://billing.erp.local    → Billing Workstation (Subdomain)"
+Write-Host "  http://inventory.erp.local  → Inventory Workstation (Subdomain)"
+Write-Host "  http://minio.erp.local      → MinIO Object Storage (Subdomain)"
+Write-Host "  http://erp.local            → All Services (Single-Domain)"

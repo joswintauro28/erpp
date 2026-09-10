@@ -26,7 +26,9 @@ $envFile = "$PSScriptRoot\.env.docker"
 if (Test-Path $envFile) {
     Write-Host "  OK - Environment file: $envFile" -ForegroundColor Green
 } else {
-    Write-Warning "  Environment file not found at $envFile"
+    Write-Host "  Creating .env.docker from template..." -ForegroundColor Yellow
+    Copy-Item "$PSScriptRoot\.env.docker.example" $envFile
+    Write-Host "  OK - Created: $envFile" -ForegroundColor Green
 }
 
 # Step 4: Verify project structure
@@ -40,7 +42,8 @@ $dockerfiles = @(
     "../../services/billing-service/Dockerfile",
     "../../services/erp-service/Dockerfile",
     "../../services/crm-service/Dockerfile",
-    "../../services/inventory-service/Dockerfile"
+    "../../services/inventory-service/Dockerfile",
+    "../../services/ai-service/Dockerfile"
 )
 
 $allOk = $true
@@ -58,10 +61,9 @@ Write-Host ""
 Write-Host "╔══════════════════════════════════════════════╗" -ForegroundColor Cyan
 Write-Host "║   Setup Complete!                            ║" -ForegroundColor Cyan
 Write-Host "║                                              ║" -ForegroundColor Cyan
-Write-Host "║   Start with:                                ║" -ForegroundColor Cyan
+Write-Host "║   Mode A: Subdomain (*.erp.local):           ║" -ForegroundColor Cyan
 Write-Host "║     .\docker-build.ps1 up                    ║" -ForegroundColor Cyan
 Write-Host "║                                              ║" -ForegroundColor Cyan
-Write-Host "║   Or manually:                               ║" -ForegroundColor Cyan
-Write-Host "║     docker compose -f .\docker-compose.yml   ║" -ForegroundColor Cyan
-Write-Host "║       --env-file .env.docker up -d           ║" -ForegroundColor Cyan
+Write-Host "║   Mode B: Single-Domain (erp.local):         ║" -ForegroundColor Cyan
+Write-Host "║     .\docker-build.ps1 up -Mode prod         ║" -ForegroundColor Cyan
 Write-Host "╚══════════════════════════════════════════════╝" -ForegroundColor Cyan

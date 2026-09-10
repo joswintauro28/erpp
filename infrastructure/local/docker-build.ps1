@@ -1,11 +1,14 @@
-# DATAVEX ERP — Docker Build & Start Helper
-# Run from repository root or from infrastructure/local/
+# DATAVEX ERP — Docker Build & Start Helper (PowerShell)
+# Usage: .\docker-build.ps1 [-Command] <up|build|down|restart|rebuild|logs|ps|prune> [[-Service] <name>] [-Mode <subdomain|single-domain|prod>] [-NoCache]
 
 param(
-    [ValidateSet("build", "up", "down", "stop", "rebuild", "logs", "ps", "prune", "destroy")]
+    [ValidateSet("up", "build", "down", "restart", "rebuild", "logs", "ps", "prune")]
     [string]$Command = "up",
 
     [string[]]$Service = @(),
+
+    [ValidateSet("subdomain", "single-domain", "prod")]
+    [string]$Mode = "subdomain",
 
     [switch]$Detach = $true,
 
@@ -15,9 +18,10 @@ param(
 $composeFile = Join-Path $PSScriptRoot "docker-compose.yml"
 $envFile = Join-Path $PSScriptRoot ".env.docker"
 
-if (-not (Test-Path $composeFile)) {
-    Write-Error "docker-compose.yml not found at $composeFile"
-    exit 1
+if (-not (Test-Path $envFile)) {
+    Write-Warning "Environment file not found at $envFile"
+    Write-Warning "Copying .env.docker.example to .env.docker..."
+    Copy-Item (Join-Path $PSScriptRoot ".env.docker.example") $envFile
 }
 
 $baseArgs = @(
@@ -25,49 +29,67 @@ $baseArgs = @(
     "--env-file", $envFile
 )
 
+# Append single-domain override when -Mode single-domain or -Mode prod
+if ($Mode -eq "single-domain" -or $Mode -eq "prod") {
+    $overrideFile = Join-Path $PSScriptRoot "docker-compose.prod.yaml"
+    if (-not (Test-Path $overrideFile)) {
+        Write-Error "docker-compose.prod.yaml not found at $overrideFile"
+        exit 1
+    }
+    $baseArgs += @("-f", $overrideFile)
+    Write-Host "  [MODE] single-domain (path-based routing at http://erp.local)" -ForegroundColor Cyan
+} else {
+    Write-Host "  [MODE] subdomain (routing at *.erp.local)" -ForegroundColor Cyan
+}
+
 if ($Service.Count -gt 0) {
-    $baseArgs += $Service
+    $serviceArgs = $Service
+} else {
+    $serviceArgs = @()
 }
 
 switch ($Command) {
     "build" {
-        $buildArgs = @("build")
+        $buildArgs = @("compose") + $baseArgs + @("build")
         if ($NoCache) { $buildArgs += "--no-cache" }
-        & docker compose @baseArgs @buildArgs
+        $buildArgs += $serviceArgs
+        & docker $buildArgs
     }
     "up" {
-        $upArgs = @("up")
+        $upArgs = @("compose") + $baseArgs + @("up")
         if ($Detach) { $upArgs += "-d" }
-        & docker compose @baseArgs @upArgs
+        $upArgs += $serviceArgs
+        & docker $upArgs
     }
     "down" {
-        # Default: stop containers but keep volumes (data safe)
-        & docker compose @baseArgs down --remove-orphans
+        $downArgs = @("compose") + $baseArgs + @("down")
+        & docker $downArgs
     }
-    "stop" {
-        # Alias for down — stop containers, keep volumes
-        & docker compose @baseArgs down --remove-orphans
-    }
-    "destroy" {
-        # Destructive: stop + remove volumes + remove images
-        Write-Warning "This will DELETE all databases and stored files."
-        $confirm = Read-Host "Type YES to confirm"
-        if ($confirm -ne "YES") { Write-Host "Aborted."; exit 0 }
-        & docker compose @baseArgs down --volumes --rmi all --remove-orphans
+    "restart" {
+        $restartArgs = @("compose") + $baseArgs + @("restart") + $serviceArgs
+        & docker $restartArgs
     }
     "rebuild" {
-        & docker compose @baseArgs build --no-cache
-        & docker compose @baseArgs up -d
+        Write-Host "Rebuilding and restarting services..." -ForegroundColor Cyan
+        $buildArgs = @("compose") + $baseArgs + @("build")
+        if ($NoCache) { $buildArgs += "--no-cache" }
+        $buildArgs += $serviceArgs
+        & docker $buildArgs
+        if ($LASTEXITCODE -eq 0) {
+            $upArgs = @("compose") + $baseArgs + @("up", "-d") + $serviceArgs
+            & docker $upArgs
+        }
     }
     "logs" {
-        & docker compose @baseArgs logs -f
+        $logsArgs = @("compose") + $baseArgs + @("logs", "-f") + $serviceArgs
+        & docker $logsArgs
     }
     "ps" {
-        & docker compose @baseArgs ps
+        $psArgs = @("compose") + $baseArgs + @("ps")
+        & docker $psArgs
     }
     "prune" {
-        # Prune: stop + remove dangling images (keeps volumes)
-        & docker compose @baseArgs down --remove-orphans
-        docker image prune -f
+        & docker builder prune -f
+        & docker image prune -f
     }
 }

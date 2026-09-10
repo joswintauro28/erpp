@@ -8,6 +8,7 @@ hosts_entries=(
     "127.0.0.1 billing.erp.local"
     "127.0.0.1 inventory.erp.local"
     "127.0.0.1 minio.erp.local"
+    "127.0.0.1 erp.local"
 )
 
 hosts_path="/etc/hosts"
@@ -35,9 +36,10 @@ else
     echo -e "\nAdded $added entries to hosts file. DNS should resolve immediately."
 fi
 
-echo -e "\nDATAVEX ERP subdomains ready:"
-echo "  http://app.erp.local        → Executive Shell"
-echo "  http://crm.erp.local        → CRM Workstation"
-echo "  http://billing.erp.local    → Billing Workstation"
-echo "  http://inventory.erp.local  → Inventory Workstation"
-echo "  http://minio.erp.local      → MinIO Object Storage"
+echo -e "\nDATAVEX ERP endpoints ready:"
+echo "  http://app.erp.local        → Executive Shell (Subdomain)"
+echo "  http://crm.erp.local        → CRM Workstation (Subdomain)"
+echo "  http://billing.erp.local    → Billing Workstation (Subdomain)"
+echo "  http://inventory.erp.local  → Inventory Workstation (Subdomain)"
+echo "  http://minio.erp.local      → MinIO Object Storage (Subdomain)"
+echo "  http://erp.local            → All Services (Single-Domain)"
