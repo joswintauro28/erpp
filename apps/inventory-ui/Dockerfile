@@ -11,7 +11,7 @@ COPY --from=oven/bun:1.2-alpine /usr/local/bin/bun /usr/local/bin/bun
 ARG BUILD_PROXY
 
 FROM base AS deps
-RUN HTTP_PROXY="${BUILD_PROXY:-}" HTTPS_PROXY="${BUILD_PROXY:-}" apk add --no-cache libc6-compat
+RUN for i in 1 2 3 4 5; do HTTP_PROXY="${BUILD_PROXY:-}" HTTPS_PROXY="${BUILD_PROXY:-}" apk add --no-cache libc6-compat && break || sleep 3; done && apk info -e libc6-compat
 
 COPY package.json bun.lock nx.json ./
 COPY apps/erp-shell/package.json apps/erp-shell/
@@ -22,7 +22,7 @@ COPY services/core-iam/package.json services/core-iam/
 COPY services/billing-service/package.json services/billing-service/
 COPY packages/auth-middleware/package.json packages/auth-middleware/
 COPY packages/ui-theme/package.json packages/ui-theme/
-RUN --mount=type=cache,target=/root/.cache/bun \
+RUN --mount=type=cache,target=/root/.cache/bun,sharing=shared \
     bun install --frozen-lockfile --ignore-scripts
 
 FROM base AS builder
@@ -36,8 +36,12 @@ COPY apps/inventory-ui/ apps/inventory-ui/
 
 ARG NEXT_PUBLIC_SHELL_APP_URL=http://app.erp.local
 ARG NEXT_PUBLIC_APP_URL=http://inventory.erp.local
+ARG NEXT_PUBLIC_BASE_PATH=""
+ARG NEXT_PUBLIC_DEPLOY_MODE="subdomain"
 ENV NEXT_PUBLIC_SHELL_APP_URL=$NEXT_PUBLIC_SHELL_APP_URL \
-    NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL
+    NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL \
+    NEXT_PUBLIC_BASE_PATH=$NEXT_PUBLIC_BASE_PATH \
+    NEXT_PUBLIC_DEPLOY_MODE=$NEXT_PUBLIC_DEPLOY_MODE
 
 RUN --mount=type=cache,target=/app/apps/inventory-ui/.next/cache \
     mkdir -p apps/inventory-ui/public && cd apps/inventory-ui && bun run build
@@ -52,7 +56,7 @@ ENV NODE_ENV=production \
 
 ARG BUILD_PROXY
 
-RUN HTTP_PROXY="${BUILD_PROXY:-}" HTTPS_PROXY="${BUILD_PROXY:-}" apk add --no-cache dumb-init
+RUN for i in 1 2 3 4 5; do HTTP_PROXY="${BUILD_PROXY:-}" HTTPS_PROXY="${BUILD_PROXY:-}" apk add --no-cache dumb-init && break || sleep 3; done && apk info -e dumb-init
 
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs

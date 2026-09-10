@@ -10,9 +10,9 @@ COPY --from=oven/bun:1.2-alpine /usr/local/bin/bun /usr/local/bin/bun
 ARG BUILD_PROXY
 
 FROM base AS deps
-RUN HTTP_PROXY="${BUILD_PROXY:-}" HTTPS_PROXY="${BUILD_PROXY:-}" apk add --no-cache openssl libc6-compat
+RUN for i in 1 2 3 4 5; do HTTP_PROXY="${BUILD_PROXY:-}" HTTPS_PROXY="${BUILD_PROXY:-}" apk add --no-cache openssl libc6-compat && break || sleep 3; done && apk info -e openssl
 
-COPY package.json bun.lock ./
+COPY package.json bun.lock nx.json ./
 COPY apps/erp-shell/package.json apps/erp-shell/
 COPY apps/crm-ui/package.json apps/crm-ui/
 COPY apps/billing-ui/package.json apps/billing-ui/
@@ -25,7 +25,7 @@ RUN --mount=type=cache,target=/root/.cache/bun,sharing=shared \
     bun install --frozen-lockfile --ignore-scripts
 
 FROM base AS builder
-RUN HTTP_PROXY="${BUILD_PROXY:-}" HTTPS_PROXY="${BUILD_PROXY:-}" apk add --no-cache openssl
+RUN for i in 1 2 3 4 5; do HTTP_PROXY="${BUILD_PROXY:-}" HTTPS_PROXY="${BUILD_PROXY:-}" apk add --no-cache openssl && break || sleep 3; done && apk info -e openssl
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/package.json /app/bun.lock ./
@@ -52,7 +52,7 @@ ENV NODE_ENV=production \
 
 ARG BUILD_PROXY
 
-RUN HTTP_PROXY="${BUILD_PROXY:-}" HTTPS_PROXY="${BUILD_PROXY:-}" apk add --no-cache openssl dumb-init && \
+RUN for i in 1 2 3 4 5; do HTTP_PROXY="${BUILD_PROXY:-}" HTTPS_PROXY="${BUILD_PROXY:-}" apk add --no-cache openssl dumb-init && break || sleep 3; done && apk info -e openssl && \
     addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nodejs
 

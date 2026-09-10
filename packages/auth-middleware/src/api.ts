@@ -1,6 +1,16 @@
 import { ApiClientError } from "./types";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "/api";
+function getApiBase(): string {
+  const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
+  const rawApiUrl = process.env.NEXT_PUBLIC_API_URL || "/api";
+  if (rawApiUrl.startsWith("http://") || rawApiUrl.startsWith("https://")) {
+    return rawApiUrl;
+  }
+  const cleanApi = rawApiUrl.startsWith("/") ? rawApiUrl : `/${rawApiUrl}`;
+  return `${basePath}${cleanApi}`;
+}
+
+const API_BASE = getApiBase();
 
 let accessToken: string | null = null;
 let refreshPromise: Promise<string | null> | null = null;
@@ -62,7 +72,8 @@ async function request<T>(
     headers["Content-Type"] = "application/json";
   }
 
-  const res = await fetch(`${API_BASE}${path}`, {
+  const fullPath = path.startsWith("/") ? path : `/${path}`;
+  const res = await fetch(`${API_BASE}${fullPath}`, {
     method,
     headers,
     body: body instanceof FormData ? body : body ? JSON.stringify(body) : undefined,
@@ -78,7 +89,7 @@ async function request<T>(
 
     if (newToken) {
       headers["Authorization"] = `Bearer ${newToken}`;
-      const retryRes = await fetch(`${API_BASE}${path}`, {
+      const retryRes = await fetch(`${API_BASE}${fullPath}`, {
         method,
         headers,
         body: body instanceof FormData ? body : body ? JSON.stringify(body) : undefined,
