@@ -119,14 +119,28 @@ machine**, not just the VM. So every developer's laptop needs these entries.
 
 ## 6. Build and Start the Stack
 
+You can start the stack using either the helper script or native docker compose commands:
+
+### Mode A: Subdomain Routing (`*.erp.datavex.com`)
 ```bash
 cd ~/datavex-erp/infrastructure/internal
 
-# Build all images (first time takes 10-15 minutes)
-docker compose --env-file .env.docker build
+# Using helper script:
+./docker-build.sh up
 
-# Start everything
-docker compose --env-file .env.docker up -d
+# Or using docker compose directly:
+docker compose --env-file .env.docker up -d --build
+```
+
+### Mode B: Single-Domain Routing (`http://${MAIN_DOMAIN}`)
+```bash
+cd ~/datavex-erp/infrastructure/internal
+
+# Using helper script:
+./docker-build.sh up --mode prod
+
+# Or using docker compose directly:
+docker compose -f docker-compose.yml -f docker-compose.prod.yaml --env-file .env.docker up -d --build
 ```
 
 ---
@@ -137,7 +151,7 @@ docker compose --env-file .env.docker up -d
 # Check all container statuses
 docker compose --env-file .env.docker ps
 
-# Expected: all 13 containers should show "Up" and healthy
+# Expected: all containers should show "Up" and healthy
 # Containers with healthchecks will show (healthy) after a minute
 
 # Check logs for any errors
@@ -169,7 +183,7 @@ curl http://app.erp.datavex.com
 After all containers are healthy, run the database seeds:
 
 ```bash
-# ERP Business Data (241 rows)
+# ERP Business Data
 docker compose --env-file .env.docker exec erp-service python scripts/seed.py
 
 # IAM Users + Permissions
@@ -194,12 +208,21 @@ docker compose --env-file .env.docker exec core-iam bunx prisma db seed
 
 Open a browser and navigate to:
 
+### Mode A (Subdomains)
 | URL | Workstation |
 |-----|-------------|
 | `http://app.erp.datavex.com` | Executive Shell (main dashboard) |
 | `http://crm.erp.datavex.com` | CRM Workstation |
 | `http://billing.erp.datavex.com` | Billing Workstation |
 | `http://inventory.erp.datavex.com` | Inventory Workstation |
+
+### Mode B (Single-Domain)
+| URL | Workstation |
+|-----|-------------|
+| `http://${MAIN_DOMAIN}` | Executive Shell |
+| `http://${MAIN_DOMAIN}/crm` | CRM Workstation |
+| `http://${MAIN_DOMAIN}/billing` | Billing Workstation |
+| `http://${MAIN_DOMAIN}/inventory` | Inventory Workstation |
 
 Login with any account from the table above. The SSO flow will redirect
 you to the correct workstation based on your role.

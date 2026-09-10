@@ -1,0 +1,121 @@
+# ══════════════════════════════════════════════════════════════════════════════
+# DATAVEX ERP — Production / Internal Single-Domain Override (Mode B: HTTP Port 80)
+# ══════════════════════════════════════════════════════════════════════════════
+#
+# USAGE:
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yaml \
+#     --env-file .env.docker up -d --build
+#
+# This override adapts the base compose for single-domain deployment:
+#   - Mounts nginx/single-domain.conf (path-based HTTP routing on port 80)
+#   - Sets MinIO S3 reverse proxy env vars under /minio
+#   - Injects DEPLOY_MODE=single-domain and Next.js basePath into frontends
+# ══════════════════════════════════════════════════════════════════════════════
+
+services:
+
+  # ─── MinIO — S3 reverse proxy under single domain ─────────────────────────
+  minio:
+    environment:
+      MINIO_SERVER_URL: http://${MAIN_DOMAIN:-erp.datavex.com}/minio
+      MINIO_BROWSER_REDIRECT_URL: http://${MAIN_DOMAIN:-erp.datavex.com}/minio
+      MINIO_API_CORS_ALLOW_ORIGIN: "*"
+
+  # ─── ERP Shell — basePath /admin ──────────────────────────────────────────
+  erp-shell:
+    build:
+      args:
+        NEXT_PUBLIC_BASE_PATH: /admin
+        NEXT_PUBLIC_DEPLOY_MODE: single-domain
+        NEXT_PUBLIC_BILLING_APP_URL: http://${MAIN_DOMAIN:-erp.datavex.com}/billing
+        NEXT_PUBLIC_CRM_APP_URL: http://${MAIN_DOMAIN:-erp.datavex.com}/crm
+        NEXT_PUBLIC_INVENTORY_APP_URL: http://${MAIN_DOMAIN:-erp.datavex.com}/inventory
+    environment:
+      NEXT_PUBLIC_BASE_PATH: /admin
+      NEXT_PUBLIC_DEPLOY_MODE: single-domain
+      NEXT_PUBLIC_BILLING_APP_URL: http://${MAIN_DOMAIN:-erp.datavex.com}/billing
+      NEXT_PUBLIC_CRM_APP_URL: http://${MAIN_DOMAIN:-erp.datavex.com}/crm
+      NEXT_PUBLIC_INVENTORY_APP_URL: http://${MAIN_DOMAIN:-erp.datavex.com}/inventory
+      CORS_ORIGINS: http://${MAIN_DOMAIN:-erp.datavex.com}
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://127.0.0.1:3000/admin', (res) => { if (res.statusCode >= 200 && res.statusCode < 400) process.exit(0); else process.exit(1); }).on('error', () => process.exit(1))"]
+
+  # ─── CRM Shell — basePath /crm ────────────────────────────────────────────
+  crm-shell:
+    build:
+      args:
+        NEXT_PUBLIC_BASE_PATH: /crm
+        NEXT_PUBLIC_DEPLOY_MODE: single-domain
+        NEXT_PUBLIC_SHELL_APP_URL: http://${MAIN_DOMAIN:-erp.datavex.com}/admin
+        NEXT_PUBLIC_APP_URL: http://${MAIN_DOMAIN:-erp.datavex.com}/crm
+    environment:
+      NEXT_PUBLIC_DEPLOY_MODE: single-domain
+      NEXT_PUBLIC_SHELL_APP_URL: http://${MAIN_DOMAIN:-erp.datavex.com}/admin
+      NEXT_PUBLIC_APP_URL: http://${MAIN_DOMAIN:-erp.datavex.com}/crm
+      CORS_ORIGINS: http://${MAIN_DOMAIN:-erp.datavex.com}
+
+  # ─── Billing UI — basePath /billing ───────────────────────────────────────
+  billing-ui:
+    build:
+      args:
+        NEXT_PUBLIC_BASE_PATH: /billing
+        NEXT_PUBLIC_DEPLOY_MODE: single-domain
+        NEXT_PUBLIC_SHELL_APP_URL: http://${MAIN_DOMAIN:-erp.datavex.com}/admin
+        NEXT_PUBLIC_APP_URL: http://${MAIN_DOMAIN:-erp.datavex.com}/billing
+    environment:
+      NEXT_PUBLIC_DEPLOY_MODE: single-domain
+      NEXT_PUBLIC_SHELL_APP_URL: http://${MAIN_DOMAIN:-erp.datavex.com}/admin
+      NEXT_PUBLIC_APP_URL: http://${MAIN_DOMAIN:-erp.datavex.com}/billing
+      CORS_ORIGINS: http://${MAIN_DOMAIN:-erp.datavex.com}
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://127.0.0.1:3002/billing', (res) => { if (res.statusCode >= 200 && res.statusCode < 400) process.exit(0); else process.exit(1); }).on('error', () => process.exit(1))"]
+
+  # ─── Inventory UI — basePath /inventory ───────────────────────────────────
+  inventory-ui:
+    build:
+      args:
+        NEXT_PUBLIC_BASE_PATH: /inventory
+        NEXT_PUBLIC_DEPLOY_MODE: single-domain
+        NEXT_PUBLIC_SHELL_APP_URL: http://${MAIN_DOMAIN:-erp.datavex.com}/admin
+        NEXT_PUBLIC_APP_URL: http://${MAIN_DOMAIN:-erp.datavex.com}/inventory
+    environment:
+      NEXT_PUBLIC_DEPLOY_MODE: single-domain
+      NEXT_PUBLIC_SHELL_APP_URL: http://${MAIN_DOMAIN:-erp.datavex.com}/admin
+      NEXT_PUBLIC_APP_URL: http://${MAIN_DOMAIN:-erp.datavex.com}/inventory
+      CORS_ORIGINS: http://${MAIN_DOMAIN:-erp.datavex.com}
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://127.0.0.1:3004/inventory', (res) => { if (res.statusCode >= 200 && res.statusCode < 400) process.exit(0); else process.exit(1); }).on('error', () => process.exit(1))"]
+
+  # ─── Backend Services — CORS & single-domain adjustments ─────────────────
+  core-iam:
+    environment:
+      COOKIE_DOMAIN: ${MAIN_DOMAIN:-erp.datavex.com}
+      CORS_ORIGINS: http://${MAIN_DOMAIN:-erp.datavex.com}
+
+  erp-service:
+    environment:
+      CORS_ORIGINS: http://${MAIN_DOMAIN:-erp.datavex.com}
+      MINIO_PUBLIC_URL: http://${MAIN_DOMAIN:-erp.datavex.com}/minio
+      FRONTEND_URL: http://${MAIN_DOMAIN:-erp.datavex.com}/admin
+
+  crm-service:
+    environment:
+      CORS_ORIGINS: http://${MAIN_DOMAIN:-erp.datavex.com}
+
+  billing-service:
+    environment:
+      CORS_ORIGINS: http://${MAIN_DOMAIN:-erp.datavex.com}
+
+  inventory-service:
+    environment:
+      CORS_ORIGINS: http://${MAIN_DOMAIN:-erp.datavex.com}
+      FRONTEND_URL: http://${MAIN_DOMAIN:-erp.datavex.com}/inventory
+
+  ai-service:
+    environment:
+      CORS_ORIGINS: http://${MAIN_DOMAIN:-erp.datavex.com}
+
+  # ─── Nginx — Switch to single-domain HTTP config ─────────────────────────
+  nginx:
+    volumes:
+      - ./nginx/single-domain.conf:/etc/nginx/nginx.conf:ro

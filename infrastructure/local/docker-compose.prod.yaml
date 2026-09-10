@@ -1,0 +1,124 @@
+# ══════════════════════════════════════════════════════════════════════════════
+# DATAVEX ERP — Local Single-Domain Testing Override
+# ══════════════════════════════════════════════════════════════════════════════
+#
+# USAGE:
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yaml up -d
+#   OR:
+#   .\docker-build.ps1 up -Mode prod
+#
+# Tests the single-domain (path-based) routing locally at http://erp.local
+# No SSL — HTTP only on port 80.
+#
+# PREREQUISITE:
+#   Add to hosts file: 127.0.0.1 erp.local
+#   (Run setup-hosts.ps1 as Administrator)
+# ══════════════════════════════════════════════════════════════════════════════
+
+services:
+
+  # ─── ERP Shell — basePath /admin ─────────────────────────────────────────
+  erp-shell:
+    build:
+      args:
+        NEXT_PUBLIC_BASE_PATH: /admin
+        NEXT_PUBLIC_DEPLOY_MODE: single-domain
+        NEXT_PUBLIC_BILLING_APP_URL: http://erp.local/billing
+        NEXT_PUBLIC_CRM_APP_URL: http://erp.local/crm
+        NEXT_PUBLIC_INVENTORY_APP_URL: http://erp.local/inventory
+    environment:
+      NEXT_PUBLIC_BASE_PATH: /admin
+      NEXT_PUBLIC_DEPLOY_MODE: single-domain
+      NEXT_PUBLIC_BILLING_APP_URL: http://erp.local/billing
+      NEXT_PUBLIC_CRM_APP_URL: http://erp.local/crm
+      NEXT_PUBLIC_INVENTORY_APP_URL: http://erp.local/inventory
+      CORS_ORIGINS: http://erp.local
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://127.0.0.1:3000/admin', (res) => { if (res.statusCode >= 200 && res.statusCode < 400) process.exit(0); else process.exit(1); }).on('error', () => process.exit(1))"]
+
+  # ─── CRM Shell — basePath /crm ──────────────────────────────────────────
+  crm-shell:
+    build:
+      args:
+        NEXT_PUBLIC_BASE_PATH: /crm
+        NEXT_PUBLIC_DEPLOY_MODE: single-domain
+        NEXT_PUBLIC_SHELL_APP_URL: http://erp.local/admin
+        NEXT_PUBLIC_APP_URL: http://erp.local/crm
+    environment:
+      NEXT_PUBLIC_DEPLOY_MODE: single-domain
+      NEXT_PUBLIC_SHELL_APP_URL: http://erp.local/admin
+      NEXT_PUBLIC_APP_URL: http://erp.local/crm
+      CORS_ORIGINS: http://erp.local
+
+  # ─── Billing UI — basePath /billing ─────────────────────────────────────
+  billing-ui:
+    build:
+      args:
+        NEXT_PUBLIC_BASE_PATH: /billing
+        NEXT_PUBLIC_DEPLOY_MODE: single-domain
+        NEXT_PUBLIC_SHELL_APP_URL: http://erp.local/admin
+        NEXT_PUBLIC_APP_URL: http://erp.local/billing
+    environment:
+      NEXT_PUBLIC_DEPLOY_MODE: single-domain
+      NEXT_PUBLIC_SHELL_APP_URL: http://erp.local/admin
+      NEXT_PUBLIC_APP_URL: http://erp.local/billing
+      CORS_ORIGINS: http://erp.local
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://127.0.0.1:3002/billing', (res) => { if (res.statusCode >= 200 && res.statusCode < 400) process.exit(0); else process.exit(1); }).on('error', () => process.exit(1))"]
+
+  # ─── Inventory UI — basePath /inventory ─────────────────────────────────
+  inventory-ui:
+    build:
+      args:
+        NEXT_PUBLIC_BASE_PATH: /inventory
+        NEXT_PUBLIC_DEPLOY_MODE: single-domain
+        NEXT_PUBLIC_SHELL_APP_URL: http://erp.local/admin
+        NEXT_PUBLIC_APP_URL: http://erp.local/inventory
+    environment:
+      NEXT_PUBLIC_DEPLOY_MODE: single-domain
+      NEXT_PUBLIC_SHELL_APP_URL: http://erp.local/admin
+      NEXT_PUBLIC_APP_URL: http://erp.local/inventory
+      CORS_ORIGINS: http://erp.local
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://127.0.0.1:3004/inventory', (res) => { if (res.statusCode >= 200 && res.statusCode < 400) process.exit(0); else process.exit(1); }).on('error', () => process.exit(1))"]
+
+  # ─── MinIO — S3 reverse proxy env vars ──────────────────────────────────
+  minio:
+    environment:
+      MINIO_SERVER_URL: http://erp.local/minio
+      MINIO_BROWSER_REDIRECT_URL: http://erp.local/minio
+      MINIO_API_CORS_ALLOW_ORIGIN: "*"
+
+  # ─── Backend services — Update CORS & routing for single domain ─────────
+  erp-service:
+    environment:
+      CORS_ORIGINS: http://erp.local
+      MINIO_PUBLIC_URL: http://erp.local/minio
+      FRONTEND_URL: http://erp.local/admin
+
+  crm-service:
+    environment:
+      CORS_ORIGINS: http://erp.local
+
+  billing-service:
+    environment:
+      CORS_ORIGINS: http://erp.local
+
+  inventory-service:
+    environment:
+      CORS_ORIGINS: http://erp.local
+      FRONTEND_URL: http://erp.local/inventory
+
+  ai-service:
+    environment:
+      CORS_ORIGINS: http://erp.local
+
+  core-iam:
+    environment:
+      COOKIE_DOMAIN: erp.local
+      CORS_ORIGINS: http://erp.local
+
+  # ─── Nginx — Switch to single-domain config ─────────────────────────────
+  nginx:
+    volumes:
+      - ./nginx/single-domain.conf:/etc/nginx/nginx.conf:ro
