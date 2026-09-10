@@ -31,7 +31,7 @@ async function bootstrap() {
   app.connectMicroservice<MicroserviceOptions>({
     transport: Transport.RMQ,
     options: {
-      urls: [process.env.RABBITMQ_URL || "amqp://guest:guest@localhost:5672"],
+      urls: [process.env.RABBITMQ_URL || "amqp://localhost:5672"],
       exchange: "erp_events",
       exchangeType: "topic",
       routingKey: "inventory.shipment.dispatched",
@@ -45,7 +45,7 @@ async function bootstrap() {
   app.connectMicroservice<MicroserviceOptions>({
     transport: Transport.RMQ,
     options: {
-      urls: [process.env.RABBITMQ_URL || "amqp://guest:guest@localhost:5672"],
+      urls: [process.env.RABBITMQ_URL || "amqp://localhost:5672"],
       exchange: "erp_events",
       exchangeType: "topic",
       routingKey: "inventory.po.created",

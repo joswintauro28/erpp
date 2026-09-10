@@ -40,8 +40,8 @@ services:
       - "5672:5672"
       - "15672:15672"
     environment:
-      RABBITMQ_DEFAULT_USER: guest
-      RABBITMQ_DEFAULT_PASS: guest
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:?Set RABBITMQ_PASSWORD in .env.docker}
     healthcheck:
       test: ["CMD", "rabbitmq-diagnostics", "check_running"]
       interval: 10s
@@ -110,7 +110,7 @@ services:
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-root}@postgres:5432/erp_iam
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set in .env.docker}
-      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+      RABBITMQ_URL: amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASSWORD:?Set RABBITMQ_PASSWORD in .env.docker}@rabbitmq:5672
       COOKIE_DOMAIN: ${COOKIE_DOMAIN:-erp.local}
       NODE_ENV: production
       PORT: "8002"
@@ -140,7 +140,7 @@ services:
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-root}@postgres:5432/erp_billing
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set in .env.docker}
-      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+      RABBITMQ_URL: amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASSWORD:?Set RABBITMQ_PASSWORD in .env.docker}@rabbitmq:5672
       PORT: "8003"
       CORS_ORIGINS: http://app.erp.local,http://billing.erp.local
     # No host port — access only via Nginx reverse proxy
@@ -168,7 +168,7 @@ services:
     environment:
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-root}@postgres:5432/erp_db
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set in .env.docker}
-      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+      RABBITMQ_URL: amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASSWORD:?Set RABBITMQ_PASSWORD in .env.docker}@rabbitmq:5672
       MINIO_ENDPOINT: minio:9000
       MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
@@ -201,7 +201,7 @@ services:
     environment:
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-root}@postgres:5432/erp_crm
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set in .env.docker}
-      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+      RABBITMQ_URL: amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASSWORD:?Set RABBITMQ_PASSWORD in .env.docker}@rabbitmq:5672
       PORT: "8001"
       GROQ_API_KEY: ${GROQ_API_KEY:-}
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
@@ -227,7 +227,7 @@ services:
     environment:
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-root}@postgres:5432/erp_inventory
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set in .env.docker}
-      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+      RABBITMQ_URL: amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASSWORD:?Set RABBITMQ_PASSWORD in .env.docker}@rabbitmq:5672
       PORT: "8004"
       FRONTEND_URL: ${INVENTORY_APP_URL:-http://inventory.erp.local}
       CORS_ORIGINS: http://inventory.erp.local,http://app.erp.local
