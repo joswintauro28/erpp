@@ -1,6 +1,7 @@
 # DATAVEX ERP — Cybersecurity Audit Report
 
 **Date:** 2026-09-09
+**Last Updated:** 2026-09-10 (Critical fixes applied)
 **Scope:** Full monorepo audit — 6 backend services, 4 frontend apps, Docker infrastructure, Nginx configs, shared packages
 **Methodology:** Static code analysis, configuration review, architecture review
 
@@ -8,31 +9,31 @@
 
 ## Executive Summary
 
-The DATAVEX ERP codebase has **strong foundational security** (ORM-only queries, centralized SSO, presigned file URLs, RBAC, account lockout). However, **7 critical** and **9 high** severity vulnerabilities were identified — primarily around hardcoded secrets, missing rate limiting on the API gateway, token leakage via URLs, and absent security headers on frontends. These must be resolved before any production deployment.
+The DATAVEX ERP codebase has **strong foundational security** (ORM-only queries, centralized SSO, presigned file URLs, RBAC, account lockout). Initially, **7 critical** and **9 high** severity vulnerabilities were identified. **All 7 critical vulnerabilities have been remediated.** Remaining high/medium/low issues should be addressed before production deployment.
 
-| Severity | Count |
-|----------|-------|
-| Critical | 7 |
-| High | 9 |
-| Medium | 10 |
-| Low / Info | 5 |
-| **Total** | **31** |
+| Severity | Original | Fixed | Remaining |
+|----------|----------|-------|-----------|
+| Critical | 7 | 7 | 0 |
+| High | 9 | 0 | 9 |
+| Medium | 10 | 0 | 10 |
+| Low / Info | 5 | 0 | 5 |
+| **Total** | **31** | **7** | **24** |
 
 ---
 
 ## Vulnerability Findings
 
-### CRITICAL
+### CRITICAL (All Fixed)
 
-| # | Vulnerability | Location | Impact |
+| # | Vulnerability | Location | Status |
 |---|--------------|----------|--------|
-| 1 | **Hardcoded JWT secret** (`development-jwt-secret-key-123`) as default in all 5 backend services | `services/*/app/core/config.py`, `services/core-iam/.env:2` | Attacker forges valid JWTs for any user including Organization Owner |
-| 2 | **Real API keys committed to git** — Groq and Gemini keys in `.env.docker` | `infrastructure/local/.env.docker:35,37` | API key theft, unauthorized LLM usage, billing fraud |
-| 3 | **SSRF via lead discovery scraper** — arbitrary user-supplied URLs with no internal IP blocklist | `services/crm-service/app/lead_discovery/router.py:101-112`, `scraper.py:714-817` | Internal network scanning, cloud metadata theft, internal service access |
-| 4 | **`secure: false` hardcoded on refresh cookie** — tokens transmitted over HTTP | `services/core-iam/src/auth/auth.controller.ts:50` | MITM attacks, session hijacking |
-| 5 | **crm-service accepts tokens without `type` claim** — `type=None` + `role` accepted as valid | `services/crm-service/app/core/security.py:8` | Malformed/legacy tokens bypass type validation, refresh token abuse |
-| 6 | **No rate limiting on central API gateway** — `RATE_LIMIT_ENABLED: bool = False` | `services/erp-service/app/core/config.py:21` | Unlimited brute force on all proxied endpoints (CRM, billing, inventory, files, dashboard) |
-| 7 | **All backend ports exposed to host** — bypass Nginx security layer entirely | `infrastructure/local/docker-compose.yml` (all service port mappings) | Direct service access, Nginx rate limiting/header enforcement bypassed |
+| 1 | **Hardcoded JWT secret** (`development-jwt-secret-key-123`) as default in all 5 backend services | `services/*/app/core/config.py`, `services/core-iam/.env:2` | **FIXED** — Removed defaults; JWT_SECRET is now mandatory env var. Docker Compose uses `${JWT_SECRET:?}` syntax |
+| 2 | **Real API keys committed to git** — Groq and Gemini keys in `.env.docker` | `infrastructure/local/.env.docker:35,37` | **FIXED** — Replaced with placeholders. `.env.docker` is gitignored. **Rotate old keys externally** |
+| 3 | **SSRF via lead discovery scraper** — arbitrary user-supplied URLs with no internal IP blocklist | `services/crm-service/app/lead_discovery/router.py:101-112` | **FIXED** — Added `_validate_scrape_url()` with DNS resolution check, RFC 1918/loopback/link-local/cloud metadata blocking |
+| 4 | **`secure: false` hardcoded on refresh cookie** — tokens transmitted over HTTP | `services/core-iam/src/auth/auth.controller.ts:50` | **FIXED** — Now reads `NODE_ENV`; `secure: true` in production, `false` in development |
+| 5 | **crm-service accepts tokens without `type` claim** — `type=None` + `role` accepted as valid | `services/crm-service/app/core/security.py:8` | **FIXED** — Strictly requires `type === "access"` like all other services |
+| 6 | **No rate limiting on central API gateway** — `RATE_LIMIT_ENABLED: bool = False` | `services/erp-service/app/core/config.py:21` | **FIXED** — Enabled by default, added `slowapi` rate limiter middleware |
+| 7 | **All backend ports exposed to host** — bypass Nginx security layer entirely | `infrastructure/local/docker-compose.yml` (all service port mappings) | **FIXED** — Removed host port mappings for all 6 backend services; accessible only via Nginx |
 
 ### HIGH
 
@@ -81,10 +82,10 @@ The DATAVEX ERP codebase has **strong foundational security** (ORM-only queries,
 |---------------|---------|---------|
 | **Login password guessing** | Core-iam: 5 attempts/min throttle + 5 failures → 15-min lockout + atomic race-safe increment | **STRONG** |
 | **Login username enumeration** | Different error messages for "no account" vs "wrong password" | **WEAK** |
-| **API endpoint brute force** | erp-service (gateway): DISABLED. crm/inventory/ai: NONE | **VERY WEAK** |
-| **JWT secret brute force** | Weak default `development-jwt-secret-key-123` — trivially guessable | **CRITICALLY WEAK** |
-| **Credential stuffing** | No global rate limiting, no IP throttling, no CAPTCHA | **WEAK** |
-| **JWT token brute force** | HS256 with 256-bit key (if proper secret used) | **STRONG** (with proper secret) |
+| **API endpoint brute force** | erp-service gateway: slowapi rate limiter enabled (100/min default). crm/inventory/ai: NONE | **MODERATE** (improved) |
+| **JWT secret brute force** | Mandatory env var, no hardcoded default — strong random secret required | **STRONG** (fixed) |
+| **Credential stuffing** | Gateway rate limiting + login throttling. No CAPTCHA. | **MODERATE** (improved) |
+| **JWT token brute force** | HS256 with 256-bit key (if proper secret used) | **STRONG** |
 | **Password spray** | No cross-IP lockout, no geographic anomaly detection | **MODERATE** |
 | **DoS via large payloads** | No body size limits on any FastAPI service | **WEAK** |
 | **DoS via LLM exhaustion** | ai-service rate limit configured (30/min) but not registered as middleware | **WEAK** |
@@ -118,10 +119,10 @@ The DATAVEX ERP codebase has **strong foundational security** (ORM-only queries,
 
 ## Top 5 Remediation Priorities
 
-| Priority | Action | Effort |
-|----------|--------|--------|
-| **1** | Remove all hardcoded secret defaults — make `JWT_SECRET`, DB passwords, RabbitMQ, MinIO credentials mandatory env vars (fail to start if unset) | Low |
-| **2** | Enable rate limiting on erp-service gateway — set `RATE_LIMIT_ENABLED: bool = True`, register throttler middleware | Low |
-| **3** | Replace URL-based token passing with cookie-based handoff or short-lived authorization codes | Medium |
-| **4** | Add CSP + security headers to all 4 Next.js frontends via `headers()` in `next.config.ts` | Low |
-| **5** | Block SSRF in lead discovery — add RFC 1918, link-local, cloud metadata IP blocklist and DNS resolution validation | Medium |
+| Priority | Action | Effort | Status |
+|----------|--------|--------|--------|
+| **1** | ~~Remove all hardcoded secret defaults~~ | Low | **DONE** |
+| **2** | ~~Enable rate limiting on erp-service gateway~~ | Low | **DONE** |
+| **3** | Replace URL-based token passing with cookie-based handoff or short-lived authorization codes | Medium | Pending |
+| **4** | Add CSP + security headers to all 4 Next.js frontends via `headers()` in `next.config.ts` | Low | Pending |
+| **5** | ~~Block SSRF in lead discovery~~ | Medium | **DONE** |
