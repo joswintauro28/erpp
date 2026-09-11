@@ -68,7 +68,8 @@ async def search_companies(request: schemas.SearchRequest, db: AsyncSession = De
     valid_companies = []
 
     try:
-        discovered = await scraper.discover_and_qualify_companies(city, industry, max_companies=50, company_name=company_name)
+        limit = 8 if company_name else 12
+        discovered = await scraper.discover_and_qualify_companies(city, industry, max_companies=limit, company_name=company_name)
 
         for c_data in discovered:
             c_name = c_data.get("company_name", "").strip()

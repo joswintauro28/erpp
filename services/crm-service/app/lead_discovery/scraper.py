@@ -207,6 +207,17 @@ class UnifiedLLMClient:
                         except Exception:
                             pass
                             
+                    is_auth_error = (
+                        "401" in err_msg or
+                        "403" in err_msg or
+                        "unauthorized" in err_msg.lower() or
+                        "invalid api key" in err_msg.lower() or
+                        "forbidden" in err_msg.lower()
+                    )
+                    if is_auth_error:
+                        logger.warning(f"Auth / API key error for {provider_name}. Skipping provider immediately.")
+                        break
+
                     # Check if it is a daily project quota block that won't reset in minutes,
                     # or if the recommended retry delay is excessively long (causing frontend timeouts).
                     is_daily_quota = (

@@ -5,21 +5,27 @@ from fastapi import HTTPException
 CRM_SERVICE_URL = os.environ.get("CRM_SERVICE_URL", "http://localhost:8001")
 
 
+DEFAULT_TIMEOUT = httpx.Timeout(120.0, connect=10.0)
+
+
 def _handle_error(e: Exception):
-    if isinstance(e, httpx.HTTPError):
-        status_code = e.response.status_code if e.response else 502
+    response = getattr(e, "response", None)
+    if response is not None:
+        status_code = response.status_code
         try:
-            detail = e.response.json().get("detail", "CRM Service Error")
+            detail = response.json().get("detail", "CRM Service Error")
         except Exception:
-            detail = e.response.text if e.response else "CRM Service Unavailable"
+            detail = response.text or "CRM Service Unavailable"
         raise HTTPException(status_code=status_code, detail=detail)
+    if isinstance(e, httpx.TimeoutException):
+        raise HTTPException(status_code=504, detail="CRM Service request timed out")
     raise HTTPException(status_code=502, detail=f"CRM Service Unavailable: {str(e)}")
 
 
 async def _get(path: str, token: str, params: dict | None = None) -> dict | list:
     headers = {"Authorization": f"Bearer {token}"}
     try:
-        async with httpx.AsyncClient(timeout=30.0) as client:
+        async with httpx.AsyncClient(timeout=DEFAULT_TIMEOUT) as client:
             resp = await client.get(f"{CRM_SERVICE_URL}/api{path}", headers=headers, params=params)
             resp.raise_for_status()
             return resp.json()
@@ -30,7 +36,7 @@ async def _get(path: str, token: str, params: dict | None = None) -> dict | list
 async def _post(path: str, token: str, body: dict) -> dict:
     headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
     try:
-        async with httpx.AsyncClient(timeout=30.0) as client:
+        async with httpx.AsyncClient(timeout=DEFAULT_TIMEOUT) as client:
             resp = await client.post(f"{CRM_SERVICE_URL}/api{path}", headers=headers, json=body)
             resp.raise_for_status()
             return resp.json()
@@ -41,7 +47,7 @@ async def _post(path: str, token: str, body: dict) -> dict:
 async def _put(path: str, token: str, body: dict) -> dict:
     headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
     try:
-        async with httpx.AsyncClient(timeout=30.0) as client:
+        async with httpx.AsyncClient(timeout=DEFAULT_TIMEOUT) as client:
             resp = await client.put(f"{CRM_SERVICE_URL}/api{path}", headers=headers, json=body)
             resp.raise_for_status()
             return resp.json()
@@ -52,7 +58,7 @@ async def _put(path: str, token: str, body: dict) -> dict:
 async def _delete(path: str, token: str) -> dict:
     headers = {"Authorization": f"Bearer {token}"}
     try:
-        async with httpx.AsyncClient(timeout=30.0) as client:
+        async with httpx.AsyncClient(timeout=DEFAULT_TIMEOUT) as client:
             resp = await client.delete(f"{CRM_SERVICE_URL}/api{path}", headers=headers)
             resp.raise_for_status()
             return resp.json() if resp.content else {"status": "success"}
