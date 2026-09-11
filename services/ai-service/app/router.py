@@ -53,15 +53,15 @@ def _check_module_permission(user: dict, module: str):
     user_role = user.get("role", "")
 
     # Admin roles bypass permission checks
-    if user_role in ("Organization Owner", "Admin"):
+    if user_role in ("Organization Owner", "Admin", "Super Admin"):
         return
 
-    for perm in required:
-        if perm not in user_permissions:
-            raise ForbiddenException(
-                f"Insufficient permissions for {module} module. "
-                f"Required: {perm}"
-            )
+    # Check if user has ANY of the module's permissions
+    if not any(perm in user_permissions for perm in required):
+        raise ForbiddenException(
+            f"Insufficient permissions for {module} module. "
+            f"Required: {', '.join(required)}"
+        )
 
 
 # ── Chat Endpoints ─────────────────────────────────────────────────
