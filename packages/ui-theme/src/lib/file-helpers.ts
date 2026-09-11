@@ -21,7 +21,7 @@ export async function fetchFileRecord(
   try {
     const { api } = await import("@datavex/auth-middleware");
     const records = await api.get<FileRecord[]>(
-      `/api/files?owner_type=${ownerType}&owner_id=${ownerId}`,
+      `/files?owner_type=${ownerType}&owner_id=${ownerId}`,
     );
     return records.length > 0 ? records[0] : null;
   } catch {
@@ -46,7 +46,7 @@ export async function resolveFileIdFromFileUri(
   try {
     const { api } = await import("@datavex/auth-middleware");
     const records = await api.get<FileRecord[]>(
-      `/api/files?object_key=${encodeURIComponent(fileUri)}`,
+      `/files?object_key=${encodeURIComponent(fileUri)}`,
     );
     return records.length > 0 ? String(records[0].id) : null;
   } catch {

@@ -82,7 +82,7 @@ export const api = {
   },
   put: async <T>(path: string, body?: any, opts?: any): Promise<T> => {
     try {
-      const res = await baseApi.put<any>(path, body);
+      const res = await baseApi.put<any>(path, body, opts);
       return mapQuotationFields(res);
     } catch (err) {
       maybeToast(path, err, opts);
@@ -91,7 +91,7 @@ export const api = {
   },
   patch: async <T>(path: string, body?: any, opts?: any): Promise<T> => {
     try {
-      const res = await baseApi.patch<any>(path, body);
+      const res = await baseApi.patch<any>(path, body, opts);
       return mapQuotationFields(res);
     } catch (err) {
       maybeToast(path, err, opts);
@@ -100,7 +100,7 @@ export const api = {
   },
   delete: async <T>(path: string, opts?: any): Promise<T> => {
     try {
-      const res = await baseApi.delete<any>(path);
+      const res = await baseApi.delete<any>(path, opts);
       return mapQuotationFields(res);
     } catch (err) {
       maybeToast(path, err, opts);

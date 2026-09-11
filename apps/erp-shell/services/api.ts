@@ -68,16 +68,16 @@ export const api = {
     const res = await baseApi.post<any>(normalizePath(path), body, opts);
     return mapQuotationFields(res);
   },
-  put: async <T>(path: string, body?: any): Promise<T> => {
-    const res = await baseApi.put<any>(normalizePath(path), body);
+  put: async <T>(path: string, body?: any, opts?: any): Promise<T> => {
+    const res = await baseApi.put<any>(normalizePath(path), body, opts);
     return mapQuotationFields(res);
   },
-  patch: async <T>(path: string, body?: any): Promise<T> => {
-    const res = await baseApi.patch<any>(normalizePath(path), body);
+  patch: async <T>(path: string, body?: any, opts?: any): Promise<T> => {
+    const res = await baseApi.patch<any>(normalizePath(path), body, opts);
     return mapQuotationFields(res);
   },
-  delete: async <T>(path: string): Promise<T> => {
-    const res = await baseApi.delete<any>(normalizePath(path));
+  delete: async <T>(path: string, opts?: any): Promise<T> => {
+    const res = await baseApi.delete<any>(normalizePath(path), opts);
     return mapQuotationFields(res);
   },
 };

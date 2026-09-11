@@ -64,6 +64,14 @@ export interface RequestOptions {
   signal?: AbortSignal;
 }
 
+function normalizeRequestPath(path: string): string {
+  let p = path.startsWith("/") ? path : `/${path}`;
+  if (p === "/api" || p.startsWith("/api/")) {
+    p = p.slice(4) || "/";
+  }
+  return p.startsWith("/") ? p : `/${p}`;
+}
+
 async function request<T>(
   method: string,
   path: string,
@@ -79,7 +87,7 @@ async function request<T>(
     headers["Content-Type"] = "application/json";
   }
 
-  const fullPath = path.startsWith("/") ? path : `/${path}`;
+  const fullPath = normalizeRequestPath(path);
   const res = await fetch(`${API_BASE}${fullPath}`, {
     method,
     headers,
