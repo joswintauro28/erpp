@@ -44,7 +44,7 @@ class GeminiProvider(LLMProvider):
         from google.genai import types as genai_types
 
         self._ensure_client()
-        model = model or "gemini-2.5-flash"
+        candidate_models = [model] if model else ["gemini-3.6-flash", "gemini-3.5-flash", "gemini-flash-latest", "gemini-2.5-flash"]
         contents, system_instruction = self._build_contents(messages)
 
         if not contents:
@@ -57,18 +57,28 @@ class GeminiProvider(LLMProvider):
         if system_instruction:
             config.system_instruction = system_instruction
 
-        response = await self._client.aio.models.generate_content(
-            model=model,
-            contents=contents,
-            config=config,
-        )
-        return response.text
+        last_err = None
+        for m in candidate_models:
+            try:
+                response = await self._client.aio.models.generate_content(
+                    model=m,
+                    contents=contents,
+                    config=config,
+                )
+                return response.text or ""
+            except Exception as e:
+                logger.warning("Gemini model %s failed: %s", m, e)
+                last_err = e
+
+        if last_err:
+            raise last_err
+        raise RuntimeError("No Gemini model succeeded")
 
     async def chat_stream(self, messages: list[dict], model: str | None = None) -> AsyncIterator[str]:
         from google.genai import types as genai_types
 
         self._ensure_client()
-        model = model or "gemini-2.5-flash"
+        candidate_models = [model] if model else ["gemini-3.6-flash", "gemini-3.5-flash", "gemini-flash-latest", "gemini-2.5-flash"]
         contents, system_instruction = self._build_contents(messages)
 
         if not contents:
@@ -81,13 +91,24 @@ class GeminiProvider(LLMProvider):
         if system_instruction:
             config.system_instruction = system_instruction
 
-        async for chunk in await self._client.aio.models.generate_content_stream(
-            model=model,
-            contents=contents,
-            config=config,
-        ):
-            if chunk.text:
-                yield chunk.text
+        last_err = None
+        for m in candidate_models:
+            try:
+                async for chunk in await self._client.aio.models.generate_content_stream(
+                    model=m,
+                    contents=contents,
+                    config=config,
+                ):
+                    if chunk.text:
+                        yield chunk.text
+                return
+            except Exception as e:
+                logger.warning("Gemini stream with model %s failed: %s", m, e)
+                last_err = e
+
+        if last_err:
+            raise last_err
+        raise RuntimeError("No Gemini model succeeded for streaming")
 
     async def health_check(self) -> bool:
         if not settings.GEMINI_API_KEY:

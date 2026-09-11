@@ -15,6 +15,7 @@ import {
   X,
 } from "lucide-react";
 import { cn } from "../../lib/utils";
+import { api, API_BASE, getAccessToken } from "@datavex/auth-middleware";
 
 // ─── Types ───────────────────────────────────────────────────────────
 
@@ -261,18 +262,13 @@ export function AIChat({ module, apiBase = "", className }: AIChatProps) {
   // Fetch sessions list
   const fetchSessions = useCallback(async () => {
     try {
-      const res = await fetch(`${base}/api/ai/sessions?module=${module}`, {
-        credentials: "include",
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setSessions(data);
-        setLoadedSessions(true);
-      }
+      const data = await api.get<AISession[]>(`/ai/sessions?module=${module}`);
+      setSessions(data || []);
+      setLoadedSessions(true);
     } catch {
       // Silently fail
     }
-  }, [base, module]);
+  }, [module]);
 
   useEffect(() => {
     fetchSessions();
@@ -281,18 +277,15 @@ export function AIChat({ module, apiBase = "", className }: AIChatProps) {
   // Fetch dynamic suggestions
   const fetchDynamicSuggestions = useCallback(async () => {
     try {
-      const res = await fetch(`${base}/api/ai/suggestions/${module}/dynamic`, {
-        credentials: "include",
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setDynamicSuggestions(data.suggestions || []);
-        setContextSummary(data.context_summary || null);
-      }
+      const data = await api.get<{ suggestions: DynamicSuggestion[]; context_summary?: string }>(
+        `/ai/suggestions/${module}/dynamic`,
+      );
+      setDynamicSuggestions(data?.suggestions || []);
+      setContextSummary(data?.context_summary || null);
     } catch {
       // Fall back to static suggestions
     }
-  }, [base, module]);
+  }, [module]);
 
   useEffect(() => {
     if (messages.length === 0) {
@@ -303,35 +296,26 @@ export function AIChat({ module, apiBase = "", className }: AIChatProps) {
   // Fetch analytics (lazy — only when panel opened)
   const fetchAnalytics = useCallback(async () => {
     try {
-      const res = await fetch(`${base}/api/ai/analytics/overview`, {
-        credentials: "include",
-      });
-      if (res.ok) {
-        setAnalytics(await res.json());
-      }
+      const data = await api.get<AnalyticsData>("/ai/analytics/overview");
+      setAnalytics(data);
     } catch {
       // ignore
     }
-  }, [base]);
+  }, []);
 
   // Load session history
   const loadSession = useCallback(
     async (sid: string) => {
       try {
-        const res = await fetch(`${base}/api/ai/history/${sid}`, {
-          credentials: "include",
-        });
-        if (res.ok) {
-          const data = await res.json();
-          setMessages(data.messages || []);
-          setSessionId(sid);
-          setShowSessionList(false);
-        }
+        const data = await api.get<{ messages: AIChatMessage[] }>(`/ai/history/${sid}`);
+        setMessages(data?.messages || []);
+        setSessionId(sid);
+        setShowSessionList(false);
       } catch {
         // fallback
       }
     },
-    [base],
+    [],
   );
 
   // Start new chat
@@ -348,10 +332,7 @@ export function AIChat({ module, apiBase = "", className }: AIChatProps) {
   const deleteSession = useCallback(
     async (sid: string) => {
       try {
-        await fetch(`${base}/api/ai/sessions/${sid}`, {
-          method: "DELETE",
-          credentials: "include",
-        });
+        await api.delete(`/ai/sessions/${sid}`);
         setSessions((prev) => prev.filter((s) => s.id !== sid));
         if (sessionId === sid) {
           newChat();
@@ -360,7 +341,7 @@ export function AIChat({ module, apiBase = "", className }: AIChatProps) {
         // ignore
       }
     },
-    [base, sessionId, newChat],
+    [sessionId, newChat],
   );
 
   // Send message (non-streaming fallback)
@@ -375,24 +356,13 @@ export function AIChat({ module, apiBase = "", className }: AIChatProps) {
       setLoading(true);
 
       try {
-        const res = await fetch(`${base}/api/ai/chat`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({
-            message: msg,
-            session_id: sessionId,
-            module,
-            stream: false,
-          }),
+        const data = await api.post<any>("/ai/chat", {
+          message: msg,
+          session_id: sessionId,
+          module,
+          stream: false,
         });
 
-        if (!res.ok) {
-          const errBody = await res.json().catch(() => ({}));
-          throw new Error(errBody.detail || `HTTP ${res.status}`);
-        }
-
-        const data = await res.json();
         const assistantMsg: AIChatMessage = {
           id: data.message?.id || `asst-${Date.now()}`,
           role: "assistant",
@@ -420,7 +390,7 @@ export function AIChat({ module, apiBase = "", className }: AIChatProps) {
         textareaRef.current?.focus();
       }
     },
-    [base, sessionId, module, fetchSessions],
+    [sessionId, module, fetchSessions],
   );
 
   // Send message with SSE streaming
@@ -440,9 +410,16 @@ export function AIChat({ module, apiBase = "", className }: AIChatProps) {
       setLoading(true);
 
       try {
-        const res = await fetch(`${base}/api/ai/chat/stream`, {
+        const token = getAccessToken();
+        const headers: Record<string, string> = { "Content-Type": "application/json" };
+        if (token) {
+          headers["Authorization"] = `Bearer ${token}`;
+        }
+
+        const endpoint = `${API_BASE}/ai/chat/stream`;
+        const res = await fetch(endpoint, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers,
           credentials: "include",
           body: JSON.stringify({
             message: msg,
@@ -485,7 +462,6 @@ export function AIChat({ module, apiBase = "", className }: AIChatProps) {
                 if (eventType === "metadata") {
                   newSessionId = data.session_id || newSessionId;
                   if (data.message_id) {
-                    // Update the assistant message id
                     setMessages((prev) =>
                       prev.map((m) =>
                         m.id === assistantId ? { ...m, id: data.message_id } : m,
@@ -503,7 +479,6 @@ export function AIChat({ module, apiBase = "", className }: AIChatProps) {
                     ),
                   );
                 } else if (eventType === "done") {
-                  // Mark streaming complete
                   setMessages((prev) =>
                     prev.map((m) =>
                       m.id === assistantId ? { ...m, streaming: false } : m,
@@ -544,7 +519,7 @@ export function AIChat({ module, apiBase = "", className }: AIChatProps) {
         textareaRef.current?.focus();
       }
     },
-    [base, sessionId, module, fetchSessions],
+    [sessionId, module, fetchSessions],
   );
 
   // Main send — tries streaming first, falls back to non-streaming
