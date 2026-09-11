@@ -85,8 +85,8 @@ services:
   # ─── MinIO — S3 reverse proxy env vars ──────────────────────────────────
   minio:
     environment:
-      MINIO_SERVER_URL: http://erp.local/minio
-      MINIO_BROWSER_REDIRECT_URL: http://erp.local/minio
+      MINIO_SERVER_URL: http://127.0.0.1:9000
+      MINIO_BROWSER_REDIRECT_URL: http://erp.local/minio-client
       MINIO_API_CORS_ALLOW_ORIGIN: "*"
 
   # ─── Backend services — Update CORS & routing for single domain ─────────

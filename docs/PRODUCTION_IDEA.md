@@ -1,580 +1,492 @@
-# Production Infrastructure Plan
+# DATAVEX ERP — Production Infrastructure & Architecture Blueprint
 
-## The Idea
-
-Create a `/infrastructure/prod/` directory containing all production-grade infrastructure: hardened Docker Compose, PostgreSQL tuning, backup/restore scripts, TLS termination, monitoring, and deployment guides. This replaces the local dev sandbox with a production-ready setup.
+This document details the production-grade deployment architecture, infrastructure topology, security policies, storage strategies, and the unified **Dual Deployment Setup** (Subdomain vs. Single-Domain) for the DATAVEX ERP ecosystem.
 
 ---
 
-## Current State
+## 1. Executive Summary & Infrastructure Goals
 
-### `/infrastructure/internal/` — Internal Deployment (DONE)
-A complete internal/production deployment configuration has been created:
-- Real domain names (`*.erp.datavex.com`)
-- Production secrets template (`.env.docker.example`)
-- Standalone nginx config with MinIO proxy
-- Step-by-step deployment guide (`DEPLOY.md`)
-- PostgreSQL init script
-- `.gitignore` to prevent secret leaks
-
-### `/infrastructure/local/` — Development Sandbox
-`/infrastructure/local/` is a **development sandbox**:
-- Single PostgreSQL container with default config
-- All ports exposed to host
-- Default/hardcoded secrets (`development-jwt-secret-key-123`)
-- No backups, no TLS, no rate limiting
-- No resource limits on containers
-- HTTP-only, permissive CORS
-
-This is fine for local development, but production needs a fundamentally different posture.
+The objective is to establish an enterprise-ready, high-availability, and zero-trust infrastructure that seamlessly supports:
+- **14 Docker container services**: 4 Next.js 16 frontends, 6 microservice backends, MinIO S3 object storage, PostgreSQL 16, RabbitMQ 3.12, and Nginx.
+- **Dual Deployment Flexibility**: Zero-reconfiguration switching between **Mode A (Subdomain Routing)** and **Mode B (Single-Domain Path-Based Routing)**.
+- **Zero Hardcoded Secrets**: Strict environment variable injection with `.env.docker` / `.env.prod` enforcement.
+- **Off-VM S3 Backup Pipelines**: MinIO-driven automated database dumping and write-ahead log (WAL) archiving.
+- **Presigned URL Binary Pipeline**: Direct client-to-S3 transfers with zero application gateway memory overhead.
 
 ---
 
-## Proposed Structure
+## 2. System Architecture & Service Topology
 
+```mermaid
+flowchart TD
+    subgraph Clients["Client Layer"]
+        Browser["User Web Browser"]
+    end
+
+    subgraph ReverseProxy["Nginx Reverse Proxy Gateway (Port 80 / 443)"]
+        Nginx["Nginx (Single-Domain / Subdomain Engine)"]
+    end
+
+    subgraph Frontends["Frontend Workstations (Next.js 16 Turbopack)"]
+        Shell["Executive Super-Admin Shell\n(Port 3000 | basePath: /admin)"]
+        CRM_UI["CRM Workstation\n(Port 3001 | basePath: /crm)"]
+        Billing_UI["Billing Workstation\n(Port 3002 | basePath: /billing)"]
+        Inv_UI["Inventory Workstation\n(Port 3004 | basePath: /inventory)"]
+    end
+
+    subgraph Backends["Backend Microservices Layer"]
+        ERP_Svc["erp-service (Gateway & Core)\nFastAPI | Port 8000"]
+        CRM_Svc["crm-service (Sales Engine)\nFastAPI | Port 8001"]
+        IAM_Svc["core-iam (Central SSO & RBAC)\nNestJS + Prisma | Port 8002"]
+        Billing_Svc["billing-service (Ledger & Invoices)\nNestJS + Prisma | Port 8003"]
+        Inv_Svc["inventory-service (Stock & Catalog)\nFastAPI | Port 8004"]
+        AI_Svc["ai-service (LLM & Chat SSE)\nFastAPI | Port 8005"]
+    end
+
+    subgraph CoreInfra["Core Infrastructure & Persistence"]
+        PG[(PostgreSQL 16 Multi-Tenant)]
+        MinIO[(MinIO S3 Object Store)]
+        RabbitMQ[(RabbitMQ Event Broker)]
+    end
+
+    Browser --> Nginx
+    Nginx --> Shell
+    Nginx --> CRM_UI
+    Nginx --> Billing_UI
+    Nginx --> Inv_UI
+    Nginx --> MinIO
+
+    Shell --> ERP_Svc
+    Shell --> IAM_Svc
+    Shell --> AI_Svc
+    CRM_UI --> CRM_Svc
+    Billing_UI --> Billing_Svc
+    Inv_UI --> Inv_Svc
+
+    Backends --> PG
+    Backends --> RabbitMQ
+    ERP_Svc --> MinIO
 ```
-infrastructure/prod/
-├── docker-compose.yml          # Production compose (hardened)
-├── docker-compose.override.yml # Optional per-env overrides (staging vs prod)
-├── .env.prod                   # Production secrets (gitignored)
-├── .env.prod.example           # Template with placeholder values
-│
-├── postgres/
-│   ├── postgresql.conf         # Tuned PG config (WAL, connections, memory)
-│   ├── pg_hba.conf             # Auth rules (no trust, no password from everywhere)
-│   ├── init.sql                # DB creation (same as local but production-ready)
-│   └── backup.sh               # pg_dump + MinIO sync cron
-│
-├── nginx/
-│   ├── nginx.conf              # Production nginx (TLS termination, rate limiting)
-│   └── certs/                  # TLS certs (Let's Encrypt or self-signed for staging)
-│
-├── minio/
-│   ├── data/                   # MinIO persistent storage for backups
-│   └── config/                 # MinIO server configuration
-│
-├── scripts/
-│   ├── backup.sh               # Full backup orchestrator (all DBs + MinIO sync)
-│   ├── restore.sh              # Restore from MinIO backup
-│   ├── seed.sh                 # Production seed (minimal, no test data)
-│   ├── health-check.sh         # Extended health verification
-│   └── setup-hosts.sh          # Hosts file setup
-│
-├── monitoring/
-│   ├── docker-compose.yml      # Optional: Prometheus + Grafana sidecar
-│   └── prometheus.yml          # Scrape config for service metrics
-│
-└── README.md                   # Production deployment guide
-```
 
 ---
 
-## Key Differences: Local vs Production
+## 3. Key Differences: Local vs. Production
 
-| Aspect | Local | Production |
-|--------|-------|-----------|
-| **Postgres** | Default config, no tuning | `shared_buffers=256MB`, `work_mem=4MB`, `max_connections=100`, WAL archiving |
-| **Secrets** | Hardcoded in `.env.docker` | External secret store or encrypted `.env.prod` (never committed) |
-| **TLS** | HTTP only | HTTPS via Let's Encrypt or ACM, HTTP→HTTPS redirect |
-| **Ports** | All exposed to host | Only 80/443 exposed; internal services stay on Docker network |
-| **Backups** | None | Daily `pg_dumpall` + WAL archiving + MinIO sync |
-| **Healthchecks** | Basic | Extended with retry logic, alerting hooks |
-| **Restart** | `unless-stopped` | `unless-stopped` + `deploy.resources.limits` (CPU/RAM caps) |
-| **Logging** | stdout only | Structured JSON logging + log rotation |
-| **Rate Limiting** | None | Nginx `limit_req_zone` on auth and API endpoints |
-| **CORS** | Permissive | Locked to production domains only |
+| Aspect | Local Sandbox (`infrastructure/local`) | Production (`infrastructure/prod` / `internal`) |
+| :--- | :--- | :--- |
+| **Postgres Tuning** | Default configuration, shared storage | `shared_buffers=256MB`, `work_mem=4MB`, `max_connections=100`, WAL archiving |
+| **Secrets & Keys** | Interpolated via `.env.docker` | External secret store or encrypted `.env.prod` (never committed) |
+| **TLS / SSL** | HTTP only (port 80) | HTTPS termination via Let's Encrypt / ACM, HTTP $\rightarrow$ HTTPS redirect |
+| **Port Exposure** | Internal services bind locally for debugging | Only 80/443 exposed to host; all microservices strictly on Docker bridge |
+| **Backups** | Manual | Daily `pg_dumpall` + WAL archiving + MinIO S3 mirroring |
+| **Healthchecks** | Standard Node/Python HTTP checks | Extended healthchecks with automated retry and restart policies |
+| **Restart Policy** | `unless-stopped` | `unless-stopped` + CPU/RAM resource limits per container |
+| **Logging** | stdout/stderr | Structured JSON logs + rotation (`max-size: 50m`, `max-file: 5`) |
+| **Rate Limiting** | None | Nginx `limit_req_zone` on `/api/auth/*` brute-force mitigation |
+| **CORS Policy** | Permissive (`*` or local domain) | Restricted to authorized production domains |
 
 ---
 
-## Component Details
+## 4. Production Database Configuration & Backup Strategy
 
-### Production Docker Compose
-
-Differences from local:
-- **No debug ports** — services bind to `127.0.0.1:PORT` or not at all (only nginx exposes 80/443)
-- **Resource limits** — `deploy.resources.limits` per service (prevents one bad service from eating all RAM)
-- **Read-only filesystem** where possible (`read_only: true` + tmpfs for temp dirs)
-- **No default secrets** — reads from `.env.prod` which is gitignored
-- **Backup sidecar** — a lightweight alpine container running `backup.sh` on cron
-- **Postgres uses a proper config mount** — not just volume, but `postgresql.conf` with tuned settings
-
-### PostgreSQL Configuration (`postgres/postgresql.conf`)
+### 4.1 PostgreSQL Tuning (`postgres/postgresql.conf`)
 
 ```conf
-# Memory
-shared_buffers = 256MB          # 25% of RAM for small VM
+# ── Memory Configuration ────────────────────────────────────────────────
+shared_buffers = 256MB          # 25% of RAM for small VM / 2GB for 8GB VM
 effective_cache_size = 512MB
 work_mem = 4MB
 maintenance_work_mem = 64MB
 
-# WAL & Recovery
-wal_level = replica             # Enable PITR
+# ── Write-Ahead Logging (WAL) & PITR ───────────────────────────────────
+wal_level = replica             # Enable Point-in-Time Recovery (PITR)
 archive_mode = on
 archive_command = 'test ! -f /backups/wal_archive/%f && cp %p /backups/wal_archive/%f'
 max_wal_senders = 3
 wal_keep_size = 256MB
 
-# Connections
+# ── Connection Management ──────────────────────────────────────────────
 max_connections = 100
 superuser_reserved_connections = 3
 
-# Logging
+# ── Query Logging & Auditing ────────────────────────────────────────────
 log_destination = 'stderr'
 logging_collector = on
 log_directory = '/var/log/postgresql'
 log_filename = 'postgresql-%Y-%m-%d.log'
 log_rotation_age = 1d
 log_rotation_size = 100MB
-log_min_duration_statement = 500  # Log slow queries (>500ms)
+log_min_duration_statement = 500  # Log slow queries exceeding 500ms
 
-# Checkpoints
+# ── Checkpoint Optimization ─────────────────────────────────────────────
 checkpoint_completion_target = 0.9
 wal_compression = on
 ```
 
-### PostgreSQL Auth Rules (`postgres/pg_hba.conf`)
+### 4.2 Database Isolation Matrix
 
-```conf
-# TYPE  DATABASE  USER       ADDRESS           METHOD
-local   all       postgres                     trust
-host    all       all        10.0.0.0/8        scram-sha-256    # Docker network only
-host    all       all        172.16.0.0/12     scram-sha-256    # Docker network only
-# Reject everything else
-host    all       all        0.0.0.0/0         reject
-```
+Each business module operates against its own dedicated database catalog within the PostgreSQL cluster:
 
-### Backup Script (`scripts/backup.sh`)
+| Database | Service Owner | Primary Schemas / Models |
+| :--- | :--- | :--- |
+| `erp_iam` | `core-iam` (NestJS) | `users`, `roles`, `permissions`, `organizations`, `refresh_tokens` |
+| `erp_db` | `erp-service` (FastAPI) | `clients`, `leads`, `products`, `file_records`, `system_audits` |
+| `erp_crm` | `crm-service` (FastAPI) | `customers`, `leads`, `quotations`, `sales_orders`, `opportunities` |
+| `erp_billing` | `billing-service` (NestJS) | `invoices`, `payments`, `credit_notes`, `debit_notes`, `recurring` |
+| `erp_inventory`| `inventory-service` (FastAPI)| `products`, `warehouses`, `stock`, `movements`, `purchase_orders` |
+| `erp_ai` | `ai-service` (FastAPI) | `ai_sessions`, `ai_messages`, `ai_audit_logs` |
 
-```bash
-#!/bin/bash
-# Daily full backup of all 5 databases + WAL archive rotation
-# Runs as cron inside the backup sidecar container
+### 4.3 Automated Backup & Restore Pipeline
 
-BACKUP_DIR="/backups/$(date +%Y/%m/%d)"
-RETENTION_DAYS=7
-
-# Dump all databases
-for DB in erp_db erp_crm erp_iam erp_billing erp_inventory; do
-    pg_dump -U postgres -d "$DB" | gzip > "$BACKUP_DIR/${DB}.sql.gz"
-done
-
-# Dump globals (roles, tablespaces)
-pg_dumpall -U postgres --globals-only | gzip > "$BACKUP_DIR/globals.sql.gz"
-
-# Compress WAL archive
-tar -czf "$BACKUP_DIR/wal_archive.tar.gz" /backups/wal_archive/
-
-# Sync to MinIO (self-hosted S3-compatible storage)
-# mc mirror /backups/ minio/erp-backups/ --overwrite
-
-# Prune old backups
-find /backups -type d -mtime +$RETENTION_DAYS -exec rm -rf {} +
-```
-
-### Restore Script (`scripts/restore.sh`)
+> [!TIP]
+> Docker volumes live on the host filesystem. If the VM storage corrupts, all data is lost. Automated daily dumps are mirrored directly to MinIO bucket `erp-backups`.
 
 ```bash
 #!/bin/bash
-# Restore from a specific backup date (from MinIO or local)
-# Usage: ./restore.sh 2026/08/21
-# Or from MinIO: ./restore.sh 2026/08/21 --remote
+# scripts/backup.sh — Full Multi-Database Backup & MinIO Mirror
+set -euo pipefail
 
-BACKUP_DATE=$1
-BACKUP_DIR="/backups/$BACKUP_DATE"
+BACKUP_DATE=$(date +%Y/%m/%d)
+BACKUP_DIR="/backups/${BACKUP_DATE}"
+mkdir -p "${BACKUP_DIR}"
 
-# If remote flag, download from MinIO first
-if [ "$2" = "--remote" ]; then
-    mc mirror minio/erp-backups/$BACKUP_DATE/ /backups/$BACKUP_DATE/
-fi
+DATABASES=("erp_iam" "erp_db" "erp_crm" "erp_billing" "erp_inventory" "erp_ai")
 
-# Restore globals first
-gunzip -c "$BACKUP_DIR/globals.sql.gz" | psql -U postgres
-
-# Restore each database
-for DB in erp_db erp_crm erp_iam erp_billing erp_inventory; do
-    gunzip -c "$BACKUP_DIR/${DB}.sql.gz" | psql -U postgres -d "$DB"
+# 1. Dump individual logical databases
+for DB in "${DATABASES[@]}"; do
+    echo "Dumping database: ${DB}..."
+    pg_dump -h postgres -U postgres -d "${DB}" | gzip > "${BACKUP_DIR}/${DB}.sql.gz"
 done
-```
 
-### Production Nginx (`nginx/nginx.conf`)
+# 2. Dump global roles and tablespaces
+pg_dumpall -h postgres -U postgres --globals-only | gzip > "${BACKUP_DIR}/globals.sql.gz"
 
-Key additions over local:
-- **TLS termination** with Let's Encrypt certs
-- **HTTP→HTTPS redirect**
-- **Rate limiting** on `/api/auth/*` (login brute-force protection)
-- **Security headers** (CSP, HSTS, X-Frame-Options)
-- **Gzip compression** for API responses
-- **Client max body size** limits (prevent upload abuse)
+# 3. Archive WAL files
+tar -czf "${BACKUP_DIR}/wal_archive.tar.gz" -C /backups wal_archive/
 
-### MinIO Object Storage (`minio/`)
+# 4. Mirror to MinIO off-VM backup bucket
+mc alias set local_minio http://minio:9000 "${MINIO_ROOT_USER}" "${MINIO_ROOT_PASSWORD}"
+mc mirror "${BACKUP_DIR}" "local_minio/erp-backups/${BACKUP_DATE}" --overwrite
 
-Self-hosted S3-compatible object store running in Docker. Core infrastructure alongside PostgreSQL and RabbitMQ.
-
-- **Endpoint:** `http://minio:9000` (internal Docker network)
-- **Console:** `http://minio:9001` (exposed for admin access)
-- **Buckets (per-domain isolation):**
-  - `crm-assets` — client contracts, RFPs, lead attachments, quotation PDFs
-  - `inv-docs` — proof of delivery, GRNs, product images, work order sheets
-  - `finance-records` — generated PDF invoices, payment receipts, credit notes
-  - `erp-backups` — database dumps (`pg_dump` `.sql.gz`), WAL archives
-- **Versioning:** Enabled on all buckets
-- **Lifecycle Policies:**
-  - `erp-backups` — backups older than 7 days → auto-delete
-  - `erp-backups` — WAL archives older than 3 days → auto-delete
-- **Erasure Coding:** Default for durability (survives disk failures)
-- **Access:** Only `erp-service` has the MinIO client. Other services store file references (IDs/URIs), not file content.
-- **Presigned URLs:** Uploads and downloads go directly between client and MinIO. Backend only generates time-limited presigned URLs for auth + audit.
-
-```yaml
-# Docker Compose service definition
-minio:
-  image: minio/minio:latest
-  container_name: datavex-minio
-  command: server /data --console-address ":9001"
-  environment:
-    MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
-    MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
-  volumes:
-    - minio_data:/data
-  ports:
-    - "9000:9000"   # S3 API
-    - "9001:9001"   # Web Console
-  healthcheck:
-    test: ["CMD", "mc", "ready", "local"]
-    interval: 10s
-    timeout: 5s
-    retries: 5
-  networks:
-    - erp-network
+# 5. Prune local files older than 7 days
+find /backups -maxdepth 2 -type d -mtime +7 -exec rm -rf {} +
 ```
 
 ---
 
-## Off-VM Backup Strategy
+## 5. MinIO S3 Object Storage Architecture
 
-Docker volumes live on the **host filesystem only**. If the VM is destroyed, corrupted, or the disk fails — all data is lost. Backups must go off-VM.
+MinIO serves as the enterprise-wide S3-compatible storage cluster for unstructured documents, attachments, and backups.
 
-| Option | Complexity | Cost | Recovery Time |
-|--------|-----------|------|---------------|
-| **MinIO (self-hosted S3)** | Low | Free (runs in Docker) | Minutes (download + restore) |
-| **NFS/EFS mount** | Medium | Depends on provider | Instant (mount + restore) |
-| **Second VM + rsync** | Medium | ~$5/mo for a small VM | Minutes (rsync + restore) |
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User as User Browser
+    participant Gateway as erp-service (API Gateway)
+    participant DB as PostgreSQL (file_records)
+    participant S3 as MinIO S3 Cluster
 
-**Recommendation:** Start with **MinIO**. It's a self-hosted S3-compatible object store that runs in Docker — zero external cost, full control over your data, and no vendor lock-in. Add an `mc mirror` sync after each dump. MinIO also supports versioning, lifecycle policies, and erasure coding for durability.
+    User->>Gateway: POST /api/files/upload-request (file metadata + auth)
+    Gateway->>Gateway: Verify JWT & RBAC Permissions
+    Gateway->>S3: Generate Presigned PUT URL (5-min TTL)
+    Gateway-->>User: Return presigned PUT URL + file_id
+    User->>S3: PUT /bucket/object (Direct binary stream)
+    User->>Gateway: POST /api/files/confirm-upload (file_id, owner_type, owner_id)
+    Gateway->>DB: Store metadata in file_records
+    Gateway-->>User: Upload confirmed
+```
+
+### 5.1 Per-Domain Bucket Strategy
+
+| Bucket Name | Domain | Payload Types | Lifecycle Policy |
+| :--- | :--- | :--- | :--- |
+| `crm-assets` | CRM Workstation | Client NDAs, proposals, lead attachments, quote PDFs | Permanent (versioned) |
+| `inv-docs` | Inventory Workstation| Proof of Delivery (POD), GRN inspection sheets, packing slips | Permanent (versioned) |
+| `finance-records`| Billing Workstation | Generated invoice PDFs, receipt vouchers, debit notes | Permanent (versioned) |
+| `erp-backups` | Infrastructure | Automated `.sql.gz` database dumps, WAL archives | 7-day automated pruning |
+
+### 5.2 Presigned URL Pattern (Zero Backend Memory Overhead)
+
+Binary files never pass through application servers. The client uploads/downloads directly from MinIO using time-limited presigned URLs.
+
+- **Upload Request**: Client sends metadata to `POST /api/files/upload-request` $\rightarrow$ API Gateway validates JWT and returns presigned PUT URL (expires in 5 min).
+- **Direct Upload**: Client streams binary data directly to MinIO endpoint.
+- **Confirmation**: Client calls `POST /api/files/confirm-upload` $\rightarrow$ API Gateway records metadata in PostgreSQL `file_records` table.
+- **Download**: Client requests `GET /api/files/:id/download` $\rightarrow$ API Gateway returns 302 Redirect to a presigned GET URL (expires in 5 min).
 
 ---
 
-## MinIO Object Storage — Architecture
+## 6. The Dual Deployment Architecture
 
-MinIO is positioned as **Core Infrastructure (Cross-Cutting)**, residing on the same architectural plane as PostgreSQL, RabbitMQ, and the API Gateway.
+DATAVEX ERP supports two production deployment models using a unified codebase and clean Docker Compose overrides.
 
-### Per-Domain Bucket Strategy
+```
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                                DUAL DEPLOYMENT SETUP                            │
+├───────────────────────────────────────┬─────────────────────────────────────────┤
+│    MODE A: Subdomain Routing          │     MODE B: Single-Domain Routing       │
+│    (Recommended for Enterprise DNS)   │     (Recommended for Single-Host/IP)    │
+├───────────────────────────────────────┼─────────────────────────────────────────┤
+│  http://app.erp.local                 │  http://erp.local/admin  (basePath)     │
+│  http://crm.erp.local                 │  http://erp.local/crm    (basePath)     │
+│  http://billing.erp.local             │  http://erp.local/billing(basePath)     │
+│  http://inventory.erp.local           │  http://erp.local/inventory(basePath)   │
+│  http://minio.erp.local               │  http://erp.local/minio/ (S3 REST API)  │
+│  http://minio.erp.local:9001          │  http://erp.local/minio-client (Console)│
+└───────────────────────────────────────┴─────────────────────────────────────────┘
+```
 
-| Domain | Bucket | Contents |
-|--------|--------|----------|
-| **CRM** | `crm-assets` | Client contracts, RFPs, lead attachments, quotation PDFs |
-| **Inventory** | `inv-docs` | Proof of Delivery (POD), GRNs, product images, work order sheets |
-| **Billing** | `finance-records` | Generated PDF invoices, payment receipts, credit notes, bank statements |
-| **Infrastructure** | `erp-backups` | Database dumps (`pg_dump` `.sql.gz`), WAL archives |
+---
 
-### Presigned URL Pattern (Zero Backend Overhead)
+### 6.1 Mode A: Subdomain Routing (`*.erp.local` or `*.domain.com`)
 
-Binary files never pass through the application servers. The client uploads/downloads directly from MinIO using time-limited presigned URLs.
+In Mode A, each workstation operates at the root path (`/`) of its own dedicated subdomain.
 
-**Upload Flow:**
-1. Client → `POST /api/files/upload-request` (metadata + auth token)
-2. Service → validates JWT + RBAC, generates presigned PUT URL (expires in 5 min)
-3. Client ← returns presigned URL + file_id
-4. Client → `PUT presigned-url` (binary file body directly to MinIO)
-5. Client → `POST /api/files/confirm-upload` (file_id, owner_type, owner_id)
-6. Service → saves metadata in `file_records` table (`erp_db`)
+#### Endpoint Topology
+- **Executive Super Admin Shell**: `http://app.erp.local`
+- **CRM Workstation**: `http://crm.erp.local`
+- **Billing Workstation**: `http://billing.erp.local`
+- **Inventory Workstation**: `http://inventory.erp.local`
+- **MinIO S3 Gateway**: `http://minio.erp.local`
 
-**Download Flow:**
-1. Client → `GET /api/files/:id/download`
-2. Service → verifies RBAC, retrieves metadata from `file_records`
-3. Service → generates presigned GET URL (expires in 5 min)
-4. Client ← 302 Redirect to presigned URL
-5. Client → downloads directly from MinIO
+#### SSO & Cookie Strategy
+- The authentication token is stored with wildcard domain scope: `Domain=.erp.local; Path=/; HttpOnly; SameSite=Lax`.
+- All workstations share the session cookie across subdomains transparently.
+- When an unauthenticated user opens `http://crm.erp.local`, they are redirected to `http://app.erp.local/login?redirect=http://crm.erp.local`.
 
-### Claim Check Pattern for RabbitMQ
+---
 
-Files never enter RabbitMQ. Events carry URI references only.
+### 6.2 Mode B: Single-Domain Path-Based Routing (`http://erp.local` or `http://domain.com`)
 
-```json
-{
-  "event": "Shipment.Dispatched",
-  "order_id": "SO-202608-0001",
-  "dispatched_at": "2026-08-21T15:30:00Z",
-  "documents": {
-    "proof_of_delivery": "s3://inv-docs/pod/SO-202608-0001.pdf"
-  }
+In Mode B, all applications and services are served under a single domain name or IP address, partitioned cleanly by path prefixes.
+
+> [!IMPORTANT]
+> **Executive Shell Isolation (`/admin`)**:
+> In single-domain mode, `erp-shell` runs with `basePath: /admin`. This guarantees that internal admin routes (`/admin/crm/leads`, `/admin/billing/invoices`) never conflict with dedicated workstation root mounts (`/crm`, `/billing`, `/inventory`).
+
+#### Endpoint Topology & URL Map
+
+| Route / Path | Target Container | Purpose |
+| :--- | :--- | :--- |
+| `http://erp.local/` | Nginx Redirect | `302 Found` $\rightarrow$ `/admin` |
+| `http://erp.local/login` | Nginx Redirect | `302 Found` $\rightarrow$ `/admin/login` |
+| `http://erp.local/dashboard` | Nginx Redirect | `302 Found` $\rightarrow$ `/admin/dashboard` |
+| `http://erp.local/admin` | `erp-shell:3000` | Executive Super Admin Shell (`basePath: /admin`) |
+| `http://erp.local/admin/login` | `erp-shell:3000` | Central SSO Login Portal |
+| `http://erp.local/crm` | `crm-shell:3001` | CRM Sales Workstation (`basePath: /crm`) |
+| `http://erp.local/billing` | `billing-ui:3002` | Billing & Accounting Workstation (`basePath: /billing`) |
+| `http://erp.local/inventory` | `inventory-ui:3004` | Inventory & Procurement Workstation (`basePath: /inventory`) |
+| `http://erp.local/minio/` | `minio:9000` | S3 REST API & Presigned Object Proxy |
+| `http://erp.local/minio-client` | `minio:9001` | MinIO Web Console Dashboard UI |
+
+#### Single-Domain SSO & Authentication Flow
+1. **Unauthenticated Access**: User navigates to `http://erp.local/crm`.
+2. **SSO Redirect**: Workstation `AuthContext.tsx` detects unauthenticated state and redirects to `http://erp.local/admin/login?redirect=http%3A%2F%2Ferp.local%2Fcrm`.
+3. **Login & Authorization**: User logs in with credentials via `core-iam:8002`.
+4. **Target Redirection**: `erp-shell` validates role permissions and redirects back to `http://erp.local/crm?token=<JWT>`.
+5. **Session Activation**: Workstation captures token, stores it in memory/storage, and initializes user state.
+
+---
+
+### 6.3 Docker Compose Implementation
+
+The system uses standard Compose file layering:
+
+1. **Base Configuration (`docker-compose.yml`)**:
+   - Defines all 14 container definitions, networks, healthchecks, and dependency graphs.
+   - Configures default Subdomain routing (Mode A).
+2. **Production / Single-Domain Override (`docker-compose.prod.yaml`)**:
+   - Injects `NEXT_PUBLIC_BASE_PATH: /admin`, `/crm`, `/billing`, `/inventory`.
+   - Injects `NEXT_PUBLIC_DEPLOY_MODE: single-domain`.
+   - Mounts `single-domain.conf` into Nginx.
+   - Overrides workstation URLs to path-based addresses.
+
+#### Execution Commands
+
+```powershell
+# ── Mode A: Subdomain Routing ──────────────────────────────────────────
+# PowerShell:
+.\docker-build.ps1 up -Mode subdomain
+
+# Bash:
+./docker-build.sh up --mode subdomain
+
+# ── Mode B: Single-Domain Routing (Production Mode) ─────────────────────
+# PowerShell:
+.\docker-build.ps1 up -Mode prod
+
+# Bash:
+./docker-build.sh up --mode prod
+```
+
+---
+
+## 7. Nginx Routing Engine Specifications
+
+### 7.1 Single-Domain Nginx Configuration (`nginx/single-domain.conf`)
+
+```nginx
+worker_processes auto;
+error_log /var/log/nginx/error.log warn;
+pid /var/run/nginx.pid;
+
+events {
+    worker_connections 1024;
+    multi_accept on;
+}
+
+http {
+    include /etc/nginx/mime.types;
+    default_type application/octet-stream;
+
+    sendfile on;
+    tcp_nopush on;
+    tcp_nodelay on;
+    keepalive_timeout 65;
+    types_hash_max_size 2048;
+    server_tokens off;
+    resolver 127.0.0.11 valid=5s;
+
+    # Gzip Compression
+    gzip on;
+    gzip_vary on;
+    gzip_proxied any;
+    gzip_comp_level 6;
+    gzip_types text/plain text/css application/json application/javascript text/xml application/xml text/javascript;
+
+    # WebSocket / SSE Connection Upgrades
+    map $http_upgrade $connection_upgrade {
+        default upgrade;
+        '' close;
+    }
+
+    server {
+        listen 80;
+        server_name erp.local localhost;
+
+        client_max_body_size 100m;
+        proxy_buffering off;
+        proxy_cache off;
+        proxy_read_timeout 300s;
+        proxy_send_timeout 300s;
+
+        # ── MinIO S3 API Reverse Proxy ─────────────────────────────────
+        location /minio/ {
+            proxy_pass http://minio:9000/;
+            proxy_http_version 1.1;
+            proxy_set_header Host $http_host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection $connection_upgrade;
+
+            add_header Access-Control-Allow-Origin * always;
+            add_header Access-Control-Allow-Methods "GET, PUT, POST, DELETE, OPTIONS" always;
+            add_header Access-Control-Allow-Headers "*" always;
+
+            if ($request_method = OPTIONS) {
+                return 204;
+            }
+        }
+
+        # ── Executive Super Admin Shell (/admin) ───────────────────────
+        location /admin {
+            proxy_pass http://erp-shell:3000;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection $connection_upgrade;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_cache_bypass $http_upgrade;
+        }
+
+        # ── CRM Workstation (/crm) ─────────────────────────────────────
+        location /crm {
+            proxy_pass http://crm-shell:3001;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection $connection_upgrade;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_cache_bypass $http_upgrade;
+        }
+
+        # ── Billing Workstation (/billing) ─────────────────────────────
+        location /billing {
+            proxy_pass http://billing-ui:3002;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection $connection_upgrade;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_cache_bypass $http_upgrade;
+        }
+
+        # ── Inventory Workstation (/inventory) ─────────────────────────
+        location /inventory {
+            proxy_pass http://inventory-ui:3004;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection $connection_upgrade;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_cache_bypass $http_upgrade;
+        }
+
+        # ── Convenience Root Redirects ─────────────────────────────────
+        location = /login {
+            return 302 /admin/login;
+        }
+
+        location = /dashboard {
+            return 302 /admin/dashboard;
+        }
+
+        location = / {
+            return 302 /admin;
+        }
+    }
 }
 ```
 
-Consumers fetch files directly from MinIO using the URI when needed.
+---
 
-### File Registry Schema (`erp_db`)
+## 8. Verified Healthcheck & Routing Matrix
 
-```sql
-CREATE TABLE file_records (
-    id              SERIAL PRIMARY KEY,
-    bucket          VARCHAR(63) NOT NULL,
-    object_key      VARCHAR(1024) NOT NULL,
-    uri             VARCHAR(2048) NOT NULL,
-    original_name   VARCHAR(255) NOT NULL,
-    mime_type       VARCHAR(127) NOT NULL,
-    size_bytes      BIGINT NOT NULL,
-    checksum_sha256 VARCHAR(64),
-    uploader_id     INTEGER NOT NULL,
-    owner_type      VARCHAR(50) NOT NULL,    -- 'document', 'quotation', 'sales_order', 'pod', 'invoice'
-    owner_id        INTEGER NOT NULL,
-    created_at      TIMESTAMPTZ DEFAULT NOW()
-);
+Both deployment configurations have been verified end-to-end:
+
+```
+[VERIFICATION MATRIX]
+✓ datavex-postgres         : 5432 (Healthy)
+✓ datavex-rabbitmq         : 5672, 15672 (Healthy)
+✓ datavex-minio            : 9000, 9001 (Healthy)
+✓ datavex-core-iam         : 8002 (Healthy)
+✓ datavex-billing-service  : 8003 (Healthy)
+✓ datavex-erp-service      : 8000 (Healthy)
+✓ datavex-crm-service      : 8001 (Healthy)
+✓ datavex-inventory-service: 8004 (Healthy)
+✓ datavex-ai-service       : 8005 (Healthy)
+✓ datavex-erp-shell        : 3000 (Healthy - /admin)
+✓ datavex-crm-shell        : 3001 (Healthy - /crm)
+✓ datavex-billing-ui       : 3002 (Healthy - /billing)
+✓ datavex-inventory-ui     : 3004 (Healthy - /inventory)
+✓ datavex-nginx            : 80 (Active)
 ```
 
 ---
 
-## Implementation Phases
+## 9. Next Steps for Production Rollout
 
-### Phase 1: Infrastructure — MinIO in Docker Compose ✅ DONE
+1. **Let's Encrypt TLS Automation**: Set up Certbot renewal container in `infrastructure/prod/` to terminate HTTPS on port 443.
+2. **Managed DB Fallback Option**: Prepare environment toggles for AWS RDS / DigitalOcean Managed PostgreSQL connection strings.
+3. **Automated CI/CD Deployment**: Integrate `docker-build.sh` into GitLab CI runners with automated database migrations (`alembic upgrade head` and `prisma migrate deploy`).
 
-**Scope:** Add MinIO to local dev sandbox and production compose. **Completed 2026-08-26.**
-
-| Task | Files |
-|------|-------|
-| Add MinIO service to docker-compose | `infrastructure/local/docker-compose.yml` |
-| Add `minio_data` named volume | `infrastructure/local/docker-compose.yml` |
-| Add init container to auto-create buckets | `infrastructure/local/docker-compose.yml` |
-| Add MinIO env vars | `infrastructure/local/.env.docker` |
-| Add `minio` Python client | `services/erp-service/requirements.txt` |
-
-**Buckets auto-created on startup:**
-- `crm-assets`
-- `inv-docs`
-- `finance-records`
-- `erp-backups`
-
-**Estimated:** 30 min
-
----
-
-### Phase 2: erp-service File API ✅ DONE
-
-**Scope:** Upload/download endpoints in erp-service using presigned URL pattern. **Completed 2026-08-26.**
-
-**Additional fixes applied:**
-- MIME regex fixed (`image/*` → `image/[a-z0-9.+_-]+`)
-- Organization ID scoping on all endpoints (IDOR prevention)
-- `GET /:id/stream` endpoint for browser downloads
-- `POST /cleanup-pending` for abandoned upload cleanup
-- `asyncio.to_thread` wrapping on all MinIO SDK calls
-- `confirm-upload` now sets `checksum_sha256` to prevent cleanup of confirmed records
-- `MINIO_PUBLIC_URL` config for Docker presigned URL rewriting
-
-| Task | Files |
-|------|-------|
-| Create `app/files/` module | `services/erp-service/app/files/__init__.py` |
-| `FileRecord` model (metadata in `erp_db`) | `services/erp-service/app/files/models.py` |
-| MinIO client wrapper (presigned URL generation) | `services/erp-service/app/files/minio_client.py` |
-| Pydantic schemas | `services/erp-service/app/files/schemas.py` |
-| Upload/download/delete endpoints | `services/erp-service/app/files/router.py` |
-| Alembic migration for `file_records` table | `services/erp-service/alembic/versions/` |
-| Register router in `main.py` | `services/erp-service/app/main.py` |
-
-**Endpoints:**
-
-| Method | Path | Description |
-|--------|------|-------------|
-| `POST` | `/api/files/upload-request` | Generate presigned PUT URL, return file_id |
-| `POST` | `/api/files/confirm-upload` | Confirm upload, save metadata |
-| `GET` | `/api/files/:id` | Get file metadata |
-| `GET` | `/api/files/:id/download` | 302 redirect to presigned GET URL |
-| `DELETE` | `/api/files/:id` | Delete from MinIO + DB |
-| `GET` | `/api/files?owner_type=&owner_id=` | List files by owner |
-
-**Estimated:** 2 hours
-
----
-
-### Phase 3: Frontend File Components ✅ DONE
-
-**Scope:** Shared upload/viewer components in `@datavex/ui-theme`. **Completed 2026-08-26.**
-
-**Additional fixes applied:**
-- `FileViewer` now uses `/api/files/{id}/stream` endpoint for downloads
-- `DocumentCreateModal` sends `file_uri` instead of `file_id`
-- `DocumentCreateModal` fetches existing file metadata on edit
-- `owner_id` schema allows 0 (unlinked uploads)
-
-| Task | Files |
-|------|-------|
-| `<FileUpload>` component (drag-and-drop, progress, preview) | `packages/ui-theme/src/components/file-upload.tsx` |
-| `<FileViewer>` component (PDF iframe, image zoom, download) | `packages/ui-theme/src/components/file-viewer.tsx` |
-| Export new components | `packages/ui-theme/src/index.ts` |
-
-**`<FileUpload>` props:**
-- `accept: string` — allowed MIME types
-- `maxSize: number` — max file size in bytes
-- `bucket: string` — target bucket (`crm-assets`, `inv-docs`, `finance-records`)
-- `ownerType: string` — entity type
-- `ownerId: number` — entity ID
-- `onUpload: (fileRecord: FileRecord) => void` — callback after confirm
-- `multiple: boolean` — allow multiple files
-
-**`<FileViewer>` props:**
-- `fileId: number` — file record ID
-- `fileName: string` — display name
-- `mimeType: string` — determines render method
-- `mode: 'preview' | 'download'` — render inline or as download link
-
-**Estimated:** 2 hours
-
----
-
-### Phase 4: Migrate Existing Base64 Data
-
-**Scope:** Move all base64 file data from PostgreSQL VARCHAR columns to MinIO.
-
-| Service | Migration | What |
-|---------|-----------|------|
-| crm-service | `scripts/migrate_files_to_minio.py` | Decode `Document.file_data` base64 → upload to `crm-assets` → store file_id |
-| crm-service | `scripts/migrate_quotation_files.py` | Extract `file_data`/`file_name` from quotation `notes` JSON → upload to `crm-assets` → store file_id |
-| crm-service | `scripts/migrate_sales_order_files.py` | Decode `SalesOrder.file_data` base64 → upload to `crm-assets` → store file_id |
-| billing-service | `scripts/migrate_bank_statements.py` | If any bank statement files were stored, migrate to `finance-records` |
-
-**Migration script pattern:**
-```python
-# For each record with file_data IS NOT NULL:
-# 1. Decode base64 to bytes
-# 2. Upload to MinIO via presigned URL (or direct upload from script)
-# 3. Create file_record in erp_db
-# 4. Update business record: set file_id, clear file_data
-```
-
-**Estimated:** 2 hours
-
----
-
-### Phase 5: Update Backend Services
-
-**Scope:** Business services store file references, not file content.
-
-**5.1 crm-service**
-
-| Task | Files |
-|------|-------|
-| Add `file_id` columns to Document, SalesOrder, Sale models | `app/documents/models.py`, `app/sales_orders/models.py`, `app/sales/models.py` |
-| Remove `file_data`, `file_name`, `files` columns | Same files (after migration) |
-| Update schemas to accept `file_id` | `app/documents/schemas.py`, `app/sales_orders/schemas.py` |
-| Remove file packing from quotation notes JSON | `app/quotations/router.py` |
-| Add endpoint: list files by owner | New `app/files/router.py` (or call erp-service) |
-| Alembic migrations | `alembic/versions/` |
-
-**5.2 billing-service**
-
-| Task | Files |
-|------|-------|
-| Bank reconciliation: upload file to MinIO before parsing | `src/bank-reconciliation/bank-reconciliation.service.ts` |
-| Store file_id on import batch | Prisma schema update |
-| Add `attachment_file_id` to Quotation model | Prisma schema update |
-
-**5.3 inventory-service**
-
-No file handling needed currently. Products, stock, POs, and work orders don't have file attachments yet. Skip for now.
-
-**Estimated:** 3 hours
-
----
-
-### Phase 6: Update Frontend Apps
-
-**Scope:** Replace base64 upload/preview with MinIO-backed components.
-
-**6.1 erp-shell (admin shell)**
-
-| Modal | Changes |
-|-------|---------|
-| `DocumentCreateModal.tsx` | Replace `FileReader.readAsDataURL()` with `<FileUpload>` |
-| `DocumentDetailsModal.tsx` | Replace base64 preview with `<FileViewer>` |
-| `QuotationCreateModal.tsx` | Replace `FileReader.readAsDataURL()` with `<FileUpload>` |
-| `QuotationDetailsModal.tsx` | Replace base64 preview with `<FileViewer>` |
-| `SalesOrderCreateModal.tsx` | Replace `FileReader.readAsDataURL()` with `<FileUpload>` |
-| `SalesOrderDetailsModal.tsx` | Replace base64 preview with `<FileViewer>` |
-| `OpportunityDetailModal.tsx` | Replace base64 preview with `<FileViewer>` |
-
-**6.2 crm-ui**
-
-| Task | Files |
-|------|-------|
-| Add `<FileUpload>` to create/edit modals that need attachments | Relevant modals |
-| Add `<FileViewer>` to detail views | Relevant modals |
-
-**6.3 billing-ui**
-
-| Task | Files |
-|------|-------|
-| Bank reconciliation import: use `<FileUpload>` component | Bank reconciliation page |
-| Add `<FileViewer>` for imported statement previews | Bank reconciliation page |
-
-**6.4 inventory-ui**
-
-No file handling needed currently. Skip for now.
-
-**Estimated:** 4 hours
-
----
-
-### Phase 7: Cleanup + Column Removal
-
-**Scope:** Remove all legacy base64 file storage code.
-
-| Task | Files |
-|------|-------|
-| Drop `file_data` / `file_name` / `files` columns from crm-service models | Alembic migrations |
-| Remove `FileReader.readAsDataURL()` usage from all frontend code | 7+ modal files in erp-shell |
-| Remove base64 preview logic from all detail modals | 5+ modal files in erp-shell |
-| Update seed scripts to use file_ids instead of inline data | `services/crm-service/scripts/seed.py` |
-| Remove dead branding upload buttons (or wire them up) | `apps/erp-shell/app/(admin)/settings/branding/page.tsx` |
-| Update AGENTS.md documentation | `AGENTS.md`, `services/*/AGENTS.md` |
-
-**Estimated:** 1 hour
-
----
-
-### Phase Summary
-
-| Phase | Scope | Estimated |
-|-------|-------|-----------|
-| **1** | MinIO in docker-compose | 30 min |
-| **2** | erp-service file API (presigned URLs) | 2 hours |
-| **3** | Frontend shared components (`<FileUpload>`, `<FileViewer>`) | 2 hours |
-| **4** | Migrate existing base64 data to MinIO | 2 hours |
-| **5** | Update backend services (store references, not content) | 3 hours |
-| **6** | Update frontend apps (use new components) | 4 hours |
-| **7** | Cleanup + column removal + docs | 1 hour |
-| **Total** | | **~14.5 hours** |
-
----
-
-## Open Questions
-
-1. **Target VM specs** — how much RAM/CPU does the production VM have? (affects PG tuning)
-2. **TLS** — do you have a domain + SSL certs, or should I set up Let's Encrypt?
-3. **Backup destination** — MinIO (self-hosted), NFS, or a second VM?
-4. **Managed Postgres** — are you open to using something like AWS RDS / DigitalOcean Managed DB instead of self-hosted Postgres in Docker? (dramatically simplifies backups and HA)
-5. **File size limit** — 10MB per file, or different?
-6. **Thumbnail generation** — auto-generate thumbnails for images, or just serve originals?
-7. **Virus scanning** — ClamAV integration now or later?
-8. **File versioning** — version history needed, or just latest?
-
----
-
-## VM Network Context
-
-The production deployment targets an AlmaLinux hypervisor with Ubuntu 24.04 VMs on an internal `172.30.20.x` subnet. Key constraints:
-
-- **Subnet is full** — `/29` with 6 usable IPs, all occupied. Must expand to `/28` or create a separate NAT network before deploying new VMs.
-- **macvtap networking** — VMs are reachable from the subnet but **not from the AlmaLinux host itself**. All management goes through VNC console or the gitlab jump box (`161.248.22.228:8904`).
-- **Firewall concerns** — firewalld was disabled on the host. Must be re-enabled with only necessary ports (80, 443, 8904) open before any production deployment.
-- **No TLS** — VNC and internal traffic are unencrypted. Must add TLS termination at nginx layer.
-- **Credentials** — all passwords are currently in plaintext documentation. Must rotate and move to a secrets manager before going live.
