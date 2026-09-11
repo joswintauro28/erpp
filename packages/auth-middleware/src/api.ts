@@ -57,11 +57,18 @@ function getToken(): string | null {
   return getAccessToken();
 }
 
+export { API_BASE };
+
+export interface RequestOptions {
+  skipAuth?: boolean;
+  signal?: AbortSignal;
+}
+
 async function request<T>(
   method: string,
   path: string,
   body?: unknown,
-  opts?: { skipAuth?: boolean },
+  opts?: RequestOptions,
 ): Promise<T> {
   const headers: Record<string, string> = {};
   const token = getToken();
@@ -78,6 +85,7 @@ async function request<T>(
     headers,
     body: body instanceof FormData ? body : body ? JSON.stringify(body) : undefined,
     credentials: "include",
+    signal: opts?.signal,
   });
 
   if (res.status === 401 && token && !opts?.skipAuth) {
@@ -94,6 +102,7 @@ async function request<T>(
         headers,
         body: body instanceof FormData ? body : body ? JSON.stringify(body) : undefined,
         credentials: "include",
+        signal: opts?.signal,
       });
       if (retryRes.ok) return retryRes.json();
       const retryErr = await retryRes.json().catch(() => ({ detail: "Request failed" }));
@@ -114,14 +123,14 @@ async function request<T>(
 }
 
 export const api = {
-  get: <T>(path: string, opts?: { skipAuth?: boolean }) =>
+  get: <T>(path: string, opts?: RequestOptions) =>
     request<T>("GET", path, undefined, opts),
-  post: <T>(path: string, body?: unknown, opts?: { skipAuth?: boolean }) =>
+  post: <T>(path: string, body?: unknown, opts?: RequestOptions) =>
     request<T>("POST", path, body, opts),
-  put: <T>(path: string, body?: unknown) =>
-    request<T>("PUT", path, body),
-  patch: <T>(path: string, body?: unknown) =>
-    request<T>("PATCH", path, body),
-  delete: <T>(path: string) =>
-    request<T>("DELETE", path),
+  put: <T>(path: string, body?: unknown, opts?: RequestOptions) =>
+    request<T>("PUT", path, body, opts),
+  patch: <T>(path: string, body?: unknown, opts?: RequestOptions) =>
+    request<T>("PATCH", path, body, opts),
+  delete: <T>(path: string, opts?: RequestOptions) =>
+    request<T>("DELETE", path, undefined, opts),
 };
