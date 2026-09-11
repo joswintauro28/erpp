@@ -1,1 +1,1 @@
-export { setAccessToken, getAccessToken, api } from "@datavex/auth-middleware";
+export { setAccessToken, getAccessToken, API_BASE, api } from "@datavex/auth-middleware";

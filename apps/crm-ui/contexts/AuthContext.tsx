@@ -57,7 +57,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       try {
-        const res = await fetch("/api/auth/refresh", {
+        const apiBase = process.env.NEXT_PUBLIC_BASE_PATH
+          ? `${process.env.NEXT_PUBLIC_BASE_PATH}/api`
+          : (process.env.NEXT_PUBLIC_API_URL || "/api");
+        const res = await fetch(`${apiBase}/auth/refresh`, {
           method: "POST",
           credentials: "include",
         });

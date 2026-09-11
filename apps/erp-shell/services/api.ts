@@ -1,6 +1,6 @@
-import { setAccessToken, getAccessToken, api as baseApi } from "@datavex/auth-middleware";
+import { setAccessToken, getAccessToken, API_BASE, api as baseApi } from "@datavex/auth-middleware";
 
-export { setAccessToken, getAccessToken };
+export { setAccessToken, getAccessToken, API_BASE };
 
 const CRM_PATHS = [
   "customers", "contacts", "documents", "opportunities", "sales", "sales-orders",

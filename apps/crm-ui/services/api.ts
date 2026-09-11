@@ -1,7 +1,7 @@
-import { setAccessToken, getAccessToken, api as baseApi } from "@datavex/auth-middleware";
+import { setAccessToken, getAccessToken, API_BASE, api as baseApi } from "@datavex/auth-middleware";
 import { toastError, errorMessage } from "@/utils/toast";
 
-export { setAccessToken, getAccessToken };
+export { setAccessToken, getAccessToken, API_BASE };
 
 /**
  * Global network-failure notifications (Phase 5). Every REST call funnels

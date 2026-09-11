@@ -27,7 +27,7 @@ import {
   ChevronRight,
   Filter,
 } from "lucide-react";
-import { api } from "@/services/api";
+import { api, API_BASE, getAccessToken } from "@/services/api";
 import { handleError, PageHeader, KpiCard } from "@datavex/ui-theme";
 import { money } from "@/utils/format";
 
@@ -121,9 +121,9 @@ export default function AgingWorkstationPage() {
   const handleExport = async (viewType: "summary" | "customers" | "invoices") => {
     setExporting(true);
     try {
-      const res = await fetch(`/api/aging/export?view=${viewType}&asOfDate=${asOfDate}`, {
+      const res = await fetch(`${API_BASE}/aging/export?view=${viewType}&asOfDate=${asOfDate}`, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("access_token") || ""}`,
+          Authorization: `Bearer ${getAccessToken() || ""}`,
         },
       });
       const blob = await res.blob();

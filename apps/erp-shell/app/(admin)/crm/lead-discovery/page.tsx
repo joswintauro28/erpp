@@ -7,17 +7,12 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
-import { api, getAccessToken } from "@/services/api";
+import { api } from "@/services/api";
 import { handleError } from "@datavex/ui-theme";
 import { exportToCSV } from "@/utils/exportCsv";
 import { toastError, toastSuccess, toastInfo } from "@/utils/toast";
 import SearchCard from "./SearchCard";
 import ResultsCard from "./ResultsCard";
-
-function getAuthHeaders(): Record<string, string> {
-  const token = getAccessToken();
-  return token ? { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } : { "Content-Type": "application/json" };
-}
 
 export default function LeadDiscoveryPage() {
   const [results, setResults] = useState<any>(null);
@@ -66,18 +61,12 @@ export default function LeadDiscoveryPage() {
         ? { url: targetUrl }
         : { city: city || null, industry: industry || null, company_name: companyName || null, searchBy: "Employees", minEmployees: "200", refresh: false };
 
-      // Route through the erp-service gateway (same-origin /api/crm passthrough)
-      // so lead discovery works in Docker and keeps the auth/aggregation layer.
-      const res = await fetch(`/api/crm${endpoint}`, {
-        method: "POST", headers: getAuthHeaders(), body: JSON.stringify(body), signal: controller.signal,
-      });
-
-      if (!res.ok) throw new Error(`Server returned ${res.status}`);
-      let data = await res.json();
+      const resData = await api.post<any>(`/crm${endpoint}`, body, { signal: controller.signal });
+      let data = resData;
       if (isUrl) {
         data = {
-          search: { company_name: data.company_name, city: data.public_contact?.address || "", industry: data.industry, mode: "url", url: targetUrl },
-          companies: [data],
+          search: { company_name: resData.company_name, city: resData.public_contact?.address || "", industry: resData.industry, mode: "url", url: targetUrl },
+          companies: [resData],
         };
       }
       setResults(data);
