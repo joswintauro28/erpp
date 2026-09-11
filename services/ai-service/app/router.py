@@ -22,6 +22,8 @@ from app.schemas import (
     ChatRequest,
     ChatResponse,
     SessionResponse,
+    SessionUpdate,
+    ClearSessionsResponse,
     HistoryResponse,
     MessageResponse,
     SuggestionResponse,
@@ -383,6 +385,27 @@ async def get_history(
     )
 
 
+@router.patch("/sessions/{session_id}", response_model=SessionResponse)
+async def rename_session(
+    session_id: str,
+    body: SessionUpdate,
+    user: dict = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Rename a session title."""
+    session = await crud.update_session_title(db, session_id, user["user_id"], body.title)
+    if not session:
+        raise NotFoundException("Session not found")
+    return SessionResponse(
+        id=session.id,
+        title=session.title,
+        module=session.module,
+        message_count=len(session.messages),
+        created_at=session.created_at,
+        updated_at=session.updated_at,
+    )
+
+
 @router.delete("/sessions/{session_id}")
 async def delete_session(
     session_id: str,
@@ -390,17 +413,45 @@ async def delete_session(
     db: AsyncSession = Depends(get_db),
 ):
     """Delete a session and all its messages."""
-    deleted = await crud.delete_session(db, session_id, user["user_id"])
-    if not deleted:
+    session = await crud.get_session(db, session_id, user["user_id"])
+    if not session:
         raise NotFoundException("Session not found")
 
-    # Audit log
+    module_name = session.module
+    await crud.delete_session(db, session_id, user["user_id"])
+
+    # Audit log (session_id=None because session is deleted)
     await crud.log_interaction(
-        db, user_id=user["user_id"], organization_id=user.get("organization_id", 0),
-        session_id=session_id, module="unknown", action="delete_session", success=True,
+        db,
+        user_id=user["user_id"],
+        organization_id=user.get("organization_id", 0),
+        session_id=None,
+        module=module_name,
+        action="delete_session",
+        success=True,
     )
 
-    return {"detail": "Session deleted"}
+    return {"detail": "Session deleted", "id": session_id}
+
+
+@router.delete("/sessions", response_model=ClearSessionsResponse)
+async def clear_sessions(
+    module: str | None = None,
+    user: dict = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Bulk delete all sessions for the current user, optionally scoped to a module."""
+    count = await crud.clear_all_sessions(db, user["user_id"], module)
+    await crud.log_interaction(
+        db,
+        user_id=user["user_id"],
+        organization_id=user.get("organization_id", 0),
+        session_id=None,
+        module=module or "all",
+        action="clear_all_sessions",
+        success=True,
+    )
+    return ClearSessionsResponse(deleted_count=count)
 
 
 # ── Suggestions ─────────────────────────────────────────────────────

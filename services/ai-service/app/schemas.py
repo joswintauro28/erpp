@@ -15,6 +15,11 @@ class SessionUpdate(BaseModel):
     title: str = Field(..., min_length=1, max_length=200)
 
 
+class ClearSessionsResponse(BaseModel):
+    deleted_count: int
+    detail: str = "Sessions cleared successfully"
+
+
 # ── Response Models ───────────────────────────
 
 class MessageResponse(BaseModel):

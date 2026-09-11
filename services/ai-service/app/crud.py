@@ -70,11 +70,26 @@ async def delete_session(db: AsyncSession, session_id: str, user_id: int) -> boo
     return True
 
 
-async def update_session_title(db: AsyncSession, session_id: str, user_id: int, title: str) -> AISession | None:
+async def clear_all_sessions(
+    db: AsyncSession, user_id: int, module: str | None = None
+) -> int:
+    """Delete all sessions for a user, optionally filtered by module."""
+    sessions = await list_sessions(db, user_id, module)
+    count = len(sessions)
+    for s in sessions:
+        await db.delete(s)
+    await db.flush()
+    return count
+
+
+async def update_session_title(
+    db: AsyncSession, session_id: str, user_id: int, title: str
+) -> AISession | None:
     session = await get_session(db, session_id, user_id)
     if not session:
         return None
-    session.title = title
+    session.title = title.strip()[:200]
+    session.updated_at = datetime.now(timezone.utc)
     await db.flush()
     return session
 
