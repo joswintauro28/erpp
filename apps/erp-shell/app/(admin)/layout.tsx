@@ -7,7 +7,7 @@ import Header from "@/components/Header";
 import ToastContainer from "@/components/ToastContainer";
 import { useAuth } from "@/contexts/AuthContext";
 import { getAccessToken } from "@datavex/auth-middleware";
-import { ConfirmProvider, LoadingSpinner } from "@datavex/ui-theme";
+import { ConfirmProvider, LoadingSpinner, AIFloatingBot } from "@datavex/ui-theme";
 
 const BILLING_URL = process.env.NEXT_PUBLIC_BILLING_APP_URL || "http://localhost:3002";
 const CRM_URL = process.env.NEXT_PUBLIC_CRM_APP_URL || "http://localhost:3001";
@@ -73,6 +73,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </main>
         </div>
         <ToastContainer />
+        <AIFloatingBot defaultModule="admin" />
       </div>
     </ConfirmProvider>
   );

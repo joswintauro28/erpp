@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import Sidebar from "@/components/Sidebar";
 import Header from "@/components/Header";
 import { useAuth } from "@/contexts/AuthContext";
-import { ConfirmProvider, LoadingSpinner, Toaster } from "@datavex/ui-theme";
+import { ConfirmProvider, LoadingSpinner, Toaster, AIFloatingBot } from "@datavex/ui-theme";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, loading } = useAuth();
@@ -43,6 +43,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </main>
         </div>
         <Toaster />
+        <AIFloatingBot defaultModule="inventory" />
       </div>
     </ConfirmProvider>
   );

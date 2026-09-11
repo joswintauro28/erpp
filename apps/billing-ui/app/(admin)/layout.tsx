@@ -5,7 +5,7 @@ import Sidebar from "@/components/Sidebar";
 import Header from "@/components/Header";
 import { useAuth } from "@/contexts/AuthContext";
 import { ToastProvider } from "@/contexts/ToastContext";
-import { ConfirmProvider, LoadingSpinner } from "@datavex/ui-theme";
+import { ConfirmProvider, LoadingSpinner, AIFloatingBot } from "@datavex/ui-theme";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, loading } = useAuth();
@@ -44,6 +44,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               {children}
             </main>
           </div>
+          <AIFloatingBot defaultModule="billing" />
         </div>
       </ToastProvider>
     </ConfirmProvider>
