@@ -262,3 +262,5 @@ node_modules/
 
 # Freebuff
 .freebuff/
+
+docs/user_manual
