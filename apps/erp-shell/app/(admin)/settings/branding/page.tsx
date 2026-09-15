@@ -2,24 +2,22 @@
 
 import * as React from "react";
 import * as ReactDOM from "react-dom";
+import { useTheme } from "next-themes";
 import { HexColorPicker } from "@datavex/ui-theme";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Save, Sparkles, Palette, Upload, X, Loader2, CheckCircle2, ImageIcon } from "lucide-react";
+import { Sun, Moon, Save, Sparkles, Upload, X, Loader2, CheckCircle2 } from "lucide-react";
 import { api } from "@datavex/auth-middleware";
 import { useBranding, cn } from "@datavex/ui-theme";
-import type { FileRecord } from "@datavex/ui-theme";
+import type { ThemeColorSet } from "@datavex/ui-theme";
 
 /* ── Types ──────────────────────────────────────────────────────────────── */
 
 interface BrandColors {
-  primary: string;
-  accent: string;
-  surface: string;
-  foreground: string;
-  muted: string;
+  light: ThemeColorSet;
+  dark: ThemeColorSet;
 }
 
 interface EmailTemplates {
@@ -36,30 +34,46 @@ interface BrandingState {
   email_templates: EmailTemplates;
 }
 
-/* ── Default colors ─────────────────────────────────────────────────────── */
+/* ── Defaults ───────────────────────────────────────────────────────────── */
 
-const DEFAULT_COLORS: BrandColors = {
+const DEFAULT_LIGHT: ThemeColorSet = {
   primary: "#f2470c",
   accent: "#E5B83C",
-  surface: "#1C1917",
-  foreground: "#F5F5F4",
-  muted: "#A8A29E",
+  surface: "#ffffff",
+  foreground: "#09090b",
+  muted: "#52525b",
+  background: "#f4f5f8",
+  border: "#e2e8f0",
+};
+
+const DEFAULT_DARK: ThemeColorSet = {
+  primary: "#f2470c",
+  accent: "#741e02",
+  surface: "#121212",
+  foreground: "#f0f0f0",
+  muted: "#969696",
+  background: "#0a0a0a",
+  border: "#1f1f1f",
 };
 
 const COLOR_META: Record<string, { label: string; cssVar: string }> = {
-  primary: { label: "Primary", cssVar: "--shell-brand" },
-  accent: { label: "Accent", cssVar: "--shell-accent" },
-  surface: { label: "Surface", cssVar: "--shell-surface" },
-  foreground: { label: "Foreground", cssVar: "--shell-foreground" },
-  muted: { label: "Muted", cssVar: "--shell-muted" },
+  primary:    { label: "Primary",    cssVar: "--primary" },
+  accent:     { label: "Accent",     cssVar: "--accent" },
+  surface:    { label: "Surface",    cssVar: "--card" },
+  foreground: { label: "Foreground", cssVar: "--foreground" },
+  muted:      { label: "Muted",      cssVar: "--muted-foreground" },
+  background: { label: "Background", cssVar: "--background" },
+  border:     { label: "Border",     cssVar: "--border" },
 };
 
 const CSS_VAR_MAP: Record<string, string> = {
-  primary: "--shell-brand",
-  accent: "--shell-accent",
-  surface: "--shell-surface",
-  foreground: "--shell-foreground",
-  muted: "--shell-muted",
+  primary:    "--primary",
+  accent:     "--accent",
+  surface:    "--card",
+  foreground: "--foreground",
+  muted:      "--muted-foreground",
+  background: "--background",
+  border:     "--border",
 };
 
 /* ── Helpers ────────────────────────────────────────────────────────────── */
@@ -79,7 +93,7 @@ async function uploadFile(
   bucket: string,
   ownerType: string,
   ownerId: number,
-): Promise<FileRecord> {
+) {
   const { file_id, upload_url } = await api.post<{
     file_id: number;
     upload_url: string;
@@ -103,7 +117,7 @@ async function uploadFile(
     throw new Error(`MinIO upload failed (${putRes.status}): ${text}`);
   }
 
-  return api.post<FileRecord>("/files/confirm-upload", { file_id });
+  return api.post<{ id: number }>("/files/confirm-upload", { file_id });
 }
 
 /* ── Color Picker Popover (portal-based to escape overflow-hidden) ───────── */
@@ -138,17 +152,15 @@ function ColorPickerPopover({
 
   React.useEffect(() => {
     if (!open) return;
-    function handleClickOutside(e: MouseEvent) {
+    const handleClickOutside = (e: MouseEvent) => {
       if (
         panelRef.current && !panelRef.current.contains(e.target as Node) &&
         triggerRef.current && !triggerRef.current.contains(e.target as Node)
       ) {
         setOpen(false);
       }
-    }
-    function handleScroll() {
-      if (open) updatePosition();
-    }
+    };
+    const handleScroll = () => { if (open) updatePosition(); };
     document.addEventListener("mousedown", handleClickOutside);
     window.addEventListener("scroll", handleScroll, true);
     return () => {
@@ -198,18 +210,80 @@ function ColorPickerPopover({
   );
 }
 
+/* ── Theme Color Set Editor ─────────────────────────────────────────────── */
+
+function ThemeColorEditor({
+  colors,
+  onChange,
+  theme,
+}: {
+  colors: ThemeColorSet;
+  onChange: (key: keyof ThemeColorSet, value: string) => void;
+  theme: "light" | "dark";
+}) {
+  const rootRef = React.useRef<HTMLDivElement>(null);
+
+  return (
+    <div ref={rootRef} className="space-y-3">
+      {Object.entries(COLOR_META).map(([key, meta]) => (
+        <div
+          key={key}
+          className="flex items-center justify-between py-1.5 border-b border-[var(--shell-border)]/40 last:border-0"
+        >
+          <div className="flex items-center gap-2.5">
+            <ColorPickerPopover
+              color={colors[key as keyof ThemeColorSet]}
+              onChange={(v) => onChange(key as keyof ThemeColorSet, v)}
+              label={meta.label}
+            />
+            <span className="text-sm font-medium text-[var(--shell-foreground)]">
+              {meta.label}
+            </span>
+            <span className="text-xs font-mono text-[var(--shell-muted)]">
+              {meta.cssVar}
+            </span>
+          </div>
+          <Input
+            className="w-24 font-mono text-xs h-8"
+            value={colors[key as keyof ThemeColorSet]}
+            onChange={(e) => {
+              let v = e.target.value.trim();
+              if (!v.startsWith("#")) v = "#" + v;
+              if (/^#[0-9A-Fa-f]{6}$/.test(v)) {
+                onChange(key as keyof ThemeColorSet, v);
+              }
+            }}
+            onBlur={(e) => {
+              let v = e.target.value.trim();
+              if (!v.startsWith("#")) v = "#" + v;
+              if (/^#[0-9A-Fa-f]{6}$/.test(v) && v !== colors[key as keyof ThemeColorSet]) {
+                onChange(key as keyof ThemeColorSet, v);
+              }
+            }}
+          />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 /* ── Main Page ──────────────────────────────────────────────────────────── */
 
 export default function Branding() {
   const { refresh } = useBranding();
+  const { resolvedTheme } = useTheme();
   const [loading, setLoading] = React.useState(true);
   const [saving, setSaving] = React.useState(false);
   const [message, setMessage] = React.useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [activeTab, setActiveTab] = React.useState<"light" | "dark">(resolvedTheme === "dark" ? "dark" : "light");
 
   const [state, setState] = React.useState<BrandingState>({
     logo_file_id: null,
     favicon_file_id: null,
-    brand_colors: { ...DEFAULT_COLORS },
+    brand_colors: {
+      light: { ...DEFAULT_LIGHT },
+      dark: { ...DEFAULT_DARK },
+    },
     email_templates: {
       sender_name: "DATAVEX ERP",
       sender_email: "noreply@datavex.in",
@@ -223,17 +297,37 @@ export default function Branding() {
   const [uploadingLogo, setUploadingLogo] = React.useState(false);
   const [uploadingEmailLogo, setUploadingEmailLogo] = React.useState(false);
 
-  /* ── LIVE brand color injection — applies instantly as user picks ────── */
+  // Sync active tab with theme
+  React.useEffect(() => {
+    setActiveTab(resolvedTheme === "dark" ? "dark" : "light");
+  }, [resolvedTheme]);
+
+  /* ── LIVE brand color injection ──────────────────────────────────────── */
   React.useEffect(() => {
     if (typeof document === "undefined") return;
     const root = document.documentElement;
+    const activeColors = state.brand_colors[activeTab];
+
+    // Inject base design tokens
     for (const [key, cssVar] of Object.entries(CSS_VAR_MAP)) {
-      const value = state.brand_colors[key as keyof BrandColors];
+      const value = activeColors[key as keyof ThemeColorSet];
       if (value) root.style.setProperty(cssVar, value);
     }
-  }, [state.brand_colors]);
 
-  /* ── LIVE favicon injection — updates tab icon when logo changes ─────── */
+    // Sidebar tokens
+    if (activeColors.primary) {
+      root.style.setProperty("--sidebar-primary", activeColors.primary);
+      root.style.setProperty("--ring", activeColors.primary);
+    }
+    if (activeColors.accent) {
+      root.style.setProperty("--sidebar-accent", activeColors.accent);
+    }
+    if (activeColors.surface) {
+      root.style.setProperty("--sidebar", activeColors.surface);
+    }
+  }, [state.brand_colors, activeTab]);
+
+  /* ── LIVE favicon ──────────────────────────────────────────────────── */
   React.useEffect(() => {
     if (typeof document === "undefined") return;
     let el = document.querySelector<HTMLLinkElement>("link[data-branding-favicon]");
@@ -256,10 +350,29 @@ export default function Branding() {
       try {
         const settings = await api.get<Record<string, any>>("/settings");
         const b = settings.branding || {};
+
+        // Migrate old flat brand_colors to light/dark structure
+        let colors: BrandColors;
+        if (b.brand_colors?.light) {
+          // Already in new format
+          colors = {
+            light: { ...DEFAULT_LIGHT, ...b.brand_colors.light },
+            dark: { ...DEFAULT_DARK, ...b.brand_colors.dark },
+          };
+        } else if (b.brand_colors?.primary) {
+          // Old flat format — migrate to light only
+          colors = {
+            light: { ...DEFAULT_LIGHT, ...b.brand_colors },
+            dark: { ...DEFAULT_DARK },
+          };
+        } else {
+          colors = { light: { ...DEFAULT_LIGHT }, dark: { ...DEFAULT_DARK };
+        }
+
         setState({
           logo_file_id: b.logo_file_id ?? null,
           favicon_file_id: b.favicon_file_id ?? null,
-          brand_colors: { ...DEFAULT_COLORS, ...b.brand_colors },
+          brand_colors: colors,
           email_templates: {
             sender_name: b.email_templates?.sender_name || "DATAVEX ERP",
             sender_email: b.email_templates?.sender_email || "noreply@datavex.in",
@@ -268,12 +381,9 @@ export default function Branding() {
           },
         });
 
-        // Logo = Favicon: resolve the logo URL for both sidebar and favicon
-        const logoFileId = b.logo_file_id;
-        const emailLogoFileId = b.email_templates?.email_logo_file_id;
         const [logoUrl, emailLogoUrl] = await Promise.all([
-          resolveFileUrl(logoFileId),
-          resolveFileUrl(emailLogoFileId),
+          resolveFileUrl(b.logo_file_id),
+          resolveFileUrl(b.email_templates?.email_logo_file_id),
         ]);
         if (logoUrl) setLogoPreview(logoUrl);
         if (emailLogoUrl) setEmailLogoPreview(emailLogoUrl);
@@ -285,7 +395,7 @@ export default function Branding() {
     })();
   }, []);
 
-  /* ── Logo upload — sets both logo_file_id AND favicon_file_id ──────── */
+  /* ── Logo upload ─────────────────────────────────────────────────────── */
   const handleUploadLogo = React.useCallback(async (file: File) => {
     setUploadingLogo(true);
     setMessage(null);
@@ -293,7 +403,6 @@ export default function Branding() {
       const record = await uploadFile(file, "erp-backups", "branding_logo", 0);
       const url = URL.createObjectURL(file);
       setLogoPreview(url);
-      // Logo IS the favicon — same file_id for both
       setState((s) => ({
         ...s,
         logo_file_id: record.id,
@@ -324,6 +433,20 @@ export default function Branding() {
     }
   }, []);
 
+  /* ── Color change handler ────────────────────────────────────────────── */
+  const handleColorChange = React.useCallback((key: keyof ThemeColorSet, value: string) => {
+    setState((s) => ({
+      ...s,
+      brand_colors: {
+        ...s.brand_colors,
+        [activeTab]: {
+          ...s.brand_colors[activeTab],
+          [key]: value,
+        },
+      },
+    }));
+  }, [activeTab]);
+
   /* ── Save handler ────────────────────────────────────────────────────── */
   const handleSave = React.useCallback(async () => {
     setSaving(true);
@@ -347,6 +470,8 @@ export default function Branding() {
     );
   }
 
+  const activeColors = state.brand_colors[activeTab];
+
   return (
     <div className="relative space-y-6">
       <span className="absolute -top-6 left-0 h-0.5 w-1/3 rounded-full bg-[var(--shell-brand)] shimmer-glow" />
@@ -357,7 +482,7 @@ export default function Branding() {
             Branding
           </h1>
           <p className="mt-0.5 text-sm text-[var(--shell-muted)]">
-            Customise your brand identity and appearance across all modules
+            Customise your brand identity across all modules
           </p>
         </div>
         {message && (
@@ -376,7 +501,7 @@ export default function Branding() {
       </div>
 
       <div className="grid grid-cols-2 gap-6">
-        {/* ── Logo & Favicon (unified — one upload, used everywhere) ──── */}
+        {/* ── Logo (unified — sidebar + favicon) ──────────────────────── */}
         <Card className="border-[var(--shell-border)] bg-[var(--shell-surface)] hover:shadow-md transition-shadow duration-200">
           <CardHeader className="p-5 pb-3">
             <div className="flex items-center gap-2">
@@ -386,11 +511,10 @@ export default function Branding() {
               </CardTitle>
             </div>
             <CardDescription className="text-xs text-[var(--shell-muted)]">
-              Used as sidebar logo, browser favicon, and brand mark across all modules
+              Used as sidebar logo and browser favicon across all modules
             </CardDescription>
           </CardHeader>
           <CardContent className="p-5 pt-0 space-y-4">
-            {/* Logo preview + upload */}
             <div className="space-y-2">
               <Label className="text-xs text-[var(--shell-muted)] font-medium">Logo &amp; Favicon</Label>
               <div className="flex items-center gap-4">
@@ -445,8 +569,8 @@ export default function Branding() {
                   </div>
                   <p className="text-[10px] text-[var(--shell-muted)]">
                     {logoPreview
-                      ? "This image is used as the sidebar logo and browser tab favicon"
-                      : "Upload a logo — it will automatically be used as the favicon too"}
+                      ? "Used as sidebar logo and browser tab favicon"
+                      : "Upload a logo — it becomes the favicon automatically"}
                   </p>
                 </div>
               </div>
@@ -454,76 +578,63 @@ export default function Branding() {
           </CardContent>
         </Card>
 
-        {/* ── Brand Colors ─────────────────────────────────────────── */}
+        {/* ── Brand Colors — Light / Dark tabs ──────────────────────────── */}
         <Card className="border-[var(--shell-border)] bg-[var(--shell-surface)] hover:shadow-md transition-shadow duration-200">
           <CardHeader className="p-5 pb-3">
-            <div className="flex items-center gap-2">
-              <Palette className="h-4 w-4 text-[var(--shell-brand)]" />
-              <CardTitle className="text-sm font-semibold text-[var(--shell-foreground)]">
-                Brand Colors
-              </CardTitle>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-[var(--shell-brand)]" />
+                <CardTitle className="text-sm font-semibold text-[var(--shell-foreground)]">
+                  Brand Colors
+                </CardTitle>
+              </div>
+              {/* Theme tabs */}
+              <div className="flex items-center rounded-lg border border-[var(--shell-border)] bg-[var(--shell-surface-alt)] p-0.5">
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("light")}
+                  className={cn(
+                    "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all",
+                    activeTab === "light"
+                      ? "bg-[var(--shell-brand)] text-white shadow-sm"
+                      : "text-[var(--shell-muted)] hover:text-[var(--shell-foreground)]",
+                  )}
+                >
+                  <Sun className="h-3.5 w-3.5" />
+                  Light
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("dark")}
+                  className={cn(
+                    "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all",
+                    activeTab === "dark"
+                      ? "bg-[var(--shell-brand)] text-white shadow-sm"
+                      : "text-[var(--shell-muted)] hover:text-[var(--shell-foreground)]",
+                  )}
+                >
+                  <Moon className="h-3.5 w-3.5" />
+                  Dark
+                </button>
+              </div>
             </div>
             <CardDescription className="text-xs text-[var(--shell-muted)]">
-              Changes apply instantly as you pick — save to persist
+              {activeTab === "light"
+                ? "Colors for light theme — changes apply as you pick"
+                : "Colors for dark theme — changes apply as you pick"}
             </CardDescription>
           </CardHeader>
-          <CardContent className="p-5 pt-0 space-y-3">
-            {Object.entries(COLOR_META).map(([key, meta]) => (
-              <div
-                key={key}
-                className="flex items-center justify-between py-1.5 border-b border-[var(--shell-border)]/40 last:border-0"
-              >
-                <div className="flex items-center gap-2.5">
-                  <ColorPickerPopover
-                    color={state.brand_colors[key as keyof BrandColors] || DEFAULT_COLORS[key as keyof BrandColors]}
-                    onChange={(v) =>
-                      setState((s) => ({
-                        ...s,
-                        brand_colors: { ...s.brand_colors, [key]: v },
-                      }))
-                    }
-                    label={meta.label}
-                  />
-                  <span className="text-sm font-medium text-[var(--shell-foreground)]">
-                    {meta.label}
-                  </span>
-                  <span className="text-xs font-mono text-[var(--shell-muted)]">
-                    {meta.cssVar}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Input
-                    className="w-24 font-mono text-xs h-8"
-                    value={state.brand_colors[key as keyof BrandColors] || ""}
-                    onChange={(e) => {
-                      let v = e.target.value.trim();
-                      if (!v.startsWith("#")) v = "#" + v;
-                      if (/^#[0-9A-Fa-f]{6}$/.test(v)) {
-                        setState((s) => ({
-                          ...s,
-                          brand_colors: { ...s.brand_colors, [key]: v },
-                        }));
-                      }
-                    }}
-                    onBlur={(e) => {
-                      let v = e.target.value.trim();
-                      if (!v.startsWith("#")) v = "#" + v;
-                      if (/^#[0-9A-Fa-f]{6}$/.test(v) && v !== state.brand_colors[key as keyof BrandColors]) {
-                        setState((s) => ({
-                          ...s,
-                          brand_colors: { ...s.brand_colors, [key]: v },
-                        }));
-                      }
-                    }}
-                  />
-                </div>
-              </div>
-            ))}
+          <CardContent className="p-5 pt-0">
+            <ThemeColorEditor
+              colors={activeColors}
+              onChange={handleColorChange}
+              theme={activeTab}
+            />
           </CardContent>
         </Card>
       </div>
 
-      {/* ── Email Templates ────────────────────────────────────────── */}
+      {/* ── Email Templates ──────────────────────────────────────────────── */}
       <Card className="border-[var(--shell-border)] bg-[var(--shell-surface)] hover:shadow-md transition-shadow duration-200">
         <CardHeader className="p-5 pb-3">
           <CardTitle className="text-sm font-semibold text-[var(--shell-foreground)]">
@@ -580,7 +691,7 @@ export default function Branding() {
                 {emailLogoPreview ? (
                   <img src={emailLogoPreview} alt="Email Logo" className="h-full w-full object-contain" />
                 ) : (
-                  <ImageIcon className="h-4 w-4 text-[var(--shell-muted)]" />
+                  <span className="text-xs font-bold text-[var(--shell-muted)]">No</span>
                 )}
               </div>
               <div className="flex gap-2">
@@ -632,7 +743,7 @@ export default function Branding() {
         </CardContent>
       </Card>
 
-      {/* ── Save Bar ───────────────────────────────────────────────── */}
+      {/* ── Save Bar ─────────────────────────────────────────────────────── */}
       <div className="flex items-center justify-end gap-3 pt-2 border-t border-[var(--shell-border)]">
         <Button
           variant="outline"

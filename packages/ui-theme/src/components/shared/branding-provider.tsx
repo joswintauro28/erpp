@@ -1,23 +1,28 @@
 "use client";
 
 import * as React from "react";
+import { useTheme } from "next-themes";
 import { api } from "@datavex/auth-middleware";
 
 /* ── Types ──────────────────────────────────────────────────────────────── */
 
-export interface BrandColors {
-  primary?: string;
-  accent?: string;
-  surface?: string;
-  foreground?: string;
-  muted?: string;
-  [key: string]: string | undefined;
+export interface ThemeColorSet {
+  primary: string;
+  accent: string;
+  surface: string;
+  foreground: string;
+  muted: string;
+  background: string;
+  border: string;
 }
 
 export interface BrandingData {
   logo_file_id?: number | null;
   favicon_file_id?: number | null;
-  brand_colors?: BrandColors;
+  brand_colors?: {
+    light?: Partial<ThemeColorSet>;
+    dark?: Partial<ThemeColorSet>;
+  };
   company_name?: string;
   email_templates?: {
     sender_name?: string;
@@ -69,29 +74,57 @@ async function resolveFileUrl(fileId: number | null | undefined): Promise<string
 
 /* ── CSS variable injection ─────────────────────────────────────────────── */
 
-const COLOR_MAP: Record<string, string> = {
-  primary: "--shell-brand",
-  accent: "--shell-accent",
-  surface: "--shell-surface",
-  foreground: "--shell-foreground",
-  muted: "--shell-muted",
+// Maps our color keys to the CSS custom properties that Tailwind reads from.
+// These are the BASE tokens — setting these changes the entire theme.
+const BASE_TOKEN_MAP: Record<string, string> = {
+  primary:    "--primary",
+  accent:     "--accent",
+  surface:    "--card",
+  foreground: "--foreground",
+  muted:      "--muted-foreground",
+  background: "--background",
+  border:     "--border",
 };
 
-function injectBrandColors(colors: BrandColors) {
+// Sidebar-specific tokens that should track the brand primary/accent.
+const SIDEBAR_TOKEN_MAP: Record<string, string> = {
+  primary: "--sidebar-primary",
+  accent:  "--sidebar-accent",
+  surface: "--sidebar",
+};
+
+// Ring token tracks primary.
+const RING_TOKEN = "--ring";
+
+function injectThemeColors(colors: Partial<ThemeColorSet>) {
   if (typeof document === "undefined") return;
   const root = document.documentElement;
-  for (const [key, cssVar] of Object.entries(COLOR_MAP)) {
-    const value = colors[key];
-    if (value) {
-      root.style.setProperty(cssVar, value);
-    }
+
+  // Inject base design tokens
+  for (const [key, cssVar] of Object.entries(BASE_TOKEN_MAP)) {
+    const value = colors[key as keyof ThemeColorSet];
+    if (value) root.style.setProperty(cssVar, value);
   }
+
+  // Inject sidebar tokens from primary/accent/surface
+  for (const [key, cssVar] of Object.entries(SIDEBAR_TOKEN_MAP)) {
+    const value = colors[key as keyof ThemeColorSet];
+    if (value) root.style.setProperty(cssVar, value);
+  }
+
+  // Ring tracks primary
+  if (colors.primary) root.style.setProperty(RING_TOKEN, colors.primary);
 }
 
-function removeInjectedBrandColors() {
+function clearInjectedColors() {
   if (typeof document === "undefined") return;
   const root = document.documentElement;
-  for (const cssVar of Object.values(COLOR_MAP)) {
+  const allVars = [
+    ...Object.values(BASE_TOKEN_MAP),
+    ...Object.values(SIDEBAR_TOKEN_MAP),
+    RING_TOKEN,
+  ];
+  for (const cssVar of allVars) {
     root.style.removeProperty(cssVar);
   }
 }
@@ -127,6 +160,8 @@ export function BrandingProvider({ children }: { children: React.ReactNode }) {
   const [logoUrl, setLogoUrl] = React.useState<string | null>(null);
   const [faviconUrl, setFaviconUrl] = React.useState<string | null>(null);
   const [loading, setLoading] = React.useState(true);
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === "dark";
 
   const loadBranding = React.useCallback(async () => {
     try {
@@ -144,11 +179,6 @@ export function BrandingProvider({ children }: { children: React.ReactNode }) {
       setLogoUrl(logo);
       setFaviconUrl(favicon);
 
-      // Inject colors
-      if (b.brand_colors && Object.keys(b.brand_colors).length > 0) {
-        injectBrandColors(b.brand_colors);
-      }
-
       // Inject favicon
       setFavicon(favicon);
     } catch {
@@ -158,9 +188,24 @@ export function BrandingProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  // Apply theme colors when branding or theme changes
+  React.useEffect(() => {
+    if (loading) return;
+    const colorSets = branding.brand_colors;
+    if (!colorSets) return;
+
+    const activeSet = isDark ? colorSets.dark : colorSets.light;
+    if (activeSet && Object.keys(activeSet).length > 0) {
+      injectThemeColors(activeSet);
+    }
+  }, [branding, isDark, loading]);
+
   React.useEffect(() => {
     loadBranding();
-    return () => removeInjectedBrandColors();
+    return () => {
+      clearInjectedColors();
+      setFavicon(null);
+    };
   }, [loadBranding]);
 
   const value = React.useMemo<BrandingContextValue>(

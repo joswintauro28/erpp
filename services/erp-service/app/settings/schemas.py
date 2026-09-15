@@ -24,12 +24,28 @@ class RegionalSettings(BaseModel):
     date_format: str = "DD-MM-YYYY"
     number_format: str = "1,23,456.78 (Indian)"
 
-class BrandColors(BaseModel):
+class ThemeColorSet(BaseModel):
+    """A set of brand colors for a single theme (light or dark)."""
     primary: str = "#f2470c"
     accent: str = "#E5B83C"
-    surface: str = "#1C1917"
-    foreground: str = "#F5F5F4"
-    muted: str = "#A8A29E"
+    surface: str = "#ffffff"
+    foreground: str = "#09090b"
+    muted: str = "#52525b"
+    background: str = "#f4f5f8"
+    border: str = "#e2e8f0"
+
+class BrandColors(BaseModel):
+    """Separate color sets for light and dark themes."""
+    light: ThemeColorSet = Field(default_factory=ThemeColorSet)
+    dark: ThemeColorSet = Field(default_factory=lambda: ThemeColorSet(
+        primary="#f2470c",
+        accent="#741e02",
+        surface="#121212",
+        foreground="#f0f0f0",
+        muted="#969696",
+        background="#0a0a0a",
+        border="#1f1f1f",
+    ))
 
 class EmailTemplateSettings(BaseModel):
     sender_name: str = "DATAVEX ERP"
