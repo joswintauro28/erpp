@@ -5,6 +5,7 @@ import { Plus, Truck, Loader2, Search, Building2, Phone, Mail, MapPin, Edit3, Tr
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { StatusBadge } from "@/components/shared/status-badge";
 import { Input } from "@/components/ui/input";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -48,9 +49,9 @@ export default function SuppliersPage() {
 
   const getStatusBadge = (s?: string, isActive?: boolean) => {
     const st = (s || (isActive !== false ? "ACTIVE" : "INACTIVE")).toUpperCase();
-    if (st === "ACTIVE") return <Badge className="bg-emerald-600 text-white text-[10px]">Active Vendor</Badge>;
-    if (st === "SUSPENDED") return <Badge variant="destructive" className="text-[10px]">Suspended</Badge>;
-    return <Badge className="bg-muted text-muted-foreground text-[10px]">Inactive</Badge>;
+    if (st === "ACTIVE") return <StatusBadge status="active" category="generic" label="Active Vendor" />;
+    if (st === "SUSPENDED") return <StatusBadge status="inactive" category="generic" label="Suspended" />;
+    return <StatusBadge status="inactive" category="generic" />;
   };
 
   const fetchSuppliers = () => {

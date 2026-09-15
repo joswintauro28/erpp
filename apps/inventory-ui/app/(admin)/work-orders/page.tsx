@@ -22,7 +22,7 @@ import { Input } from "@/components/ui/input";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { api } from "@/services/api";
-import { PageHeader, handleError, KpiCard, SectionHeading } from "@datavex/ui-theme";
+import { PageHeader, handleError, KpiCard, SectionHeading, StatusBadge } from "@datavex/ui-theme";
 import { toastError, toastWarning } from "@/utils/toast";
 
 interface Operation {
@@ -64,13 +64,20 @@ interface Product {
   make_or_buy?: string;
 }
 
-const STATUS_BADGES: Record<string, { label: string; cls: string }> = {
-  DRAFT: { label: "Draft", cls: "bg-muted text-muted-foreground" },
-  RELEASED: { label: "Released", cls: "bg-blue-600 text-white" },
-  IN_PROGRESS: { label: "In Progress", cls: "bg-amber-600 text-white" },
-  COMPLETED: { label: "Completed", cls: "bg-emerald-600 text-white" },
-  CANCELLED: { label: "Cancelled", cls: "bg-red-600 text-white" },
+const WO_STATUS_MAP: Record<string, string> = {
+  DRAFT: "draft",
+  RELEASED: "released",
+  IN_PROGRESS: "in_progress",
+  COMPLETED: "completed",
+  CANCELLED: "cancelled",
 };
+
+function getWoStatusBadge(status: string) {
+  const key = status.toUpperCase();
+  const mapped = WO_STATUS_MAP[key];
+  if (!mapped) return <Badge variant="outline" className="text-[10px]">{status}</Badge>;
+  return <StatusBadge status={mapped} category="work_order" />;
+}
 
 export default function WorkOrdersPage() {
   const [orders, setOrders] = useState<WorkOrder[]>([]);
@@ -272,9 +279,7 @@ export default function WorkOrdersPage() {
                       </Badge>
                     </TableCell>
                     <TableCell className="text-center">
-                      <Badge className={`${STATUS_BADGES[wo.status]?.cls || "bg-muted"} text-[10px]`}>
-                        {STATUS_BADGES[wo.status]?.label || wo.status}
-                      </Badge>
+                      {getWoStatusBadge(wo.status)}
                     </TableCell>
                     <TableCell className="text-right text-xs text-muted-foreground">
                       {new Date(wo.created_at).toLocaleDateString()}
@@ -393,9 +398,7 @@ export default function WorkOrdersPage() {
                 <span className="flex items-center gap-2">
                   <Wrench className="h-4 w-4 text-[var(--shell-brand)]" /> {selectedOrder.work_order_no}
                 </span>
-                <Badge className={`${STATUS_BADGES[selectedOrder.status]?.cls || "bg-muted"} text-[10px]`}>
-                  {STATUS_BADGES[selectedOrder.status]?.label || selectedOrder.status}
-                </Badge>
+                {getWoStatusBadge(selectedOrder.status)}
               </DialogTitle>
               <DialogDescription>
                 Producing {selectedOrder.quantity} × {selectedOrder.product_name}

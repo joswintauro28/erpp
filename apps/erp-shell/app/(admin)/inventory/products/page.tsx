@@ -5,6 +5,7 @@ import { Plus, PackageOpen, Loader2, Search, ArrowRight, Boxes, Warehouse, Edit3
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { StatusBadge } from "@/components/shared/status-badge";
 import { Input } from "@/components/ui/input";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -203,9 +204,7 @@ export default function ProductsPage() {
                     <TableCell className="text-right font-bold text-foreground">{money(p.price)}</TableCell>
                     <TableCell className="text-right text-muted-foreground">{money(p.cost_price)}</TableCell>
                     <TableCell className="text-center">
-                      <Badge className={p.is_active ? "bg-emerald-600 text-white text-[10px]" : "bg-muted text-muted-foreground text-[10px]"}>
-                        {p.is_active ? "Active" : "Inactive"}
-                      </Badge>
+                      <StatusBadge status={p.is_active ? "active" : "inactive"} category="generic" />
                     </TableCell>
                     <TableCell className="text-center">
                       <div className="flex items-center justify-center gap-1">

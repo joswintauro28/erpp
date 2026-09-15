@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { api } from "@/services/api";
-import { PageHeader, handleError } from "@datavex/ui-theme";
+import { PageHeader, handleError, StatusBadge } from "@datavex/ui-theme";
 import { toastError, toastWarning } from "@/utils/toast";
 import { money } from "@/utils/format";
 
@@ -194,19 +194,19 @@ export default function PurchaseOrdersPage() {
     const st = s.toUpperCase();
     switch (st) {
       case "DRAFT":
-        return <Badge variant="neutral" className="text-[10px]">Draft</Badge>;
+        return <StatusBadge status="draft" category="purchase_order" />;
       case "SUBMITTED":
-        return <Badge className="bg-amber-600 text-white text-[10px]">Submitted</Badge>;
+        return <StatusBadge status="pending" category="purchase_order" />;
       case "APPROVED":
-        return <Badge className="bg-blue-600 text-white text-[10px]">Approved</Badge>;
+        return <StatusBadge status="approved" category="purchase_order" />;
       case "PARTIALLY_RECEIVED":
-        return <Badge className="bg-violet-600 text-white text-[10px]">Partially Received</Badge>;
+        return <StatusBadge status="ordered" category="purchase_order" label="Partially Received" />;
       case "COMPLETED":
-        return <Badge className="bg-emerald-600 text-white text-[10px]">Completed</Badge>;
+        return <StatusBadge status="received" category="purchase_order" />;
       case "CANCELLED":
-        return <Badge variant="destructive" className="text-[10px]">Cancelled</Badge>;
+        return <StatusBadge status="cancelled" category="purchase_order" />;
       default:
-        return <Badge variant="neutral" className="text-[10px]">{st}</Badge>;
+        return <Badge variant="outline" className="text-[10px]">{st}</Badge>;
     }
   };
 

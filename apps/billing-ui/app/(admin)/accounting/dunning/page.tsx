@@ -11,7 +11,7 @@ import { money } from "@/utils/format";
 
 const levelColors: Record<number, string> = {
   1: "bg-[var(--shell-warning-surface)] text-[var(--shell-warning)] border-[var(--shell-warning)]/30",
-  2: "bg-orange-100 text-orange-800 border-orange-200",
+  2: "bg-[var(--shell-warning-surface)] text-[var(--shell-warning)] border-[var(--shell-warning)]/30",
   3: "bg-[var(--shell-danger-surface)] text-[var(--shell-danger)] border-[var(--shell-danger)]/30",
 };
 

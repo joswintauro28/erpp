@@ -369,7 +369,7 @@ export default function ReportsPage() {
                         <p className="text-[10px] text-muted-foreground mt-1">General Ledger balance</p>
                       </CardContent>
                     </Card>
-                    <Card className={`border-border/60 shadow-sm ${detailedCf.reconciliation.difference === 0 ? "bg-[var(--shell-success-surface)]0/5 border-[var(--shell-success)]/20" : "bg-destructive/5 border-destructive/20"}`}>
+                    <Card className={`border-border/60 shadow-sm ${detailedCf.reconciliation.difference === 0 ? "bg-[var(--shell-success-surface)]/5 border-[var(--shell-success)]/20" : "bg-destructive/5 border-destructive/20"}`}>
                       <CardContent className="pt-6">
                         <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">Reconciliation Status</p>
                         <p className={`font-heading text-lg font-bold ${detailedCf.reconciliation.difference === 0 ? "text-[var(--shell-success)]" : "text-destructive"}`}>
@@ -524,8 +524,8 @@ export default function ReportsPage() {
                         <div className="flex flex-col justify-center items-center border-l border-border pl-6 bg-muted/10 rounded-xl p-6">
                           {detailedCf.reconciliation.difference === 0 ? (
                             <div className="text-center space-y-2">
-                              <div className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 text-[var(--shell-success)]  ">
-                                <Badge className="bg-[var(--shell-success-surface)]0 hover:bg-emerald-600 text-white border-none py-1 px-2.5 text-[10px] font-bold">OK</Badge>
+                              <div className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[var(--shell-success)]/10 text-[var(--shell-success)]">
+                                <Badge className="bg-[var(--shell-success-surface)] hover:bg-[var(--shell-success)] text-white border-none py-1 px-2.5 text-[10px] font-bold">OK</Badge>
                               </div>
                               <h4 className="text-sm font-semibold text-foreground">Zero Discrepancy</h4>
                               <p className="text-xs text-muted-foreground max-w-[280px]">
@@ -606,7 +606,7 @@ export default function ReportsPage() {
                                   <Badge variant="outline" className={`text-[10px] font-bold capitalize border-none px-2 py-0.5 ${
                                     tx.activity === "operating" ? "bg-[var(--shell-success)]/10 text-[var(--shell-success)]" :
                                     tx.activity === "investing" ? "bg-[var(--shell-info)]/10 text-[var(--shell-info)]" :
-                                    "bg-purple-500/10 text-purple-700"
+                                    "bg-[var(--shell-accent)]/10 text-[var(--shell-accent)]"
                                   }`}>
                                     {tx.activity}
                                   </Badge>

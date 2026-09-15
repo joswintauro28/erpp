@@ -13,6 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
+import { StatusBadge } from "@/components/shared/status-badge";
 import { FileViewer, FilePreviewModal, type FileRecord } from "@datavex/ui-theme";
 
 function formatCurrency(value: number | string) {
@@ -77,14 +78,6 @@ export default function QuotationDetailsModal({ record, isOpen, onClose, onSucce
 
   const content = useMemo(() => {
     const rec = record || {};
-    const stageColors: Record<string, string> = {
-      "Draft": "bg-gray-500",
-      "Sent": "bg-blue-500",
-      "Accepted": "bg-emerald-500",
-      "Rejected": "bg-red-500",
-      "Expired": "bg-slate-500",
-    };
-
     return (
       <div className="space-y-6">
         {/* Header Card */}
@@ -100,9 +93,7 @@ export default function QuotationDetailsModal({ record, isOpen, onClose, onSucce
               <p className="text-xs text-[var(--shell-muted)]">{rec.account}</p>
             </div>
             <div className="ml-auto">
-              <Badge className={stageColors[rec.status] || "bg-gray-500"}>
-                {rec.status}
-              </Badge>
+              <StatusBadge status={rec.status} category="quotation" />
             </div>
           </div>
 
@@ -203,12 +194,12 @@ export default function QuotationDetailsModal({ record, isOpen, onClose, onSucce
 
         {/* Approval Status */}
         {rec.approved_at && (
-          <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-4">
+          <div className="rounded-xl border border-[var(--shell-success)]/30 bg-[var(--shell-success)]/5 p-4">
             <div className="flex items-center gap-2">
-              <CheckCircle className="h-4 w-4 text-emerald-600" />
-              <span className="text-sm font-medium text-emerald-700">Approved by owner</span>
+              <CheckCircle className="h-4 w-4 text-[var(--shell-success)]" />
+              <span className="text-sm font-medium text-[var(--shell-success)]">Approved by owner</span>
             </div>
-            <p className="text-xs text-emerald-600/70 mt-1">
+            <p className="text-xs text-[var(--shell-success)]/70 mt-1">
               Approved at {rec.approved_at}
             </p>
           </div>
@@ -245,12 +236,12 @@ export default function QuotationDetailsModal({ record, isOpen, onClose, onSucce
 
         {/* Conversion CTA */}
         {rec.status === "Accepted" && !rec.converted_invoice_id && (
-          <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-4">
+          <div className="rounded-xl border border-[var(--shell-success)]/30 bg-[var(--shell-success)]/5 p-4">
             <div className="flex items-center gap-2">
-              <CheckCircle className="h-4 w-4 text-emerald-600" />
-              <span className="text-sm font-medium text-emerald-700">Ready to convert to Sales Order</span>
+              <CheckCircle className="h-4 w-4 text-[var(--shell-success)]" />
+              <span className="text-sm font-medium text-[var(--shell-success)]">Ready to convert to Sales Order</span>
             </div>
-            <p className="text-xs text-emerald-600/70 mt-1">
+            <p className="text-xs text-[var(--shell-success)]/70 mt-1">
               This quote has been accepted and can be converted to a sales order.
             </p>
           </div>

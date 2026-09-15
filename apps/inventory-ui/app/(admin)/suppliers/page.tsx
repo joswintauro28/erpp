@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { api } from "@/services/api";
-import { PageHeader, handleError } from "@datavex/ui-theme";
+import { PageHeader, handleError, StatusBadge } from "@datavex/ui-theme";
 import { toastError } from "@/utils/toast";
 
 interface Supplier {
@@ -47,10 +47,9 @@ export default function SuppliersPage() {
   const [status, setStatus] = useState("ACTIVE");
 
   const getStatusBadge = (s?: string, isActive?: boolean) => {
-    const st = (s || (isActive !== false ? "ACTIVE" : "INACTIVE")).toUpperCase();
-    if (st === "ACTIVE") return <Badge className="bg-emerald-600 text-white text-[10px]">Active Vendor</Badge>;
-    if (st === "SUSPENDED") return <Badge variant="destructive" className="text-[10px]">Suspended</Badge>;
-    return <Badge className="bg-muted text-muted-foreground text-[10px]">Inactive</Badge>;
+    const st = (s || (isActive !== false ? "active" : "inactive")).toLowerCase();
+    if (st === "suspended") return <StatusBadge status="suspended" variant="destructive" label="Suspended" />;
+    return <StatusBadge status={st} category="supplier" />;
   };
 
   const fetchSuppliers = () => {

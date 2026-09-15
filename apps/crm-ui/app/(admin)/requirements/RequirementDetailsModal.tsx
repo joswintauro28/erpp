@@ -211,7 +211,7 @@ export default function RequirementDetailsModal({
                   });
                   setShowQuotationForm(true);
                 }}
-                className="flex items-center gap-1.5 bg-amber-600 hover:bg-amber-700 text-white"
+                  className="flex items-center gap-1.5 bg-[var(--shell-warning)] hover:bg-[var(--shell-warning)]/90 text-white"
                 size="sm"
               >
                 <FileSpreadsheet className="size-3.5" />
@@ -303,7 +303,7 @@ export default function RequirementDetailsModal({
                 <Button
                   type="submit"
                   disabled={quotationSubmitting}
-                  className="flex items-center gap-1.5 bg-amber-600 hover:bg-amber-700 text-white"
+                className="flex items-center gap-1.5 bg-[var(--shell-warning)] hover:bg-[var(--shell-warning)]/90 text-white"
                   size="sm"
                 >
                   <FileSpreadsheet className="size-3.5" />

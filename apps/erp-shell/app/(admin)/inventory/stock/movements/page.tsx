@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { ArrowRightLeft, Loader2, ArrowUpRight, ArrowDownLeft, SlidersHorizontal } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { StatusBadge } from "@/components/shared/status-badge";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { api } from "@/services/api";
 
@@ -36,16 +37,12 @@ export default function StockMovementsPage() {
     const t = type.toLowerCase();
     if (t === "in") {
       return (
-        <Badge className="bg-emerald-600 text-white flex items-center gap-1 text-[11px] w-fit">
-          <ArrowDownLeft className="h-3 w-3" /> Goods Receipt (IN)
-        </Badge>
+        <StatusBadge status="in_stock" category="stock" label="Goods Receipt (IN)" className="w-fit" />
       );
     }
     if (t === "out") {
       return (
-        <Badge variant="destructive" className="flex items-center gap-1 text-[11px] w-fit">
-          <ArrowUpRight className="h-3 w-3" /> Order Dispatch (OUT)
-        </Badge>
+        <StatusBadge status="out_of_stock" category="stock" label="Order Dispatch (OUT)" className="w-fit" />
       );
     }
     return (

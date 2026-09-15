@@ -490,8 +490,8 @@ export default function Branding() {
             className={cn(
               "flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium",
               message.type === "success"
-                ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
-                : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
+                ? "bg-[var(--shell-success-surface)] text-[var(--shell-success)]"
+                : "bg-[var(--shell-danger-surface)] text-[var(--shell-danger)]",
             )}
           >
             {message.type === "success" ? <CheckCircle2 className="h-4 w-4" /> : null}

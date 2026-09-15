@@ -5,7 +5,13 @@ import { BarChart3 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 
-const STAGE_COLORS = ["#6366f1", "#0ea5e9", "#14b8a6", "#f59e0b", "#10b981"];
+const STAGE_COLORS = [
+  "var(--chart-1)",
+  "var(--chart-2)",
+  "var(--chart-3)",
+  "var(--chart-4)",
+  "var(--chart-5)",
+];
 
 const tooltipStyle = {
   background: "var(--shell-popover)",

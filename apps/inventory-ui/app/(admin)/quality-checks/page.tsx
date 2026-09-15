@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { api } from "@/services/api";
-import { PageHeader, handleError, KpiCard, SectionHeading } from "@datavex/ui-theme";
+import { PageHeader, handleError, KpiCard, SectionHeading, StatusBadge } from "@datavex/ui-theme";
 import { toastError } from "@/utils/toast";
 
 interface QualityCheck {
@@ -25,12 +25,26 @@ interface QualityCheck {
   created_at: string;
 }
 
-const STATUS_BADGES: Record<string, { label: string; cls: string }> = {
-  PENDING: { label: "Pending QC", cls: "bg-amber-600 text-white" },
-  PASS: { label: "Passed", cls: "bg-emerald-600 text-white" },
-  FAIL: { label: "Failed", cls: "bg-red-600 text-white" },
-  HOLD: { label: "On Hold", cls: "bg-blue-600 text-white" },
+const QC_STATUS_MAP: Record<string, string> = {
+  PENDING: "pending",
+  PASS: "pass",
+  FAIL: "fail",
+  HOLD: "hold",
 };
+
+const QC_LABELS: Record<string, string> = {
+  pending: "Pending QC",
+  pass: "Passed",
+  fail: "Failed",
+  hold: "On Hold",
+};
+
+function getQcStatusBadge(status: string) {
+  const key = status.toUpperCase();
+  const mapped = QC_STATUS_MAP[key];
+  if (!mapped) return <Badge variant="outline" className="text-[10px]">{status}</Badge>;
+  return <StatusBadge status={mapped} category="quality_check" label={QC_LABELS[mapped]} />;
+}
 
 export default function QualityChecksPage() {
   const [checks, setChecks] = useState<QualityCheck[]>([]);
@@ -190,9 +204,7 @@ export default function QualityChecksPage() {
                     <TableCell className="text-center text-xs font-semibold">{c.quantity}</TableCell>
                     <TableCell className="text-center font-mono text-xs">{c.po_id ? `#${c.po_id}` : "—"}</TableCell>
                     <TableCell className="text-center">
-                      <Badge className={`${STATUS_BADGES[c.status]?.cls || "bg-muted"} text-[10px]`}>
-                        {STATUS_BADGES[c.status]?.label || c.status}
-                      </Badge>
+                      {getQcStatusBadge(c.status)}
                     </TableCell>
                     <TableCell className="text-center text-xs text-muted-foreground">{c.inspected_by || "—"}</TableCell>
                     <TableCell className="text-right text-xs text-muted-foreground">

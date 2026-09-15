@@ -20,7 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { api } from "@/services/api";
-import { PageHeader, handleError } from "@datavex/ui-theme";
+import { PageHeader, handleError, StatusBadge } from "@datavex/ui-theme";
 import { toastError, toastWarning } from "@/utils/toast";
 import { money } from "@/utils/format";
 
@@ -59,14 +59,28 @@ interface Warehouse {
   name: string;
 }
 
-const STATUS_BADGES: Record<string, { label: string; cls: string }> = {
-  DRAFT: { label: "Draft", cls: "bg-muted text-muted-foreground" },
-  SUBMITTED: { label: "Submitted", cls: "bg-amber-600 text-white" },
-  APPROVED: { label: "Approved", cls: "bg-blue-600 text-white" },
-  REJECTED: { label: "Rejected", cls: "bg-red-600 text-white" },
-  CONVERTED: { label: "Converted to PO", cls: "bg-emerald-600 text-white" },
-  CANCELLED: { label: "Cancelled", cls: "bg-muted text-muted-foreground" },
+const PR_STATUS_MAP: Record<string, string> = {
+  DRAFT: "draft",
+  SUBMITTED: "submitted",
+  APPROVED: "approved",
+  REJECTED: "rejected",
+  CONVERTED: "converted",
+  CANCELLED: "cancelled",
 };
+
+function getPrStatusBadge(status: string) {
+  const key = status.toUpperCase();
+  const mapped = PR_STATUS_MAP[key];
+  if (!mapped) return <Badge variant="outline" className="text-[10px]">{status}</Badge>;
+  const labels: Record<string, string> = {
+    submitted: "Submitted",
+    approved: "Approved",
+    rejected: "Rejected",
+    converted: "Converted to PO",
+    cancelled: "Cancelled",
+  };
+  return <StatusBadge status={mapped} label={labels[mapped]} />;
+}
 
 export default function PurchaseRequisitionsPage() {
   const [requisitions, setRequisitions] = useState<Requisition[]>([]);
@@ -260,9 +274,7 @@ export default function PurchaseRequisitionsPage() {
                       <Badge variant="outline" className="text-[10px]">{r.priority}</Badge>
                     </TableCell>
                     <TableCell className="text-center">
-                      <Badge className={`${STATUS_BADGES[r.status]?.cls || "bg-muted"} text-[10px]`}>
-                        {STATUS_BADGES[r.status]?.label || r.status}
-                      </Badge>
+                      {getPrStatusBadge(r.status)}
                     </TableCell>
                     <TableCell className="text-right font-bold text-foreground text-xs">{money(totalEstimate(r))}</TableCell>
                     <TableCell className="text-right text-xs text-muted-foreground">
@@ -364,9 +376,7 @@ export default function PurchaseRequisitionsPage() {
                 <span className="flex items-center gap-2">
                   <FileText className="h-4 w-4 text-[var(--shell-brand)]" /> {selectedReq.pr_number}
                 </span>
-                <Badge className={`${STATUS_BADGES[selectedReq.status]?.cls || "bg-muted"} text-[10px]`}>
-                  {STATUS_BADGES[selectedReq.status]?.label || selectedReq.status}
-                </Badge>
+                {getPrStatusBadge(selectedReq.status)}
               </DialogTitle>
               <DialogDescription>{selectedReq.title}</DialogDescription>
             </DialogHeader>

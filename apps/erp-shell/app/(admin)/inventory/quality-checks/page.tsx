@@ -5,6 +5,7 @@ import { Loader2, Search, ShieldCheck, CheckCircle2, XCircle, PauseCircle, Plus 
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { StatusBadge } from "@/components/shared/status-badge";
 import { Input } from "@/components/ui/input";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -25,11 +26,11 @@ interface QualityCheck {
   created_at: string;
 }
 
-const STATUS_BADGES: Record<string, { label: string; cls: string }> = {
-  PENDING: { label: "Pending QC", cls: "bg-amber-600 text-white" },
-  PASS: { label: "Passed", cls: "bg-emerald-600 text-white" },
-  FAIL: { label: "Failed", cls: "bg-red-600 text-white" },
-  HOLD: { label: "On Hold", cls: "bg-blue-600 text-white" },
+const STATUS_BADGES: Record<string, { label: string; variant: string }> = {
+  PENDING: { label: "Pending QC", variant: "warning" },
+  PASS: { label: "Passed", variant: "success" },
+  FAIL: { label: "Failed", variant: "destructive" },
+  HOLD: { label: "On Hold", variant: "info" },
 };
 
 export default function QualityChecksPage() {
@@ -196,9 +197,7 @@ export default function QualityChecksPage() {
                     <TableCell className="text-center text-xs font-semibold">{c.quantity}</TableCell>
                     <TableCell className="text-center font-mono text-xs">{c.po_id ? `#${c.po_id}` : "—"}</TableCell>
                     <TableCell className="text-center">
-                      <Badge className={`${STATUS_BADGES[c.status]?.cls || "bg-muted"} text-[10px]`}>
-                        {STATUS_BADGES[c.status]?.label || c.status}
-                      </Badge>
+                      <StatusBadge status={c.status} category="quality_check" />
                     </TableCell>
                     <TableCell className="text-center text-xs text-muted-foreground">{c.inspected_by || "—"}</TableCell>
                     <TableCell className="text-right text-xs text-muted-foreground">

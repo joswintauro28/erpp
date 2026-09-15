@@ -18,6 +18,7 @@ import {
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { StatusBadge } from "@/components/shared/status-badge";
 import { Input } from "@/components/ui/input";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -64,12 +65,12 @@ interface Product {
   make_or_buy?: string;
 }
 
-const STATUS_BADGES: Record<string, { label: string; cls: string }> = {
-  DRAFT: { label: "Draft", cls: "bg-muted text-muted-foreground" },
-  RELEASED: { label: "Released", cls: "bg-blue-600 text-white" },
-  IN_PROGRESS: { label: "In Progress", cls: "bg-amber-600 text-white" },
-  COMPLETED: { label: "Completed", cls: "bg-emerald-600 text-white" },
-  CANCELLED: { label: "Cancelled", cls: "bg-red-600 text-white" },
+const STATUS_BADGES: Record<string, { label: string; variant: string }> = {
+  DRAFT: { label: "Draft", variant: "outline" },
+  RELEASED: { label: "Released", variant: "info" },
+  IN_PROGRESS: { label: "In Progress", variant: "warning" },
+  COMPLETED: { label: "Completed", variant: "success" },
+  CANCELLED: { label: "Cancelled", variant: "destructive" },
 };
 
 export default function WorkOrdersPage() {
@@ -278,9 +279,7 @@ export default function WorkOrdersPage() {
                       </Badge>
                     </TableCell>
                     <TableCell className="text-center">
-                      <Badge className={`${STATUS_BADGES[wo.status]?.cls || "bg-muted"} text-[10px]`}>
-                        {STATUS_BADGES[wo.status]?.label || wo.status}
-                      </Badge>
+                      <StatusBadge status={wo.status} category="work_order" />
                     </TableCell>
                     <TableCell className="text-right text-xs text-muted-foreground">
                       {new Date(wo.created_at).toLocaleDateString()}
@@ -399,9 +398,7 @@ export default function WorkOrdersPage() {
                 <span className="flex items-center gap-2">
                   <Wrench className="h-4 w-4 text-[var(--shell-brand)]" /> {selectedOrder.work_order_no}
                 </span>
-                <Badge className={`${STATUS_BADGES[selectedOrder.status]?.cls || "bg-muted"} text-[10px]`}>
-                  {STATUS_BADGES[selectedOrder.status]?.label || selectedOrder.status}
-                </Badge>
+                <StatusBadge status={selectedOrder.status} category="work_order" />
               </DialogTitle>
               <DialogDescription>
                 Producing {selectedOrder.quantity} × {selectedOrder.product_name}

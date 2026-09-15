@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { GripVertical, Lock, Unlock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { StatusBadge } from "@datavex/ui-theme";
 import { api } from "@/services/api";
 import { toastError, errorMessage } from "@/utils/toast";
 import { cn } from "@/lib/utils";
@@ -11,11 +12,11 @@ export const PIPELINE_STAGES = ["Discovery", "Quote", "Negotiation", "Won", "Los
 export type PipelineStage = (typeof PIPELINE_STAGES)[number];
 
 const STAGE_META: Record<PipelineStage, { color: string; dot: string; label: string }> = {
-  Discovery: { color: "bg-muted text-muted-foreground border-border", dot: "bg-slate-400", label: "Discovery" },
-  Quote: { color: "bg-[var(--shell-info-surface)] text-[var(--shell-info)] border-sky-300", dot: "bg-[var(--shell-info-surface)]0", label: "Quote" },
-  Negotiation: { color: "bg-violet-50 text-violet-700 border-violet-300", dot: "bg-violet-500", label: "Negotiation" },
-  Won: { color: "bg-[var(--shell-success-surface)] text-[var(--shell-success)] border-[var(--shell-success)]/30", dot: "bg-[var(--shell-success-surface)]0", label: "Closed Won" },
-  Lost: { color: "bg-[var(--shell-danger-surface)] text-[var(--shell-danger)] border-[var(--shell-danger)]/30", dot: "bg-[var(--shell-danger-surface)]0", label: "Lost" },
+  Discovery: { color: "bg-muted text-muted-foreground border-border", dot: "bg-muted-foreground/40", label: "Discovery" },
+  Quote: { color: "bg-[var(--shell-info-surface)] text-[var(--shell-info)] border-sky-300", dot: "bg-[var(--shell-info-surface)]", label: "Quote" },
+  Negotiation: { color: "bg-[var(--shell-warning-surface)] text-[var(--shell-warning)] border-[var(--shell-warning)]/30", dot: "bg-[var(--shell-warning)]", label: "Negotiation" },
+  Won: { color: "bg-[var(--shell-success-surface)] text-[var(--shell-success)] border-[var(--shell-success)]/30", dot: "bg-[var(--shell-success-surface)]", label: "Closed Won" },
+  Lost: { color: "bg-[var(--shell-danger-surface)] text-[var(--shell-danger)] border-[var(--shell-danger)]/30", dot: "bg-[var(--shell-danger-surface)]", label: "Lost" },
 };
 
 const formatCurrency = (value: number) =>

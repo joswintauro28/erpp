@@ -46,6 +46,9 @@ export * from "./components/ui/breadcrumb";
 // Branding (org-aware logo, favicon, colors provider)
 export * from "./components/shared/branding-provider";
 
+// Theme-aware status badge
+export * from "./components/shared/status-badge";
+
 // Shared composites
 export * from "./components/shared/multi-step-dialog";
 export * from "./components/shared/empty-state";

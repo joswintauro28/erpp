@@ -21,6 +21,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { StatusBadge } from "@/components/shared/status-badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { api } from "@/services/api";
 import { handleError, KpiCard } from "@datavex/ui-theme";
@@ -147,23 +148,23 @@ export default function OrderFulfillmentPage() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "QUEUED":
-        return <Badge variant="neutral">Order Queue</Badge>;
+        return <StatusBadge status="pending" category="fulfillment" label="Order Queue" />;
       case "RESERVED":
-        return <Badge className="bg-blue-600 text-white">Stock Reserved</Badge>;
+        return <StatusBadge status="reserved" category="fulfillment" />;
       case "PICKING":
-        return <Badge className="bg-amber-600 text-white font-medium">Picking Items</Badge>;
+        return <StatusBadge status="processing" category="fulfillment" label="Picking Items" />;
       case "PACKED":
-        return <Badge className="bg-purple-600 text-white font-medium">Packed & Ready</Badge>;
+        return <StatusBadge status="processing" category="fulfillment" label="Packed & Ready" />;
       case "DISPATCHED":
-        return <Badge className="bg-emerald-600 text-white font-medium">Dispatched</Badge>;
+        return <StatusBadge status="shipped" category="fulfillment" />;
       case "SHORTAGE":
-        return <Badge variant="destructive">Stock Shortage</Badge>;
+        return <StatusBadge status="cancelled" category="fulfillment" label="Stock Shortage" />;
       case "PO_CREATED":
-        return <Badge className="bg-orange-600 text-white">Reorder PO Active</Badge>;
+        return <StatusBadge status="processing" category="fulfillment" label="Reorder PO Active" />;
       case "WO_CREATED":
-        return <Badge className="bg-violet-600 text-white">Work Order Created</Badge>;
+        return <StatusBadge status="processing" category="fulfillment" label="Work Order Created" />;
       case "COMPLETED":
-        return <Badge className="bg-green-700 text-white font-medium">Completed & Billed</Badge>;
+        return <StatusBadge status="delivered" category="fulfillment" label="Completed & Billed" />;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }

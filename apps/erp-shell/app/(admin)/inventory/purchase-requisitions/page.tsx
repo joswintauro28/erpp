@@ -16,6 +16,7 @@ import {
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { StatusBadge } from "@/components/shared/status-badge";
 import { Input } from "@/components/ui/input";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -59,13 +60,13 @@ interface Warehouse {
   name: string;
 }
 
-const STATUS_BADGES: Record<string, { label: string; cls: string }> = {
-  DRAFT: { label: "Draft", cls: "bg-muted text-muted-foreground" },
-  SUBMITTED: { label: "Submitted", cls: "bg-amber-600 text-white" },
-  APPROVED: { label: "Approved", cls: "bg-blue-600 text-white" },
-  REJECTED: { label: "Rejected", cls: "bg-red-600 text-white" },
-  CONVERTED: { label: "Converted to PO", cls: "bg-emerald-600 text-white" },
-  CANCELLED: { label: "Cancelled", cls: "bg-muted text-muted-foreground" },
+const STATUS_BADGES: Record<string, { label: string; variant: string }> = {
+  DRAFT: { label: "Draft", variant: "outline" },
+  SUBMITTED: { label: "Submitted", variant: "warning" },
+  APPROVED: { label: "Approved", variant: "info" },
+  REJECTED: { label: "Rejected", variant: "destructive" },
+  CONVERTED: { label: "Converted to PO", variant: "success" },
+  CANCELLED: { label: "Cancelled", variant: "outline" },
 };
 
 export default function PurchaseRequisitionsPage() {
@@ -269,9 +270,7 @@ export default function PurchaseRequisitionsPage() {
                       <Badge variant="outline" className="text-[10px]">{r.priority}</Badge>
                     </TableCell>
                     <TableCell className="text-center">
-                      <Badge className={`${STATUS_BADGES[r.status]?.cls || "bg-muted"} text-[10px]`}>
-                        {STATUS_BADGES[r.status]?.label || r.status}
-                      </Badge>
+                      <StatusBadge status={r.status} category="purchase_order" />
                     </TableCell>
                     <TableCell className="text-right font-bold text-foreground text-xs">{money(totalEstimate(r))}</TableCell>
                     <TableCell className="text-right text-xs text-muted-foreground">
@@ -373,9 +372,7 @@ export default function PurchaseRequisitionsPage() {
                 <span className="flex items-center gap-2">
                   <FileText className="h-4 w-4 text-[var(--shell-brand)]" /> {selectedReq.pr_number}
                 </span>
-                <Badge className={`${STATUS_BADGES[selectedReq.status]?.cls || "bg-muted"} text-[10px]`}>
-                  {STATUS_BADGES[selectedReq.status]?.label || selectedReq.status}
-                </Badge>
+                <StatusBadge status={selectedReq.status} category="purchase_order" />
               </DialogTitle>
               <DialogDescription>{selectedReq.title}</DialogDescription>
             </DialogHeader>

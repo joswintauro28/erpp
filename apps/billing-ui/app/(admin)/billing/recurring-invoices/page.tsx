@@ -23,7 +23,7 @@ import RecurringInvoicesLoading from "./loading";
 
 const frequencyColors: Record<string, string> = {
   weekly: "bg-[var(--shell-info)]/10 text-[var(--shell-info)] border-blue-500/20",
-  monthly: "bg-purple-500/10 text-purple-500 border-purple-500/20",
+  monthly: "bg-[var(--shell-accent)]/10 text-[var(--shell-accent)] border-[var(--shell-accent)]/20",
   quarterly: "bg-[var(--shell-warning)]/10 text-[var(--shell-warning)] border-[var(--shell-warning)]/20",
   yearly: "bg-[var(--shell-success)]/10 text-[var(--shell-success)] border-[var(--shell-success)]/20",
 };

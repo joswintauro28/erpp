@@ -27,7 +27,7 @@ import {
 } from "lucide-react";
 import { api } from "@/services/api";
 import { money } from "@/utils/format";
-import { FileUpload, type FileRecord, PageHeader } from "@datavex/ui-theme";
+import { FileUpload, type FileRecord, PageHeader, StatusBadge } from "@datavex/ui-theme";
 
 export default function ReconciliationPage() {
   const [activeTab, setActiveTab] = useState<"transactions" | "settings" | "variance" | "audit">("transactions");
@@ -212,15 +212,15 @@ export default function ReconciliationPage() {
   const getStatusBadge = (classification: string) => {
     switch (classification) {
       case "Matched":
-        return <Badge className="bg-emerald-600 hover:bg-emerald-700 text-white border-0 text-xs">Matched</Badge>;
+        return <StatusBadge status="matched" category="reconciliation" />;
       case "Partial_Match":
-        return <Badge className="bg-amber-600 hover:bg-amber-700 text-white border-0 text-xs">Partial Match</Badge>;
+        return <StatusBadge status="partial_match" category="reconciliation" />;
       case "Duplicate":
-        return <Badge variant="destructive" className="bg-purple-600 hover:bg-purple-700 text-white border-0 text-xs">Duplicate</Badge>;
+        return <StatusBadge status="duplicate" category="reconciliation" />;
       case "Exception":
         return <Badge variant="destructive" className="text-xs">Exception</Badge>;
       default:
-        return <Badge variant="neutral" className="text-xs">Unmatched</Badge>;
+        return <Badge variant="outline" className="text-xs">Unmatched</Badge>;
     }
   };
 
@@ -333,7 +333,7 @@ export default function ReconciliationPage() {
                     <CardContent className="pt-5 pb-4 space-y-2">
                       <div className="flex items-center justify-between">
                         <span className="text-xs font-mono font-medium text-[var(--shell-warning)]">{r.batch}</span>
-                        <Badge variant={selectedBatch === r.batch ? "default" : "outline"} className={selectedBatch === r.batch ? "bg-amber-600 text-white" : ""}>
+                        <Badge variant={selectedBatch === r.batch ? "warning" : "outline"}>
                           {selectedBatch === r.batch ? "Selected" : "Filter"}
                         </Badge>
                       </div>

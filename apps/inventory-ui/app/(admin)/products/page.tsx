@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { api } from "@/services/api";
 import { money } from "@/utils/format";
 import { toastError } from "@/utils/toast";
-import { PageHeader, KpiCard, SectionHeading, handleError } from "@datavex/ui-theme";
+import { PageHeader, KpiCard, SectionHeading, handleError, StatusBadge } from "@datavex/ui-theme";
 import Link from "next/link";
 
 interface Product {
@@ -203,9 +203,7 @@ export default function ProductsPage() {
                     <TableCell className="text-right font-bold text-foreground">{money(p.price)}</TableCell>
                     <TableCell className="text-right text-muted-foreground">{money(p.cost_price)}</TableCell>
                     <TableCell className="text-center">
-                      <Badge className={p.is_active ? "bg-emerald-600 text-white text-[10px]" : "bg-muted text-muted-foreground text-[10px]"}>
-                        {p.is_active ? "Active" : "Inactive"}
-                      </Badge>
+                      <StatusBadge status={p.is_active ? "active" : "inactive"} category="generic" />
                     </TableCell>
                     <TableCell className="text-center">
                       <div className="flex items-center justify-center gap-1">

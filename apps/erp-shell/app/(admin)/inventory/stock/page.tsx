@@ -16,6 +16,7 @@ import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { StatusBadge } from "@/components/shared/status-badge";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { api } from "@/services/api";
@@ -228,11 +229,9 @@ export default function StockPage() {
                       <TableCell className="text-right font-bold text-[var(--shell-success)]">{number(avail)}</TableCell>
                       <TableCell className="text-center">
                         {isLow ? (
-                          <Badge variant="destructive" className="text-[10px]">
-                            Low Stock Alert
-                          </Badge>
+                          <StatusBadge status="low_stock" category="stock" />
                         ) : (
-                          <Badge className="bg-emerald-600 text-white text-[10px]">In Stock</Badge>
+                          <StatusBadge status="in_stock" category="stock" />
                         )}
                       </TableCell>
                       <TableCell className="text-right">

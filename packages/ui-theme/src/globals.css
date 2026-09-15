@@ -73,9 +73,9 @@
   --shell-muted: var(--muted-foreground);
   --shell-border: var(--border);
   --shell-brand: var(--primary);
-  --shell-accent: #f2470c;
-  --shell-accent-surface: #fff0eb;
-  --shell-accent-text: #c23000;
+  --shell-accent: var(--accent);
+  --shell-accent-surface: var(--accent);
+  --shell-accent-text: var(--accent-foreground);
   --shell-action: var(--primary);
   --shell-ring: var(--ring);
   --shell-success: #10b981;

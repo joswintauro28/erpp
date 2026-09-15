@@ -20,6 +20,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { StatusBadge } from "@/components/shared/status-badge";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
@@ -71,14 +72,14 @@ interface Warehouse {
 }
 
 const STATUS_META: Record<string, { label: string; dot: string; badge: string }> = {
-  in_stock: { label: "In Stock", dot: "bg-[var(--shell-success-surface)]0", badge: "bg-emerald-600/15 text-[var(--shell-success)]  border-emerald-600/20" },
-  reserved: { label: "Reserved", dot: "bg-[var(--shell-info-surface)]0", badge: "bg-blue-600/15 text-[var(--shell-info)]  border-blue-600/20" },
-  sold: { label: "Sold", dot: "bg-muted0", badge: "bg-slate-600/15 text-muted-foreground  border-slate-600/20" },
-  returned: { label: "Returned", dot: "bg-[var(--shell-warning-surface)]0", badge: "bg-amber-600/15 text-[var(--shell-warning)]  border-amber-600/20" },
-  repair: { label: "In Repair", dot: "bg-purple-500", badge: "bg-purple-600/15 text-purple-700  border-purple-600/20" },
-  damaged: { label: "Damaged", dot: "bg-[var(--shell-danger-surface)]0", badge: "bg-red-600/15 text-[var(--shell-danger)]  border-red-600/20" },
-  retired: { label: "Retired", dot: "bg-zinc-400", badge: "bg-zinc-600/15 text-muted-foreground  border-zinc-600/20" },
-  in_transit: { label: "In Transit", dot: "bg-cyan-500", badge: "bg-cyan-600/15 text-cyan-700  border-cyan-600/20" },
+  in_stock: { label: "In Stock", dot: "bg-[var(--shell-success)]", badge: "bg-[var(--shell-success)]/10 text-[var(--shell-success)] border-[var(--shell-success)]/20" },
+  reserved: { label: "Reserved", dot: "bg-[var(--shell-info)]", badge: "bg-[var(--shell-info)]/10 text-[var(--shell-info)] border-[var(--shell-info)]/20" },
+  sold: { label: "Sold", dot: "bg-muted-foreground", badge: "bg-muted text-muted-foreground border-border" },
+  returned: { label: "Returned", dot: "bg-[var(--shell-warning)]", badge: "bg-[var(--shell-warning)]/10 text-[var(--shell-warning)] border-[var(--shell-warning)]/20" },
+  repair: { label: "In Repair", dot: "bg-[var(--shell-accent)]", badge: "bg-[var(--shell-accent)]/10 text-[var(--shell-accent)] border-[var(--shell-accent)]/20" },
+  damaged: { label: "Damaged", dot: "bg-[var(--shell-danger)]", badge: "bg-[var(--shell-danger)]/10 text-[var(--shell-danger)] border-[var(--shell-danger)]/20" },
+  retired: { label: "Retired", dot: "bg-muted-foreground", badge: "bg-muted text-muted-foreground border-border" },
+  in_transit: { label: "In Transit", dot: "bg-[var(--shell-info)]", badge: "bg-[var(--shell-info)]/10 text-[var(--shell-info)] border-[var(--shell-info)]/20" },
 };
 
 const STATUS_ORDER = ["in_stock", "reserved", "in_transit", "sold", "returned", "repair", "damaged", "retired"];

@@ -283,7 +283,7 @@ export default function QuotationDetailsModal({ record, isOpen, onClose, onSucce
                 <Button type="button" variant="outline" size="sm" onClick={() => setShowSalesOrderForm(false)}>
                   Back
                 </Button>
-                <Button type="submit" size="sm" disabled={salesOrderSubmitting} className="bg-emerald-600 hover:bg-emerald-700">
+                <Button type="submit" size="sm" disabled={salesOrderSubmitting} className="bg-[var(--shell-success)] hover:bg-[var(--shell-success)]/90 text-white">
                   {salesOrderSubmitting ? 'Creating...' : 'Confirm & Add to Sales Orders'}
                 </Button>
               </div>
@@ -333,7 +333,7 @@ export default function QuotationDetailsModal({ record, isOpen, onClose, onSucce
         {!showSalesOrderForm && (
           <div className="flex justify-end gap-2 pt-4 border-t border-[var(--shell-border)] mt-4">
             {record.status === 'Accepted' && (
-              <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700" onClick={() => setShowSalesOrderForm(true)}>
+              <Button size="sm" className="bg-[var(--shell-success)] hover:bg-[var(--shell-success)]/90 text-white" onClick={() => setShowSalesOrderForm(true)}>
                 Convert to Sales Order
               </Button>
             )}

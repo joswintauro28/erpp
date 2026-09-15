@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { BarChart3, TrendingUp, TrendingDown, AlertTriangle, DollarSign, Receipt, Wallet, Banknote, ArrowUpRight, ArrowDownRight, Minus, CheckCircle2 } from "lucide-react";
 import ReportsLoading from "./loading";
 import { api } from "@/services/api";
-import { handleError, Button, PageHeader, KpiCard, SectionHeading } from "@datavex/ui-theme";
+import { handleError, Button, PageHeader, KpiCard, SectionHeading, StatusBadge } from "@datavex/ui-theme";
 import { money } from "@/utils/format";
 
 type Tab = "pl" | "balance-sheet" | "cash-flow" | "cogs";
@@ -473,8 +473,8 @@ export default function ReportsPage() {
                         <div className="flex flex-col justify-center items-center border-l border-border pl-6 bg-muted/10 rounded-xl p-6">
                           {detailedCf.reconciliation.difference === 0 ? (
                             <div className="text-center space-y-2">
-                              <div className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 text-[var(--shell-success)]  ">
-                                <Badge className="bg-[var(--shell-success-surface)]0 hover:bg-emerald-600 text-white border-none py-1 px-2.5 text-[10px] font-bold">OK</Badge>
+                               <div className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[var(--shell-success-surface)] text-[var(--shell-success)]">
+                                <StatusBadge status="paid" label="OK" className="py-1 px-2.5 text-[10px] font-bold" />
                               </div>
                               <h4 className="text-sm font-semibold text-foreground">Zero Discrepancy</h4>
                               <p className="text-xs text-muted-foreground max-w-[280px]">
@@ -555,7 +555,7 @@ export default function ReportsPage() {
                                   <Badge variant="outline" className={`text-[10px] font-bold capitalize border-none px-2 py-0.5 ${
                                     tx.activity === "operating" ? "bg-[var(--shell-success)]/10 text-[var(--shell-success)]" :
                                     tx.activity === "investing" ? "bg-[var(--shell-info)]/10 text-[var(--shell-info)]" :
-                                    "bg-purple-500/10 text-purple-700"
+                                    "bg-[var(--shell-accent)]/10 text-[var(--shell-accent)]"
                                   }`}>
                                     {tx.activity}
                                   </Badge>

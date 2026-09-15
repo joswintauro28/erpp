@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { api } from "@/services/api";
-import { PageHeader, handleError } from "@datavex/ui-theme";
+import { PageHeader, handleError, StatusBadge } from "@datavex/ui-theme";
 import { toastError } from "@/utils/toast";
 
 interface Warehouse {
@@ -160,9 +160,7 @@ export default function WarehousesPage() {
                       {[w.city, w.state].filter(Boolean).join(", ") || "India"}
                     </TableCell>
                     <TableCell className="text-center">
-                      <Badge className={w.is_active !== false ? "bg-emerald-600 text-white text-[10px]" : "bg-muted text-muted-foreground text-[10px]"}>
-                        {w.is_active !== false ? "Operational" : "Inactive"}
-                      </Badge>
+                      <StatusBadge status={w.is_active !== false ? "active" : "inactive"} category="generic" />
                     </TableCell>
                     <TableCell className="text-center">
                       <div className="flex items-center justify-center gap-1">

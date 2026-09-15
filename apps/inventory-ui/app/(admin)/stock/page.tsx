@@ -19,7 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { api } from "@/services/api";
-import { PageHeader, handleError, KpiCard, SectionHeading } from "@datavex/ui-theme";
+import { PageHeader, handleError, KpiCard, SectionHeading, StatusBadge } from "@datavex/ui-theme";
 import { toastError } from "@/utils/toast";
 import { number } from "@/utils/format";
 import Link from "next/link";
@@ -220,11 +220,9 @@ export default function StockPage() {
                       <TableCell className="text-right font-bold text-[var(--shell-success)]">{number(avail)}</TableCell>
                       <TableCell className="text-center">
                         {isLow ? (
-                          <Badge variant="destructive" className="text-[10px]">
-                            Low Stock Alert
-                          </Badge>
+                          <StatusBadge status="low_stock" category="stock" label="Low Stock Alert" />
                         ) : (
-                          <Badge className="bg-emerald-600 text-white text-[10px]">In Stock</Badge>
+                          <StatusBadge status="in_stock" category="stock" label="In Stock" />
                         )}
                       </TableCell>
                       <TableCell className="text-right">

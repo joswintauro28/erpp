@@ -19,7 +19,7 @@ import DashboardLoading from "./loading";
 import PipelineChart from "./PipelineChart";
 import Recommendations from "./Recommendations";
 
-const STAGE_COLORS = ["var(--shell-brand)", "#E5B83C", "#6366f1", "#10b981", "#f43f5e"];
+const STAGE_COLORS = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--chart-4)", "var(--chart-5)"];
 const KPI_COLORS = ["var(--chart-1)", "var(--chart-2)", "var(--chart-4)", "var(--chart-3)"];
 
 const tooltipStyle = {

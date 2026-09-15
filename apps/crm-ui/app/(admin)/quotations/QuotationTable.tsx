@@ -3,7 +3,7 @@
 import { Edit2, Trash2, ShoppingCart, Lock, CheckCircle2, XCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { DataTable, type Column } from "@datavex/ui-theme";
+import { DataTable, StatusBadge, type Column } from "@datavex/ui-theme";
 import { cn, statusVariant } from "@/lib/utils";
 
 function formatCurrency(value: string | number) {
@@ -30,9 +30,7 @@ export default function QuotationTable({ quotations, onView, onEdit, onDelete, o
           <span className="font-semibold text-[var(--shell-brand)] hover:underline cursor-pointer flex items-center gap-1.5">
             {row.quote_no || row.quote_number}
             {approvalPending && (
-              <span className="inline-flex items-center gap-0.5 rounded-full bg-[var(--shell-warning-surface)] px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-[var(--shell-warning)] border border-[var(--shell-warning)]/30">
-                <Lock className="h-2.5 w-2.5" /> Approval
-              </span>
+              <StatusBadge status="pending" category="quotation" label="Approval" />
             )}
           </span>
         );

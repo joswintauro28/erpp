@@ -279,7 +279,7 @@ function renderMarkdown(text: string): React.ReactNode {
         parts.push(
           <code
             key={match.index}
-            className="rounded bg-muted px-1.5 py-0.5 text-[11px] font-mono border border-border text-[#8C1D24] dark:text-[#E5B83C]"
+            className="rounded bg-muted px-1.5 py-0.5 text-[11px] font-mono border border-border text-[var(--shell-brand)] dark:text-[var(--shell-accent)]"
           >
             {token.slice(1, -1)}
           </code>,
@@ -288,7 +288,7 @@ function renderMarkdown(text: string): React.ReactNode {
         parts.push(
           <span
             key={match.index}
-            className="font-medium text-[#8C1D24] dark:text-[#E5B83C] bg-[#8C1D24]/10 dark:bg-[#8C1D24]/20 px-1.5 py-0.5 rounded text-[12px]"
+            className="font-medium text-[var(--shell-brand)] dark:text-[var(--shell-accent)] bg-[var(--shell-brand)]/10 dark:bg-[var(--shell-brand)]/20 px-1.5 py-0.5 rounded text-[12px]"
           >
             {token}
           </span>,
@@ -841,7 +841,7 @@ export function AIChat({
       >
         <div className="p-3 border-b border-border flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0">
-            <MessageSquare size={15} className="text-[#8C1D24] dark:text-[#E5B83C] shrink-0" />
+            <MessageSquare size={15} className="text-[var(--shell-brand)] dark:text-[var(--shell-accent)] shrink-0" />
             <span className="text-xs font-semibold text-foreground truncate">
               Chat History
             </span>
@@ -866,7 +866,7 @@ export function AIChat({
           <Button
             type="button"
             onClick={newChat}
-            className="w-full bg-[#8C1D24] hover:bg-[#8C1D24]/90 text-white text-xs h-8 gap-2 font-medium shadow-2xs"
+            className="w-full bg-[var(--shell-brand)] hover:bg-[var(--shell-brand)]/90 text-white text-xs h-8 gap-2 font-medium shadow-2xs"
           >
             <Plus size={14} />
             <span>New Chat</span>
@@ -879,7 +879,7 @@ export function AIChat({
               placeholder="Search past chats..."
               value={sessionSearch}
               onChange={(e) => setSessionSearch(e.target.value)}
-              className="h-8 pl-8 text-xs bg-background/50 placeholder:text-muted-foreground/70 focus-visible:ring-1 focus-visible:ring-[#8C1D24]"
+              className="h-8 pl-8 text-xs bg-background/50 placeholder:text-muted-foreground/70 focus-visible:ring-1 focus-visible:ring-[var(--shell-brand)]"
             />
           </div>
         </div>
@@ -907,7 +907,7 @@ export function AIChat({
                       className={cn(
                         "group relative flex items-center justify-between rounded-lg px-2.5 py-1.5 text-xs transition-colors cursor-pointer",
                         isActive
-                          ? "bg-accent text-foreground font-medium border-l-[3px] border-[#8C1D24] pl-2 shadow-2xs"
+                          ? "bg-accent text-foreground font-medium border-l-[3px] border-[var(--shell-brand)] pl-2 shadow-2xs"
                           : "text-muted-foreground hover:bg-muted hover:text-foreground",
                       )}
                     >
@@ -1058,7 +1058,7 @@ export function AIChat({
               </Button>
             )}
 
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#8C1D24]/10 border border-[#8C1D24]/25 text-[#8C1D24] dark:text-[#E5B83C]">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[var(--shell-brand)]/10 border border-[var(--shell-brand)]/25 text-[var(--shell-brand)] dark:text-[var(--shell-accent)]">
               <Sparkles size={16} />
             </div>
 
@@ -1112,7 +1112,7 @@ export function AIChat({
               variant="outline"
               size="sm"
               onClick={newChat}
-              className="h-8 gap-1.5 text-xs font-medium shadow-2xs hover:border-[#8C1D24]/40"
+              className="h-8 gap-1.5 text-xs font-medium shadow-2xs hover:border-[var(--shell-brand)]/40"
               title="Start New Chat"
             >
               <Plus size={13} />
@@ -1125,7 +1125,7 @@ export function AIChat({
         {showAnalytics && analytics && (
           <Card className="rounded-none border-x-0 border-t-0 border-b border-border bg-card shadow-xs animate-in slide-in-from-top-2 duration-200">
             <CardHeader className="p-3 pb-2 flex flex-row items-center justify-between space-y-0">
-              <CardTitle className="text-xs font-semibold text-[#8C1D24] dark:text-[#E5B83C] flex items-center gap-1.5">
+              <CardTitle className="text-xs font-semibold text-[var(--shell-brand)] dark:text-[var(--shell-accent)] flex items-center gap-1.5">
                 <BarChart3 size={14} />
                 AI Assistant Performance & Usage
               </CardTitle>
@@ -1176,7 +1176,7 @@ export function AIChat({
         <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 [scrollbar-width:thin]">
           {isEmpty ? (
             <div className="flex flex-col items-center justify-center h-full text-center py-6 max-w-2xl mx-auto px-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#8C1D24]/10 border border-[#8C1D24]/25 text-[#8C1D24] dark:text-[#E5B83C] text-xl shadow-2xs mb-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--shell-brand)]/10 border border-[var(--shell-brand)]/25 text-[var(--shell-brand)] dark:text-[var(--shell-accent)] text-xl shadow-2xs mb-3">
                 {meta.icon}
               </div>
               <h2 className="text-base font-semibold text-foreground mb-1.5">
@@ -1201,7 +1201,7 @@ export function AIChat({
                       type="button"
                       variant="outline"
                       onClick={() => sendMessage(item.text)}
-                      className="h-auto p-3.5 rounded-xl border border-border bg-card hover:bg-accent/60 hover:border-[#8C1D24]/40 hover:shadow-2xs transition-all text-xs text-foreground group flex items-start justify-start text-left whitespace-normal"
+                      className="h-auto p-3.5 rounded-xl border border-border bg-card hover:bg-accent/60 hover:border-[var(--shell-brand)]/40 hover:shadow-2xs transition-all text-xs text-foreground group flex items-start justify-start text-left whitespace-normal"
                     >
                       <span className="text-base shrink-0 mt-0.5 mr-3">{item.icon}</span>
                       <div className="flex-1 min-w-0">
@@ -1240,7 +1240,7 @@ export function AIChat({
                           "rounded-lg text-xs font-semibold",
                           isUser
                             ? "bg-zinc-800 text-white dark:bg-zinc-200 dark:text-zinc-900"
-                            : "bg-[#8C1D24] text-white dark:bg-[#8C1D24] dark:text-[#E5B83C]",
+                            : "bg-[var(--shell-brand)] text-white dark:bg-[var(--shell-brand)] dark:text-[var(--shell-accent)]",
                         )}
                       >
                         {isUser ? <User size={13} /> : <Bot size={13} />}
@@ -1279,7 +1279,7 @@ export function AIChat({
                           renderMarkdown(msg.content)
                         ) : msg.streaming ? (
                           <div className="flex items-center gap-2.5 py-1">
-                            <Sparkles size={14} className="text-[#8C1D24] dark:text-[#E5B83C] animate-spin" style={{ animationDuration: "3s" }} />
+                            <Sparkles size={14} className="text-[var(--shell-brand)] dark:text-[var(--shell-accent)] animate-spin" style={{ animationDuration: "3s" }} />
                             <span className="text-xs text-muted-foreground font-medium animate-pulse">
                               DATAVEX AI is analyzing module records...
                             </span>
@@ -1324,7 +1324,7 @@ export function AIChat({
         {/* Input Bar */}
         <footer className="border-t border-border bg-card/60 backdrop-blur-xs p-3.5 shrink-0">
           <div className="max-w-3xl mx-auto w-full">
-            <div className="relative bg-card border border-border rounded-2xl shadow-2xs focus-within:border-[#8C1D24] focus-within:ring-2 focus-within:ring-[#8C1D24]/15 transition-all p-2 flex flex-col gap-1.5">
+            <div className="relative bg-card border border-border rounded-2xl shadow-2xs focus-within:border-[var(--shell-brand)] focus-within:ring-2 focus-within:ring-[var(--shell-brand)]/15 transition-all p-2 flex flex-col gap-1.5">
               <textarea
                 ref={textareaRef}
                 value={input}
@@ -1359,7 +1359,7 @@ export function AIChat({
                     size="icon"
                     onClick={() => sendMessage()}
                     disabled={loading || !input.trim()}
-                    className="h-7 w-7 rounded-lg bg-[#8C1D24] hover:bg-[#8C1D24]/90 text-white shadow-2xs"
+                    className="h-7 w-7 rounded-lg bg-[var(--shell-brand)] hover:bg-[var(--shell-brand)]/90 text-white shadow-2xs"
                     aria-label="Send message"
                   >
                     <Send size={13} />

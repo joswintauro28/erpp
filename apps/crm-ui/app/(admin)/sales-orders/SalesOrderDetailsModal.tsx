@@ -334,7 +334,7 @@ export default function SalesOrderDetailsModal({
                 {onApprove && canApprove && (
                   <Button
                     onClick={handleInnerApprove}
-                    className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white"
+                    className="flex items-center gap-1.5 bg-[var(--shell-success)] hover:bg-[var(--shell-success)]/90 text-white"
                     size="sm"
                   >
                     <BadgeCheck className="size-3.5" />
@@ -346,14 +346,14 @@ export default function SalesOrderDetailsModal({
                     <Button variant="outline" size="sm" onClick={() => onEdit?.(record)}>
                       Edit Order
                     </Button>
-                    <Button className="bg-blue-600 hover:bg-blue-700 text-white" size="sm" onClick={handleAddAsCustomer}>
+                    <Button className="bg-[var(--shell-info)] hover:bg-[var(--shell-info)]/90 text-white" size="sm" onClick={handleAddAsCustomer}>
                       Add as Customer
                     </Button>
                   </>
                 ) : (
                   <Button
                     onClick={() => setShowInvoiceForm(true)}
-                    className="flex items-center gap-1.5 bg-[var(--shell-success-surface)]0 hover:bg-emerald-600 text-white"
+                    className="flex items-center gap-1.5 bg-[var(--shell-success-surface)] hover:bg-[var(--shell-success)] text-white"
                     size="sm"
                   >
                     <CheckCircle className="size-3.5" />
@@ -405,7 +405,7 @@ export default function SalesOrderDetailsModal({
               </div>
               <div className="flex justify-end gap-2 pt-2">
                 <Button type="button" variant="outline" onClick={() => setShowInvoiceForm(false)} size="sm">Cancel</Button>
-                <Button type="submit" className="bg-[var(--shell-success-surface)]0 hover:bg-emerald-600 text-white" disabled={invoiceSubmitting} size="sm">
+                <Button type="submit" className="bg-[var(--shell-success-surface)] hover:bg-[var(--shell-success)] text-white" disabled={invoiceSubmitting} size="sm">
                   {invoiceSubmitting ? "Checking stock..." : "Check stock & confirm"}
                 </Button>
               </div>

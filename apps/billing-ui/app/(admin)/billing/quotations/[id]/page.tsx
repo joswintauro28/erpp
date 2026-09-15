@@ -194,7 +194,7 @@ export default function QuotationDetail() {
       </div>
 
       {quotation.converted_invoice_id && (
-        <div className="flex items-center gap-3.5 rounded-xl border border-[var(--shell-success)]/20 bg-gradient-to-r from-[var(--shell-success-surface)]0/5 to-transparent px-5 py-4.5 shadow-sm animate-kpi print:hidden">
+        <div className="flex items-center gap-3.5 rounded-xl border border-[var(--shell-success)]/20 bg-gradient-to-r from-[var(--shell-success-surface)]/5 to-transparent px-5 py-4.5 shadow-sm animate-kpi print:hidden">
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--shell-success)]/10 text-[var(--shell-success)]">
             <FileCheck className="h-5 w-5" />
           </div>
@@ -382,7 +382,7 @@ export default function QuotationDetail() {
 
           {/* Conversion Wizard */}
           {canEdit && quotation.status === "accepted" && !quotation.converted_invoice_id && (
-            <Card className="border-[var(--shell-success)]/20 shadow-md bg-gradient-to-r from-[var(--shell-success-surface)]0/5 to-transparent print:hidden">
+            <Card className="border-[var(--shell-success)]/20 shadow-md bg-gradient-to-r from-[var(--shell-success-surface)]/5 to-transparent print:hidden">
               <CardContent className="p-6 flex flex-col sm:flex-row items-center gap-4 justify-between">
                 <div className="flex items-start gap-3.5">
                   <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--shell-success)]/10 text-[var(--shell-success)] border border-[var(--shell-success)]/20 shrink-0">
@@ -431,7 +431,7 @@ export default function QuotationDetail() {
                     <div key={step.key} className="flex items-start gap-3.5 pb-6 last:pb-0 relative">
                       {idx < STATUS_FLOW.length - 1 && (
                         <div className={`absolute left-[13.5px] top-7 w-0.5 h-6 -translate-x-1/2 ${
-                          isPast ? "bg-[var(--shell-success-surface)]0" : "bg-[var(--shell-border)]"
+                          isPast ? "bg-[var(--shell-success-surface)]" : "bg-[var(--shell-border)]"
                         }`} />
                       )}
                       <div className={`flex h-7 w-7 items-center justify-center rounded-full border-2 shrink-0 z-10 transition-colors duration-200 ${

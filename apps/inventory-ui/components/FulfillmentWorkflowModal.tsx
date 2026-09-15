@@ -14,7 +14,7 @@ import {
   Loader2,
   ExternalLink,
 } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Button, Badge, handleError } from "@datavex/ui-theme";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Button, Badge, StatusBadge, handleError } from "@datavex/ui-theme";
 import { api } from "@/services/api";
 import { toastError, toastWarning, toastSuccess } from "@/utils/toast";
 
@@ -192,26 +192,7 @@ export default function FulfillmentWorkflowModal({
   };
 
   const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "QUEUED":
-        return <Badge variant="neutral">Order Queue</Badge>;
-      case "RESERVED":
-        return <Badge className="bg-blue-600 text-white">Stock Reserved</Badge>;
-      case "PICKING":
-        return <Badge className="bg-amber-600 text-white">Picking Items</Badge>;
-      case "PACKED":
-        return <Badge className="bg-purple-600 text-white">Packed & Ready</Badge>;
-      case "DISPATCHED":
-        return <Badge className="bg-emerald-600 text-white">Dispatched</Badge>;
-      case "SHORTAGE":
-        return <Badge variant="destructive">Stock Shortage</Badge>;
-      case "PO_CREATED":
-        return <Badge className="bg-orange-600 text-white">Reorder PO Active</Badge>;
-      case "COMPLETED":
-        return <Badge className="bg-green-700 text-white">Completed & Billed</Badge>;
-      default:
-        return <Badge variant="outline">{status}</Badge>;
-    }
+    return <StatusBadge status={status} category="fulfillment" />;
   };
 
   return (
@@ -239,16 +220,16 @@ export default function FulfillmentWorkflowModal({
             <div className={`p-2 rounded font-medium border ${order.status === "QUEUED" ? "bg-[var(--shell-brand)] text-white border-[var(--shell-brand)]" : "bg-background border-border"}`}>
               1. Check Stock
             </div>
-            <div className={`p-2 rounded font-medium border ${order.status === "RESERVED" ? "bg-blue-600 text-white border-blue-600" : "bg-background border-border"}`}>
+            <div className={`p-2 rounded font-medium border ${order.status === "RESERVED" ? "bg-[var(--shell-info)] text-white border-[var(--shell-info)]" : "bg-background border-border"}`}>
               2. Reserve Stock
             </div>
-            <div className={`p-2 rounded font-medium border ${order.status === "PICKING" ? "bg-amber-600 text-white border-amber-600" : "bg-background border-border"}`}>
+            <div className={`p-2 rounded font-medium border ${order.status === "PICKING" ? "bg-[var(--shell-warning)] text-white border-[var(--shell-warning)]" : "bg-background border-border"}`}>
               3. Pick List
             </div>
-            <div className={`p-2 rounded font-medium border ${order.status === "PACKED" ? "bg-purple-600 text-white border-purple-600" : "bg-background border-border"}`}>
+            <div className={`p-2 rounded font-medium border ${order.status === "PACKED" ? "bg-[var(--shell-accent)] text-[var(--shell-accent-text)] border-[var(--shell-border)]" : "bg-background border-border"}`}>
               4. Pack Items
             </div>
-            <div className={`p-2 rounded font-medium border ${order.status === "DISPATCHED" || order.status === "COMPLETED" ? "bg-emerald-600 text-white border-emerald-600" : "bg-background border-border"}`}>
+            <div className={`p-2 rounded font-medium border ${order.status === "DISPATCHED" || order.status === "COMPLETED" ? "bg-[var(--shell-success)] text-white border-[var(--shell-success)]" : "bg-background border-border"}`}>
               5. Dispatch & Bill
             </div>
           </div>
@@ -323,7 +304,7 @@ export default function FulfillmentWorkflowModal({
 
                     <div className="pt-2 flex justify-end gap-2">
                       {stockCheck.overall_available ? (
-                        <Button size="sm" onClick={handleReserve} disabled={loading} className="bg-blue-600 text-white">
+                        <Button size="sm" onClick={handleReserve} disabled={loading} className="bg-[var(--shell-info)] hover:bg-[var(--shell-info)]/90 text-white">
                           Proceed to Reserve Stock <ArrowRight className="h-4 w-4 ml-1" />
                         </Button>
                       ) : (
@@ -350,7 +331,7 @@ export default function FulfillmentWorkflowModal({
                   <Button variant="outline" size="sm" onClick={handleStepBack} disabled={loading}>
                     ← Back
                   </Button>
-                  <Button onClick={handlePick} disabled={loading} className="bg-amber-600 text-white hover:bg-amber-700">
+                  <Button onClick={handlePick} disabled={loading} className="bg-[var(--shell-warning)] hover:bg-[var(--shell-warning)]/90 text-white">
                     Generate Pick List <ArrowRight className="h-4 w-4 ml-1" />
                   </Button>
                 </div>
@@ -370,7 +351,7 @@ export default function FulfillmentWorkflowModal({
                   <Button variant="outline" size="sm" onClick={handleStepBack} disabled={loading}>
                     ← Back
                   </Button>
-                  <Button onClick={handlePack} disabled={loading} className="bg-purple-600 text-white hover:bg-purple-700">
+                  <Button onClick={handlePack} disabled={loading} className="bg-[var(--shell-accent)] hover:bg-[var(--shell-accent)]/90 text-[var(--shell-accent-text)]">
                     Confirm Packing <ArrowRight className="h-4 w-4 ml-1" />
                   </Button>
                 </div>
@@ -381,7 +362,7 @@ export default function FulfillmentWorkflowModal({
             {order.status === "PACKED" && (
               <div className="space-y-3">
                 <div>
-                  <h5 className="font-semibold text-purple-600 flex items-center gap-2">
+                  <h5 className="font-semibold text-[var(--shell-info)] flex items-center gap-2">
                     <Boxes className="h-5 w-5" /> Packed & Ready for Shipment
                   </h5>
                   <p className="text-xs text-muted-foreground">Enter carrier and tracking details to dispatch and deduct stock.</p>
@@ -412,7 +393,7 @@ export default function FulfillmentWorkflowModal({
                   <Button variant="outline" size="sm" onClick={handleStepBack} disabled={loading}>
                     ← Back
                   </Button>
-                  <Button onClick={handleDispatch} disabled={loading} className="bg-emerald-600 text-white hover:bg-emerald-700">
+                  <Button onClick={handleDispatch} disabled={loading} className="bg-[var(--shell-success)] hover:bg-[var(--shell-success)]/90 text-white">
                     <Truck className="h-4 w-4 mr-1" /> Dispatch & Update Stock
                   </Button>
                 </div>

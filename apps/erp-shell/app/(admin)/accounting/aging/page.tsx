@@ -284,7 +284,7 @@ export default function AgingWorkstationPage() {
                   <p className="font-heading text-lg font-bold">{money(bucket.totalAmount)}</p>
                   <div className="w-full bg-muted h-1.5 rounded-full mt-3 overflow-hidden">
                     <div
-                      className={`h-full ${bucket.bucket === "Over 90 Days" ? "bg-[var(--shell-danger-surface)]0" : bucket.bucket === "61–90 Days" ? "bg-[var(--shell-warning-surface)]0" : "bg-primary"}`}
+                      className={`h-full ${bucket.bucket === "Over 90 Days" ? "bg-[var(--shell-danger-surface)]" : bucket.bucket === "61–90 Days" ? "bg-[var(--shell-warning-surface)]" : "bg-primary"}`}
                       style={{ width: `${Math.min(100, bucket.percentage)}%` }}
                     />
                   </div>

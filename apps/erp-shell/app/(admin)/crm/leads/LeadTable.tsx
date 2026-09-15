@@ -41,7 +41,7 @@ export default function LeadTable({ leads, onView, onEdit, onDelete, onQualify }
           <span className="flex items-center gap-1.5">
             {row.name}
             {isMql && (
-              <span className="inline-flex items-center gap-0.5 rounded-full bg-yellow-500/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-yellow-600 border border-yellow-500/30">
+              <span className="inline-flex items-center gap-0.5 rounded-full bg-[var(--shell-warning)]/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-[var(--shell-warning)] border border-[var(--shell-warning)]/30">
                 <BadgeCheck className="h-2.5 w-2.5" /> MQL
               </span>
             )}

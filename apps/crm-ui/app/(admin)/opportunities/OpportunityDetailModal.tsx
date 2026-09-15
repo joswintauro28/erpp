@@ -9,6 +9,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/shared/empty-state";
+import { StatusBadge } from "@datavex/ui-theme";
 import { api } from "@/services/api";
 import { toastError } from "@/utils/toast";
 import { useConfirm, handleError, stageColors, FileUpload, type FileRecord } from "@datavex/ui-theme";
@@ -159,7 +160,7 @@ function QuoteRow({ quote, onDelete, onPreview, onConverted, onEdit }: QuoteRowP
             Value: {quote.value} &middot; Valid until: {quote.valid_until} &middot; {quote.owner}
           </div>
         </div>
-        <Badge variant={isConverted ? "default" : isAccepted ? "default" : "secondary"}>{quote.status}</Badge>
+        <StatusBadge status={quote.status} category="quotation" />
         {open ? <ChevronDown size={14} className="shrink-0 text-[var(--shell-muted)]" /> : <ChevronRight size={14} className="shrink-0 text-[var(--shell-muted)]" />}
       </div>
 
@@ -244,7 +245,7 @@ function QuoteRow({ quote, onDelete, onPreview, onConverted, onEdit }: QuoteRowP
                 </div>
                 <div className="flex gap-2 justify-end">
                   <Button type="button" variant="outline" size="sm" onClick={() => { setShowSaleForm(false); setSaleError(""); }}>Cancel</Button>
-                  <Button type="submit" size="sm" disabled={saleSubmitting} className="bg-green-600 hover:bg-green-700">
+                  <Button type="submit" size="sm" disabled={saleSubmitting} className="bg-[var(--shell-success)] hover:bg-[var(--shell-success)]/90 text-white">
                     {saleSubmitting ? <Loader size={13} className="mr-1 animate-spin" /> : <CheckCircle size={13} className="mr-1" />}
                     {saleSubmitting ? "Creating..." : "Confirm & Create"}
                   </Button>

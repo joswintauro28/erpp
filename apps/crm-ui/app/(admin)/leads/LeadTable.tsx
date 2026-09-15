@@ -3,7 +3,7 @@
 import { Edit2, Trash2, BadgeCheck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { DataTable, type Column } from "@datavex/ui-theme";
+import { DataTable, StatusBadge, type Column } from "@datavex/ui-theme";
 import { cn, statusVariant } from "@/lib/utils";
 
 const tierVariant = (tier: string) => {
@@ -41,9 +41,7 @@ export default function LeadTable({ leads, onView, onEdit, onDelete, onQualify }
           <span className="flex items-center gap-1.5">
             {row.name}
             {isMql && (
-              <span className="inline-flex items-center gap-0.5 rounded-full bg-yellow-500/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-yellow-600 border border-yellow-500/30">
-                <BadgeCheck className="h-2.5 w-2.5" /> MQL
-              </span>
+              <StatusBadge status="mql" category="lead" />
             )}
           </span>
         );
@@ -68,7 +66,7 @@ export default function LeadTable({ leads, onView, onEdit, onDelete, onQualify }
               <div
                 className={cn(
                   "h-full rounded-full transition-all",
-                  score >= 70 ? "bg-yellow-500" : score >= 40 ? "bg-blue-500" : "bg-slate-400"
+                  score >= 70 ? "bg-[var(--shell-warning)]" : score >= 40 ? "bg-[var(--shell-info)]" : "bg-muted-foreground/40"
                 )}
                 style={{ width: `${score}%` }}
               />

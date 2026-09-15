@@ -243,7 +243,7 @@ export default function LeadDetailsModal({ lead, isOpen, onClose, onSuccess, onV
                 <span className="text-[10px] font-semibold uppercase text-[var(--shell-muted)]">/ 100</span>
                 <div className="flex-1 h-2 rounded-full bg-[var(--shell-border)] overflow-hidden">
                   <div
-                    className={`h-full rounded-full ${(lead.score ?? 0) >= 70 ? "bg-[var(--shell-warning-surface)]0" : (lead.score ?? 0) >= 40 ? "bg-[var(--shell-info-surface)]0" : "bg-slate-400"}`}
+                    className={`h-full rounded-full ${(lead.score ?? 0) >= 70 ? "bg-[var(--shell-warning-surface)]" : (lead.score ?? 0) >= 40 ? "bg-[var(--shell-info-surface)]" : "bg-muted-foreground/40"}`}
                     style={{ width: `${lead.score ?? 0}%` }}
                   />
                 </div>
@@ -404,7 +404,7 @@ export default function LeadDetailsModal({ lead, isOpen, onClose, onSuccess, onV
               size="sm"
               disabled={qualifying}
               onClick={handleQualify}
-              className="bg-amber-600 hover:bg-amber-700"
+              className="bg-[var(--shell-warning)] hover:bg-[var(--shell-warning)]/90 text-white"
             >
               <BadgeCheck size={14} className="mr-1" />
               {qualifying ? "Qualifying..." : "Qualify to SQL (1-click)"}
