@@ -1,4 +1,5 @@
 from pydantic import BaseModel, Field
+from typing import Optional
 
 class CompanyInfo(BaseModel):
     company_name: str = "DATAVEX Technologies Pvt Ltd"
@@ -23,7 +24,27 @@ class RegionalSettings(BaseModel):
     date_format: str = "DD-MM-YYYY"
     number_format: str = "1,23,456.78 (Indian)"
 
+class BrandColors(BaseModel):
+    primary: str = "#f2470c"
+    accent: str = "#E5B83C"
+    surface: str = "#1C1917"
+    foreground: str = "#F5F5F4"
+    muted: str = "#A8A29E"
+
+class EmailTemplateSettings(BaseModel):
+    sender_name: str = "DATAVEX ERP"
+    sender_email: str = "noreply@datavex.in"
+    footer: str = "Powered by DATAVEX Technologies"
+    email_logo_file_id: Optional[int] = None
+
+class BrandingSettings(BaseModel):
+    logo_file_id: Optional[int] = None
+    favicon_file_id: Optional[int] = None
+    brand_colors: BrandColors = Field(default_factory=BrandColors)
+    email_templates: EmailTemplateSettings = Field(default_factory=EmailTemplateSettings)
+
 class SettingsSchema(BaseModel):
     company: CompanyInfo = Field(default_factory=CompanyInfo)
     financial: FinancialSettings = Field(default_factory=FinancialSettings)
     regional: RegionalSettings = Field(default_factory=RegionalSettings)
+    branding: BrandingSettings = Field(default_factory=BrandingSettings)

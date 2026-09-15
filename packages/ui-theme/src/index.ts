@@ -37,10 +37,14 @@ export * from "./components/ui/switch";
 export * from "./components/ui/checkbox";
 export * from "./components/ui/avatar";
 export * from "./components/ui/separator";
+export * from "./components/ui/color-picker";
 
 // Navigation primitives (D-14)
 export * from "./components/ui/pagination";
 export * from "./components/ui/breadcrumb";
+
+// Branding (org-aware logo, favicon, colors provider)
+export * from "./components/shared/branding-provider";
 
 // Shared composites
 export * from "./components/shared/multi-step-dialog";

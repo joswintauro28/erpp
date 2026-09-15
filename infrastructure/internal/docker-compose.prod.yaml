@@ -17,8 +17,8 @@ services:
   # ─── MinIO — S3 reverse proxy under single domain ─────────────────────────
   minio:
     environment:
-      MINIO_SERVER_URL: http://${MAIN_DOMAIN:-erp.datavex.com}/minio
-      MINIO_BROWSER_REDIRECT_URL: http://${MAIN_DOMAIN:-erp.datavex.com}/minio
+      MINIO_SERVER_URL: http://${MAIN_DOMAIN:-erp.datavex.com}
+      MINIO_BROWSER_REDIRECT_URL: http://${MAIN_DOMAIN:-erp.datavex.com}/minio-client
       MINIO_API_CORS_ALLOW_ORIGIN: "*"
 
   # ─── ERP Shell — basePath /admin ──────────────────────────────────────────
@@ -86,13 +86,6 @@ services:
     healthcheck:
       test: ["CMD", "node", "-e", "require('http').get('http://127.0.0.1:3004/inventory', (res) => { if (res.statusCode >= 200 && res.statusCode < 400) process.exit(0); else process.exit(1); }).on('error', () => process.exit(1))"]
 
-  # ─── MinIO — S3 reverse proxy env vars ──────────────────────────────────
-  minio:
-    environment:
-      MINIO_SERVER_URL: http://127.0.0.1:9000
-      MINIO_BROWSER_REDIRECT_URL: http://${MAIN_DOMAIN:-erp.datavex.com}/minio-client
-      MINIO_API_CORS_ALLOW_ORIGIN: "*"
-
   # ─── Backend Services — CORS & single-domain adjustments ─────────────────
   core-iam:
     environment:
@@ -102,7 +95,7 @@ services:
   erp-service:
     environment:
       CORS_ORIGINS: http://${MAIN_DOMAIN:-erp.datavex.com}
-      MINIO_PUBLIC_URL: http://${MAIN_DOMAIN:-erp.datavex.com}/minio
+      MINIO_PUBLIC_URL: http://${MAIN_DOMAIN:-erp.datavex.com}
       FRONTEND_URL: http://${MAIN_DOMAIN:-erp.datavex.com}/admin
 
   crm-service:

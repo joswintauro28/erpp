@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
+import { useBranding } from "@datavex/ui-theme";
 import type { NavItem, NavGroup, NavSection, NavChild } from "@/types/navigation";
 
 const navItems: NavItem[] = [
@@ -117,6 +118,8 @@ function activeChild(group: NavGroup, pathname: string): string | null {
 export default function Sidebar({ collapsed }: { collapsed: boolean }) {
   const pathname = usePathname();
   const { user, logout } = useAuth();
+  const { logoUrl, branding } = useBranding();
+  const companyName = branding.company_name || "DATAVEX";
   const [expanded, setExpanded] = useState<string[]>(["Inventory"]);
   const [hoveredGroup, setHoveredGroup] = useState<NavGroup | null>(null);
   const [hoverPosition, setHoverPosition] = useState(0);
@@ -192,10 +195,18 @@ export default function Sidebar({ collapsed }: { collapsed: boolean }) {
           collapsed ? "h-20 justify-center px-0" : "h-20 gap-3 px-5"
         )}
       >
-        <div className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-sidebar-primary text-sm font-extrabold text-sidebar-primary-foreground shadow-md transition-transform duration-300 hover:rotate-6 select-none">
-          <span className="absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent pointer-events-none" />
-          D
-        </div>
+        {logoUrl ? (
+          <img
+            src={logoUrl}
+            alt={companyName}
+            className="h-9 w-9 shrink-0 rounded-md object-contain shadow-md transition-transform duration-300 hover:rotate-6"
+          />
+        ) : (
+          <div className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-sidebar-primary text-sm font-extrabold text-sidebar-primary-foreground shadow-md transition-transform duration-300 hover:rotate-6 select-none">
+            <span className="absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent pointer-events-none" />
+            D
+          </div>
+        )}
         <div
           className={cn(
             "flex flex-col overflow-hidden transition-all duration-300",
@@ -203,7 +214,7 @@ export default function Sidebar({ collapsed }: { collapsed: boolean }) {
           )}
         >
           <span className="font-heading text-sm font-bold tracking-[0.18em] text-sidebar-primary select-none">
-            DATAVEX
+            {companyName}
           </span>
           <span className="text-[9px] font-medium tracking-[0.1em] text-sidebar-foreground/50 uppercase mt-0.5 select-none">
             Inventory Center
