@@ -40,8 +40,8 @@ class MigrationStats:
 def get_s3_client():
     """Create an S3 client from environment variables."""
     endpoint = os.getenv("RUSTFS_ENDPOINT", "localhost:9000")
-    access_key = os.getenv("RUSTFS_ACCESS_KEY", "minioadmin")
-    secret_key = os.getenv("RUSTFS_SECRET_KEY", "minioadmin")
+    access_key = os.getenv("RUSTFS_ACCESS_KEY", "datavex-rustfs-admin")
+    secret_key = os.getenv("RUSTFS_SECRET_KEY", "datavex-rustfs-admin")
     secure = os.getenv("RUSTFS_SECURE", "false").lower() == "true"
     scheme = "https" if secure else "http"
 

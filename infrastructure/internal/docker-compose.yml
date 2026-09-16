@@ -56,13 +56,13 @@ services:
       - erp-network
 
   # ─── RustFS Object Storage ──────────────────────────────────────────────────
-  minio:
+  rustfs:
     image: rustfs/rustfs:latest
-    container_name: datavex-minio
+    container_name: datavex-rustfs
     restart: unless-stopped
     command: server /data --console-address ":9001"
     environment:
-      RUSTFS_ACCESS_KEY: ${RUSTFS_ACCESS_KEY:-minioadmin}
+      RUSTFS_ACCESS_KEY: ${RUSTFS_ACCESS_KEY:-datavex-rustfs-admin}
       RUSTFS_SECRET_KEY: ${RUSTFS_SECRET_KEY:?RUSTFS_SECRET_KEY is required}
       RUSTFS_CONSOLE_ENABLE: "true"
       RUSTFS_CONSOLE_ADDRESS: ":9001"
@@ -78,13 +78,13 @@ services:
       - erp-network
 
   # ─── RustFS Bucket Init (runs once on first boot) ──────────────────────────
-  minio-init:
+  rustfs-init:
     image: rustfs/rustfs:latest
-    container_name: datavex-minio-init
+    container_name: datavex-rustfs-init
     entrypoint: >
       /bin/sh -c "
         apk add --no-cache curl > /dev/null 2>&1 &&
-        rc alias set local http://minio:9000 ${RUSTFS_ACCESS_KEY:-minioadmin} ${RUSTFS_SECRET_KEY:?RUSTFS_SECRET_KEY is required} &&
+        rc alias set local http://rustfs:9000 ${RUSTFS_ACCESS_KEY:-datavex-rustfs-admin} ${RUSTFS_SECRET_KEY:?RUSTFS_SECRET_KEY is required} &&
         rc mb local/crm-assets &&
         rc mb local/inv-docs &&
         rc mb local/finance-records &&
@@ -96,7 +96,7 @@ services:
         echo 'RustFS buckets created successfully'
       "
     depends_on:
-      minio:
+      rustfs:
         condition: service_healthy
     networks:
       - erp-network
@@ -170,8 +170,8 @@ services:
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/erp_db
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
       RABBITMQ_URL: amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASSWORD:?RABBITMQ_PASSWORD is required}@rabbitmq:5672
-      RUSTFS_ENDPOINT: minio:9000
-      RUSTFS_ACCESS_KEY: ${RUSTFS_ACCESS_KEY:-minioadmin}
+      RUSTFS_ENDPOINT: rustfs:9000
+      RUSTFS_ACCESS_KEY: ${RUSTFS_ACCESS_KEY:-datavex-rustfs-admin}
       RUSTFS_SECRET_KEY: ${RUSTFS_SECRET_KEY:?RUSTFS_SECRET_KEY is required}
       RUSTFS_SECURE: "false"
       RUSTFS_PUBLIC_URL: ${RUSTFS_SERVER_URL:-http://rustfs.${MAIN_DOMAIN:-erp.datavex.com}}
@@ -186,7 +186,7 @@ services:
         condition: service_healthy
       postgres:
         condition: service_healthy
-      minio:
+      rustfs:
         condition: service_healthy
     networks:
       - erp-network

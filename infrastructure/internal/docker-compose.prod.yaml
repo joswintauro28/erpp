@@ -15,7 +15,7 @@
 services:
 
   # ─── RustFS — S3 reverse proxy under single domain ─────────────────────────
-  minio:
+  rustfs:
     environment:
       RUSTFS_CONSOLE_ENABLE: "true"
 

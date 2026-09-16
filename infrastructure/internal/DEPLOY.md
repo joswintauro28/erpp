@@ -326,7 +326,7 @@ docker compose --env-file .env.docker exec erp-service curl http://postgres:5432
 
 ### RustFS Uploads Fail
 
-- Check RustFS is healthy: `docker compose --env-file .env.docker logs minio`
+- Check RustFS is healthy: `docker compose --env-file .env.docker logs rustfs`
 - Verify `RUSTFS_PUBLIC_URL` resolves from the browser's machine
 - If using `/etc/hosts`, ensure `rustfs.erp.datavex.com` is listed there
 

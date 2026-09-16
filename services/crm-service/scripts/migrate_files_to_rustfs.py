@@ -53,8 +53,8 @@ ERP_DATABASE_URL = os.getenv("ERP_DATABASE_URL", "postgresql+asyncpg://postgres:
 BILLING_DATABASE_URL = os.getenv("BILLING_DATABASE_URL", "postgresql+asyncpg://postgres:root@localhost:5432/erp_billing")
 
 RUSTFS_ENDPOINT = os.getenv("RUSTFS_ENDPOINT", "localhost:9000")
-RUSTFS_ACCESS_KEY = os.getenv("RUSTFS_ACCESS_KEY", "minioadmin")
-RUSTFS_SECRET_KEY = os.getenv("RUSTFS_SECRET_KEY", "minioadmin")
+RUSTFS_ACCESS_KEY = os.getenv("RUSTFS_ACCESS_KEY", "datavex-rustfs-admin")
+RUSTFS_SECRET_KEY = os.getenv("RUSTFS_SECRET_KEY", "datavex-rustfs-admin")
 RUSTFS_SECURE = os.getenv("RUSTFS_SECURE", "false").lower() == "true"
 
 BUCKET = "crm-assets"

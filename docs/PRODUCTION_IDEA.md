@@ -165,7 +165,7 @@ pg_dumpall -h postgres -U postgres --globals-only | gzip > "${BACKUP_DIR}/global
 tar -czf "${BACKUP_DIR}/wal_archive.tar.gz" -C /backups wal_archive/
 
 # 4. Mirror to RustFS off-VM backup bucket
-rc alias set local_rustfs http://minio:9000 "${RUSTFS_ACCESS_KEY}" "${RUSTFS_SECRET_KEY}"
+rc alias set local_rustfs http://rustfs:9000 "${RUSTFS_ACCESS_KEY}" "${RUSTFS_SECRET_KEY}"
 rc mirror "${BACKUP_DIR}" "local_rustfs/erp-backups/${BACKUP_DATE}" --overwrite
 
 # 5. Prune local files older than 7 days
@@ -276,8 +276,8 @@ In Mode B, all applications and services are served under a single domain name o
 | `http://erp.local/crm` | `crm-shell:3001` | CRM Sales Workstation (`basePath: /crm`) |
 | `http://erp.local/billing` | `billing-ui:3002` | Billing & Accounting Workstation (`basePath: /billing`) |
 | `http://erp.local/inventory` | `inventory-ui:3004` | Inventory & Procurement Workstation (`basePath: /inventory`) |
-| `http://erp.local/rustfs/` | `minio:9000` | S3 REST API & Presigned Object Proxy |
-| `http://erp.local/rustfs-console` | `minio:9001` | RustFS Web Console Dashboard UI |
+| `http://erp.local/rustfs/` | `rustfs:9000` | S3 REST API & Presigned Object Proxy |
+| `http://erp.local/rustfs-console` | `rustfs:9001` | RustFS Web Console Dashboard UI |
 
 #### Single-Domain SSO & Authentication Flow
 1. **Unauthenticated Access**: User navigates to `http://erp.local/crm`.
@@ -372,7 +372,7 @@ http {
 
         # ── RustFS S3 API Reverse Proxy ────────────────────────────────
         location /rustfs/ {
-            proxy_pass http://minio:9000/;
+            proxy_pass http://rustfs:9000/;
             proxy_http_version 1.1;
             proxy_set_header Host $http_host;
             proxy_set_header X-Real-IP $remote_addr;
@@ -468,7 +468,7 @@ Both deployment configurations have been verified end-to-end:
 [VERIFICATION MATRIX]
 ✓ datavex-postgres         : 5432 (Healthy)
 ✓ datavex-rabbitmq         : 5672, 15672 (Healthy)
-✓ datavex-minio            : 9000, 9001 (Healthy)
+✓ datavex-rustfs          : 9000, 9001 (Healthy)
 ✓ datavex-core-iam         : 8002 (Healthy)
 ✓ datavex-billing-service  : 8003 (Healthy)
 ✓ datavex-erp-service      : 8000 (Healthy)

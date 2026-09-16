@@ -25,8 +25,8 @@ class Settings(BaseSettings):
 
     # RustFS Object Storage (S3-compatible)
     RUSTFS_ENDPOINT: str = "localhost:9000"
-    RUSTFS_ACCESS_KEY: str = "minioadmin"
-    RUSTFS_SECRET_KEY: str = "minioadmin"
+    RUSTFS_ACCESS_KEY: str = "datavex-rustfs-admin"
+    RUSTFS_SECRET_KEY: str = "datavex-rustfs-admin"
     RUSTFS_SECURE: bool = False
     # Public URL for presigned URLs — browsers use this to reach RustFS.
     # In Docker: http://rustfs.erp.local:80  (proxied through nginx)

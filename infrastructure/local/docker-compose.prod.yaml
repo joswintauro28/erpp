@@ -85,7 +85,7 @@ services:
       test: ["CMD", "node", "-e", "require('http').get('http://127.0.0.1:3004/inventory', (res) => { if (res.statusCode >= 200 && res.statusCode < 400) process.exit(0); else process.exit(1); }).on('error', () => process.exit(1))"]
 
   # ─── RustFS — S3 reverse proxy env vars ──────────────────────────────────
-  minio:
+  rustfs:
     environment:
       RUSTFS_CONSOLE_ENABLE: "true"
 

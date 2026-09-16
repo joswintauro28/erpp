@@ -55,7 +55,7 @@ The DATAVEX ERP codebase has **strong foundational security** (ORM-only queries,
 |---|--------------|----------|--------|
 | 17 | **Hardcoded DB credentials** (`postgres:root`) across all FastAPI services | `services/*/app/core/config.py`, `core-iam/.env:1` | Database access if source code leaked |
 | 18 | **Hardcoded RabbitMQ `guest:guest`** | `services/billing-service/src/main.ts:34,48` | Message broker admin access |
-| 19 | **Hardcoded RustFS `minioadmin:minioadmin`** | `services/erp-service/app/core/config.py:28-29` | Object storage admin access |
+| 19 | **Hardcoded RustFS `datavex-rustfs-admin:datavex-rustfs-admin`** | `services/erp-service/app/core/config.py:28-29` | Object storage admin access |
 | 20 | **No request body size limits** on any FastAPI app | All FastAPI `main.py` files | DoS via memory exhaustion with large payloads |
 | 21 | **OpenAPI docs publicly accessible** with no auth | All FastAPI `main.py` (docs_url enabled) | Full API surface exposure to unauthenticated users |
 | 22 | **crm-service ignores CORS_ORIGINS env var** — hardcoded origins | `services/crm-service/app/main.py:83-88` | Docker Compose CORS overrides have no effect |
