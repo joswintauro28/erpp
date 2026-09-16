@@ -15,6 +15,8 @@
 #   (Run setup-hosts.ps1 as Administrator)
 # ══════════════════════════════════════════════════════════════════════════════
 
+name: datavex-erp
+
 services:
 
   # ─── ERP Shell — basePath /admin ─────────────────────────────────────────
@@ -121,4 +123,13 @@ services:
   # ─── Nginx — Switch to single-domain config ─────────────────────────────
   nginx:
     volumes:
-      - ./nginx/single-domain.conf:/etc/nginx/nginx.conf:ro
+      - type: bind
+        source: ./nginx/single-domain.conf
+        target: /etc/nginx/nginx.conf
+        read_only: true
+
+volumes:
+  postgres_data:
+    name: datavex-erp_postgres_data
+  minio_data:
+    name: datavex-erp_minio_data

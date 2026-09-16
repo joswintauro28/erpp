@@ -22,12 +22,12 @@ import { KpiCard } from "@datavex/ui-theme";
 import type { TeamMember } from "@/types/settings";
 
 const roleColors: Record<string, string> = {
-  "Organization Owner": "var(--shell-brand)", // Crimson Red
-  "Accountant": "#E5B83C",        // Brushed Gold
-  "Sales Executive": "#3b82f6",    // Blue
-  "Inventory Manager": "#10b981",  // Green
-  "Auditor": "#a855f7",            // Purple
-  "Employee": "#6b7280",           // Gray
+  "Organization Owner": "var(--shell-brand)",
+  "Accountant": "var(--shell-accent)",
+  "Sales Executive": "var(--shell-info)",
+  "Inventory Manager": "var(--shell-success)",
+  "Auditor": "var(--chart-5)",
+  "Employee": "var(--shell-muted)",
 };
 
 export default function TeamManagement() {

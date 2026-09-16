@@ -31,11 +31,11 @@ const TYPE_META: Record<string, { icon: typeof Info; cls: string }> = {
 function ModuleBadge({ source }: { source: string }) {
   const cls =
     source === "INVENTORY"
-      ? "bg-amber-500/10 text-amber-500"
+      ? "bg-[var(--shell-warning)]/10 text-[var(--shell-warning)]"
       : source === "BILLING"
-        ? "bg-emerald-500/10 text-emerald-500"
+        ? "bg-[var(--shell-success)]/10 text-[var(--shell-success)]"
         : source === "CRM"
-          ? "bg-blue-500/10 text-blue-500"
+          ? "bg-[var(--shell-info)]/10 text-[var(--shell-info)]"
           : "bg-muted text-muted-foreground";
   return (
     <span className={cn("rounded px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide", cls)}>

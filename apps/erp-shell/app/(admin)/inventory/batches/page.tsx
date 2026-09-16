@@ -138,7 +138,7 @@ export default function BatchesPage() {
                         <TableCell className="text-xs text-muted-foreground">{batch.manufactured_date || "—"}</TableCell>
                         <TableCell className="text-xs">
                           {batch.expiry_date ? (
-                            <span className={isExpired ? "text-destructive font-semibold" : isExpiring ? "text-amber-600 font-semibold" : ""}>
+                            <span className={isExpired ? "text-destructive font-semibold" : isExpiring ? "text-[var(--shell-warning)] font-semibold" : ""}>
                               {batch.expiry_date}
                             </span>
                           ) : "—"}

@@ -77,13 +77,13 @@ function fileTypeMeta(mime: string): {
   fg: string;
 } {
   if (mime.startsWith("image/"))
-    return { Icon: FileImage, bg: "bg-blue-100 dark:bg-blue-900/40", fg: "text-blue-600 dark:text-blue-400" };
+    return { Icon: FileImage, bg: "bg-[var(--shell-info-surface)]", fg: "text-[var(--shell-info)]" };
   if (mime === "application/pdf")
-    return { Icon: FileText, bg: "bg-red-100 dark:bg-red-900/40", fg: "text-red-600 dark:text-red-400" };
+    return { Icon: FileText, bg: "bg-[var(--shell-danger-surface)]", fg: "text-[var(--shell-danger)]" };
   if (mime.includes("spreadsheet") || mime.includes("excel") || mime === "text/csv")
-    return { Icon: FileSpreadsheet, bg: "bg-emerald-100 dark:bg-emerald-900/40", fg: "text-emerald-600 dark:text-emerald-400" };
+    return { Icon: FileSpreadsheet, bg: "bg-[var(--shell-success-surface)]", fg: "text-[var(--shell-success)]" };
   if (mime.includes("wordprocessing") || mime === "application/msword")
-    return { Icon: FileText, bg: "bg-indigo-100 dark:bg-indigo-900/40", fg: "text-indigo-600 dark:text-indigo-400" };
+    return { Icon: FileText, bg: "bg-[var(--shell-info-surface)]", fg: "text-[var(--shell-info)]" };
   return { Icon: File, bg: "bg-muted", fg: "text-[var(--shell-muted)]" };
 }
 
@@ -202,25 +202,25 @@ export function FileUpload({
     switch (p) {
       case "done":
         return (
-          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 dark:bg-emerald-900/40 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 dark:text-emerald-400">
+          <span className="inline-flex items-center gap-1 rounded-full bg-[var(--shell-success-surface)] px-2 py-0.5 text-[10px] font-semibold text-[var(--shell-success)]">
             <CheckCircle2 className="h-3 w-3" /> Done
           </span>
         );
       case "error":
         return (
-          <span className="inline-flex items-center gap-1 rounded-full bg-red-100 dark:bg-red-900/40 px-2 py-0.5 text-[10px] font-semibold text-red-700 dark:text-red-400">
+          <span className="inline-flex items-center gap-1 rounded-full bg-[var(--shell-danger-surface)] px-2 py-0.5 text-[10px] font-semibold text-[var(--shell-danger)]">
             <AlertCircle className="h-3 w-3" /> Error
           </span>
         );
       case "uploading":
         return (
-          <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 dark:bg-amber-900/40 px-2 py-0.5 text-[10px] font-semibold text-amber-700 dark:text-amber-400">
+          <span className="inline-flex items-center gap-1 rounded-full bg-[var(--shell-warning-surface)] px-2 py-0.5 text-[10px] font-semibold text-[var(--shell-warning)]">
             <Loader2 className="h-3 w-3 animate-spin" /> Uploading
           </span>
         );
       case "confirming":
         return (
-          <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 dark:bg-blue-900/40 px-2 py-0.5 text-[10px] font-semibold text-blue-700 dark:text-blue-400">
+          <span className="inline-flex items-center gap-1 rounded-full bg-[var(--shell-info-surface)] px-2 py-0.5 text-[10px] font-semibold text-[var(--shell-info)]">
             <Loader2 className="h-3 w-3 animate-spin" /> Confirming
           </span>
         );
@@ -284,9 +284,9 @@ export function FileUpload({
                 className={cn(
                   "relative overflow-hidden rounded-lg border px-3 py-2.5 transition-colors",
                   entry.progress === "done"
-                    ? "border-emerald-200 dark:border-emerald-800 bg-emerald-50/50 dark:bg-emerald-900/10"
+                    ? "border-[var(--shell-success)]/20 bg-[var(--shell-success-surface)]/50"
                     : entry.progress === "error"
-                      ? "border-red-200 dark:border-red-800 bg-red-50/50 dark:bg-red-900/10"
+                      ? "border-[var(--shell-danger)]/20 bg-[var(--shell-danger-surface)]/50"
                       : "border-[var(--shell-border)] bg-[var(--shell-surface)]",
                 )}
               >
@@ -313,7 +313,7 @@ export function FileUpload({
                         {formatBytes(entry.file.size)}
                       </span>
                       {entry.error && (
-                        <span className="text-[11px] text-red-500">{entry.error}</span>
+                        <span className="text-[11px] text-[var(--shell-danger)]">{entry.error}</span>
                       )}
                     </div>
                   </div>

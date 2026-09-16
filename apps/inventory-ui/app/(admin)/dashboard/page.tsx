@@ -144,7 +144,7 @@ export default function DashboardPage() {
           </Link>
           <Link href="/products">
             <Button size="sm" variant="outline" className="gap-1.5 text-xs">
-              <PackageOpen className="h-3.5 w-3.5 text-purple-600" /> Product Catalog
+              <PackageOpen className="h-3.5 w-3.5 text-[var(--shell-brand)]" /> Product Catalog
             </Button>
           </Link>
           <Link href="/purchase-orders">

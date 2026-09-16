@@ -25,8 +25,8 @@ function formatBytes(bytes: number): string {
 }
 
 function fileIcon(mimeType: string) {
-  if (mimeType.startsWith("image/")) return <Image className="h-4 w-4 text-blue-500" />;
-  if (mimeType.includes("pdf")) return <FileText className="h-4 w-4 text-red-500" />;
+  if (mimeType.startsWith("image/")) return <Image className="h-4 w-4 text-[var(--shell-info)]" />;
+  if (mimeType.includes("pdf")) return <FileText className="h-4 w-4 text-[var(--shell-danger)]" />;
   return <FileIcon className="h-4 w-4 text-[var(--shell-muted)]" />;
 }
 
@@ -101,7 +101,7 @@ export function FileViewer({ files, onDelete, onPreview, className, showActions 
                   size="icon-xs"
                   onClick={() => onDelete(record)}
                   title="Delete"
-                  className="text-red-500 hover:text-red-600"
+                  className="text-[var(--shell-danger)] hover:text-[var(--shell-danger)]"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
                 </Button>

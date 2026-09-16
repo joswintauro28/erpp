@@ -179,7 +179,7 @@ export default function Quotations() {
                             aria-label="Convert to invoice"
                             title="Convert to invoice"
                           >
-                            {actionLoading === qt.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Receipt className="h-3.5 w-3.5 text-emerald-600" />}
+                            {actionLoading === qt.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Receipt className="h-3.5 w-3.5 text-[var(--shell-success)]" />}
                           </Button>
                         )}
                         {canDelete && qt.status === "draft" && (

@@ -308,7 +308,7 @@ export default function Payments() {
           <DialogFooter className="mt-4">
             <Button variant="outline" size="sm" onClick={() => setRefundConfirmId(null)}>Cancel</Button>
             <Button
-              className="bg-amber-600 hover:bg-amber-700 text-white"
+              className="bg-[var(--shell-brand)] hover:bg-[var(--shell-brand)]/90 text-white"
               onClick={() => refundConfirmId !== null && handleRefund(refundConfirmId)}
               disabled={refunding !== null}
             >

@@ -98,7 +98,7 @@ export const MODULE_META: Record<
     title: "Executive AI Assistant",
     shortTitle: "Admin AI",
     icon: "⚡",
-    badgeColor: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20",
+    badgeColor: "bg-[var(--shell-warning)]/10 text-[var(--shell-warning)] border-[var(--shell-warning)]/20",
     welcome:
       "I am DATACLAIRE, your Executive AI Assistant. I monitor cross-module health, aggregate business KPIs, and assist with organization governance.",
     suggestions: [
@@ -112,7 +112,7 @@ export const MODULE_META: Record<
     title: "CRM AI Sales Assistant",
     shortTitle: "CRM AI",
     icon: "👥",
-    badgeColor: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20",
+    badgeColor: "bg-[var(--shell-info)]/10 text-[var(--shell-info)] border-[var(--shell-info)]/20",
     welcome:
       "I am your CRM AI Assistant. I analyze client accounts, score pipeline opportunities, track conversion rates, and draft targeted sales communications.",
     suggestions: [
@@ -126,7 +126,7 @@ export const MODULE_META: Record<
     title: "Billing & Finance AI Assistant",
     shortTitle: "Billing AI",
     icon: "💳",
-    badgeColor: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
+    badgeColor: "bg-[var(--shell-success)]/10 text-[var(--shell-success)] border-[var(--shell-success)]/20",
     welcome:
       "I am your Finance & Billing AI Assistant. I track invoice balances, calculate GST summaries, monitor aging receivables, and reconcile ledger records.",
     suggestions: [
@@ -140,7 +140,7 @@ export const MODULE_META: Record<
     title: "Inventory & Supply AI Assistant",
     shortTitle: "Inventory AI",
     icon: "📦",
-    badgeColor: "bg-amber-600/10 text-amber-700 dark:text-amber-400 border-amber-600/20",
+    badgeColor: "bg-[var(--shell-warning)]/10 text-[var(--shell-warning)] border-[var(--shell-warning)]/20",
     welcome:
       "I am your Inventory & Logistics AI Assistant. I track warehouse stock levels, forecast reorders, monitor purchase orders, and track batch serial items.",
     suggestions: [
@@ -173,7 +173,7 @@ function CodeBlock({ code, language }: { code: string; language: string }) {
           onClick={handleCopy}
           className="h-6 px-1.5 text-[11px] text-muted-foreground hover:text-foreground gap-1"
         >
-          {copied ? <Check size={12} className="text-emerald-500" /> : <Copy size={12} />}
+          {copied ? <Check size={12} className="text-[var(--shell-success)]" /> : <Copy size={12} />}
           <span>{copied ? "Copied!" : "Copy"}</span>
         </Button>
       </div>
@@ -928,7 +928,7 @@ export function AIChat({
                             type="submit"
                             variant="ghost"
                             size="icon"
-                            className="h-6 w-6 text-emerald-500 hover:bg-emerald-500/10"
+                            className="h-6 w-6 text-[var(--shell-success)] hover:bg-[var(--shell-success)]/10"
                           >
                             <Check size={12} />
                           </Button>
@@ -965,7 +965,7 @@ export function AIChat({
                               variant="ghost"
                               size="icon"
                               onClick={(e) => deleteSession(s.id, e)}
-                              className="h-6 w-6 text-muted-foreground hover:text-red-500 hover:bg-red-500/10"
+                              className="h-6 w-6 text-muted-foreground hover:text-[var(--shell-danger)] hover:bg-[var(--shell-danger)]/10"
                               title="Delete chat"
                             >
                               <Trash2 size={11} />
@@ -985,7 +985,7 @@ export function AIChat({
         <div className="p-2.5 border-t border-border/80 flex items-center justify-between text-[11px] text-muted-foreground">
           {clearConfirm ? (
             <div className="flex items-center gap-2 w-full justify-between animate-in fade-in duration-200">
-              <span className="text-[10px] text-red-500 font-medium">Clear all?</span>
+              <span className="text-[10px] text-[var(--shell-danger)] font-medium">Clear all?</span>
               <div className="flex items-center gap-1">
                 <Button
                   type="button"
@@ -1015,7 +1015,7 @@ export function AIChat({
                 size="sm"
                 onClick={() => setClearConfirm(true)}
                 disabled={sessions.length === 0}
-                className="h-7 px-2 text-xs text-muted-foreground hover:text-red-500 gap-1.5"
+                className="h-7 px-2 text-xs text-muted-foreground hover:text-[var(--shell-danger)] gap-1.5"
               >
                 <Trash2 size={12} />
                 <span>Clear History</span>
@@ -1077,8 +1077,8 @@ export function AIChat({
                   {meta.shortTitle}
                 </Badge>
 
-                <Badge variant="outline" className="hidden md:inline-flex items-center gap-1 text-[11px] text-emerald-600 dark:text-emerald-400 font-medium border-emerald-500/20 bg-emerald-500/10 px-1.5 py-0 h-4.5">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <Badge variant="outline" className="hidden md:inline-flex items-center gap-1 text-[11px] text-[var(--shell-success)] font-medium border-[var(--shell-success)]/20 bg-[var(--shell-success)]/10 px-1.5 py-0 h-4.5">
+                  <span className="h-1.5 w-1.5 rounded-full bg-[var(--shell-success)] animate-pulse" />
                   Live Grounded
                 </Badge>
               </div>
@@ -1239,7 +1239,7 @@ export function AIChat({
                         className={cn(
                           "rounded-lg text-xs font-semibold",
                           isUser
-                            ? "bg-zinc-800 text-white dark:bg-zinc-200 dark:text-zinc-900"
+                            ? "bg-[var(--shell-surface-alt)] text-[var(--shell-foreground)]"
                             : "bg-[var(--shell-brand)] text-white dark:bg-[var(--shell-brand)] dark:text-[var(--shell-accent)]",
                         )}
                       >
@@ -1271,7 +1271,7 @@ export function AIChat({
                         className={cn(
                           "rounded-2xl px-4 py-3 text-xs sm:text-[13px] leading-relaxed shadow-2xs",
                           isUser
-                            ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 rounded-tr-xs"
+                            ? "bg-[var(--shell-surface-alt)] text-[var(--shell-foreground)] rounded-tr-xs"
                             : "bg-card border border-border/90 text-foreground rounded-tl-xs",
                         )}
                       >
@@ -1299,7 +1299,7 @@ export function AIChat({
                             title="Copy response"
                           >
                             {copiedMessageId === msg.id ? (
-                              <Check size={11} className="text-emerald-500" />
+                              <Check size={11} className="text-[var(--shell-success)]" />
                             ) : (
                               <Copy size={11} />
                             )}

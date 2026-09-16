@@ -66,7 +66,7 @@ const tierVariant = (tier: string) => tier === "High" ? "destructive" : tier ===
             <div className="flex items-center gap-2">
               <div className={cn(
                 "h-2 w-2 rounded-full",
-                record.is_mql ? "bg-yellow-500" : record.score >= 40 ? "bg-blue-500" : "bg-slate-400"
+                record.is_mql ? "bg-[var(--shell-warning)]" : record.score >= 40 ? "bg-[var(--shell-info)]" : "bg-[var(--shell-muted)]"
               )} />
               <span className="text-xs text-[var(--shell-muted)]">Score: {record.score}</span>
             </div>
@@ -158,10 +158,10 @@ const tierVariant = (tier: string) => tier === "High" ? "destructive" : tier ===
 
         {/* MQL Badge */}
         {record.is_mql && (
-          <div className="flex items-center gap-2 rounded-lg bg-yellow-500/10 border border-yellow-500/30 px-4 py-3">
-            <BadgeCheck className="h-5 w-5 text-yellow-600" />
-            <span className="text-sm font-medium text-yellow-600">Marketing Qualified Lead (MQL)</span>
-            <span className="text-xs text-yellow-600/70">Ready for sales handoff</span>
+          <div className="flex items-center gap-2 rounded-lg bg-[var(--shell-warning-surface)] border border-[var(--shell-warning)]/30 px-4 py-3">
+            <BadgeCheck className="h-5 w-5 text-[var(--shell-warning)]" />
+            <span className="text-sm font-medium text-[var(--shell-warning)]">Marketing Qualified Lead (MQL)</span>
+            <span className="text-xs text-[var(--shell-warning)]/70">Ready for sales handoff</span>
           </div>
         )}
       </div>

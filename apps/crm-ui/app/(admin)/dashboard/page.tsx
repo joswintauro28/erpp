@@ -185,20 +185,20 @@ export default function DashboardPage() {
                           <stop offset="95%" stopColor="var(--shell-brand)" stopOpacity={0.4}/>
                         </linearGradient>
                         <linearGradient id="colorQuoteBar" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#E5B83C" stopOpacity={0.9}/>
-                          <stop offset="95%" stopColor="#E5B83C" stopOpacity={0.4}/>
+                           <stop offset="5%" stopColor="var(--shell-accent)" stopOpacity={0.9}/>
+                           <stop offset="95%" stopColor="var(--shell-accent)" stopOpacity={0.4}/>
                         </linearGradient>
                         <linearGradient id="colorNegotiationBar" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#6366f1" stopOpacity={0.9}/>
-                          <stop offset="95%" stopColor="#6366f1" stopOpacity={0.4}/>
+                           <stop offset="5%" stopColor="var(--chart-2)" stopOpacity={0.9}/>
+                           <stop offset="95%" stopColor="var(--chart-2)" stopOpacity={0.4}/>
                         </linearGradient>
                         <linearGradient id="colorWonBar" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#10b981" stopOpacity={0.9}/>
-                          <stop offset="95%" stopColor="#10b981" stopOpacity={0.4}/>
+                           <stop offset="5%" stopColor="var(--shell-success)" stopOpacity={0.9}/>
+                           <stop offset="95%" stopColor="var(--shell-success)" stopOpacity={0.4}/>
                         </linearGradient>
                         <linearGradient id="colorLostBar" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#f43f5e" stopOpacity={0.9}/>
-                          <stop offset="95%" stopColor="#f43f5e" stopOpacity={0.4}/>
+                           <stop offset="5%" stopColor="var(--shell-danger)" stopOpacity={0.9}/>
+                           <stop offset="95%" stopColor="var(--shell-danger)" stopOpacity={0.4}/>
                         </linearGradient>
                       </defs>
                       <CartesianGrid strokeDasharray="4 4" stroke="var(--shell-border)" strokeOpacity={0.4} />

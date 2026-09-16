@@ -550,7 +550,7 @@ export default function OpportunityDetailModal({ record, isOpen, onClose, onSucc
                 </div>
 
                 {showReqForm && (
-                  <form onSubmit={handleReqSubmit} className="p-4 rounded-xl border border-blue-300 bg-[var(--shell-info-surface)] mb-4">
+                  <form onSubmit={handleReqSubmit} className="p-4 rounded-xl border border-[var(--shell-info)]/30 bg-[var(--shell-info-surface)] mb-4">
                     <div className="text-xs font-bold text-[var(--shell-info)] flex items-center gap-1.5 mb-3">
                       <ClipboardList size={14} /> {editReq ? "Edit Requirement" : "New Requirement"}
                     </div>

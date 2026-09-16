@@ -24,20 +24,20 @@ import type { Expense } from "@/types/accounting";
 import ExpensesLoading from "./loading";
 
 const categoryColors: Record<string, string> = {
-  "Office Supplies": "#16a34a",
-  "Utilities": "#2563eb",
-  "Rent": "#d97706",
-  "Travel": "#7c3aed",
-  "Salary": "#dc2626",
-  "Marketing": "#ea580c",
-  "Software": "#0891b2",
-  "Insurance": "#4f46e5",
-  "Maintenance": "#65a30d",
-  "Food": "#ca8a04",
+  "Office Supplies": "var(--shell-success)",
+  "Utilities": "var(--shell-info)",
+  "Rent": "var(--shell-warning)",
+  "Travel": "var(--chart-1)",
+  "Salary": "var(--shell-danger)",
+  "Marketing": "var(--shell-accent)",
+  "Software": "var(--shell-info)",
+  "Insurance": "var(--chart-2)",
+  "Maintenance": "var(--shell-success)",
+  "Food": "var(--shell-warning)",
 };
 
 function getCategoryColor(cat: string): string {
-  return categoryColors[cat] || "#6b7280";
+  return categoryColors[cat] || "var(--shell-muted)";
 }
 
 export default function Expenses() {
@@ -130,8 +130,8 @@ export default function Expenses() {
   const summaryCards = [
     { label: "Total Expenses", value: money(totalAmount), subtitle: `${expenses.length} entries`, gradient: "from-[var(--shell-brand)]/5" },
     { label: "This Month", value: money(thisMonth), subtitle: new Date().toLocaleString("default", { month: "long", year: "numeric" }), gradient: "from-[var(--shell-accent)]/5" },
-    { label: "Pending", value: money(pendingAmount), subtitle: `${expenses.filter((e) => e.status === "pending").length} unpaid`, gradient: "from-amber-500/5" },
-    { label: "Categories", value: String(new Set(expenses.map((e) => e.category)).size), subtitle: "distinct categories", gradient: "from-blue-500/5" },
+    { label: "Pending", value: money(pendingAmount), subtitle: `${expenses.filter((e) => e.status === "pending").length} unpaid`, gradient: "from-[var(--shell-warning)]/5" },
+    { label: "Categories", value: String(new Set(expenses.map((e) => e.category)).size), subtitle: "distinct categories", gradient: "from-[var(--shell-info)]/5" },
   ];
 
   if (loading) return <ExpensesLoading />;

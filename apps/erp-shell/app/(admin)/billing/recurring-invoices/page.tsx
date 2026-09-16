@@ -225,7 +225,7 @@ export default function RecurringInvoices() {
                     <TableCell><span className="font-mono text-xs font-medium">{r.invoice_number}</span></TableCell>
                     <TableCell className="text-[var(--shell-muted)]">{r.client_name}</TableCell>
                     <TableCell>
-                      <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider border ${frequencyColors[r.frequency] ?? "bg-gray-500/10 text-gray-500 border-gray-500/20"}`}>
+                      <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider border ${frequencyColors[r.frequency] ?? "bg-[var(--shell-muted)]/10 text-[var(--shell-muted)] border-[var(--shell-muted)]/20"}`}>
                         {r.frequency}
                       </span>
                     </TableCell>

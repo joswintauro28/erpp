@@ -259,8 +259,8 @@ export default function QualityChecksPage() {
                         ? r === "PASS"
                           ? "border-[var(--shell-success)] bg-[var(--shell-success-surface)] text-[var(--shell-success)] "
                           : r === "FAIL"
-                            ? "border-red-500 bg-[var(--shell-danger-surface)] text-[var(--shell-danger)] "
-                            : "border-blue-500 bg-[var(--shell-info-surface)] text-[var(--shell-info)] "
+                            ? "border-[var(--shell-danger)]/40 bg-[var(--shell-danger-surface)] text-[var(--shell-danger)] "
+                            : "border-[var(--shell-info)]/40 bg-[var(--shell-info-surface)] text-[var(--shell-info)] "
                         : "border-border text-muted-foreground hover:bg-muted"
                     }`}
                   >

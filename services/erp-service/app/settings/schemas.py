@@ -27,7 +27,7 @@ class RegionalSettings(BaseModel):
 class ThemeColorSet(BaseModel):
     """A set of brand colors for a single theme (light or dark)."""
     primary: str = "#f2470c"
-    accent: str = "#E5B83C"
+    accent: str = "#fff0eb"
     surface: str = "#ffffff"
     foreground: str = "#09090b"
     muted: str = "#52525b"

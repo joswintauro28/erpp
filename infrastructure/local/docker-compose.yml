@@ -435,7 +435,10 @@ services:
     ports:
       - "80:80"
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - type: bind
+        source: ./nginx/nginx.conf
+        target: /etc/nginx/nginx.conf
+        read_only: true
     depends_on:
       erp-shell:
         condition: service_healthy
@@ -452,8 +455,10 @@ services:
 
 volumes:
   postgres_data:
+    name: datavex-erp_postgres_data
     driver: local
   minio_data:
+    name: datavex-erp_minio_data
     driver: local
 
 networks:

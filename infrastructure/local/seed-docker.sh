@@ -57,7 +57,7 @@ container_healthy() {
 }
 
 ORDINAL=0
-TOTAL=4
+TOTAL=5
 SUCCESS_COUNT=0
 FAIL_COUNT=0
 
@@ -176,6 +176,16 @@ if ! should_skip "inventory-service"; then
             docker cp '$DIR/../../services/inventory-service/scripts' datavex-inventory-service:/app/services/inventory-service/ && \
             docker exec -e PYTHONPATH=. datavex-inventory-service /opt/venv/bin/alembic upgrade head && \
             docker exec -e PYTHONPATH=. datavex-inventory-service /opt/venv/bin/python /app/services/inventory-service/scripts/seed.py
+        "
+fi
+
+# Step 5: erp-service (FastAPI, seed.py)
+if ! should_skip "erp-service"; then
+    run_step "erp-service (Gateway, System Settings, Notifications)" \
+        sh -c "
+            docker cp '$DIR/../../services/erp-service/scripts' datavex-erp-service:/app/services/erp-service/ && \
+            docker exec -e PYTHONPATH=. datavex-erp-service /opt/venv/bin/alembic upgrade head && \
+            docker exec -e PYTHONPATH=. datavex-erp-service /opt/venv/bin/python /app/services/erp-service/scripts/seed.py
         "
 fi
 

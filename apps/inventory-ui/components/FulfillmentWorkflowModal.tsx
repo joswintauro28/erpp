@@ -419,7 +419,7 @@ export default function FulfillmentWorkflowModal({
                     <p className="text-xs text-muted-foreground">Convert dispatched order to an official Invoice in Billing Workstation.</p>
                   </div>
                   {order.status === "COMPLETED" ? (
-                    <Badge className="bg-green-700 text-white flex items-center gap-1">
+                    <Badge className="bg-[var(--shell-success)] text-white flex items-center gap-1">
                       <CheckCircle2 className="h-3.5 w-3.5" /> Billed & Completed
                     </Badge>
                   ) : (
@@ -442,12 +442,12 @@ export default function FulfillmentWorkflowModal({
 
             {/* Shortage PO Active */}
             {order.status === "PO_CREATED" && (
-              <div className="p-3 bg-orange-50  border border-orange-200  rounded-md flex items-center justify-between">
+              <div className="p-3 bg-[var(--shell-warning-surface)] border border-[var(--shell-warning)]/30  rounded-md flex items-center justify-between">
                 <div>
-                  <h5 className="font-semibold text-orange-700  text-xs flex items-center gap-1">
+                  <h5 className="font-semibold text-[var(--shell-warning)]  text-xs flex items-center gap-1">
                     <ShoppingBag className="h-4 w-4" /> Reorder Purchase Order Sent to Supplier
                   </h5>
-                  <p className="text-xs text-orange-600  mt-0.5">
+                  <p className="text-xs text-[var(--shell-warning)]  mt-0.5">
                     PO #{order.purchase_order_id}. Awaiting Goods Received Note (GRN) to update stock and complete fulfillment.
                   </p>
                 </div>

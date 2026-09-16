@@ -299,8 +299,8 @@ export default function FulfillmentWorkflowModal({
             {/* Step 5: Dispatched */}
             {(order.status === "DISPATCHED" || order.status === "COMPLETED") && (
               <div className="space-y-3">
-                <div className="p-3 bg-emerald-950/30 border border-emerald-800 rounded-md">
-                  <h5 className="font-semibold text-emerald-300 flex items-center gap-2 text-sm">
+                <div className="p-3 bg-[var(--shell-success-surface)] border border-[var(--shell-success)]/30 rounded-md">
+                  <h5 className="font-semibold text-[var(--shell-success)] flex items-center gap-2 text-sm">
                     <Truck className="h-5 w-5" /> Order Dispatched
                   </h5>
                   <p className="text-xs text-[var(--shell-success)] mt-1">
@@ -313,7 +313,7 @@ export default function FulfillmentWorkflowModal({
                     <p className="text-xs text-[var(--shell-muted)]">Generate invoice in Billing Workstation.</p>
                   </div>
                   {order.status === "COMPLETED" ? (
-                    <Badge className="bg-green-700 text-white flex items-center gap-1"><CheckCircle2 className="h-3.5 w-3.5" /> Billed</Badge>
+                    <Badge className="bg-[var(--shell-success)] text-white flex items-center gap-1"><CheckCircle2 className="h-3.5 w-3.5" /> Billed</Badge>
                   ) : (
                     <div className="flex gap-2">
                       <Button variant="outline" size="sm" onClick={handleStepBack} disabled={loading}>← Rollback</Button>
@@ -329,12 +329,12 @@ export default function FulfillmentWorkflowModal({
 
             {/* Shortage */}
             {order.status === "PO_CREATED" && (
-              <div className="p-3 bg-orange-950/30 border border-orange-800 rounded-md flex items-center justify-between">
+              <div className="p-3 bg-[var(--shell-warning-surface)] border border-[var(--shell-warning)]/30 rounded-md flex items-center justify-between">
                 <div>
-                  <h5 className="font-semibold text-orange-300 text-xs flex items-center gap-1">
+                  <h5 className="font-semibold text-[var(--shell-warning)] text-xs flex items-center gap-1">
                     <ShoppingBag className="h-4 w-4" /> Reorder PO Sent to Supplier
                   </h5>
-                  <p className="text-xs text-orange-400 mt-0.5">
+                  <p className="text-xs text-[var(--shell-warning)] mt-0.5">
                     PO #{order.purchase_order_id}. Awaiting GRN to update stock.
                   </p>
                 </div>

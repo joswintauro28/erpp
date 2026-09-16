@@ -260,7 +260,7 @@ export default function SerialRegistryPage() {
     });
   }, [serials, search, statusFilter]);
 
-  const getStatusMeta = (status: string) => STATUS_META[status] || { label: status, dot: "bg-zinc-400", badge: "" };
+  const getStatusMeta = (status: string) => STATUS_META[status] || { label: status, dot: "bg-[var(--shell-muted)]", badge: "" };
 
   return (
     <div className="space-y-10 lg:space-y-12">

@@ -8,9 +8,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Sun, Moon, Save, Sparkles, Upload, X, Loader2, CheckCircle2 } from "lucide-react";
+import { Sun, Moon, Save, Sparkles, Upload, X, Loader2, CheckCircle2, RotateCcw } from "lucide-react";
 import { api } from "@datavex/auth-middleware";
-import { useBranding, cn } from "@datavex/ui-theme";
+import { useBranding, cn, DEFAULT_LIGHT_COLORS, DEFAULT_DARK_COLORS } from "@datavex/ui-theme";
 import type { ThemeColorSet } from "@datavex/ui-theme";
 
 /* ── Types ──────────────────────────────────────────────────────────────── */
@@ -36,25 +36,8 @@ interface BrandingState {
 
 /* ── Defaults ───────────────────────────────────────────────────────────── */
 
-const DEFAULT_LIGHT: ThemeColorSet = {
-  primary: "#f2470c",
-  accent: "#E5B83C",
-  surface: "#ffffff",
-  foreground: "#09090b",
-  muted: "#52525b",
-  background: "#f4f5f8",
-  border: "#e2e8f0",
-};
-
-const DEFAULT_DARK: ThemeColorSet = {
-  primary: "#f2470c",
-  accent: "#741e02",
-  surface: "#121212",
-  foreground: "#f0f0f0",
-  muted: "#969696",
-  background: "#0a0a0a",
-  border: "#1f1f1f",
-};
+const DEFAULT_LIGHT: ThemeColorSet = DEFAULT_LIGHT_COLORS;
+const DEFAULT_DARK: ThemeColorSet = DEFAULT_DARK_COLORS;
 
 const COLOR_META: Record<string, { label: string; cssVar: string }> = {
   primary:    { label: "Primary",    cssVar: "--primary" },
@@ -366,7 +349,7 @@ export default function Branding() {
             dark: { ...DEFAULT_DARK },
           };
         } else {
-          colors = { light: { ...DEFAULT_LIGHT }, dark: { ...DEFAULT_DARK };
+          colors = { light: { ...DEFAULT_LIGHT }, dark: { ...DEFAULT_DARK } };
         }
 
         setState({
@@ -446,6 +429,18 @@ export default function Branding() {
       },
     }));
   }, [activeTab]);
+
+  /* ── Reset to defaults handler ────────────────────────────────────────── */
+  const handleResetToDefaults = React.useCallback(() => {
+    setState((s) => ({
+      ...s,
+      brand_colors: {
+        light: { ...DEFAULT_LIGHT_COLORS },
+        dark: { ...DEFAULT_DARK_COLORS },
+      },
+    }));
+    setMessage({ type: "success", text: "Colors reset to defaults. Click 'Save Changes' to apply permanently." });
+  }, []);
 
   /* ── Save handler ────────────────────────────────────────────────────── */
   const handleSave = React.useCallback(async () => {
@@ -588,34 +583,47 @@ export default function Branding() {
                   Brand Colors
                 </CardTitle>
               </div>
-              {/* Theme tabs */}
-              <div className="flex items-center rounded-lg border border-[var(--shell-border)] bg-[var(--shell-surface-alt)] p-0.5">
-                <button
+              <div className="flex items-center gap-2">
+                <Button
                   type="button"
-                  onClick={() => setActiveTab("light")}
-                  className={cn(
-                    "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all",
-                    activeTab === "light"
-                      ? "bg-[var(--shell-brand)] text-white shadow-sm"
-                      : "text-[var(--shell-muted)] hover:text-[var(--shell-foreground)]",
-                  )}
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleResetToDefaults}
+                  className="h-7 text-xs text-[var(--shell-muted)] hover:text-[var(--shell-foreground)] hover:bg-[var(--shell-surface-alt)] cursor-pointer"
+                  title="Reset all colors to system defaults from ui-theme"
                 >
-                  <Sun className="h-3.5 w-3.5" />
-                  Light
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveTab("dark")}
-                  className={cn(
-                    "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all",
-                    activeTab === "dark"
-                      ? "bg-[var(--shell-brand)] text-white shadow-sm"
-                      : "text-[var(--shell-muted)] hover:text-[var(--shell-foreground)]",
-                  )}
-                >
-                  <Moon className="h-3.5 w-3.5" />
-                  Dark
-                </button>
+                  <RotateCcw className="mr-1 h-3 w-3" />
+                  Reset to Defaults
+                </Button>
+                {/* Theme tabs */}
+                <div className="flex items-center rounded-lg border border-[var(--shell-border)] bg-[var(--shell-surface-alt)] p-0.5">
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("light")}
+                    className={cn(
+                      "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all",
+                      activeTab === "light"
+                        ? "bg-[var(--shell-brand)] text-white shadow-sm"
+                        : "text-[var(--shell-muted)] hover:text-[var(--shell-foreground)]",
+                    )}
+                  >
+                    <Sun className="h-3.5 w-3.5" />
+                    Light
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("dark")}
+                    className={cn(
+                      "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all",
+                      activeTab === "dark"
+                        ? "bg-[var(--shell-brand)] text-white shadow-sm"
+                        : "text-[var(--shell-muted)] hover:text-[var(--shell-foreground)]",
+                    )}
+                  >
+                    <Moon className="h-3.5 w-3.5" />
+                    Dark
+                  </button>
+                </div>
               </div>
             </div>
             <CardDescription className="text-xs text-[var(--shell-muted)]">
@@ -744,28 +752,40 @@ export default function Branding() {
       </Card>
 
       {/* ── Save Bar ─────────────────────────────────────────────────────── */}
-      <div className="flex items-center justify-end gap-3 pt-2 border-t border-[var(--shell-border)]">
+      <div className="flex items-center justify-between pt-2 border-t border-[var(--shell-border)]">
         <Button
+          type="button"
           variant="outline"
           size="sm"
-          className="hover:bg-[var(--shell-surface-alt)]"
-          onClick={() => window.location.reload()}
+          onClick={handleResetToDefaults}
+          className="text-xs text-[var(--shell-muted)] hover:text-[var(--shell-foreground)] hover:bg-[var(--shell-surface-alt)]"
         >
-          Cancel
+          <RotateCcw className="mr-1.5 h-3.5 w-3.5" />
+          Reset to Defaults
         </Button>
-        <Button
-          size="sm"
-          disabled={saving}
-          onClick={handleSave}
-          className="bg-[var(--shell-brand)] hover:bg-[var(--shell-brand)]/90 text-white"
-        >
-          {saving ? (
-            <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-          ) : (
-            <Save className="mr-1.5 h-3.5 w-3.5" />
-          )}
-          {saving ? "Saving..." : "Save Changes"}
-        </Button>
+        <div className="flex items-center gap-3">
+          <Button
+            variant="outline"
+            size="sm"
+            className="hover:bg-[var(--shell-surface-alt)]"
+            onClick={() => window.location.reload()}
+          >
+            Cancel
+          </Button>
+          <Button
+            size="sm"
+            disabled={saving}
+            onClick={handleSave}
+            className="bg-[var(--shell-brand)] hover:bg-[var(--shell-brand)]/90 text-white"
+          >
+            {saving ? (
+              <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Save className="mr-1.5 h-3.5 w-3.5" />
+            )}
+            {saving ? "Saving..." : "Save Changes"}
+          </Button>
+        </div>
       </div>
     </div>
   );

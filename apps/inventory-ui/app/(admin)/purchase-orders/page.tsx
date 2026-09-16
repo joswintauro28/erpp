@@ -579,7 +579,7 @@ export default function PurchaseOrdersPage() {
               <Button variant="outline" size="sm" onClick={() => setPutawayOrder(null)}>
                 Cancel
               </Button>
-              <Button size="sm" onClick={handlePutaway} className="bg-emerald-700 text-white hover:bg-emerald-800">
+              <Button size="sm" onClick={handlePutaway} className="bg-[var(--shell-success)] text-white hover:bg-[var(--shell-success)]/90">
                 <MapPin className="h-3.5 w-3.5 mr-1" /> Confirm Putaway
               </Button>
             </div>

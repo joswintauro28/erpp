@@ -84,10 +84,10 @@ export default function LeadsPage() {
             </Button>
             <Button
               onClick={() => window.location.href = "/crm/lead-discovery"}
-              className="bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-slate-950 font-semibold border border-[var(--shell-warning)]/40 shadow-[0_0_12px_rgba(245,158,11,0.25)] hover:shadow-[0_0_18px_rgba(245,158,11,0.5)] transition-all duration-300 gap-1.5 text-xs"
+              className="bg-gradient-to-r from-[var(--shell-warning)] to-[var(--shell-accent)] hover:from-[var(--shell-warning)]/90 hover:to-[var(--shell-accent)]/90 text-white font-semibold border border-[var(--shell-warning)]/40 shadow-[0_0_12px_color-mix(in_srgb,var(--shell-warning)_25%,transparent)] hover:shadow-[0_0_18px_color-mix(in_srgb,var(--shell-warning)_50%,transparent)] transition-all duration-300 gap-1.5 text-xs"
               size="sm"
             >
-              <BadgeCheck size={14} className="fill-amber-950/20 text-slate-950" /> Discover Leads
+              <BadgeCheck size={14} className="fill-[var(--shell-accent)]/20 text-white" /> Discover Leads
             </Button>
             <Button size="sm" onClick={() => setIsModalOpen(true)} className="bg-[var(--shell-brand)] text-white hover:bg-[var(--shell-brand)]/90 gap-1.5 text-xs shadow-sm">
               <Plus size={14} /> New Lead

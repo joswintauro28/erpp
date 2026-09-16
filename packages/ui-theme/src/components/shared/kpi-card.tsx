@@ -16,14 +16,14 @@ export interface KpiCardProps {
 
 /** Maps a CSS color to a subtle gradient background class */
 function gradientBg(color: string): string {
-  if (color.includes("danger") || color.includes("destructive")) return "from-red-500/5";
-  if (color.includes("success")) return "from-emerald-500/5";
-  if (color.includes("chart-1")) return "from-violet-500/5";
-  if (color.includes("chart-2")) return "from-blue-500/5";
-  if (color.includes("chart-3")) return "from-amber-500/5";
-  if (color.includes("chart-4")) return "from-cyan-500/5";
-  if (color.includes("chart-5")) return "from-pink-500/5";
-  return "from-gray-500/5";
+  if (color.includes("danger") || color.includes("destructive")) return "from-[var(--shell-danger)]/5";
+  if (color.includes("success")) return "from-[var(--shell-success)]/5";
+  if (color.includes("chart-1")) return "from-[var(--chart-1)]/5";
+  if (color.includes("chart-2")) return "from-[var(--chart-2)]/5";
+  if (color.includes("chart-3")) return "from-[var(--chart-3)]/5";
+  if (color.includes("chart-4")) return "from-[var(--chart-4)]/5";
+  if (color.includes("chart-5")) return "from-[var(--chart-5)]/5";
+  return "from-[var(--shell-muted)]/5";
 }
 
 export function KpiCard({

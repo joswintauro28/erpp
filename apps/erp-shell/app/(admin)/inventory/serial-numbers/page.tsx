@@ -269,7 +269,7 @@ export default function SerialRegistryPage() {
     { label: "Returns & Repairs", value: (stats.returned || 0) + (stats.repair || 0) + (stats.damaged || 0), icon: Wrench, color: "var(--shell-warning)" },
   ];
 
-  const getStatusMeta = (status: string) => STATUS_META[status] || { label: status, dot: "bg-zinc-400", badge: "" };
+  const getStatusMeta = (status: string) => STATUS_META[status] || { label: status, dot: "bg-[var(--shell-muted)]", badge: "" };
 
   return (
     <div className="space-y-6">

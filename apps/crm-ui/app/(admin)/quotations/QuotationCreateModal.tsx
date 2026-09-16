@@ -114,7 +114,7 @@ export default function QuotationCreateModal({ isOpen, onClose, onSuccess, editR
   return (
     <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
       <DialogContent className="sm:max-w-lg p-0 overflow-hidden">
-        <div className="p-4 rounded-xl border border-yellow-300 bg-[var(--shell-warning-surface)] m-4 mb-0">
+        <div className="p-4 rounded-xl border border-[var(--shell-warning)]/30 bg-[var(--shell-warning-surface)] m-4 mb-0">
           <div className="text-xs font-bold text-[var(--shell-warning)] flex items-center gap-1.5 mb-0">
             <FileSpreadsheet size={14} /> {editRecord ? "Edit Quotation" : "New Quotation"}
           </div>

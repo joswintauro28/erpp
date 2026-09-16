@@ -4,8 +4,8 @@ import { FileSearch, Home } from "lucide-react";
 export default function NotFoundPage() {
   return (
     <div className="relative flex min-h-screen w-full bg-background overflow-hidden">
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(150,40,46,0.12)_0%,transparent_60%)]" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,rgba(203,160,82,0.06)_0%,transparent_50%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,color-mix(in srgb, var(--shell-brand) 12%, transparent)_0%,transparent_60%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,color-mix(in srgb, var(--shell-accent) 6%, transparent)_0%,transparent_50%)]" />
 
       <div className="relative z-10 m-auto flex w-full max-w-[420px] flex-col items-center px-6">
         <div className="mb-10 flex flex-col items-center gap-3">
@@ -19,7 +19,7 @@ export default function NotFoundPage() {
         </div>
 
         <div className="relative w-full rounded-lg border border bg-card p-8">
-          <div className="pointer-events-none absolute -inset-px rounded-lg bg-[radial-gradient(ellipse_at_top_left,rgba(203,160,82,0.06)_0%,transparent_50%)]" />
+          <div className="pointer-events-none absolute -inset-px rounded-lg bg-[radial-gradient(ellipse_at_top_left,color-mix(in srgb, var(--shell-accent) 6%, transparent)_0%,transparent_50%)]" />
 
           <div className="relative z-10 flex flex-col items-center text-center">
             <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10">

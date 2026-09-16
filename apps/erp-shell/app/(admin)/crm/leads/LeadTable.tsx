@@ -68,7 +68,7 @@ export default function LeadTable({ leads, onView, onEdit, onDelete, onQualify }
               <div
                 className={cn(
                   "h-full rounded-full transition-all",
-                  score >= 70 ? "bg-yellow-500" : score >= 40 ? "bg-blue-500" : "bg-slate-400"
+                  score >= 70 ? "bg-[var(--shell-warning)]" : score >= 40 ? "bg-[var(--shell-info)]" : "bg-[var(--shell-muted)]"
                 )}
                 style={{ width: `${score}%` }}
               />
@@ -105,7 +105,7 @@ export default function LeadTable({ leads, onView, onEdit, onDelete, onQualify }
                 className="cursor-pointer"
                 onClick={(e) => { e.stopPropagation(); onQualify(row); }}
               >
-                <BadgeCheck size={14} className="text-yellow-600" />
+                <BadgeCheck size={14} className="text-[var(--shell-warning)]" />
               </Button>
             )}
             <Button variant="ghost" size="icon-sm" className="cursor-pointer" onClick={(e) => { e.stopPropagation(); onEdit(row); }}><Edit2 size={14} className="text-[var(--shell-brand)]" /></Button>

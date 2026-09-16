@@ -77,9 +77,10 @@ async def main():
         run_command("docker exec datavex-inventory-service alembic upgrade head")
         run_command("docker exec datavex-inventory-service python scripts/seed.py")
         
-        # 5. erp-service (FastAPI / Alembic)
-        print("\n--- Migrating Gateway Service in Docker ---")
+        # 5. erp-service (FastAPI / Alembic / Settings & Notifications)
+        print("\n--- Migrating & Seeding Gateway Service in Docker ---")
         run_command("docker exec datavex-erp-service alembic upgrade head")
+        run_command("docker exec datavex-erp-service python scripts/seed.py")
         
         print("\n=== Docker Seeding Completed! ===")
         
@@ -132,13 +133,15 @@ async def main():
         run_command(f"{crm_alembic} upgrade head", cwd=crm_dir)
         run_command(f"{crm_py} scripts/seed.py", cwd=crm_dir)
         
-        # Step 6: Migrate erp-service (gateway database)
-        print("\n--- Step 6: Migrating erp-service gateway ---")
+        # Step 6: Migrate & Seed erp-service (gateway database & settings)
+        print("\n--- Step 6: Migrating & Seeding erp-service gateway ---")
         erp_dir = os.path.join(repo_root, "services", "erp-service")
+        erp_py = get_py_path("erp-service")
         erp_alembic = get_alembic_path("erp-service")
         
         os.environ["PYTHONPATH"] = erp_dir
         run_command(f"{erp_alembic} upgrade head", cwd=erp_dir)
+        run_command(f"{erp_py} scripts/seed.py", cwd=erp_dir)
         
         print("\n=== Local Host Seeding Completed Successfully! ===")
 

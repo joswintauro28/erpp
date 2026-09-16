@@ -244,7 +244,7 @@ function QuoteRow({ quote, onDelete, onPreview, onConverted, onEdit }: QuoteRowP
                 </div>
                 <div className="flex gap-2 justify-end">
                   <Button type="button" variant="outline" size="sm" onClick={() => { setShowSaleForm(false); setSaleError(""); }}>Cancel</Button>
-                  <Button type="submit" size="sm" disabled={saleSubmitting} className="bg-green-600 hover:bg-green-700">
+                  <Button type="submit" size="sm" disabled={saleSubmitting} className="bg-[var(--shell-success)] hover:bg-[var(--shell-success)]/90">
                     {saleSubmitting ? <Loader size={13} className="mr-1 animate-spin" /> : <CheckCircle size={13} className="mr-1" />}
                     {saleSubmitting ? "Creating..." : "Confirm & Create"}
                   </Button>
@@ -549,7 +549,7 @@ export default function OpportunityDetailModal({ record, isOpen, onClose, onSucc
                 </div>
 
                 {showReqForm && (
-                  <form onSubmit={handleReqSubmit} className="p-4 rounded-xl border border-blue-300 bg-[var(--shell-info-surface)] mb-4">
+                  <form onSubmit={handleReqSubmit} className="p-4 rounded-xl border border-[var(--shell-info)]/30 bg-[var(--shell-info-surface)] mb-4">
                     <div className="text-xs font-bold text-[var(--shell-info)] flex items-center gap-1.5 mb-3">
                       <ClipboardList size={14} /> {editReq ? "Edit Requirement" : "New Requirement"}
                     </div>

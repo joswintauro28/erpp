@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { usePathname } from "next/navigation";
 import {
   Sparkles,
   X,
@@ -191,7 +190,7 @@ export function AIFloatingBot({
   defaultModule = "admin",
   positionClassName = "fixed bottom-6 right-6 z-50",
 }: AIFloatingBotProps) {
-  const pathname = usePathname();
+  const [isAiPage, setIsAiPage] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [isMaximized, setIsMaximized] = useState(false);
   const [messages, setMessages] = useState<FloatingMessage[]>([]);
@@ -205,7 +204,13 @@ export function AIFloatingBot({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  if (pathname && pathname.includes("/ai-assistant")) {
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.location.pathname.includes("/ai-assistant")) {
+      setIsAiPage(true);
+    }
+  }, []);
+
+  if (isAiPage) {
     return null;
   }
 
@@ -488,7 +493,7 @@ export function AIFloatingBot({
                         className={cn(
                           "h-6 w-6 rounded-md text-[10px] font-semibold mt-0.5 shadow-2xs",
                           isUser
-                            ? "bg-zinc-800 text-white dark:bg-zinc-200 dark:text-zinc-900"
+                            ? "bg-[var(--shell-surface-alt)] text-[var(--shell-foreground)]"
                             : "bg-[var(--shell-brand)] text-white dark:bg-[var(--shell-brand)] dark:text-[var(--shell-accent)]",
                         )}
                       >
@@ -502,7 +507,7 @@ export function AIFloatingBot({
                           className={cn(
                             "rounded-xl px-3 py-2 text-[12px] leading-relaxed shadow-2xs",
                             isUser
-                              ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 rounded-tr-xs"
+                              ? "bg-[var(--shell-surface-alt)] text-[var(--shell-foreground)] rounded-tr-xs"
                               : "bg-card border border-border text-foreground rounded-tl-xs",
                           )}
                         >
@@ -524,7 +529,7 @@ export function AIFloatingBot({
                               onClick={() => handleCopy(m.id, m.content)}
                               className="h-5 px-1.5 text-[10px] text-muted-foreground hover:text-foreground"
                             >
-                              {copiedId === m.id ? <Check size={10} className="text-emerald-500 mr-1" /> : <Copy size={10} className="mr-1" />}
+                              {copiedId === m.id ? <Check size={10} className="text-[var(--shell-success)] mr-1" /> : <Copy size={10} className="mr-1" />}
                               <span>{copiedId === m.id ? "Copied" : "Copy"}</span>
                             </Button>
                           </div>

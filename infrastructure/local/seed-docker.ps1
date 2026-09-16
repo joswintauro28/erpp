@@ -66,7 +66,9 @@ $services = @(
     @{ Name = 'crm-service';       Container = 'datavex-crm-service';
        Label = 'crm-service (Leads, Customers, Pipelines)' },
     @{ Name = 'inventory-service'; Container = 'datavex-inventory-service';
-       Label = 'inventory-service (Products, Warehouses, Stock)' }
+       Label = 'inventory-service (Products, Warehouses, Stock)' },
+    @{ Name = 'erp-service';       Container = 'datavex-erp-service';
+       Label = 'erp-service (Gateway, System Settings, Notifications)' }
 )
 
 # â”€â”€ Help / bootstrap â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -172,6 +174,19 @@ if (-not (Test-ShouldSkip 'inventory-service')) {
         docker exec -e PYTHONPATH=. datavex-inventory-service /opt/venv/bin/alembic upgrade head 2>&1
         if ($LASTEXITCODE -and $LASTEXITCODE -ne 0) { throw "alembic upgrade head failed (exit $LASTEXITCODE)" }
         docker exec -e PYTHONPATH=. datavex-inventory-service /opt/venv/bin/python /app/services/inventory-service/scripts/seed.py 2>&1
+        if ($LASTEXITCODE -and $LASTEXITCODE -ne 0) { throw "seed script failed (exit $LASTEXITCODE)" }
+    }
+} else { $script:ordinal--; $script:total-- }
+
+# Step 5: erp-service
+$script:ordinal++
+if (-not (Test-ShouldSkip 'erp-service')) {
+    Invoke-Step -Label $services[4].Label -Container $services[4].Container -ScriptBlock {
+        docker cp "$PSScriptRoot\..\..\services\erp-service\scripts" datavex-erp-service:/app/services/erp-service/ 2>&1
+        if ($LASTEXITCODE -and $LASTEXITCODE -ne 0) { throw "docker cp failed" }
+        docker exec -e PYTHONPATH=. datavex-erp-service /opt/venv/bin/alembic upgrade head 2>&1
+        if ($LASTEXITCODE -and $LASTEXITCODE -ne 0) { throw "alembic upgrade head failed (exit $LASTEXITCODE)" }
+        docker exec -e PYTHONPATH=. datavex-erp-service /opt/venv/bin/python /app/services/erp-service/scripts/seed.py 2>&1
         if ($LASTEXITCODE -and $LASTEXITCODE -ne 0) { throw "seed script failed (exit $LASTEXITCODE)" }
     }
 } else { $script:ordinal--; $script:total-- }

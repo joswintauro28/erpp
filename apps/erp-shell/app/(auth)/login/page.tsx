@@ -104,8 +104,8 @@ export default function LoginPage() {
         }
       `}</style>
       {/* Premium background sweeps */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(140,29,36,0.15)_0%,transparent_60%)]" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,rgba(229,184,60,0.06)_0%,transparent_50%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,color-mix(in srgb, var(--shell-brand) 15%, transparent)_0%,transparent_60%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,color-mix(in srgb, var(--shell-accent) 6%, transparent)_0%,transparent_50%)]" />
 
       <div className="relative z-10 w-full max-w-[400px] px-6 py-12 flex flex-col items-center">
         {/* Brand Header */}

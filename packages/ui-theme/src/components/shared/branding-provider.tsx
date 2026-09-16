@@ -40,12 +40,35 @@ export interface BrandingContextValue {
   refresh: () => Promise<void>;
 }
 
-/* ── Defaults ───────────────────────────────────────────────────────────── */
+/* ── Defaults (synced with packages/ui-theme/src/globals.css) ────────── */
+
+export const DEFAULT_LIGHT_COLORS: ThemeColorSet = {
+  primary: "#f2470c",
+  accent: "#fff0eb",
+  surface: "#ffffff",
+  foreground: "#09090b",
+  muted: "#52525b",
+  background: "#f4f5f8",
+  border: "#e2e8f0",
+};
+
+export const DEFAULT_DARK_COLORS: ThemeColorSet = {
+  primary: "#f2470c",
+  accent: "#741e02",
+  surface: "#121212",
+  foreground: "#f0f0f0",
+  muted: "#969696",
+  background: "#0a0a0a",
+  border: "#1f1f1f",
+};
 
 const DEFAULT_BRANDING: BrandingData = {
   logo_file_id: null,
   favicon_file_id: null,
-  brand_colors: {},
+  brand_colors: {
+    light: DEFAULT_LIGHT_COLORS,
+    dark: DEFAULT_DARK_COLORS,
+  },
   company_name: "DATAVEX",
   email_templates: {},
 };

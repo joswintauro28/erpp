@@ -100,8 +100,8 @@ export function FilePreviewModal({ fileId, fileName, mimeType, open, onClose }: 
         {/* Header */}
         <div className="flex items-center gap-3 px-5 py-3 border-b border-border shrink-0">
           <div className="flex items-center gap-2 min-w-0 flex-1">
-            {isImage ? <Image size={16} className="shrink-0 text-blue-500" /> :
-             isPdf ? <FileText size={16} className="shrink-0 text-red-500" /> :
+            {isImage ? <Image size={16} className="shrink-0 text-[var(--shell-info)]" /> :
+             isPdf ? <FileText size={16} className="shrink-0 text-[var(--shell-danger)]" /> :
              <FileIcon size={16} className="shrink-0 text-muted-foreground" />}
             <span className="text-sm font-semibold truncate">{displayName}</span>
             {meta?.size_bytes ? (

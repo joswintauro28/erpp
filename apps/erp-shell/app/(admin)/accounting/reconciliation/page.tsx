@@ -582,7 +582,7 @@ export default function ReconciliationPage() {
 
               <div className="h-2.5 w-full bg-muted rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-emerald-600"
+                  className="h-full bg-[var(--shell-success)]"
                   style={{
                     width: `${
                       varianceData.total_transactions > 0

@@ -398,7 +398,7 @@ export default function QuotationDetail() {
                 <Button
                   onClick={handleConvert}
                   disabled={actionLoading === "convert"}
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold shadow-sm w-full sm:w-auto"
+                  className="bg-[var(--shell-success)] hover:bg-[var(--shell-success)]/90 text-white font-semibold shadow-sm w-full sm:w-auto"
                 >
                   {actionLoading === "convert" ? (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -509,7 +509,7 @@ export default function QuotationDetail() {
           </p>
           <DialogFooter className="mt-4">
             <Button type="button" variant="outline" size="sm" className="border-[var(--shell-border)]" onClick={() => setDeleteOpen(false)}>Cancel</Button>
-            <Button variant="destructive" onClick={handleDelete} disabled={deleteSaving} className="bg-red-600 hover:bg-red-700 text-white">
+            <Button variant="destructive" onClick={handleDelete} disabled={deleteSaving} className="bg-[var(--shell-danger)] hover:bg-[var(--shell-danger)]/90 text-white">
               {deleteSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Trash2 className="mr-2 h-4 w-4" />}
               Delete Quotation
             </Button>

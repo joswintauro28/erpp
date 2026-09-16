@@ -3,7 +3,7 @@
 import { Badge } from "../ui/badge";
 import { cn } from "../../lib/utils";
 
-type BadgeVariant = "default" | "secondary" | "destructive" | "outline" | "success" | "warning" | "info";
+type BadgeVariant = "default" | "secondary" | "destructive" | "outline" | "success" | "warning" | "info" | "neutral" | "ghost" | "link";
 
 interface StatusConfig {
   label: string;
