@@ -160,7 +160,7 @@ export default function DashboardPage() {
         <SectionHeading label="Inventory Operations" />
         <div className="grid gap-6 lg:grid-cols-2">
           {/* Low Stock Alerts */}
-          <Card>
+          <Card className="border-[var(--shell-border)] bg-[var(--shell-surface)]">
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
@@ -212,7 +212,7 @@ export default function DashboardPage() {
           </Card>
 
           {/* Recent Stock Movements */}
-          <Card>
+          <Card className="border-[var(--shell-border)] bg-[var(--shell-surface)]">
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>

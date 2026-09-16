@@ -158,7 +158,7 @@ export default function DashboardPage() {
         <SectionHeading label="Activity & Insights" />
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           {/* Stage Value Bar Chart */}
-          <Card>
+          <Card className="border-[var(--shell-border)] bg-[var(--shell-surface)]">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <div>
                 <CardTitle className="flex items-center gap-2 text-sm">
@@ -227,7 +227,7 @@ export default function DashboardPage() {
           </Card>
 
           {/* Quick Insights */}
-          <Card>
+          <Card className="border-[var(--shell-border)] bg-[var(--shell-surface)]">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <div>
                 <CardTitle className="flex items-center gap-2 text-sm">

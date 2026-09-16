@@ -149,7 +149,7 @@ export default function BillingDashboard() {
 
       <section>
         <SectionHeading label="Revenue Trend" />
-        <Card>
+        <Card className="border-[var(--shell-border)] bg-[var(--shell-surface)]">
           <CardContent>
             <div className="h-[280px]">
               {d?.revenue_trend && d.revenue_trend.length > 0 ? (
@@ -182,7 +182,7 @@ export default function BillingDashboard() {
 
       <section>
         <SectionHeading label="Invoice Distribution" />
-        <Card>
+        <Card className="border-[var(--shell-border)] bg-[var(--shell-surface)]">
           <CardHeader className="flex flex-row items-center justify-between pb-2 border-b border-border/20">
             <div>
               <CardTitle className="flex items-center gap-2 text-sm font-semibold text-foreground">
@@ -265,7 +265,7 @@ export default function BillingDashboard() {
       </section>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <Card>
+        <Card className="border-[var(--shell-border)] bg-[var(--shell-surface)]">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <div>
               <CardTitle className="flex items-center gap-2 text-sm">
@@ -301,7 +301,7 @@ export default function BillingDashboard() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-[var(--shell-border)] bg-[var(--shell-surface)]">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <div>
               <CardTitle className="flex items-center gap-2 text-sm">

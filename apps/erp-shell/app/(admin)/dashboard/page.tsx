@@ -276,7 +276,7 @@ export default function Dashboard() {
         <SectionHeading label="Analytics" />
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           {/* Revenue Trend */}
-          <Card>
+          <Card className="border-[var(--shell-border)] bg-[var(--shell-surface)]">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <div>
                 <CardTitle className="flex items-center gap-2 text-sm">
@@ -328,7 +328,7 @@ export default function Dashboard() {
           </Card>
 
           {/* Invoice Summary (Donut) */}
-          <Card>
+          <Card className="border-[var(--shell-border)] bg-[var(--shell-surface)]">
             <CardHeader className="flex flex-row items-center justify-between pb-2 border-b border-[var(--shell-border)]/20">
               <div>
                 <CardTitle className="flex items-center gap-2 text-sm font-semibold text-[var(--shell-foreground)]">
@@ -425,7 +425,7 @@ export default function Dashboard() {
         <SectionHeading label="Activity" />
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Recent Invoices */}
-        <Card>
+        <Card className="border-[var(--shell-border)] bg-[var(--shell-surface)]">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <div>
               <CardTitle className="flex items-center gap-2 text-sm">
@@ -471,7 +471,7 @@ export default function Dashboard() {
         </Card>
 
         {/* Low Stock / Alerts */}
-        <Card>
+        <Card className="border-[var(--shell-border)] bg-[var(--shell-surface)]">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <div>
               <CardTitle className="flex items-center gap-2 text-sm">
@@ -514,7 +514,7 @@ export default function Dashboard() {
         <SectionHeading label="Payments & Growth" />
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Payment Analytics */}
-        <Card>
+        <Card className="border-[var(--shell-border)] bg-[var(--shell-surface)]">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <div>
               <CardTitle className="flex items-center gap-2 text-sm">
@@ -565,7 +565,7 @@ export default function Dashboard() {
         </Card>
 
         {/* Client Growth */}
-        <Card>
+        <Card className="border-[var(--shell-border)] bg-[var(--shell-surface)]">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <div>
               <CardTitle className="flex items-center gap-2 text-sm">
