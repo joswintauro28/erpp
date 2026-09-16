@@ -1,17 +1,17 @@
 """
-MinIO Object Key Migration Script
+RustFS Object Key Migration Script
 
 Migrates existing flat-key objects (<uuid>_<name>) to client-scoped paths
 (<client_name>/<owner_type>/<uuid>_<name>) for all FileRecords in the database.
 
 Usage:
     cd services/erp-service
-    PYTHONPATH=. .venv/Scripts/python scripts/migrate_minio_keys.py
+    PYTHONPATH=. .venv/Scripts/python scripts/migrate_rustfs_keys.py
 
 Requirements:
     - Running PostgreSQL with erp_db database
-    - Running MinIO instance with existing buckets
-    - Environment variables: DATABASE_URL, MINIO_ENDPOINT, MINIO_ACCESS_KEY, MINIO_SECRET_KEY
+    - Running RustFS instance with existing buckets
+    - Environment variables: DATABASE_URL, RUSTFS_ENDPOINT, RUSTFS_ACCESS_KEY, RUSTFS_SECRET_KEY
 """
 
 import asyncio
@@ -19,10 +19,11 @@ import os
 import sys
 from dataclasses import dataclass
 
-# Add the project root to the path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from minio import Minio
+import boto3
+from botocore.config import Config as BotoConfig
+from botocore.exceptions import ClientError
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
@@ -36,24 +37,27 @@ class MigrationStats:
     errors: int = 0
 
 
-def get_minio_client() -> Minio:
-    """Create a MinIO client from environment variables."""
-    endpoint = os.getenv("MINIO_ENDPOINT", "localhost:9000")
-    access_key = os.getenv("MINIO_ACCESS_KEY", "minioadmin")
-    secret_key = os.getenv("MINIO_SECRET_KEY", "minioadmin")
-    secure = os.getenv("MINIO_SECURE", "false").lower() == "true"
+def get_s3_client():
+    """Create an S3 client from environment variables."""
+    endpoint = os.getenv("RUSTFS_ENDPOINT", "localhost:9000")
+    access_key = os.getenv("RUSTFS_ACCESS_KEY", "minioadmin")
+    secret_key = os.getenv("RUSTFS_SECRET_KEY", "minioadmin")
+    secure = os.getenv("RUSTFS_SECURE", "false").lower() == "true"
+    scheme = "https" if secure else "http"
 
-    return Minio(endpoint, access_key=access_key, secret_key=secret_key, secure=secure)
+    return boto3.client(
+        "s3",
+        endpoint_url=f"{scheme}://{endpoint}",
+        aws_access_key_id=access_key,
+        aws_secret_access_key=secret_key,
+        region_name="us-east-1",
+        config=BotoConfig(signature_version="s3v4"),
+    )
 
 
 async def get_client_name_for_record(session: AsyncSession, owner_type: str, owner_id: int) -> str:
-    """
-    Resolve the client/account name for a given owner_type and owner_id.
-    Falls back to 'general' if not found.
-    """
     try:
         if owner_type in ("document", "quotation", "requirement", "sales_order"):
-            # CRM entities — get account from the linked record
             table_map = {
                 "document": "documents",
                 "quotation": "quotations",
@@ -79,12 +83,10 @@ async def get_client_name_for_record(session: AsyncSession, owner_type: str, own
                 return row[0].strip()
     except Exception:
         pass
-
     return "general"
 
 
 async def migrate_keys():
-    """Main migration function."""
     db_url = os.getenv(
         "DATABASE_URL",
         "postgresql+asyncpg://datavex:datavex@localhost:5432/erp_db",
@@ -93,11 +95,10 @@ async def migrate_keys():
     engine = create_async_engine(db_url)
     async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
-    minio = get_minio_client()
+    s3 = get_s3_client()
     stats = MigrationStats()
 
     async with async_session() as session:
-        # Fetch all file records
         result = await session.execute(
             text("SELECT id, bucket, object_key, uri, owner_type, owner_id FROM file_records ORDER BY id")
         )
@@ -105,7 +106,7 @@ async def migrate_keys():
 
         stats.total = len(records)
         print(f"\n{'='*60}")
-        print(f"MinIO Object Key Migration")
+        print(f"RustFS Object Key Migration")
         print(f"{'='*60}")
         print(f"Total records to process: {stats.total}")
         print(f"{'='*60}\n")
@@ -113,46 +114,40 @@ async def migrate_keys():
         for record in records:
             record_id, bucket, object_key, uri, owner_type, owner_id = record
 
-            # Skip if already has client-scoped path (contains /)
             if "/" in object_key:
                 stats.skipped += 1
                 continue
 
             try:
-                # Resolve client name
                 client_name = await get_client_name_for_record(session, owner_type, owner_id or 0)
-                # Sanitize client name for use as path segment
                 safe_client = "".join(c if c.isalnum() or c in (" ", "-", "_") else "_" for c in client_name)
                 safe_client = safe_client.strip().replace(" ", "_") or "general"
 
-                # Construct new key
                 new_key = f"{safe_client}/{owner_type}/{object_key}"
 
-                # Check if source object exists in MinIO
-                if not minio.stat_object(bucket, object_key):
-                    print(f"  [SKIP] Record #{record_id}: object not found in MinIO: {object_key}")
+                try:
+                    s3.head_object(Bucket=bucket, Key=object_key)
+                except ClientError:
+                    print(f"  [SKIP] Record #{record_id}: object not found in RustFS: {object_key}")
                     stats.skipped += 1
                     continue
 
-                # Copy object to new key
-                minio.copy_object(
-                    bucket,
-                    new_key,
-                    f"/{bucket}/{object_key}",
+                s3.copy_object(
+                    Bucket=bucket,
+                    Key=new_key,
+                    CopySource={"Bucket": bucket, "Key": object_key},
                 )
 
-                # Update database
                 new_uri = f"s3://{bucket}/{new_key}"
                 await session.execute(
                     text("UPDATE file_records SET object_key = :new_key, uri = :new_uri WHERE id = :id"),
                     {"new_key": new_key, "new_uri": new_uri, "id": record_id},
                 )
 
-                # Delete old object
-                minio.remove_object(bucket, object_key)
+                s3.delete_object(Bucket=bucket, Key=object_key)
 
                 stats.migrated += 1
-                print(f"  [OK] Record #{record_id}: {object_key} → {new_key}")
+                print(f"  [OK] Record #{record_id}: {object_key} -> {new_key}")
 
             except Exception as e:
                 stats.errors += 1

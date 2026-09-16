@@ -6,7 +6,7 @@ $hostsEntries = @(
     "127.0.0.1 crm.erp.local",
     "127.0.0.1 billing.erp.local",
     "127.0.0.1 inventory.erp.local",
-    "127.0.0.1 minio.erp.local",
+    "127.0.0.1 rustfs.erp.local",
     "127.0.0.1 erp.local"
 )
 
@@ -49,5 +49,5 @@ Write-Host "  http://app.erp.local        → Executive Shell (Subdomain)"
 Write-Host "  http://crm.erp.local        → CRM Workstation (Subdomain)"
 Write-Host "  http://billing.erp.local    → Billing Workstation (Subdomain)"
 Write-Host "  http://inventory.erp.local  → Inventory Workstation (Subdomain)"
-Write-Host "  http://minio.erp.local      → MinIO Object Storage (Subdomain)"
+Write-Host "  http://rustfs.erp.local     → RustFS Object Storage (Subdomain)"
 Write-Host "  http://erp.local            → All Services (Single-Domain)"

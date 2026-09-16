@@ -22,7 +22,7 @@ function formatBytes(bytes: number): string {
 }
 
 /**
- * Shared modal for previewing files from MinIO via the /api/files/:id/stream
+ * Shared modal for previewing files from RustFS via the /api/files/:id/stream
  * endpoint (302 redirect to presigned URL).
  *
  * - images → inline <img> with zoom controls

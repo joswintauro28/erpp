@@ -1,7 +1,7 @@
 """File upload / download / management endpoints.
 
 Uses the presigned URL pattern: the backend never handles binary data.
-Files go directly between the client and MinIO.
+Files go directly between the client and RustFS.
 """
 
 import logging
@@ -16,7 +16,7 @@ from starlette.responses import RedirectResponse
 from app.core.config import settings
 from app.core.database import get_db
 from app.core.deps import get_current_token_payload
-from app.files import minio_client as mc
+from app.files import s3_client as mc
 from app.files.models import FileRecord
 from app.files.schemas import (
     ConfirmUploadRequest,
@@ -96,7 +96,7 @@ async def request_upload(
     db: AsyncSession = Depends(get_db),
 ):
     """Validate the request, generate a presigned PUT URL, and create a
-    pending FileRecord. The client then uploads directly to MinIO."""
+    pending FileRecord. The client then uploads directly to RustFS."""
 
     _validate_mime(body.mime_type)
     _validate_size(body.size_bytes)
@@ -158,7 +158,7 @@ async def request_upload(
 
 
 # ---------------------------------------------------------------------------
-# 2. Confirm upload (client has PUT the file to MinIO)
+# 2. Confirm upload (client has PUT the file to RustFS)
 # ---------------------------------------------------------------------------
 
 
@@ -168,7 +168,7 @@ async def confirm_upload(
     payload: dict = Depends(get_current_token_payload),
     db: AsyncSession = Depends(get_db),
 ):
-    """Client calls this after successfully uploading the file to MinIO.
+    """Client calls this after successfully uploading the file to RustFS.
     We verify the object exists and return the final file record."""
 
     stmt = _org_filter(
@@ -180,7 +180,7 @@ async def confirm_upload(
     if not record:
         raise HTTPException(status_code=404, detail="File record not found")
 
-    # Verify the object actually landed in MinIO (async-wrapped)
+    # Verify the object actually landed in RustFS (async-wrapped)
     if not await mc.object_exists(record.bucket, record.object_key):
         raise HTTPException(
             status_code=400,
@@ -292,7 +292,7 @@ async def delete_file(
     payload: dict = Depends(get_current_token_payload),
     db: AsyncSession = Depends(get_db),
 ):
-    """Delete a file from MinIO and remove its registry record."""
+    """Delete a file from RustFS and remove its registry record."""
 
     stmt = _org_filter(
         select(FileRecord).where(FileRecord.id == file_id), payload
@@ -303,7 +303,7 @@ async def delete_file(
     if not record:
         raise HTTPException(status_code=404, detail="File not found")
 
-    # Delete from MinIO (async-wrapped)
+    # Delete from RustFS (async-wrapped)
     await mc.delete_object(record.bucket, record.object_key)
 
     # Delete from DB

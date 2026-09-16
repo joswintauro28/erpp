@@ -18,7 +18,7 @@ export class BankReconciliationService {
   }
 
   /**
-   * Import bank statement from a file stored in MinIO via erp-service.
+   * Import bank statement from a file stored in RustFS via erp-service.
    * Fetches the presigned download URL, then downloads the actual file bytes.
    * @param jwtToken Raw JWT bearer token to forward to erp-service.
    */
@@ -40,7 +40,7 @@ export class BankReconciliationService {
       throw new Error("erp-service returned no download_url for this file");
     }
 
-    // Step 2: Download the actual file bytes from MinIO via the presigned URL
+    // Step 2: Download the actual file bytes from RustFS via the presigned URL
     const fileResponse = await fetch(meta.download_url, { redirect: "follow" });
     if (!fileResponse.ok) {
       throw new Error(`Failed to download file from storage: ${fileResponse.status} ${fileResponse.statusText}`);
@@ -53,7 +53,7 @@ export class BankReconciliationService {
 
   /**
    * Import bank statement from a Base64-encoded file (CSV or XLSX).
-   * @deprecated Use importFileById instead for MinIO-based file handling.
+   * @deprecated Use importFileById instead for RustFS-based file handling.
    */
   async importFile(organizationId: number, fileBase64: string, fileName: string) {
     const buffer = Buffer.from(fileBase64, "base64");

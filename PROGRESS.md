@@ -73,16 +73,16 @@ Spacing: space-y-10 lg:space-y-12
 
 ## File Upload/Storage Pipeline — Complete (2026-08-26)
 
-Full MinIO-backed presigned URL file system deployed across the stack. All 15 identified bugs fixed.
+Full RustFS-backed presigned URL file system deployed across the stack. All 15 identified bugs fixed.
 
 ### What Was Built/Fixed
 
 | Component | Changes |
 |-----------|--------|
 | `erp-service/app/files/router.py` | Fixed MIME regex, added org scoping, added `/stream` endpoint, added `/cleanup-pending`, checksum on confirm |
-| `erp-service/app/files/minio_client.py` | All sync calls wrapped in `asyncio.to_thread`, error logging, presigned URL rewriting to public hostname |
+| `erp-service/app/files/s3_client.py` | All sync calls wrapped in `asyncio.to_thread`, error logging, presigned URL rewriting to public hostname |
 | `erp-service/app/files/schemas.py` | `owner_id` allows 0 for unlinked uploads |
-| `erp-service/app/core/config.py` | Added `MINIO_PUBLIC_URL` setting |
+| `erp-service/app/core/config.py` | Added `RUSTFS_PUBLIC_URL` setting |
 | `erp-shell/proxy.ts` | Added `/files/` routing to erp-service (preserving `/api` prefix) |
 | `billing-service` bank-reconciliation | JWT forwarding + JSON response parsing for file import |
 | Both `DocumentCreateModal.tsx` | Sends `file_uri` instead of `file_id`, fetches metadata on edit |

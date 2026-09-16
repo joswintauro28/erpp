@@ -27,9 +27,9 @@ This backend service acts as the central business logic gateway and handles lead
   - `crm_client.py` -> Connects to crm-service (`http://localhost:8001/api`) — generic CRUD + specific functions for dashboard, lead-discovery, AI assistant.
 - **Interactive OpenAPI Documentation:** Exposes Swagger UI (`http://localhost:8000/docs`), ReDoc (`http://localhost:8000/redoc`), and OpenAPI spec (`http://localhost:8000/openapi.json`) with Bearer JWT authorization. `SecurityHeadersMiddleware` excludes `/docs`, `/redoc`, and `/openapi.json` from restrictive CSP headers.
 - **Active Models:** Client, Lead, Product.
-- **MinIO File Module (`app/files/`):**
+- **RustFS File Module (`app/files/`):**
   - `models.py` — `FileRecord` model (bucket, object_key, uri, original_name, mime_type, size_bytes, checksum_sha256, owner_type, owner_id)
-  - `minio_client.py` — MinIO wrapper with presigned URL generation (PUT for upload, GET for download)
+  - `s3_client.py` — Boto3 S3 client with presigned URL generation (PUT for upload, GET for download)
   - `schemas.py` — Pydantic schemas (UploadRequest, UploadResponse, ConfirmUploadRequest, FileRecordOut, DownloadResponse)
   - `router.py` — 6 REST endpoints on `/api/files` (upload-request, confirm-upload, get metadata, download via 302 redirect, delete, list by owner)
   - Bucket constants: `crm-assets`, `inv-docs`, `finance-records`, `erp-backups`

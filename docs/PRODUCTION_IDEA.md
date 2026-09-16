@@ -7,10 +7,10 @@ This document details the production-grade deployment architecture, infrastructu
 ## 1. Executive Summary & Infrastructure Goals
 
 The objective is to establish an enterprise-ready, high-availability, and zero-trust infrastructure that seamlessly supports:
-- **14 Docker container services**: 4 Next.js 16 frontends, 6 microservice backends, MinIO S3 object storage, PostgreSQL 16, RabbitMQ 3.12, and Nginx.
+- **14 Docker container services**: 4 Next.js 16 frontends, 6 microservice backends, RustFS S3 object storage, PostgreSQL 16, RabbitMQ 3.12, and Nginx.
 - **Dual Deployment Flexibility**: Zero-reconfiguration switching between **Mode A (Subdomain Routing)** and **Mode B (Single-Domain Path-Based Routing)**.
 - **Zero Hardcoded Secrets**: Strict environment variable injection with `.env.docker` / `.env.prod` enforcement.
-- **Off-VM S3 Backup Pipelines**: MinIO-driven automated database dumping and write-ahead log (WAL) archiving.
+- **Off-VM S3 Backup Pipelines**: RustFS-driven automated database dumping and write-ahead log (WAL) archiving.
 - **Presigned URL Binary Pipeline**: Direct client-to-S3 transfers with zero application gateway memory overhead.
 
 ---
@@ -164,9 +164,9 @@ pg_dumpall -h postgres -U postgres --globals-only | gzip > "${BACKUP_DIR}/global
 # 3. Archive WAL files
 tar -czf "${BACKUP_DIR}/wal_archive.tar.gz" -C /backups wal_archive/
 
-# 4. Mirror to MinIO off-VM backup bucket
-mc alias set local_minio http://minio:9000 "${MINIO_ROOT_USER}" "${MINIO_ROOT_PASSWORD}"
-mc mirror "${BACKUP_DIR}" "local_minio/erp-backups/${BACKUP_DATE}" --overwrite
+# 4. Mirror to RustFS off-VM backup bucket
+rc alias set local_rustfs http://minio:9000 "${RUSTFS_ACCESS_KEY}" "${RUSTFS_SECRET_KEY}"
+rc mirror "${BACKUP_DIR}" "local_rustfs/erp-backups/${BACKUP_DATE}" --overwrite
 
 # 5. Prune local files older than 7 days
 find /backups -maxdepth 2 -type d -mtime +7 -exec rm -rf {} +
@@ -174,9 +174,9 @@ find /backups -maxdepth 2 -type d -mtime +7 -exec rm -rf {} +
 
 ---
 
-## 5. MinIO S3 Object Storage Architecture
+## 5. RustFS S3 Object Storage Architecture
 
-MinIO serves as the enterprise-wide S3-compatible storage cluster for unstructured documents, attachments, and backups.
+RustFS serves as the enterprise-wide S3-compatible storage cluster for unstructured documents, attachments, and backups.
 
 ```mermaid
 sequenceDiagram
@@ -184,7 +184,7 @@ sequenceDiagram
     actor User as User Browser
     participant Gateway as erp-service (API Gateway)
     participant DB as PostgreSQL (file_records)
-    participant S3 as MinIO S3 Cluster
+    participant S3 as RustFS S3 Cluster
 
     User->>Gateway: POST /api/files/upload-request (file metadata + auth)
     Gateway->>Gateway: Verify JWT & RBAC Permissions
@@ -231,8 +231,8 @@ DATAVEX ERP supports two production deployment models using a unified codebase a
 │  http://crm.erp.local                 │  http://erp.local/crm    (basePath)     │
 │  http://billing.erp.local             │  http://erp.local/billing(basePath)     │
 │  http://inventory.erp.local           │  http://erp.local/inventory(basePath)   │
-│  http://minio.erp.local               │  http://erp.local/minio/ (S3 REST API)  │
-│  http://minio.erp.local:9001          │  http://erp.local/minio-client (Console)│
+│  http://rustfs.erp.local              │  http://erp.local/rustfs/ (S3 REST API)  │
+│  http://rustfs.erp.local:9001         │  http://erp.local/rustfs-console (Console)│
 └───────────────────────────────────────┴─────────────────────────────────────────┘
 ```
 
@@ -247,7 +247,7 @@ In Mode A, each workstation operates at the root path (`/`) of its own dedicated
 - **CRM Workstation**: `http://crm.erp.local`
 - **Billing Workstation**: `http://billing.erp.local`
 - **Inventory Workstation**: `http://inventory.erp.local`
-- **MinIO S3 Gateway**: `http://minio.erp.local`
+- **RustFS S3 Gateway**: `http://rustfs.erp.local`
 
 #### SSO & Cookie Strategy
 - The authentication token is stored with wildcard domain scope: `Domain=.erp.local; Path=/; HttpOnly; SameSite=Lax`.
@@ -276,8 +276,8 @@ In Mode B, all applications and services are served under a single domain name o
 | `http://erp.local/crm` | `crm-shell:3001` | CRM Sales Workstation (`basePath: /crm`) |
 | `http://erp.local/billing` | `billing-ui:3002` | Billing & Accounting Workstation (`basePath: /billing`) |
 | `http://erp.local/inventory` | `inventory-ui:3004` | Inventory & Procurement Workstation (`basePath: /inventory`) |
-| `http://erp.local/minio/` | `minio:9000` | S3 REST API & Presigned Object Proxy |
-| `http://erp.local/minio-client` | `minio:9001` | MinIO Web Console Dashboard UI |
+| `http://erp.local/rustfs/` | `minio:9000` | S3 REST API & Presigned Object Proxy |
+| `http://erp.local/rustfs-console` | `minio:9001` | RustFS Web Console Dashboard UI |
 
 #### Single-Domain SSO & Authentication Flow
 1. **Unauthenticated Access**: User navigates to `http://erp.local/crm`.
@@ -370,8 +370,8 @@ http {
         proxy_read_timeout 300s;
         proxy_send_timeout 300s;
 
-        # ── MinIO S3 API Reverse Proxy ─────────────────────────────────
-        location /minio/ {
+        # ── RustFS S3 API Reverse Proxy ────────────────────────────────
+        location /rustfs/ {
             proxy_pass http://minio:9000/;
             proxy_http_version 1.1;
             proxy_set_header Host $http_host;

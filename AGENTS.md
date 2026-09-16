@@ -243,10 +243,10 @@ DATAVEX ERP utilizes a decoupled backend architecture where each business domain
   - `billing_client.py` → `http://localhost:8003/api` (dashboard KPIs, invoices, payments)
   - `inventory_client.py` → `http://localhost:8004` (dashboard, products, warehouses)
    - `crm_client.py` → `http://localhost:8001/api` (dashboard, customers, leads)
-- **MinIO Object Storage (`app/files/`):**
+- **RustFS Object Storage (`app/files/`):**
   - Presigned URL pattern — binary files never pass through backend servers
-  - Client uploads/downloads directly to/from MinIO via presigned PUT/GET URLs
-  - Centralized `file_records` table in `erp_db` — only erp-service has MinIO client
+  - Client uploads/downloads directly to/from RustFS via presigned PUT/GET URLs
+  - Centralized `file_records` table in `erp_db` — only erp-service has RustFS client
   - Per-domain buckets: `crm-assets`, `inv-docs`, `finance-records`, `erp-backups`
   - Endpoints: `POST /api/files/upload-request`, `POST /api/files/confirm-upload`, `GET /api/files/:id`, `GET /api/files/:id/download`, `DELETE /api/files/:id`, `GET /api/files?owner_type=&owner_id=`
 
@@ -450,7 +450,7 @@ The application contains a production-optimized local Docker sandbox configured 
 - **Consistent Alpine Builders**: Node/Bun services compile natively on Alpine-based Node layers (`node:22-alpine`) with Bun copied inside, avoiding glibc vs musl runtime crashes.
 - **Next.js Standalone Mode**: Configured to compile to minimal standalone node targets, reducing container image size by ~95% (~100MB instead of ~2GB).
 - **Python Isolation & Auto-Migrations**: FastAPI backends run in virtualenvs (`/opt/venv`), run under non-root permissions, and perform Alembic db migrations (`alembic upgrade head`) automatically on startup.
-- **MinIO Object Storage**: S3-compatible object storage for file uploads. `minio` init container auto-creates buckets (`crm-assets`, `inv-docs`, `finance-records`, `erp-backups`) on first start. erp-service is the only service with MinIO client access.
+- **RustFS Object Storage**: S3-compatible object storage for file uploads. `rustfs-init` container auto-creates buckets (`crm-assets`, `inv-docs`, `finance-records`, `erp-backups`) on first start. erp-service is the only service with RustFS client access.
 - **Consolidated Healthchecks**: All containers run custom, lightweight healthchecks (via Node `http` or Python `urllib`) to track container status inside Compose.
 - **AI Service Integration**: AI chat (SSE streaming) runs through ai-service with Groq/Gemini LLM providers. All 4 frontends proxy `/api/ai/*` to ai-service. Nginx configured with `proxy_buffering off` for streaming.
 - **Sequential Boot Sequence**: Standardized `depends_on: condition: service_healthy` triggers ensure Postgres starts first, followed by database migrations, services, frontends, and finally Nginx.

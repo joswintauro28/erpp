@@ -5,10 +5,10 @@ Revises: f5a6b7c8d9e0
 Create Date: 2026-08-21
 
 Drops base64 file_data/file_name columns from documents, sales, and
-sales_orders after migration to MinIO. Adds file_uri column to store
+sales_orders after migration to RustFS. Adds file_uri column to store
 the S3 URI reference instead.
 
-IMPORTANT: Run scripts/migrate_files_to_minio.py BEFORE applying this
+IMPORTANT: Run scripts/migrate_files_to_rustfs.py BEFORE applying this
 migration to preserve existing file data.
 """
 from typing import Sequence, Union

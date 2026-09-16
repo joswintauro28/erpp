@@ -4,8 +4,8 @@ Revision ID: a1b2c3d4e5f7
 Revises: d2e3f4a5b6c7
 Create Date: 2026-08-21 10:00:00.000000
 
-Creates the `file_records` table for MinIO file registry.
-Stores metadata for files uploaded to MinIO; binary content lives in MinIO.
+Creates the `file_records` table for RustFS file registry.
+Stores metadata for files uploaded to RustFS; binary content lives in RustFS.
 """
 from typing import Sequence, Union
 

@@ -84,18 +84,16 @@ services:
     healthcheck:
       test: ["CMD", "node", "-e", "require('http').get('http://127.0.0.1:3004/inventory', (res) => { if (res.statusCode >= 200 && res.statusCode < 400) process.exit(0); else process.exit(1); }).on('error', () => process.exit(1))"]
 
-  # ─── MinIO — S3 reverse proxy env vars ──────────────────────────────────
+  # ─── RustFS — S3 reverse proxy env vars ──────────────────────────────────
   minio:
     environment:
-      MINIO_SERVER_URL: http://127.0.0.1:9000
-      MINIO_BROWSER_REDIRECT_URL: http://erp.local/minio-client
-      MINIO_API_CORS_ALLOW_ORIGIN: "*"
+      RUSTFS_CONSOLE_ENABLE: "true"
 
   # ─── Backend services — Update CORS & routing for single domain ─────────
   erp-service:
     environment:
       CORS_ORIGINS: http://erp.local
-      MINIO_PUBLIC_URL: http://erp.local/minio
+      RUSTFS_PUBLIC_URL: http://erp.local/rustfs
       FRONTEND_URL: http://erp.local/admin
 
   crm-service:
@@ -131,5 +129,5 @@ services:
 volumes:
   postgres_data:
     name: datavex-erp_postgres_data
-  minio_data:
-    name: datavex-erp_minio_data
+  rustfs_data:
+    name: datavex-erp_rustfs_data

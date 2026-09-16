@@ -1,20 +1,20 @@
 """
-One-time migration: move base64 file data from crm-service DB to MinIO.
+One-time migration: move base64 file data from crm-service DB to RustFS.
 
 Reads file_data/file_name columns from documents, sales, sales_orders,
-and quotation notes JSON. Uploads each file to MinIO, creates a FileRecord
+and quotation notes JSON. Uploads each file to RustFS, creates a FileRecord
 in erp_db, then NULLs out the base64 columns.
 
 Usage (from services/crm-service):
-    python scripts/migrate_files_to_minio.py
+    python scripts/migrate_files_to_rustfs.py
 
 Requires .env variables:
     DATABASE_URL          — crm-service async PostgreSQL URL
     ERP_DATABASE_URL      — erp-service async PostgreSQL URL
-    MINIO_ENDPOINT        — MinIO host:port (e.g. localhost:9000)
-    MINIO_ROOT_USER       — MinIO access key
-    MINIO_ROOT_PASSWORD   — MinIO secret key
-    MINIO_SECURE          — "true" or "false" (default false)
+    RUSTFS_ENDPOINT       — RustFS host:port (e.g. localhost:9000)
+    RUSTFS_ACCESS_KEY     — RustFS access key
+    RUSTFS_SECRET_KEY     — RustFS secret key
+    RUSTFS_SECURE         — "true" or "false" (default false)
 """
 from __future__ import annotations
 
@@ -41,8 +41,9 @@ load_dotenv(PROJECT_ROOT / ".env")
 import sqlalchemy as sa
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
-from minio import Minio
-from minio.error import S3Error
+import boto3
+from botocore.config import Config as BotoConfig
+from botocore.exceptions import ClientError
 
 # ---------------------------------------------------------------------------
 # Config
@@ -51,10 +52,10 @@ DATABASE_URL = os.getenv("DATABASE_URL", "postgresql+asyncpg://postgres:postgres
 ERP_DATABASE_URL = os.getenv("ERP_DATABASE_URL", "postgresql+asyncpg://postgres:root@localhost:5432/erp_db")
 BILLING_DATABASE_URL = os.getenv("BILLING_DATABASE_URL", "postgresql+asyncpg://postgres:root@localhost:5432/erp_billing")
 
-MINIO_ENDPOINT = os.getenv("MINIO_ENDPOINT", "localhost:9000")
-MINIO_ACCESS_KEY = os.getenv("MINIO_ROOT_USER", "minioadmin")
-MINIO_SECRET_KEY = os.getenv("MINIO_ROOT_PASSWORD", "minioadmin")
-MINIO_SECURE = os.getenv("MINIO_SECURE", "false").lower() == "true"
+RUSTFS_ENDPOINT = os.getenv("RUSTFS_ENDPOINT", "localhost:9000")
+RUSTFS_ACCESS_KEY = os.getenv("RUSTFS_ACCESS_KEY", "minioadmin")
+RUSTFS_SECRET_KEY = os.getenv("RUSTFS_SECRET_KEY", "minioadmin")
+RUSTFS_SECURE = os.getenv("RUSTFS_SECURE", "false").lower() == "true"
 
 BUCKET = "crm-assets"
 OWNER_TYPE = "document"
@@ -83,35 +84,36 @@ ErpSession = sessionmaker(erp_engine, class_=AsyncSession, expire_on_commit=Fals
 BillingSession = sessionmaker(billing_engine, class_=AsyncSession, expire_on_commit=False)
 
 # ---------------------------------------------------------------------------
-# MinIO client (sync — used outside async loop)
+# S3 client (sync — used outside async loop)
 # ---------------------------------------------------------------------------
-minio_client = Minio(
-    MINIO_ENDPOINT,
-    access_key=MINIO_ACCESS_KEY,
-    secret_key=MINIO_SECRET_KEY,
-    secure=MINIO_SECURE,
+_s3_scheme = "https" if RUSTFS_SECURE else "http"
+s3_client = boto3.client(
+    "s3",
+    endpoint_url=f"{_s3_scheme}://{RUSTFS_ENDPOINT}",
+    aws_access_key_id=RUSTFS_ACCESS_KEY,
+    aws_secret_access_key=RUSTFS_SECRET_KEY,
+    region_name="us-east-1",
+    config=BotoConfig(signature_version="s3v4"),
 )
 
 
 def ensure_bucket():
     """Create the target bucket if it doesn't exist."""
-    if not minio_client.bucket_exists(BUCKET):
-        minio_client.make_bucket(BUCKET)
-        print(f"[minio] Created bucket: {BUCKET}")
-    else:
-        print(f"[minio] Bucket exists: {BUCKET}")
+    try:
+        s3_client.head_bucket(Bucket=BUCKET)
+        print(f"[rustfs] Bucket exists: {BUCKET}")
+    except ClientError:
+        s3_client.create_bucket(Bucket=BUCKET)
+        print(f"[rustfs] Created bucket: {BUCKET}")
 
 
-def upload_to_minio(data: bytes, object_key: str, content_type: str) -> str:
-    """Upload bytes to MinIO, return the object URI."""
-    from io import BytesIO
-
-    minio_client.put_object(
-        BUCKET,
-        object_key,
-        BytesIO(data),
-        length=len(data),
-        content_type=content_type,
+def upload_to_s3(data: bytes, object_key: str, content_type: str) -> str:
+    """Upload bytes to RustFS, return the object URI."""
+    s3_client.put_object(
+        Bucket=BUCKET,
+        Key=object_key,
+        Body=data,
+        ContentType=content_type,
     )
     uri = f"s3://{BUCKET}/{object_key}"
     return uri
@@ -200,7 +202,7 @@ async def migrate_documents(crm_db: AsyncSession, erp_db: AsyncSession) -> int:
             original_name = name or f"document_{doc_id}.bin"
             mime = guess_mime(original_name)
             obj_key = make_object_key(original_name)
-            uri = upload_to_minio(data, obj_key, mime)
+            uri = upload_to_s3(data, obj_key, mime)
             checksum = sha256_hex(data)
 
             file_id = await insert_file_record(
@@ -244,7 +246,7 @@ async def migrate_sales(crm_db: AsyncSession, erp_db: AsyncSession) -> int:
             original_name = file_name or f"sale_{sale_id}.bin"
             mime = guess_mime(original_name)
             obj_key = make_object_key(original_name)
-            uri = upload_to_minio(data, obj_key, mime)
+            uri = upload_to_s3(data, obj_key, mime)
             checksum = sha256_hex(data)
 
             file_id = await insert_file_record(
@@ -287,7 +289,7 @@ async def migrate_sales_orders(crm_db: AsyncSession, erp_db: AsyncSession) -> in
             original_name = file_name or f"so_{so_id}.bin"
             mime = guess_mime(original_name)
             obj_key = make_object_key(original_name)
-            uri = upload_to_minio(data, obj_key, mime)
+            uri = upload_to_s3(data, obj_key, mime)
             checksum = sha256_hex(data)
 
             file_id = await insert_file_record(
@@ -348,7 +350,7 @@ async def migrate_quotation_notes(billing_db: AsyncSession, erp_db: AsyncSession
             original_name = file_name or f"quotation_{quote_id}.bin"
             mime = guess_mime(original_name)
             obj_key = make_object_key(original_name)
-            uri = upload_to_minio(data, obj_key, mime)
+            uri = upload_to_s3(data, obj_key, mime)
             checksum = sha256_hex(data)
 
             file_id = await insert_file_record(
@@ -386,9 +388,9 @@ async def migrate_quotation_notes(billing_db: AsyncSession, erp_db: AsyncSession
 
 async def main():
     print("=" * 60)
-    print("CRM File Migration: base64 -> MinIO + file_records")
+    print("CRM File Migration: base64 -> RustFS + file_records")
     print("=" * 60)
-    print(f"  MinIO:     {MINIO_ENDPOINT} (bucket={BUCKET})")
+    print(f"  RustFS:    {RUSTFS_ENDPOINT} (bucket={BUCKET})")
     print(f"  CRM DB:    {DATABASE_URL.split('@')[-1] if '@' in DATABASE_URL else DATABASE_URL}")
     print(f"  ERP DB:    {ERP_DATABASE_URL.split('@')[-1] if '@' in ERP_DATABASE_URL else ERP_DATABASE_URL}")
     print(f"  Billing DB:{BILLING_DATABASE_URL.split('@')[-1] if '@' in BILLING_DATABASE_URL else BILLING_DATABASE_URL}")
@@ -415,7 +417,7 @@ async def main():
         total += await migrate_quotation_notes(billing_db, erp_db)
 
         print()
-        print(f"Done. Migrated {total} files to MinIO.")
+        print(f"Done. Migrated {total} files to RustFS.")
     finally:
         await crm_db.close()
         await erp_db.close()

@@ -63,7 +63,7 @@ export * from "./components/shared/ai-chat";
 export * from "./components/shared/ai-floating-bot";
 export * from "./components/shared/alert-banner";
 
-// File management (MinIO presigned URL pattern)
+// File management (RustFS presigned URL pattern)
 export * from "./components/shared/file-upload";
 export * from "./components/shared/file-viewer";
 export * from "./components/shared/file-preview-modal";

@@ -3,4 +3,4 @@
 
 # Docker volumes (persistent data)
 postgres_data/
-minio_data/
+rustfs_data/

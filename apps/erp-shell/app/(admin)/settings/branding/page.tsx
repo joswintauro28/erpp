@@ -97,7 +97,7 @@ async function uploadFile(
   });
   if (!putRes.ok) {
     const text = await putRes.text().catch(() => "");
-    throw new Error(`MinIO upload failed (${putRes.status}): ${text}`);
+    throw new Error(`RustFS upload failed (${putRes.status}): ${text}`);
   }
 
   return api.post<{ id: number }>("/files/confirm-upload", { file_id });

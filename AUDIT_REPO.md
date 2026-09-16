@@ -55,7 +55,7 @@ The DATAVEX ERP codebase has **strong foundational security** (ORM-only queries,
 |---|--------------|----------|--------|
 | 17 | **Hardcoded DB credentials** (`postgres:root`) across all FastAPI services | `services/*/app/core/config.py`, `core-iam/.env:1` | Database access if source code leaked |
 | 18 | **Hardcoded RabbitMQ `guest:guest`** | `services/billing-service/src/main.ts:34,48` | Message broker admin access |
-| 19 | **Hardcoded MinIO `minioadmin:minioadmin`** | `services/erp-service/app/core/config.py:28-29` | Object storage admin access |
+| 19 | **Hardcoded RustFS `minioadmin:minioadmin`** | `services/erp-service/app/core/config.py:28-29` | Object storage admin access |
 | 20 | **No request body size limits** on any FastAPI app | All FastAPI `main.py` files | DoS via memory exhaustion with large payloads |
 | 21 | **OpenAPI docs publicly accessible** with no auth | All FastAPI `main.py` (docs_url enabled) | Full API surface exposure to unauthenticated users |
 | 22 | **crm-service ignores CORS_ORIGINS env var** — hardcoded origins | `services/crm-service/app/main.py:83-88` | Docker Compose CORS overrides have no effect |
@@ -70,7 +70,7 @@ The DATAVEX ERP codebase has **strong foundational security** (ORM-only queries,
 |---|--------------|----------|--------|
 | 27 | Prompt injection risk in AI service — unsanitized context data in system prompts | `services/ai-service/app/router.py:129-135` | LLM behavior manipulation |
 | 28 | No Nginx `limit_req`/`limit_conn` for rate limiting defense-in-depth | `infrastructure/local/nginx/nginx.conf` | No upstream DoS protection |
-| 29 | MinIO Nginx proxy uses `Access-Control-Allow-Origin: *` wildcard CORS | `infrastructure/local/nginx/nginx.conf:156-158` | Any origin can read MinIO responses |
+| 29 | RustFS Nginx proxy uses `Access-Control-Allow-Origin: *` wildcard CORS | `infrastructure/local/nginx/nginx.conf:156-158` | Any origin can read RustFS responses |
 | 30 | Seed user passwords in source code | `services/core-iam/prisma/seed.ts:174-205` | Credential exposure to repo readers |
 | 31 | Production Nginx missing `proxy_buffering off` — SSE streaming broken | `infrastructure/internal/nginx/nginx.conf` | AI chat SSE fails in production |
 
@@ -104,7 +104,7 @@ The DATAVEX ERP codebase has **strong foundational security** (ORM-only queries,
 | **Account lockout** | Atomic SQL increment prevents race conditions, configurable threshold/duration |
 | **bcrypt password hashing** | Salt rounds 10-12, industry standard |
 | **ORM-only database queries** | 120+ `db.execute()` calls all use SQLAlchemy `select()` — no raw SQL (except 1 instance) |
-| **Presigned file URLs** | Binary files never pass through backend servers — direct client-to-MinIO |
+| **Presigned file URLs** | Binary files never pass through backend servers — direct client-to-RustFS |
 | **Data isolation** | All models enforce `owner_id` scoping from JWT claims |
 | **RBAC enforcement** | `@Permissions()` decorators + guards on protected endpoints |
 | **Security headers on erp-service** | X-Frame-Options DENY, HSTS, CSP, X-Content-Type-Options, Referrer-Policy |

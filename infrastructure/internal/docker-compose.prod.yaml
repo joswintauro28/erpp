@@ -8,18 +8,16 @@
 #
 # This override adapts the base compose for single-domain deployment:
 #   - Mounts nginx/single-domain.conf (path-based HTTP routing on port 80)
-#   - Sets MinIO S3 reverse proxy env vars under /minio
+#   - Sets RustFS S3 reverse proxy env vars under /rustfs
 #   - Injects DEPLOY_MODE=single-domain and Next.js basePath into frontends
 # ══════════════════════════════════════════════════════════════════════════════
 
 services:
 
-  # ─── MinIO — S3 reverse proxy under single domain ─────────────────────────
+  # ─── RustFS — S3 reverse proxy under single domain ─────────────────────────
   minio:
     environment:
-      MINIO_SERVER_URL: http://${MAIN_DOMAIN:-erp.datavex.com}
-      MINIO_BROWSER_REDIRECT_URL: http://${MAIN_DOMAIN:-erp.datavex.com}/minio-client
-      MINIO_API_CORS_ALLOW_ORIGIN: "*"
+      RUSTFS_CONSOLE_ENABLE: "true"
 
   # ─── ERP Shell — basePath /admin ──────────────────────────────────────────
   erp-shell:
@@ -95,7 +93,7 @@ services:
   erp-service:
     environment:
       CORS_ORIGINS: http://${MAIN_DOMAIN:-erp.datavex.com}
-      MINIO_PUBLIC_URL: http://${MAIN_DOMAIN:-erp.datavex.com}
+      RUSTFS_PUBLIC_URL: http://${MAIN_DOMAIN:-erp.datavex.com}
       FRONTEND_URL: http://${MAIN_DOMAIN:-erp.datavex.com}/admin
 
   crm-service:

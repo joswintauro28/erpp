@@ -216,7 +216,7 @@ export default function QuotationDetailsModal({ record, isOpen, onClose, onSucce
           </div>
         )}
 
-        {/* Attached Files from MinIO */}
+        {/* Attached Files from RustFS */}
         {attachedFiles.length > 0 && (
           <div className="rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface)] p-5">
             <div className="flex items-center gap-2 mb-4">

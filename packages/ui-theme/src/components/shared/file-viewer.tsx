@@ -32,7 +32,7 @@ function fileIcon(mimeType: string) {
 
 async function downloadFile(record: FileRecord) {
   try {
-    // Use the /stream endpoint which 302-redirects to the presigned MinIO URL.
+    // Use the /stream endpoint which 302-redirects to the presigned RustFS URL.
     // This avoids the JSON-wrapping issue and works with browser download.
     const baseUrl = "/api/files";
     const a = document.createElement("a");
@@ -48,7 +48,7 @@ async function downloadFile(record: FileRecord) {
 
 async function openPreview(record: FileRecord) {
   try {
-    // Use the /stream endpoint which 302-redirects to the presigned MinIO URL.
+    // Use the /stream endpoint which 302-redirects to the presigned RustFS URL.
     window.open(`/api/files/${record.id}/stream`, "_blank");
   } catch {
     // silent

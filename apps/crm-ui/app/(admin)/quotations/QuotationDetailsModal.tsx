@@ -40,7 +40,7 @@ export default function QuotationDetailsModal({ record, isOpen, onClose, onSucce
   });
   const [soFileId, setSoFileId] = useState<number | null>(null);
 
-  // Attached files from MinIO
+  // Attached files from RustFS
   const [attachedFiles, setAttachedFiles] = useState<FileRecord[]>([]);
   const [previewFile, setPreviewFile] = useState<{ id: number; name: string; mimeType: string } | null>(null);
 
@@ -315,7 +315,7 @@ export default function QuotationDetailsModal({ record, isOpen, onClose, onSucce
           </div>
         )}
 
-        {/* Attached Files from MinIO (shown in view mode) */}
+        {/* Attached Files from RustFS (shown in view mode) */}
         {!showSalesOrderForm && attachedFiles.length > 0 && (
           <div className="mt-4 rounded-lg border border-[var(--shell-border)] bg-[var(--shell-surface)] p-4">
             <div className="text-[10px] font-semibold uppercase text-[var(--shell-muted)] mb-2">

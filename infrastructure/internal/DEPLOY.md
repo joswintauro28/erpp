@@ -87,7 +87,7 @@ nano .env.docker   # or vim, code, etc.
 
 **Generate strong secrets** (run in a separate terminal):
 ```bash
-# PostgreSQL / MinIO password
+# PostgreSQL / RustFS password
 openssl rand -base64 32
 
 # JWT secret (used by ALL backend services — must match)
@@ -108,11 +108,11 @@ on every machine that needs access:
 ```bash
 # Add to /etc/hosts on developer machines (NOT on the VM itself)
 # Replace <VM-INTERNAL-IP> with the actual IP
-echo "<VM-INTERNAL-IP> app.erp.datavex.com crm.erp.datavex.com billing.erp.datavex.com inventory.erp.datavex.com minio.erp.datavex.com" | sudo tee -a /etc/hosts
+echo "<VM-INTERNAL-IP> app.erp.datavex.com crm.erp.datavex.com billing.erp.datavex.com inventory.erp.datavex.com rustfs.erp.datavex.com" | sudo tee -a /etc/hosts
 ```
 
-**Note:** If using `/etc/hosts`, the MinIO presigned URLs will include
-`minio.erp.datavex.com` — this hostname must resolve on the **browser's
+**Note:** If using `/etc/hosts`, the RustFS presigned URLs will include
+`rustfs.erp.datavex.com` — this hostname must resolve on the **browser's
 machine**, not just the VM. So every developer's laptop needs these entries.
 
 ---
@@ -257,7 +257,7 @@ docker compose --env-file .env.docker down
 ### Stop and Destroy All Data
 
 ```bash
-# WARNING: This deletes all PostgreSQL databases and MinIO files
+# WARNING: This deletes all PostgreSQL databases and RustFS files
 docker compose --env-file .env.docker down -v
 ```
 
@@ -324,11 +324,11 @@ docker compose --env-file .env.docker exec erp-service curl http://postgres:5432
 - All services MUST use the same `JWT_SECRET` value from `.env.docker`.
 - After changing it: `docker compose --env-file .env.docker down && up -d`
 
-### MinIO Uploads Fail
+### RustFS Uploads Fail
 
-- Check MinIO is healthy: `docker compose --env-file .env.docker logs minio`
-- Verify `MINIO_PUBLIC_URL` resolves from the browser's machine
-- If using `/etc/hosts`, ensure `minio.erp.datavex.com` is listed there
+- Check RustFS is healthy: `docker compose --env-file .env.docker logs minio`
+- Verify `RUSTFS_PUBLIC_URL` resolves from the browser's machine
+- If using `/etc/hosts`, ensure `rustfs.erp.datavex.com` is listed there
 
 ### Slow First Build
 

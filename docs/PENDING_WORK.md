@@ -92,8 +92,8 @@ All flows below are currently approximated via synchronous REST calls. A central
 - [ ] **Healthcheck Consolidation** — Standardize healthcheck endpoints across all services
 - [ ] **Stale DB Table Cleanup** — `erp_db` still has legacy `invoices`, `payments`, `credit_notes`, `debit_notes`, `invoice_items` tables that are never used (data now lives in `erp_billing`)
 - [x] **Docker Healthchecks** — Custom HTTP healthchecks for all containers (done in infrastructure/local)
-- [x] **File Upload/Storage Pipeline** — MinIO presigned URL system complete: upload, download, streaming, org-scoped access, cleanup endpoint, async MinIO calls, billing-service JWT forwarding, DocumentCreateModal contract fix (2026-08-26)
-- [x] **MinIO Nginx Proxy** — `minio.erp.local` server block in nginx, `MINIO_PUBLIC_URL` config for Docker presigned URL rewriting (2026-08-26)
+- [x] **File Upload/Storage Pipeline** — RustFS presigned URL system complete: upload, download, streaming, org-scoped access, cleanup endpoint, async S3 calls, billing-service JWT forwarding, DocumentCreateModal contract fix (2026-08-26)
+- [x] **RustFS Nginx Proxy** — `rustfs.erp.local` server block in nginx, `RUSTFS_PUBLIC_URL` config for Docker presigned URL rewriting (2026-08-26)
 - [x] **Internal Deployment Config** — `infrastructure/internal/` with production compose, real domains, secrets template, deployment guide (2026-08-26)
 - [x] **Docker SSL Fix** — Added `openssl` to `crm-service` and `inventory-service` Dockerfiles to fix pip install SSL errors through Docker Desktop proxy (2026-08-26)
 

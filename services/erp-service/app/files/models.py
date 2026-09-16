@@ -1,7 +1,7 @@
 """File registry model.
 
-Stores metadata for files uploaded to MinIO. The actual binary content
-lives in MinIO; this table tracks provenance, ownership, and enables
+Stores metadata for files uploaded to RustFS. The actual binary content
+lives in RustFS; this table tracks provenance, ownership, and enables
 cross-domain file queries.
 """
 
@@ -19,7 +19,7 @@ class FileRecord(Base):
     id: Mapped[int] = mapped_column(sa.Integer, primary_key=True)
     organization_id: Mapped[int] = mapped_column(sa.Integer, nullable=False, index=True)
 
-    # MinIO placement
+    # RustFS placement
     bucket: Mapped[str] = mapped_column(sa.String(63), nullable=False)
     object_key: Mapped[str] = mapped_column(sa.String(1024), nullable=False)
     uri: Mapped[str] = mapped_column(sa.String(2048), nullable=False)

@@ -39,7 +39,7 @@ export default function RequirementDetailsModal({
     owner: "",
   });
 
-  // Attached files from MinIO
+  // Attached files from RustFS
   const [attachedFiles, setAttachedFiles] = useState<FileRecord[]>([]);
   const [previewFile, setPreviewFile] = useState<{ id: number; name: string; mimeType: string } | null>(null);
 
@@ -181,7 +181,7 @@ export default function RequirementDetailsModal({
           <div className="space-y-6">
             {renderFrameContent()}
 
-            {/* Attached Files from MinIO */}
+            {/* Attached Files from RustFS */}
             {attachedFiles.length > 0 && (
               <div className="rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface)] p-5">
                 <div className="flex items-center gap-2 mb-4">

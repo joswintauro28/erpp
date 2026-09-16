@@ -18,7 +18,7 @@ class UploadRequest(BaseModel):
 
 
 class UploadResponse(BaseModel):
-    """Returned to the client so it can upload directly to MinIO."""
+    """Returned to the client so it can upload directly to RustFS."""
     file_id: int
     upload_url: str
     object_key: str
@@ -27,7 +27,7 @@ class UploadResponse(BaseModel):
 
 
 class ConfirmUploadRequest(BaseModel):
-    """Client confirms the upload is complete after PUTting to MinIO."""
+    """Client confirms the upload is complete after PUTting to RustFS."""
     file_id: int
 
 
@@ -51,6 +51,6 @@ class FileRecordOut(BaseModel):
 
 
 class DownloadResponse(BaseModel):
-    """Presigned GET URL for the client to download directly from MinIO."""
+    """Presigned GET URL for the client to download directly from RustFS."""
     download_url: str
     expires_in: int = 300  # seconds
