@@ -31,6 +31,15 @@ async def lifespan(app: FastAPI):
     import asyncio
     from app.events.notifications_consumer import run_notifications_worker
     from app.events.cogs_consumer import run_cogs_worker
+    from app.files.s3_client import ensure_bucket, BUCKET_CRM, BUCKET_INV, BUCKET_FINANCE, BUCKET_BACKUPS
+
+    for bucket in (BUCKET_CRM, BUCKET_INV, BUCKET_FINANCE, BUCKET_BACKUPS):
+        try:
+            await ensure_bucket(bucket)
+            logging.getLogger(__name__).info("RustFS bucket ensured: %s", bucket)
+        except Exception:
+            logging.getLogger(__name__).warning("Could not ensure RustFS bucket %s (will retry on first upload)", bucket)
+
     notif_task = asyncio.create_task(run_notifications_worker())
     cogs_task = asyncio.create_task(run_cogs_worker())
     yield
