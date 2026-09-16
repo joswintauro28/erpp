@@ -5,7 +5,7 @@ import sys
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from app.core.database import AsyncSessionLocal, Base, engine
+from app.core.database import async_session_factory, Base, engine
 from app.notification.models import Notification
 from app.settings.models import SystemSettings
 from app.settings.schemas import SettingsSchema
@@ -14,7 +14,7 @@ from sqlalchemy import select
 
 async def seed():
     print("Seeding erp-service database...")
-    async with AsyncSessionLocal() as db:
+    async with async_session_factory() as db:
         try:
             async with engine.begin() as conn:
                 await conn.run_sync(Base.metadata.create_all)
