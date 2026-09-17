@@ -15,8 +15,8 @@ export default function NewQuotation() {
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div>
-          <h1 className="font-heading text-xl font-semibold tracking-tight text-[var(--shell-foreground)]">New Quotation</h1>
-          <p className="mt-0.5 text-sm text-[var(--shell-muted)]">Create a new quotation for a client</p>
+          <h1 className="font-heading text-xl font-semibold tracking-tight text-foreground">New Quotation</h1>
+          <p className="mt-0.5 text-sm text-muted-foreground">Create a new quotation for a client</p>
         </div>
       </div>
 

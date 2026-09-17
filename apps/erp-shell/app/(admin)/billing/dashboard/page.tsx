@@ -106,7 +106,7 @@ export default function BillingDashboard() {
         subtitle="Here's a live view of your revenue stream, receivables, payables, and invoice statuses."
         badge="Billing & Finance Console"
         actions={
-          <Button size="sm" className="bg-[var(--shell-brand)] text-white hover:bg-[var(--shell-brand)]/90 gap-1.5 text-xs shadow-sm" onClick={() => router.push("/billing/invoices")}>
+          <Button size="sm" className="bg-primary text-white hover:bg-primary/90 gap-1.5 text-xs shadow-sm" onClick={() => router.push("/billing/invoices")}>
             <Plus className="h-3.5 w-3.5" /> New Invoice
           </Button>
         }

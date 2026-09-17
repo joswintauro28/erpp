@@ -2,7 +2,7 @@ export default function AdminLoading() {
   return (
     <div className="relative space-y-10 lg:space-y-12">
       {/* Hardware-accelerated Brand Sweep Loader */}
-      <span className="absolute -top-6 left-0 h-0.5 w-1/3 rounded-full bg-[var(--shell-brand)] shimmer-glow" />
+      <span className="absolute -top-6 left-0 h-0.5 w-1/3 rounded-full bg-primary shimmer-glow" />
 
       {/* Header Info */}
       <div className="flex items-center justify-between">
@@ -18,7 +18,7 @@ export default function AdminLoading() {
         {Array.from({ length: 4 }).map((_, i) => (
           <div
             key={i}
-            className="flex flex-col gap-3 rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface)] p-5 shadow-sm"
+            className="flex flex-col gap-3 rounded-xl border p-5 shadow-sm"
           >
             <div className="flex items-center justify-between">
               <div className="h-4 w-24 rounded shimmer-glow" />
@@ -33,8 +33,8 @@ export default function AdminLoading() {
       {/* Analytics Charts Mock Blocks */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Mock Chart Card 1: Revenue Trend */}
-        <div className="rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface)] p-5 space-y-4">
-          <div className="flex items-center justify-between border-b border-[var(--shell-border)]/20 pb-3">
+        <div className="rounded-xl border p-5 space-y-4">
+          <div className="flex items-center justify-between border-b border-border/20 pb-3">
             <div className="space-y-1.5">
               <div className="h-4.5 w-32 rounded shimmer-glow" />
               <div className="h-3 w-48 rounded shimmer-glow" />
@@ -53,8 +53,8 @@ export default function AdminLoading() {
         </div>
 
         {/* Mock Chart Card 2: Donut Split */}
-        <div className="rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface)] p-5 space-y-4">
-          <div className="flex items-center justify-between border-b border-[var(--shell-border)]/20 pb-3">
+        <div className="rounded-xl border p-5 space-y-4">
+          <div className="flex items-center justify-between border-b border-border/20 pb-3">
             <div className="space-y-1.5">
               <div className="h-4.5 w-36 rounded shimmer-glow" />
               <div className="h-3 w-40 rounded shimmer-glow" />
@@ -64,7 +64,7 @@ export default function AdminLoading() {
             {/* Mock Ring */}
             <div className="col-span-7 flex justify-center items-center relative">
               <div className="h-40 w-40 rounded-full border-[14px] border-[var(--shell-surface-alt)] flex items-center justify-center">
-                <div className="flex flex-col items-center justify-center rounded-full h-24 w-24 border border-[var(--shell-border)] bg-[var(--shell-surface)] shadow-sm">
+                <div className="flex flex-col items-center justify-center rounded-full h-24 w-24 border shadow-sm">
                   <div className="h-6 w-10 rounded shimmer-glow" />
                   <div className="h-3 w-12 rounded shimmer-glow mt-1.5" />
                 </div>
@@ -81,7 +81,7 @@ export default function AdminLoading() {
                     </div>
                     <div className="h-3.5 w-8 rounded shimmer-glow" />
                   </div>
-                  <div className="h-1.5 w-full rounded-full bg-[var(--shell-surface-alt)]" />
+                  <div className="h-1.5 w-full rounded-full bg-secondary" />
                 </div>
               ))}
             </div>
@@ -91,13 +91,13 @@ export default function AdminLoading() {
 
       {/* Tabular Lists Mock Layout */}
       <div className="space-y-4">
-        <div className="flex items-center gap-2 border-b border-[var(--shell-border)]/20 pb-2">
+        <div className="flex items-center gap-2 border-b border-border/20 pb-2">
           <div className="h-4 w-20 rounded shimmer-glow" />
-          <div className="h-px flex-1 bg-[var(--shell-border)]/20" />
+          <div className="h-px flex-1 bg-border/20" />
         </div>
-        <div className="rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface)] overflow-hidden">
+        <div className="rounded-xl border overflow-hidden">
           {/* Table Header */}
-          <div className="grid grid-cols-12 gap-4 border-b border-[var(--shell-border)] bg-[var(--shell-surface-alt)]/50 px-6 py-3">
+          <div className="grid grid-cols-12 gap-4 border-b border-border bg-secondary/50 px-6 py-3">
             <div className="col-span-2"><div className="h-3.5 w-12 rounded shimmer-glow" /></div>
             <div className="col-span-4"><div className="h-3.5 w-24 rounded shimmer-glow" /></div>
             <div className="col-span-2"><div className="h-3.5 w-16 rounded shimmer-glow" /></div>
@@ -105,7 +105,7 @@ export default function AdminLoading() {
             <div className="col-span-2 text-right flex justify-end"><div className="h-3.5 w-8 rounded shimmer-glow" /></div>
           </div>
           {/* Table Rows */}
-          <div className="divide-y divide-[var(--shell-border)]/40">
+          <div className="divide-y divide-border/40">
             {Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="grid grid-cols-12 gap-4 px-6 py-4 items-center">
                 <div className="col-span-2"><div className="h-4 w-16 rounded shimmer-glow" /></div>

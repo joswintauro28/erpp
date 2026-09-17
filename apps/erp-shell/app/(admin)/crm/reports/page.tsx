@@ -121,8 +121,8 @@ export default function ReportsPage() {
                 rep_sales.map((item: any, idx: number) => (
                   <div key={idx}>
                     <div className="flex justify-between text-sm font-semibold mb-1">
-                      <span className="text-[var(--shell-foreground)]">{item.rep}</span>
-                      <span className="text-[var(--shell-brand)]">{formatCurrency(item.amount)}</span>
+                      <span className="text-foreground">{item.rep}</span>
+                      <span className="text-primary">{formatCurrency(item.amount)}</span>
                     </div>
                     <Progress value={(item.amount / maxRepSales) * 100} />
                   </div>
@@ -143,8 +143,8 @@ export default function ReportsPage() {
                 lead_status.map((item: any, idx: number) => (
                   <div key={idx}>
                     <div className="flex justify-between text-sm font-semibold mb-1">
-                      <span className="text-[var(--shell-foreground)]">{item.status}</span>
-                      <span className="text-[var(--shell-muted)]">{item.count} leads</span>
+                      <span className="text-foreground">{item.status}</span>
+                      <span className="text-muted-foreground">{item.count} leads</span>
                     </div>
                     <Progress value={(item.count / maxLeadCount) * 100} className="[&>div]:bg-[var(--shell-info)]" />
                   </div>
@@ -165,9 +165,9 @@ export default function ReportsPage() {
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {opp_stages.length > 0 ? (
                 opp_stages.map((item: any, idx: number) => (
-                  <div key={idx} className="rounded-lg border border-[var(--shell-border)] bg-[var(--shell-bg)] p-4">
-                    <p className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--shell-muted)]">{item.stage}</p>
-                    <p className="font-heading text-2xl font-semibold tracking-tight text-[var(--shell-foreground)] mt-1">{item.count}</p>
+                  <div key={idx} className="rounded-lg border border-border bg-background p-4">
+                    <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">{item.stage}</p>
+                    <p className="font-heading text-2xl font-semibold tracking-tight text-foreground mt-1">{item.count}</p>
                     <div className="mt-2">
                       <Progress value={(item.count / maxOppCount) * 100} className="h-1 [&>div]:bg-[var(--shell-success)]" />
                     </div>
@@ -186,17 +186,17 @@ export default function ReportsPage() {
       <section>
         <SectionHeading label="Report Records" />
         <Card>
-          <div className="flex items-center justify-between border-b border-[var(--shell-border)] p-4">
+          <div className="flex items-center justify-between border-b border-border p-4">
             <div className="relative flex-1 max-w-xs">
-              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--shell-muted)]" />
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
               <Input placeholder="Search reports..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 h-9 text-sm" />
             </div>
             <div className="flex items-center gap-3">
-              <Filter size={15} className="text-[var(--shell-muted)] shrink-0" />
+              <Filter size={15} className="text-muted-foreground shrink-0" />
               <Button variant="outline" size="sm" onClick={() => exportToCSV(filteredReports, "reports")} className="gap-1.5 text-xs">
                 <Download size={14} /> Export
               </Button>
-              <Button size="sm" onClick={() => setIsModalOpen(true)} className="bg-[var(--shell-brand)] text-white hover:bg-[var(--shell-brand)]/90 gap-1.5 text-xs shadow-sm">
+              <Button size="sm" onClick={() => setIsModalOpen(true)} className="bg-primary text-white hover:bg-primary/90 gap-1.5 text-xs shadow-sm">
                 <Plus size={14} /> New Report
               </Button>
             </div>

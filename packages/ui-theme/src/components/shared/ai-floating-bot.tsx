@@ -103,7 +103,7 @@ function renderSimpleMarkdown(text: string): React.ReactNode {
         parts.push(
           <code
             key={match.index}
-            className="rounded bg-muted px-1 py-0.2 text-[11px] font-mono text-[var(--shell-brand)] dark:text-[var(--shell-accent)] border border-border"
+            className="rounded bg-muted px-1 py-0.2 text-[11px] font-mono text-primary dark:text-[var(--shell-accent)] border border-border"
           >
             {token.slice(1, -1)}
           </code>,
@@ -112,7 +112,7 @@ function renderSimpleMarkdown(text: string): React.ReactNode {
         parts.push(
           <span
             key={match.index}
-            className="font-medium text-[var(--shell-brand)] dark:text-[var(--shell-accent)] bg-[var(--shell-brand)]/10 dark:bg-[var(--shell-brand)]/20 px-1 py-0.2 rounded"
+            className="font-medium text-primary dark:text-[var(--shell-accent)] bg-primary/10 dark:bg-primary/20 px-1 py-0.2 rounded"
           >
             {token}
           </span>,
@@ -390,8 +390,8 @@ export function AIFloatingBot({
             {/* Header */}
             <div className="flex items-center justify-between px-3.5 py-2.5 bg-card/95 border-b border-border select-none shrink-0 backdrop-blur-xs">
               <div className="flex items-center gap-2 min-w-0">
-                <Avatar className="h-7 w-7 rounded-lg bg-[var(--shell-brand)]/15 text-[var(--shell-brand)] dark:text-[var(--shell-accent)] border border-[var(--shell-brand)]/25">
-                  <AvatarFallback className="bg-transparent text-[var(--shell-brand)] dark:text-[var(--shell-accent)]">
+                <Avatar className="h-7 w-7 rounded-lg bg-primary/15 text-primary dark:text-[var(--shell-accent)] border border-[var(--shell-brand)]/25">
+                  <AvatarFallback className="bg-transparent text-primary dark:text-[var(--shell-accent)]">
                     <Sparkles size={14} />
                   </AvatarFallback>
                 </Avatar>
@@ -446,8 +446,8 @@ export function AIFloatingBot({
             <div className="flex-1 overflow-y-auto p-3.5 space-y-3 custom-scrollbar bg-background">
               {messages.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-center py-6 px-3">
-                  <Avatar className="h-11 w-11 rounded-2xl bg-[var(--shell-brand)]/10 border border-[var(--shell-brand)]/20 mb-2.5 shadow-2xs">
-                    <AvatarFallback className="bg-transparent text-[var(--shell-brand)] dark:text-[var(--shell-accent)] text-xl">
+                  <Avatar className="h-11 w-11 rounded-2xl bg-primary/10 border border-[var(--shell-brand)]/20 mb-2.5 shadow-2xs">
+                    <AvatarFallback className="bg-transparent text-primary dark:text-[var(--shell-accent)] text-xl">
                       {meta.icon}
                     </AvatarFallback>
                   </Avatar>
@@ -493,8 +493,8 @@ export function AIFloatingBot({
                         className={cn(
                           "h-6 w-6 rounded-md text-[10px] font-semibold mt-0.5 shadow-2xs",
                           isUser
-                            ? "bg-[var(--shell-surface-alt)] text-[var(--shell-foreground)]"
-                            : "bg-[var(--shell-brand)] text-white dark:bg-[var(--shell-brand)] dark:text-[var(--shell-accent)]",
+                            ? "bg-secondary text-foreground"
+                            : "bg-primary text-white dark:bg-primary dark:text-[var(--shell-accent)]",
                         )}
                       >
                         <AvatarFallback className="bg-transparent">
@@ -507,7 +507,7 @@ export function AIFloatingBot({
                           className={cn(
                             "rounded-xl px-3 py-2 text-[12px] leading-relaxed shadow-2xs",
                             isUser
-                              ? "bg-[var(--shell-surface-alt)] text-[var(--shell-foreground)] rounded-tr-xs"
+                              ? "bg-secondary text-foreground rounded-tr-xs"
                               : "bg-card border border-border text-foreground rounded-tl-xs",
                           )}
                         >
@@ -515,7 +515,7 @@ export function AIFloatingBot({
                             renderSimpleMarkdown(m.content)
                           ) : m.streaming ? (
                             <div className="flex items-center gap-2 py-0.5 text-[11px] text-muted-foreground animate-pulse">
-                              <Sparkles size={12} className="text-[var(--shell-brand)] animate-spin" style={{ animationDuration: "3s" }} />
+                              <Sparkles size={12} className="text-primary animate-spin" style={{ animationDuration: "3s" }} />
                               <span>Thinking...</span>
                             </div>
                           ) : null}
@@ -578,7 +578,7 @@ export function AIFloatingBot({
                     type="submit"
                     size="icon"
                     disabled={loading || !input.trim()}
-                    className="h-7 w-7 rounded-full bg-[var(--shell-brand)] hover:bg-[var(--shell-brand)]/90 text-white shrink-0 disabled:opacity-25 shadow-2xs cursor-pointer transition-transform active:scale-95"
+                    className="h-7 w-7 rounded-full bg-primary hover:bg-primary/90 text-white shrink-0 disabled:opacity-25 shadow-2xs cursor-pointer transition-transform active:scale-95"
                     aria-label="Send"
                   >
                     <Send size={12} />
@@ -594,7 +594,7 @@ export function AIFloatingBot({
             variant="default"
             size="icon"
             onClick={() => setIsOpen(true)}
-            className="relative h-12 w-12 rounded-full bg-[var(--shell-brand)] hover:bg-[var(--shell-brand)]/90 text-white shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-200 border-2 border-[var(--shell-accent)]/40 p-0 overflow-hidden cursor-pointer"
+            className="relative h-12 w-12 rounded-full bg-primary hover:bg-primary/90 text-white shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-200 border-2 border-[var(--shell-accent)]/40 p-0 overflow-hidden cursor-pointer"
             title="AI Copilot (Ctrl+J)"
             aria-label="Open AI Copilot (Ctrl+J)"
           >

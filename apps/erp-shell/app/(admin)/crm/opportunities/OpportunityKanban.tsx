@@ -66,8 +66,8 @@ export default function OpportunityKanban({ opportunities, onView, onStageChange
             onDragLeave={() => setOverStage((s) => (s === stage ? null : s))}
             onDrop={(e) => handleDrop(stage, e)}
             className={cn(
-              "flex w-[240px] shrink-0 flex-col rounded-xl border bg-[var(--shell-surface)] transition-all duration-150",
-              isOver ? "border-[var(--shell-warning)]/40 ring-2 ring-[var(--shell-warning)]/60" : "border-[var(--shell-border)]"
+              "flex w-[240px] shrink-0 flex-col rounded-xl border transition-all duration-150",
+              isOver ? "border-[var(--shell-warning)]/40 ring-2 ring-[var(--shell-warning)]/60" : "border-border"
             )}
           >
             <div className={cn("flex items-center justify-between rounded-t-xl border-b px-3 py-2.5", meta.color)}>
@@ -81,7 +81,7 @@ export default function OpportunityKanban({ opportunities, onView, onStageChange
 
             <div className="flex flex-1 flex-col gap-2 p-2">
               {cards.length === 0 && (
-                <div className="flex flex-1 items-center justify-center rounded-lg border border-dashed border-[var(--shell-border)] p-4 text-[10px] uppercase tracking-wider text-[var(--shell-muted)]">
+                <div className="flex flex-1 items-center justify-center rounded-lg border border-dashed border-border p-4 text-[10px] uppercase tracking-wider text-muted-foreground">
                   Drop here
                 </div>
               )}
@@ -96,30 +96,30 @@ export default function OpportunityKanban({ opportunities, onView, onStageChange
                     onDragEnd={() => { setDragId(null); setOverStage(null); }}
                     onClick={() => onView(o)}
                     className={cn(
-                      "group cursor-grab rounded-lg border border-[var(--shell-border)] bg-card p-2.5 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5 active:cursor-grabbing",
+                      "group cursor-grab rounded-lg border border-border bg-card p-2.5 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5 active:cursor-grabbing",
                       isDragging && "opacity-40",
                       isBusy && "opacity-60"
                     )}
                     title={`${o.name} — drag to move stage`}
                   >
                     <div className="mb-1 flex items-start justify-between gap-1">
-                      <p className="m-0 text-xs font-semibold text-[var(--shell-foreground)] leading-snug">{o.name}</p>
-                      <GripVertical className="h-3.5 w-3.5 shrink-0 text-[var(--shell-muted)] opacity-0 transition-opacity group-hover:opacity-100" />
+                      <p className="m-0 text-xs font-semibold text-foreground leading-snug">{o.name}</p>
+                      <GripVertical className="h-3.5 w-3.5 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
                     </div>
-                    <p className="m-0 text-[10px] text-[var(--shell-muted)]">{o.account}</p>
+                    <p className="m-0 text-[10px] text-muted-foreground">{o.account}</p>
                     <div className="mt-2 flex items-center justify-between">
                       <span className="text-xs font-bold tabular-nums">{formatCurrency(o.value)}</span>
                       <div className="flex items-center gap-1">
-                        <span className="text-[10px] text-[var(--shell-muted)]">{o.probability || "20%"}</span>
+                        <span className="text-[10px] text-muted-foreground">{o.probability || "20%"}</span>
                         {stage === "Won" ? (
                           <Unlock className="h-3 w-3 text-[var(--shell-success)]" />
                         ) : (
-                          <Lock className="h-3 w-3 text-[var(--shell-muted)]/50" />
+                          <Lock className="h-3 w-3 text-muted-foreground/50" />
                         )}
                       </div>
                     </div>
                     {o.discovery_notes && (
-                      <p className="mt-1.5 line-clamp-2 m-0 border-t border-dashed border-[var(--shell-border)] pt-1 text-[10px] italic text-[var(--shell-muted)]">
+                      <p className="mt-1.5 line-clamp-2 m-0 border-t border-dashed border-border pt-1 text-[10px] italic text-muted-foreground">
                         {o.discovery_notes}
                       </p>
                     )}

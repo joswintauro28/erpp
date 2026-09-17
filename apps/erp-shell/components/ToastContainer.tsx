@@ -50,11 +50,11 @@ export default function ToastContainer() {
         >
           <span className="mt-0.5 shrink-0">{ICONS[toast.type]}</span>
           <div className="min-w-0 flex-1">
-            <p className="text-xs font-semibold text-[var(--shell-foreground)] m-0">
+            <p className="text-xs font-semibold text-foreground m-0">
               {toast.title}
             </p>
             {toast.message && (
-              <p className="mt-0.5 text-[11px] leading-relaxed text-[var(--shell-muted)] m-0 break-words">
+              <p className="mt-0.5 text-[11px] leading-relaxed text-muted-foreground m-0 break-words">
                 {toast.message}
               </p>
             )}
@@ -63,7 +63,7 @@ export default function ToastContainer() {
             type="button"
             aria-label="Dismiss notification"
             onClick={() => dismiss(toast.id)}
-            className="shrink-0 rounded p-0.5 text-[var(--shell-muted)] transition-colors hover:text-[var(--shell-foreground)] cursor-pointer"
+            className="shrink-0 rounded p-0.5 text-muted-foreground transition-colors hover:text-foreground cursor-pointer"
           >
             <X className="h-3.5 w-3.5" />
           </button>

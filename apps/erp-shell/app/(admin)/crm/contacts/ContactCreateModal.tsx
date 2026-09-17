@@ -121,34 +121,34 @@ export default function ContactCreateModal({ isOpen, onClose, onSuccess, editRec
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">First Name</Label>
+              <Label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">First Name</Label>
               <Input name="first_name" value={formData.first_name} onChange={handleChange} required />
             </div>
             <div>
-              <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Last Name</Label>
+              <Label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Last Name</Label>
               <Input name="last_name" value={formData.last_name} onChange={handleChange} required />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Email Address</Label>
+              <Label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Email Address</Label>
               <Input type="email" name="email" value={formData.email} onChange={handleChange} />
             </div>
             <div>
-              <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Phone Number</Label>
+              <Label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Phone Number</Label>
               <Input name="phone" value={formData.phone} onChange={handleChange} placeholder="+1234567890" />
             </div>
           </div>
 
           <div className="grid grid-cols-3 gap-4">
             <div>
-              <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Role</Label>
+              <Label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Role</Label>
               <select
                 name="role"
                 value={formData.role}
                 onChange={handleChange}
-                className="h-9 w-full rounded-md border border-[var(--shell-border)] bg-[var(--shell-bg)] px-3 text-xs text-[var(--shell-foreground)]"
+                className="h-9 w-full rounded-md border border-border bg-background px-3 text-xs text-foreground"
               >
                 <option value="Decision Maker">Decision Maker</option>
                 <option value="Influencer">Influencer</option>
@@ -158,17 +158,17 @@ export default function ContactCreateModal({ isOpen, onClose, onSuccess, editRec
               </select>
             </div>
             <div>
-              <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Title</Label>
+              <Label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Title</Label>
               <Input name="title" value={formData.title} onChange={handleChange} placeholder="Job title" />
             </div>
             <div>
-              <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Owner</Label>
+              <Label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Owner</Label>
               <Input name="owner" value={formData.owner} onChange={handleChange} required />
             </div>
           </div>
 
           <div>
-            <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Notes</Label>
+            <Label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Notes</Label>
             <Input name="notes" value={formData.notes} onChange={handleChange} placeholder="Contact notes..." />
           </div>
 

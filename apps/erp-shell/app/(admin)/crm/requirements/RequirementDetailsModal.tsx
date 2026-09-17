@@ -161,7 +161,7 @@ export default function RequirementDetailsModal({
     return (
       <iframe
         srcDoc={htmlContent}
-        className="w-full h-[360px] border border-[var(--shell-border)] rounded-lg"
+        className="w-full h-[360px] border border-border rounded-lg"
         title={record.name}
       />
     );
@@ -170,7 +170,7 @@ export default function RequirementDetailsModal({
   return (
     <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
       <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto rounded-xl">
-        <DialogHeader className="border-b border-[var(--shell-border)] pb-4 mb-6">
+        <DialogHeader className="border-b border-border pb-4 mb-6">
           <div className="flex items-center gap-2">
             <FileText className="size-5 text-accent" />
             <DialogTitle className="m-0 text-base font-bold">Requirement Summary: {record.name}</DialogTitle>
@@ -183,10 +183,10 @@ export default function RequirementDetailsModal({
 
             {/* Attached Files from RustFS */}
             {attachedFiles.length > 0 && (
-              <div className="rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface)] p-5">
+              <div className="rounded-xl border p-5">
                 <div className="flex items-center gap-2 mb-4">
-                  <FileText className="h-4 w-4 text-[var(--shell-muted)]" />
-                  <span className="text-xs font-bold uppercase tracking-wider text-[var(--shell-foreground)]">
+                  <FileText className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-xs font-bold uppercase tracking-wider text-foreground">
                     Attached Documents ({attachedFiles.length})
                   </span>
                 </div>
@@ -199,7 +199,7 @@ export default function RequirementDetailsModal({
               </div>
             )}
 
-            <div className="flex items-center justify-between border-t border-[var(--shell-border)] pt-4">
+            <div className="flex items-center justify-between border-t border-border pt-4">
               <Button
                 onClick={() => {
                   setQuotationData({
@@ -211,7 +211,7 @@ export default function RequirementDetailsModal({
                   });
                   setShowQuotationForm(true);
                 }}
-                className="flex items-center gap-1.5 bg-[var(--shell-brand)] hover:bg-[var(--shell-brand)]/90 text-white"
+                className="flex items-center gap-1.5 bg-primary hover:bg-primary/90 text-white"
                 size="sm"
               >
                 <FileSpreadsheet className="size-3.5" />
@@ -232,9 +232,9 @@ export default function RequirementDetailsModal({
               </span>
             </div>
 
-            <div className="mb-5 flex flex-wrap gap-6 rounded-md border border-[var(--shell-border)] bg-[var(--shell-bg)]/50 px-4 py-3 text-xs text-[var(--shell-muted)]">
-              <span>Account: <strong className="text-[var(--shell-foreground)]">{record.account}</strong></span>
-              <span>Requirement: <strong className="text-[var(--shell-foreground)]">{record.name}</strong></span>
+            <div className="mb-5 flex flex-wrap gap-6 rounded-md border border-border bg-background/50 px-4 py-3 text-xs text-muted-foreground">
+              <span>Account: <strong className="text-foreground">{record.account}</strong></span>
+              <span>Requirement: <strong className="text-foreground">{record.name}</strong></span>
             </div>
 
             {quotationError && (
@@ -246,7 +246,7 @@ export default function RequirementDetailsModal({
             <form onSubmit={handleQuotationSubmit}>
               <div className="mb-6 flex flex-col gap-4">
                 <div>
-                  <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Quote No.</Label>
+                  <Label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Quote No.</Label>
                   <Input
                     placeholder="e.g. QT-20260001 (auto-generated if blank)"
                     value={quotationData.quote_no}
@@ -255,7 +255,7 @@ export default function RequirementDetailsModal({
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Value *</Label>
+                    <Label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Value *</Label>
                     <Input
                       placeholder="e.g. ₹5,00,000 or $10,000"
                       value={quotationData.value}
@@ -264,19 +264,19 @@ export default function RequirementDetailsModal({
                     />
                   </div>
                   <div>
-                    <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Valid Until *</Label>
+                    <Label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Valid Until *</Label>
                     <input
                       type="date"
                       value={quotationData.valid_until}
                       onChange={e => setQuotationData(p => ({ ...p, valid_until: e.target.value }))}
-                      className="h-9 w-full rounded-md border border-[var(--shell-border)] bg-[var(--shell-bg)] px-3 text-xs text-[var(--shell-foreground)]"
+                      className="h-9 w-full rounded-md border border-border bg-background px-3 text-xs text-foreground"
                       required
                     />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Status *</Label>
+                    <Label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Status *</Label>
                     <Input
                       placeholder="e.g. Draft, Sent, Accepted"
                       value={quotationData.status}
@@ -285,7 +285,7 @@ export default function RequirementDetailsModal({
                     />
                   </div>
                   <div>
-                    <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Owner *</Label>
+                    <Label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Owner *</Label>
                     <Input
                       placeholder="e.g. Aditi Rao"
                       value={quotationData.owner}
@@ -303,7 +303,7 @@ export default function RequirementDetailsModal({
                 <Button
                   type="submit"
                   disabled={quotationSubmitting}
-                  className="flex items-center gap-1.5 bg-[var(--shell-brand)] hover:bg-[var(--shell-brand)]/90 text-white"
+                  className="flex items-center gap-1.5 bg-primary hover:bg-primary/90 text-white"
                   size="sm"
                 >
                   <FileSpreadsheet className="size-3.5" />

@@ -53,7 +53,7 @@ export default function RequirementTable({ requirements, onView, onEdit, onDelet
       className: "w-24",
       render: (row) => (
         <div className="flex gap-2">
-          <Button variant="ghost" size="icon-sm" className="cursor-pointer" onClick={(e) => { e.stopPropagation(); onEdit(row); }} title="Edit"><Edit2 size={14} className="text-[var(--shell-brand)]" /></Button>
+          <Button variant="ghost" size="icon-sm" className="cursor-pointer" onClick={(e) => { e.stopPropagation(); onEdit(row); }} title="Edit"><Edit2 size={14} className="text-primary" /></Button>
           <Button variant="ghost" size="icon-sm" className="cursor-pointer" onClick={(e) => { e.stopPropagation(); onDelete(row); }} title="Delete"><Trash2 size={14} className="text-[var(--shell-danger)]" /></Button>
         </div>
       ),

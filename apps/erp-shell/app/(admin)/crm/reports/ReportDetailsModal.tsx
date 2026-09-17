@@ -71,7 +71,7 @@ export default function ReportDetailsModal({
     return (
       <iframe
         srcDoc={htmlContent}
-        className="w-full h-[320px] border border-[var(--shell-border)] rounded-lg"
+        className="w-full h-[320px] border border-border rounded-lg"
         title={record.title}
       />
     );
@@ -80,7 +80,7 @@ export default function ReportDetailsModal({
   return (
     <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
       <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto rounded-xl">
-        <DialogHeader className="border-b border-[var(--shell-border)] pb-4 mb-4">
+        <DialogHeader className="border-b border-border pb-4 mb-4">
           <div className="flex items-center gap-2">
             <FileText className="size-5 text-accent" />
             <DialogTitle className="m-0 text-base font-bold">Report Summary: {record.title}</DialogTitle>

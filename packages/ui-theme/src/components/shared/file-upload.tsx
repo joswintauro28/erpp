@@ -84,7 +84,7 @@ function fileTypeMeta(mime: string): {
     return { Icon: FileSpreadsheet, bg: "bg-[var(--shell-success-surface)]", fg: "text-[var(--shell-success)]" };
   if (mime.includes("wordprocessing") || mime === "application/msword")
     return { Icon: FileText, bg: "bg-[var(--shell-info-surface)]", fg: "text-[var(--shell-info)]" };
-  return { Icon: File, bg: "bg-muted", fg: "text-[var(--shell-muted)]" };
+  return { Icon: File, bg: "bg-muted", fg: "text-muted-foreground" };
 }
 
 /* ── component ───────────────────────────────────────────────────────────── */
@@ -226,7 +226,7 @@ export function FileUpload({
         );
       default:
         return (
-          <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold text-[var(--shell-muted)]">
+          <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
             <Loader2 className="h-3 w-3 animate-spin" /> Preparing
           </span>
         );
@@ -253,19 +253,19 @@ export function FileUpload({
         className={cn(
           "flex cursor-pointer flex-col items-center gap-2 rounded-lg border-2 border-dashed p-6 text-center transition-colors",
           isDragOver
-            ? "border-[var(--shell-brand)] bg-[var(--shell-brand)]/5"
+            ? "border-[var(--shell-brand)] bg-primary/5"
             : "border-[var(--shell-muted)]/40 hover:border-[var(--shell-brand)]/50 hover:bg-muted/50",
           disabled && "pointer-events-none opacity-50",
         )}
       >
         <div className="rounded-full bg-muted/60 p-2.5">
-          <Upload className="h-5 w-5 text-[var(--shell-muted)]" />
+          <Upload className="h-5 w-5 text-muted-foreground" />
         </div>
         <div>
-          <p className="text-sm font-medium text-[var(--shell-foreground)]">
+          <p className="text-sm font-medium text-foreground">
             Drop files here or click to browse
           </p>
-          <p className="mt-0.5 text-[11px] text-[var(--shell-muted)]">
+          <p className="mt-0.5 text-[11px] text-muted-foreground">
             Max {formatBytes(maxSize)} · {accept.replace(/\//g, "/* ")}
           </p>
         </div>
@@ -287,13 +287,13 @@ export function FileUpload({
                     ? "border-[var(--shell-success)]/20 bg-[var(--shell-success-surface)]/50"
                     : entry.progress === "error"
                       ? "border-[var(--shell-danger)]/20 bg-[var(--shell-danger-surface)]/50"
-                      : "border-[var(--shell-border)] bg-[var(--shell-surface)]",
+                      : "border-border",
                 )}
               >
                 {/* Progress bar overlay */}
                 {isActive && (
                   <div className="absolute inset-x-0 top-0 h-0.5 bg-muted overflow-hidden">
-                    <div className="h-full bg-[var(--shell-brand)] animate-pulse w-full" />
+                    <div className="h-full bg-primary animate-pulse w-full" />
                   </div>
                 )}
 
@@ -305,11 +305,11 @@ export function FileUpload({
 
                   {/* File info */}
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-[var(--shell-foreground)]">
+                    <p className="truncate text-sm font-medium text-foreground">
                       {entry.file.name}
                     </p>
                     <div className="mt-0.5 flex items-center gap-2">
-                      <span className="text-[11px] text-[var(--shell-muted)]">
+                      <span className="text-[11px] text-muted-foreground">
                         {formatBytes(entry.file.size)}
                       </span>
                       {entry.error && (
@@ -325,7 +325,7 @@ export function FileUpload({
                   {!isActive && (
                     <button
                       onClick={() => removeEntry(idx)}
-                      className="shrink-0 rounded-md p-1 text-[var(--shell-muted)] hover:bg-muted hover:text-[var(--shell-foreground)] transition-colors"
+                      className="shrink-0 rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
                     >
                       <X className="h-3.5 w-3.5" />
                     </button>

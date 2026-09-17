@@ -132,34 +132,34 @@ export default function LeadCreateModal({ isOpen, onClose, onSuccess, editRecord
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Lead Name</Label>
+              <Label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Lead Name</Label>
               <Input name="name" value={formData.name} onChange={handleChange} required />
             </div>
             <div>
-              <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Company</Label>
+              <Label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Company</Label>
               <Input name="company" value={formData.company} onChange={handleChange} required />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Email Address</Label>
+              <Label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Email Address</Label>
               <Input type="email" name="email" value={formData.email} onChange={handleChange} />
             </div>
             <div>
-              <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Phone Number</Label>
+              <Label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Phone Number</Label>
               <Input name="phone" value={formData.phone} onChange={handleChange} placeholder="+1234567890" />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Lead Source</Label>
+              <Label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Lead Source</Label>
               <select
                 name="source"
                 value={formData.source}
                 onChange={handleChange}
-                className="h-9 w-full rounded-md border border-[var(--shell-border)] bg-[var(--shell-bg)] px-3 text-xs text-[var(--shell-foreground)]"
+                className="h-9 w-full rounded-md border border-border bg-background px-3 text-xs text-foreground"
                 required
               >
                 <option value="Website Inquiry">Website Inquiry</option>
@@ -171,12 +171,12 @@ export default function LeadCreateModal({ isOpen, onClose, onSuccess, editRecord
               </select>
             </div>
             <div>
-              <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Status</Label>
+              <Label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Status</Label>
               <select
                 name="status"
                 value={formData.status}
                 onChange={handleChange}
-                className="h-9 w-full rounded-md border border-[var(--shell-border)] bg-[var(--shell-bg)] px-3 text-xs text-[var(--shell-foreground)]"
+                className="h-9 w-full rounded-md border border-border bg-background px-3 text-xs text-foreground"
                 required
               >
                 <option value="New">New</option>
@@ -190,15 +190,15 @@ export default function LeadCreateModal({ isOpen, onClose, onSuccess, editRecord
 
           <div className="grid grid-cols-3 gap-4">
             <div>
-              <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Est. Value (INR)</Label>
+              <Label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Est. Value (INR)</Label>
               <Input type="number" name="value" value={formData.value} onChange={handleChange} />
             </div>
             <div>
-              <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Probability</Label>
+              <Label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Probability</Label>
               <Input name="probability" value={formData.probability} onChange={handleChange} placeholder="e.g. 60%" />
             </div>
             <div>
-              <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Owner</Label>
+              <Label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Owner</Label>
               <Input name="owner" value={formData.owner} onChange={handleChange} required />
             </div>
           </div>

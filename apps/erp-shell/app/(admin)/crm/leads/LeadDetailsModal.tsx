@@ -46,18 +46,18 @@ const tierVariant = (tier: string) => tier === "High" ? "destructive" : tier ===
     return (
       <div className="space-y-6">
         {/* Identity Card */}
-        <div className="rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface)] p-5 space-y-4">
+        <div className="rounded-xl border p-5 space-y-4">
           <div className="flex items-center gap-4">
-            <div className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-[var(--shell-brand)]/10 border border-[var(--shell-brand)]/20">
-              <span className="font-heading text-lg font-bold text-[var(--shell-brand)]">
+            <div className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-primary/10 border border-[var(--shell-brand)]/20">
+              <span className="font-heading text-lg font-bold text-primary">
                 {record.name?.charAt(0).toUpperCase()}
               </span>
             </div>
             <div>
-              <h3 className="font-heading text-lg font-semibold text-[var(--shell-foreground)]">
+              <h3 className="font-heading text-lg font-semibold text-foreground">
                 {record.name}
               </h3>
-              <p className="text-xs text-[var(--shell-muted)]">{record.company}</p>
+              <p className="text-xs text-muted-foreground">{record.company}</p>
             </div>
           </div>
 
@@ -68,83 +68,83 @@ const tierVariant = (tier: string) => tier === "High" ? "destructive" : tier ===
                 "h-2 w-2 rounded-full",
                 record.is_mql ? "bg-[var(--shell-warning)]" : record.score >= 40 ? "bg-[var(--shell-info)]" : "bg-[var(--shell-muted)]"
               )} />
-              <span className="text-xs text-[var(--shell-muted)]">Score: {record.score}</span>
+              <span className="text-xs text-muted-foreground">Score: {record.score}</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-xs text-[var(--shell-muted)]">Tier:</span>
+              <span className="text-xs text-muted-foreground">Tier:</span>
               <Badge variant={tierVariant(record.tier) as any}>{record.tier}</Badge>
             </div>
           </div>
         </div>
 
         {/* Contact Details */}
-        <div className="rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface)] p-5">
+        <div className="rounded-xl border p-5">
           <div className="flex items-center gap-2 mb-4">
-            <Mail className="h-4 w-4 text-[var(--shell-muted)]" />
-            <span className="text-xs font-bold uppercase tracking-wider text-[var(--shell-foreground)]">Contact Information</span>
+            <Mail className="h-4 w-4 text-muted-foreground" />
+            <span className="text-xs font-bold uppercase tracking-wider text-foreground">Contact Information</span>
           </div>
           <div className="space-y-3">
             <div className="flex items-center gap-3">
-              <Mail className="h-4 w-4 text-[var(--shell-muted)]" />
-              <span className="text-xs text-[var(--shell-muted)]">Email:</span>
-              <span className="text-sm text-[var(--shell-foreground)]">{record.email}</span>
+              <Mail className="h-4 w-4 text-muted-foreground" />
+              <span className="text-xs text-muted-foreground">Email:</span>
+              <span className="text-sm text-foreground">{record.email}</span>
             </div>
             <div className="flex items-center gap-3">
-              <Phone className="h-4 w-4 text-[var(--shell-muted)]" />
-              <span className="text-xs text-[var(--shell-muted)]">Phone:</span>
-              <span className="text-sm text-[var(--shell-foreground)]">{record.phone}</span>
+              <Phone className="h-4 w-4 text-muted-foreground" />
+              <span className="text-xs text-muted-foreground">Phone:</span>
+              <span className="text-sm text-foreground">{record.phone}</span>
             </div>
             <div className="flex items-center gap-3">
-              <Building2 className="h-4 w-4 text-[var(--shell-muted)]" />
-              <span className="text-xs text-[var(--shell-muted)]">Company:</span>
-              <span className="text-sm text-[var(--shell-foreground)]">{record.company}</span>
+              <Building2 className="h-4 w-4 text-muted-foreground" />
+              <span className="text-xs text-muted-foreground">Company:</span>
+              <span className="text-sm text-foreground">{record.company}</span>
             </div>
           </div>
         </div>
 
         {/* Qualification & Source */}
-        <div className="rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface)] p-5">
+        <div className="rounded-xl border p-5">
           <div className="flex items-center gap-2 mb-4">
-            <GitBranch className="h-4 w-4 text-[var(--shell-muted)]" />
-            <span className="text-xs font-bold uppercase tracking-wider text-[var(--shell-foreground)]">Qualification Details</span>
+            <GitBranch className="h-4 w-4 text-muted-foreground" />
+            <span className="text-xs font-bold uppercase tracking-wider text-foreground">Qualification Details</span>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Lead Source</Label>
-              <p className="text-sm text-[var(--shell-foreground)]">{record.source}</p>
+              <Label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Lead Source</Label>
+              <p className="text-sm text-foreground">{record.source}</p>
             </div>
             <div>
-              <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Status</Label>
+              <Label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Status</Label>
               <Badge variant={statusVariant("lead", record.status) as any}>{record.status}</Badge>
             </div>
             <div>
-              <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Nurture Status</Label>
-              <p className="text-sm text-[var(--shell-foreground)]">{record.nurture_status}</p>
+              <Label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Nurture Status</Label>
+              <p className="text-sm text-foreground">{record.nurture_status}</p>
             </div>
             <div>
-              <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Probability</Label>
-              <p className="text-sm text-[var(--shell-foreground)]">{record.probability}</p>
+              <Label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Probability</Label>
+              <p className="text-sm text-foreground">{record.probability}</p>
             </div>
             <div>
-              <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Estimated Value (INR)</Label>
-              <p className="text-sm text-[var(--shell-foreground)]">
+              <Label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Estimated Value (INR)</Label>
+              <p className="text-sm text-foreground">
                 {formatCurrency(record.est_value ?? 0)}
               </p>
             </div>
             <div>
-              <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Owner</Label>
-              <p className="text-sm text-[var(--shell-foreground)]">{record.owner}</p>
+              <Label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Owner</Label>
+              <p className="text-sm text-foreground">{record.owner}</p>
             </div>
           </div>
         </div>
 
         {/* Timeline */}
-        <div className="rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface)] p-5">
+        <div className="rounded-xl border p-5">
           <div className="flex items-center gap-2 mb-4">
-            <Clock className="h-4 w-4 text-[var(--shell-muted)]" />
-            <span className="text-xs font-bold uppercase tracking-wider text-[var(--shell-foreground)]">Timeline</span>
+            <Clock className="h-4 w-4 text-muted-foreground" />
+            <span className="text-xs font-bold uppercase tracking-wider text-foreground">Timeline</span>
           </div>
-          <div className="space-y-2 text-xs text-[var(--shell-muted)]">
+          <div className="space-y-2 text-xs text-muted-foreground">
             <div className="flex justify-between py-1">
               <span>Created</span>
               <span>{record.created_at}</span>

@@ -179,11 +179,11 @@ function CitySearch({
         onFocus={() => setIsOpen(true)}
       />
       {isOpen && (
-        <div className="absolute left-0 right-0 z-[9999] mt-1 max-h-60 overflow-y-auto rounded-lg border border-[var(--shell-border)] bg-[var(--shell-surface)] p-1 shadow-lg">
+        <div className="absolute left-0 right-0 z-[9999] mt-1 max-h-60 overflow-y-auto rounded-lg border p-1 shadow-lg">
           {loading ? (
-            <div className="p-2 text-xs text-[var(--shell-muted)]">Searching cities...</div>
+            <div className="p-2 text-xs text-muted-foreground">Searching cities...</div>
           ) : options.length === 0 ? (
-            <div className="p-2 text-xs text-[var(--shell-muted)]">No cities found.</div>
+            <div className="p-2 text-xs text-muted-foreground">No cities found.</div>
           ) : (
             options.map((opt) => (
               <button
@@ -194,7 +194,7 @@ function CitySearch({
                   setInputValue(opt.label);
                   setIsOpen(false);
                 }}
-                className="w-full text-left px-3 py-2 text-sm rounded-md hover:bg-[var(--shell-border)] text-[var(--shell-foreground)] transition-colors cursor-pointer"
+                className="w-full text-left px-3 py-2 text-sm rounded-md hover:bg-border text-foreground transition-colors cursor-pointer"
               >
                 {opt.label}
               </button>
@@ -253,7 +253,7 @@ function IndustrySelect({
         onFocus={() => setIsOpen(true)}
       />
       {isOpen && (
-        <div className="absolute left-0 right-0 z-[9999] mt-1 max-h-60 overflow-y-auto rounded-lg border border-[var(--shell-border)] bg-[var(--shell-surface)] p-1 shadow-lg">
+        <div className="absolute left-0 right-0 z-[9999] mt-1 max-h-60 overflow-y-auto rounded-lg border p-1 shadow-lg">
           {filteredOptions.length === 0 ? (
             inputValue.trim() ? (
               <button
@@ -262,12 +262,12 @@ function IndustrySelect({
                   onChange(inputValue);
                   setIsOpen(false);
                 }}
-                className="w-full text-left px-3 py-2 text-sm rounded-md hover:bg-[var(--shell-border)] text-[var(--shell-success)] font-medium transition-colors cursor-pointer"
+                className="w-full text-left px-3 py-2 text-sm rounded-md hover:bg-border text-[var(--shell-success)] font-medium transition-colors cursor-pointer"
               >
                 Create &quot;{inputValue}&quot;
               </button>
             ) : (
-              <div className="p-2 text-xs text-[var(--shell-muted)]">Type to search/create...</div>
+              <div className="p-2 text-xs text-muted-foreground">Type to search/create...</div>
             )
           ) : (
             filteredOptions.map((opt) => (
@@ -279,7 +279,7 @@ function IndustrySelect({
                   setInputValue(opt.label);
                   setIsOpen(false);
                 }}
-                className="w-full text-left px-3 py-2 text-sm rounded-md hover:bg-[var(--shell-border)] text-[var(--shell-foreground)] transition-colors cursor-pointer"
+                className="w-full text-left px-3 py-2 text-sm rounded-md hover:bg-border text-foreground transition-colors cursor-pointer"
               >
                 {opt.label}
               </button>
@@ -327,16 +327,16 @@ export default function SearchCard({
   onReset,
 }: SearchCardProps) {
   return (
-    <Card className="!overflow-visible hover:shadow-engineered transition-shadow duration-200 border-[var(--shell-border)] bg-[var(--shell-surface)]">
+    <Card className="!overflow-visible hover:shadow-engineered transition-shadow duration-200">
       <CardContent className="p-5 space-y-5">
-        <div className="flex gap-6 border-b border-[var(--shell-border)] pb-3">
+        <div className="flex gap-6 border-b border-border pb-3">
           <button
             onClick={() => onSearchModeChange("parameters")}
             className={cn(
               "pb-2 text-sm font-semibold border-b-2 transition-colors cursor-pointer",
               searchMode === "parameters"
-                ? "border-[var(--shell-brand)] text-[var(--shell-brand)]"
-                : "border-transparent text-[var(--shell-muted)]"
+                ? "border-[var(--shell-brand)] text-primary"
+                : "border-transparent text-muted-foreground"
             )}
           >
             Discover by Location & Industry
@@ -346,8 +346,8 @@ export default function SearchCard({
             className={cn(
               "pb-2 text-sm font-semibold border-b-2 transition-colors cursor-pointer",
               searchMode === "url"
-                ? "border-[var(--shell-brand)] text-[var(--shell-brand)]"
-                : "border-transparent text-[var(--shell-muted)]"
+                ? "border-[var(--shell-brand)] text-primary"
+                : "border-transparent text-muted-foreground"
             )}
           >
             Scrape & Analyze
@@ -357,7 +357,7 @@ export default function SearchCard({
         {searchMode === "url" ? (
           <div className="space-y-4">
             <div>
-              <label className="text-xs font-semibold uppercase text-[var(--shell-muted)] flex items-center gap-1.5 mb-1.5">
+              <label className="text-xs font-semibold uppercase text-muted-foreground flex items-center gap-1.5 mb-1.5">
                 <Building2 size={13} /> Company Name
               </label>
               <Input
@@ -366,9 +366,9 @@ export default function SearchCard({
                 onChange={(e) => onCompanyNameChange(e.target.value)}
               />
             </div>
-            <div className="text-center text-xs text-[var(--shell-muted)]">— OR —</div>
+            <div className="text-center text-xs text-muted-foreground">— OR —</div>
             <div>
-              <label className="text-xs font-semibold uppercase text-[var(--shell-muted)] flex items-center gap-1.5 mb-1.5">
+              <label className="text-xs font-semibold uppercase text-muted-foreground flex items-center gap-1.5 mb-1.5">
                 <Globe size={13} /> Website URL
               </label>
               <Input
@@ -381,13 +381,13 @@ export default function SearchCard({
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 relative !overflow-visible">
             <div className="relative !overflow-visible">
-              <label className="text-xs font-semibold uppercase text-[var(--shell-muted)] flex items-center gap-1.5 mb-1.5">
+              <label className="text-xs font-semibold uppercase text-muted-foreground flex items-center gap-1.5 mb-1.5">
                 <MapPin size={13} /> City
               </label>
               <CitySearch value={city} onChange={onCityChange} />
             </div>
             <div className="relative !overflow-visible">
-              <label className="text-xs font-semibold uppercase text-[var(--shell-muted)] flex items-center gap-1.5 mb-1.5">
+              <label className="text-xs font-semibold uppercase text-muted-foreground flex items-center gap-1.5 mb-1.5">
                 <Briefcase size={13} /> Industry
               </label>
               <IndustrySelect value={industry} onChange={onIndustryChange} />
@@ -396,7 +396,7 @@ export default function SearchCard({
         )}
 
         <div className="flex items-center justify-between gap-4 flex-wrap">
-          <p className="text-xs text-[var(--shell-muted)] flex-1 min-w-[200px]">
+          <p className="text-xs text-muted-foreground flex-1 min-w-[200px]">
             {searchMode === "url"
               ? "Enter a company name or URL to trigger targeted intelligence collection and AI capability analysis."
               : "Search by city and industry to discover B2B leads."}

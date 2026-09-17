@@ -135,7 +135,7 @@ export function FilePreviewModal({ fileId, fileName, mimeType, open, onClose }: 
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-auto min-h-[300px] max-h-[75vh] bg-[var(--shell-bg)]">
+        <div className="flex-1 overflow-auto min-h-[300px] max-h-[75vh] bg-background">
           {loading ? (
             <div className="flex items-center justify-center h-full">
               <Loader2 size={24} className="animate-spin text-muted-foreground" />

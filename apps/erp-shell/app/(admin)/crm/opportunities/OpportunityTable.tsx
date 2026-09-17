@@ -19,7 +19,7 @@ interface OpportunityTableProps {
 export default function OpportunityTable({ opportunities, onView, onEdit, onDelete }: OpportunityTableProps) {
   if (!opportunities?.length) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 text-[var(--shell-muted)]">
+      <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
         <p className="text-sm">No opportunities found.</p>
       </div>
     );
@@ -43,8 +43,8 @@ export default function OpportunityTable({ opportunities, onView, onEdit, onDele
       <TableBody>
         {opportunities.map((item: any) => (
           <TableRow key={item.id}>
-            <TableCell className="text-[var(--shell-muted)] cursor-pointer" onClick={() => onView(item)}>{item.id_str}</TableCell>
-            <TableCell className="font-medium text-[var(--shell-foreground)] cursor-pointer" onClick={() => onView(item)}>{item.name}</TableCell>
+            <TableCell className="text-muted-foreground cursor-pointer" onClick={() => onView(item)}>{item.id_str}</TableCell>
+            <TableCell className="font-medium text-foreground cursor-pointer" onClick={() => onView(item)}>{item.name}</TableCell>
             <TableCell>{item.account}</TableCell>
             <TableCell>{formatCurrency(item.value)}</TableCell>
             <TableCell>{item.probability}</TableCell>
@@ -53,7 +53,7 @@ export default function OpportunityTable({ opportunities, onView, onEdit, onDele
             <TableCell>{item.owner}</TableCell>
             <TableCell>
               <div className="flex gap-2">
-                <Button variant="ghost" size="icon-sm" className="cursor-pointer" onClick={() => onEdit(item)}><Edit2 size={14} className="text-[var(--shell-brand)]" /></Button>
+                <Button variant="ghost" size="icon-sm" className="cursor-pointer" onClick={() => onEdit(item)}><Edit2 size={14} className="text-primary" /></Button>
                 <Button variant="ghost" size="icon-sm" className="cursor-pointer" onClick={() => onDelete(item)}><Trash2 size={14} className="text-[var(--shell-danger)]" /></Button>
               </div>
             </TableCell>

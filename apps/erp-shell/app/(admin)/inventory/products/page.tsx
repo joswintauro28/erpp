@@ -135,7 +135,7 @@ export default function ProductsPage() {
                 <Warehouse className="h-3.5 w-3.5" /> View Stock Levels
               </Button>
             </Link>
-            <Button size="sm" onClick={() => setIsAddOpen(true)} className="bg-[var(--shell-brand)] text-white hover:bg-[var(--shell-brand)]/90 gap-1.5 text-xs shadow-sm">
+            <Button size="sm" onClick={() => setIsAddOpen(true)} className="bg-primary text-white hover:bg-primary/90 gap-1.5 text-xs shadow-sm">
               <Plus className="h-3.5 w-3.5" /> Add New Product
             </Button>
           </>
@@ -222,7 +222,7 @@ export default function ProductsPage() {
                             setQcRequired(!!p.qc_required);
                           }}
                         >
-                          <Edit3 className="h-3.5 w-3.5 text-muted-foreground hover:text-[var(--shell-brand)]" />
+                          <Edit3 className="h-3.5 w-3.5 text-muted-foreground hover:text-primary" />
                         </Button>
                         <Button
                           variant="ghost"
@@ -329,7 +329,7 @@ export default function ProductsPage() {
             <Button variant="outline" size="sm" onClick={() => setIsAddOpen(false)}>
               Cancel
             </Button>
-            <Button size="sm" onClick={handleCreateProduct} className="bg-[var(--shell-brand)] text-white">
+            <Button size="sm" onClick={handleCreateProduct} className="bg-primary text-white">
               Save Product
             </Button>
           </div>
@@ -422,7 +422,7 @@ export default function ProductsPage() {
               <Button variant="outline" size="sm" onClick={() => setEditingProduct(null)}>
                 Cancel
               </Button>
-              <Button size="sm" onClick={handleUpdateProduct} className="bg-[var(--shell-brand)] text-white">
+              <Button size="sm" onClick={handleUpdateProduct} className="bg-primary text-white">
                 Save Changes
               </Button>
             </div>

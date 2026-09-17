@@ -107,7 +107,7 @@ function ColorSwatch({
       type="button"
       disabled={disabled}
       onClick={() => inputRef.current?.click()}
-      className="h-6 w-6 shrink-0 rounded-md border border-[var(--shell-border)] shadow-sm cursor-pointer transition-transform hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed"
+      className="h-6 w-6 shrink-0 rounded-md border border-border shadow-sm cursor-pointer transition-transform hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed"
       style={{ backgroundColor: value }}
       title={`Pick color (current: ${value})`}
     >
@@ -169,7 +169,7 @@ function VariableRow({
     : null;
 
   return (
-    <div className="flex items-center gap-2.5 py-1.5 border-b border-[var(--shell-border)]/30 last:border-0 group">
+    <div className="flex items-center gap-2.5 py-1.5 border-b border-border/30 last:border-0 group">
       {isColor && (
         <ColorSwatch
           value={value}
@@ -177,7 +177,7 @@ function VariableRow({
         />
       )}
 
-      <span className="text-xs font-mono text-[var(--shell-muted)] min-w-0 shrink-0 max-w-[180px] truncate" title={variable.cssVar}>
+      <span className="text-xs font-mono text-muted-foreground min-w-0 shrink-0 max-w-[180px] truncate" title={variable.cssVar}>
         {variable.cssVar}
       </span>
 
@@ -187,12 +187,12 @@ function VariableRow({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           className={cn(
-            "w-full h-7 px-2 rounded-md border bg-[var(--shell-bg)] text-xs font-mono",
-            "text-[var(--shell-foreground)] placeholder:text-[var(--shell-muted)]/50",
+            "w-full h-7 px-2 rounded-md border bg-background text-xs font-mono",
+            "text-foreground placeholder:text-muted-foreground/50",
             "focus:outline-none focus:ring-1 transition-colors",
             error
               ? "border-red-500/60 focus:ring-red-500/30 focus:border-red-500/50"
-              : "border-[var(--shell-border)]/50 focus:ring-[var(--shell-brand)]/30 focus:border-[var(--shell-brand)]/50",
+              : "border-border/50 focus:ring-[var(--shell-brand)]/30 focus:border-[var(--shell-brand)]/50",
           )}
           title={error ?? undefined}
         />
@@ -202,7 +202,7 @@ function VariableRow({
       </div>
 
       {!isColor && (
-        <span className="text-[9px] font-mono uppercase tracking-wider text-[var(--shell-muted)] bg-[var(--shell-border)]/30 px-1.5 py-0.5 rounded shrink-0">
+        <span className="text-[9px] font-mono uppercase tracking-wider text-muted-foreground bg-border/30 px-1.5 py-0.5 rounded shrink-0">
           {variable.type === "size" ? (value.match(/\d+(px|rem|em|pt|vh|vw)/)?.[1] ?? "size") : variable.type}
         </span>
       )}
@@ -211,7 +211,7 @@ function VariableRow({
         <button
           type="button"
           onClick={onReset}
-          className="opacity-0 group-hover:opacity-100 h-6 w-6 shrink-0 flex items-center justify-center rounded text-[var(--shell-muted)] hover:text-[var(--shell-foreground)] hover:bg-[var(--shell-surface-alt)] transition-all cursor-pointer"
+          className="opacity-0 group-hover:opacity-100 h-6 w-6 shrink-0 flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-secondary transition-all cursor-pointer"
           title="Reset to default"
         >
           <RotateCcw className="h-3 w-3" />
@@ -249,21 +249,21 @@ function CategorySection({
   const overriddenCount = category.variables.length - defaultCount;
 
   return (
-    <div className="border border-[var(--shell-border)]/40 rounded-lg overflow-hidden">
+    <div className="border border-border/40 rounded-lg overflow-hidden">
       <button
         type="button"
         onClick={() => setExpanded(!expanded)}
-        className="w-full flex items-center justify-between px-3 py-2.5 bg-[var(--shell-surface)] hover:bg-[var(--shell-surface-alt)] transition-colors cursor-pointer"
+        className="w-full flex items-center justify-between px-3 py-2.5 hover:bg-secondary transition-colors cursor-pointer"
       >
         <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-[var(--shell-foreground)]">
+          <span className="text-sm font-medium text-foreground">
             {category.name}
           </span>
-          <span className="text-[10px] font-mono text-[var(--shell-muted)] bg-[var(--shell-border)]/30 px-1.5 py-0.5 rounded">
+          <span className="text-[10px] font-mono text-muted-foreground bg-border/30 px-1.5 py-0.5 rounded">
             {category.variables.length}
           </span>
           {overriddenCount > 0 && (
-            <span className="text-[10px] font-mono text-[var(--shell-brand)] bg-[var(--shell-brand)]/10 px-1.5 py-0.5 rounded">
+            <span className="text-[10px] font-mono text-primary bg-primary/10 px-1.5 py-0.5 rounded">
               {overriddenCount} changed
             </span>
           )}
@@ -276,14 +276,14 @@ function CategorySection({
                 e.stopPropagation();
                 onResetCategory(category.variables);
               }}
-              className="text-[10px] text-[var(--shell-muted)] hover:text-[var(--shell-foreground)] cursor-pointer px-1"
+              className="text-[10px] text-muted-foreground hover:text-foreground cursor-pointer px-1"
             >
               Reset all
             </span>
           )}
           <ChevronDown
             className={cn(
-              "h-4 w-4 text-[var(--shell-muted)] transition-transform",
+              "h-4 w-4 text-muted-foreground transition-transform",
               !expanded && "-rotate-90",
             )}
           />
@@ -488,14 +488,14 @@ export function BrandingModal({
       />
 
       {/* Panel */}
-      <div className="fixed inset-y-0 right-0 z-50 w-full max-w-[520px] bg-[var(--shell-bg)] border-l border-[var(--shell-border)] shadow-2xl flex flex-col animate-in slide-in-from-right duration-200">
+      <div className="fixed inset-y-0 right-0 z-50 w-full max-w-[520px] bg-background border-l border-border shadow-2xl flex flex-col animate-in slide-in-from-right duration-200">
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--shell-border)]">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-border">
           <div>
-            <h2 className="font-heading text-base font-semibold text-[var(--shell-foreground)]">
+            <h2 className="font-heading text-base font-semibold text-foreground">
               Theme Editor
             </h2>
-            <p className="text-xs text-[var(--shell-muted)] mt-0.5">
+            <p className="text-xs text-muted-foreground mt-0.5">
               Edit CSS variables from globals.css directly
             </p>
           </div>
@@ -506,23 +506,23 @@ export function BrandingModal({
               removePreview();
               onClose();
             }}
-            className="h-8 w-8 flex items-center justify-center rounded-md text-[var(--shell-muted)] hover:text-[var(--shell-foreground)] hover:bg-[var(--shell-surface-alt)] transition-colors cursor-pointer"
+            className="h-8 w-8 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer"
           >
             <X className="h-4 w-4" />
           </button>
         </div>
 
         {/* Theme Tabs + Controls */}
-        <div className="flex items-center justify-between px-5 py-3 border-b border-[var(--shell-border)]/50 bg-[var(--shell-surface)]">
-          <div className="flex items-center rounded-lg border border-[var(--shell-border)] bg-[var(--shell-bg)] p-0.5">
+        <div className="flex items-center justify-between px-5 py-3 border-b border-border/50">
+          <div className="flex items-center rounded-lg border border-border bg-background p-0.5">
             <button
               type="button"
               onClick={() => setActiveTab("light")}
               className={cn(
                 "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all cursor-pointer",
                 activeTab === "light"
-                  ? "bg-[var(--shell-brand)] text-white shadow-sm"
-                  : "text-[var(--shell-muted)] hover:text-[var(--shell-foreground)]",
+                  ? "bg-primary text-white shadow-sm"
+                  : "text-muted-foreground hover:text-foreground",
               )}
             >
               Light
@@ -533,8 +533,8 @@ export function BrandingModal({
               className={cn(
                 "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all cursor-pointer",
                 activeTab === "dark"
-                  ? "bg-[var(--shell-brand)] text-white shadow-sm"
-                  : "text-[var(--shell-muted)] hover:text-[var(--shell-foreground)]",
+                  ? "bg-primary text-white shadow-sm"
+                  : "text-muted-foreground hover:text-foreground",
               )}
             >
               Dark
@@ -553,7 +553,7 @@ export function BrandingModal({
             <button
               type="button"
               onClick={handleImport}
-              className="flex items-center gap-1.5 h-8 px-2.5 rounded-md text-xs text-[var(--shell-muted)] hover:text-[var(--shell-foreground)] hover:bg-[var(--shell-bg)] transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 h-8 px-2.5 rounded-md text-xs text-muted-foreground hover:text-foreground hover:bg-background transition-colors cursor-pointer"
               title="Import theme from JSON file"
             >
               <Upload className="h-3 w-3" />
@@ -562,17 +562,17 @@ export function BrandingModal({
             <button
               type="button"
               onClick={handleExport}
-              className="flex items-center gap-1.5 h-8 px-2.5 rounded-md text-xs text-[var(--shell-muted)] hover:text-[var(--shell-foreground)] hover:bg-[var(--shell-bg)] transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 h-8 px-2.5 rounded-md text-xs text-muted-foreground hover:text-foreground hover:bg-background transition-colors cursor-pointer"
               title="Export theme as JSON file"
             >
               <Download className="h-3 w-3" />
               Export
             </button>
-            <div className="w-px h-4 bg-[var(--shell-border)]" />
+            <div className="w-px h-4 bg-border" />
             <button
               type="button"
               onClick={handleResetAll}
-              className="flex items-center gap-1.5 h-8 px-2.5 rounded-md text-xs text-[var(--shell-muted)] hover:text-[var(--shell-foreground)] hover:bg-[var(--shell-bg)] transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 h-8 px-2.5 rounded-md text-xs text-muted-foreground hover:text-foreground hover:bg-background transition-colors cursor-pointer"
               title="Reset all to defaults"
             >
               <RotateCcw className="h-3 w-3" />
@@ -585,8 +585,8 @@ export function BrandingModal({
               className={cn(
                 "flex items-center gap-1.5 h-8 px-2.5 rounded-md text-xs font-medium transition-colors cursor-pointer",
                 previewing
-                  ? "bg-[var(--shell-brand)]/10 text-[var(--shell-brand)] border border-[var(--shell-brand)]/30"
-                  : "text-[var(--shell-muted)] hover:text-[var(--shell-foreground)] hover:bg-[var(--shell-bg)]",
+                  ? "bg-primary/10 text-primary border border-[var(--shell-brand)]/30"
+                  : "text-muted-foreground hover:text-foreground hover:bg-background",
               )}
               title="Toggle live preview"
             >
@@ -612,8 +612,8 @@ export function BrandingModal({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between px-5 py-4 border-t border-[var(--shell-border)] bg-[var(--shell-surface)]">
-          <p className="text-[10px] text-[var(--shell-muted)]">
+        <div className="flex items-center justify-between px-5 py-4 border-t">
+          <p className="text-[10px] text-muted-foreground">
             {Object.keys(overrides.light).length + Object.keys(overrides.dark).length} variables loaded from globals.css
           </p>
           <div className="flex items-center gap-2">
@@ -624,14 +624,14 @@ export function BrandingModal({
                 removePreview();
                 onClose();
               }}
-              className="h-8 px-3 rounded-md text-xs font-medium text-[var(--shell-muted)] hover:text-[var(--shell-foreground)] hover:bg-[var(--shell-bg)] border border-[var(--shell-border)] transition-colors cursor-pointer"
+              className="h-8 px-3 rounded-md text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-background border border-border transition-colors cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="button"
               onClick={handleSave}
-              className="h-8 px-4 rounded-md text-xs font-medium bg-[var(--shell-brand)] text-white hover:bg-[var(--shell-brand)]/90 transition-colors cursor-pointer shadow-sm"
+              className="h-8 px-4 rounded-md text-xs font-medium bg-primary text-white hover:bg-primary/90 transition-colors cursor-pointer shadow-sm"
             >
               Save Changes
             </button>

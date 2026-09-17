@@ -27,7 +27,7 @@ function formatBytes(bytes: number): string {
 function fileIcon(mimeType: string) {
   if (mimeType.startsWith("image/")) return <Image className="h-4 w-4 text-[var(--shell-info)]" />;
   if (mimeType.includes("pdf")) return <FileText className="h-4 w-4 text-[var(--shell-danger)]" />;
-  return <FileIcon className="h-4 w-4 text-[var(--shell-muted)]" />;
+  return <FileIcon className="h-4 w-4 text-muted-foreground" />;
 }
 
 async function downloadFile(record: FileRecord) {
@@ -68,7 +68,7 @@ export function FileViewer({ files, onDelete, onPreview, className, showActions 
           {fileIcon(record.mime_type)}
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-medium">{record.original_name}</p>
-            <p className="text-xs text-[var(--shell-muted)]">
+            <p className="text-xs text-muted-foreground">
               {formatBytes(record.size_bytes)}
               {record.checksum_sha256 && (
                 <span className="ml-2 font-mono opacity-60">{record.checksum_sha256.slice(0, 8)}</span>

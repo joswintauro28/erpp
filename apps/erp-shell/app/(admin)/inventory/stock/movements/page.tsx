@@ -56,7 +56,7 @@ export default function StockMovementsPage() {
     <div className="space-y-6">
       <div className="border-b border-border pb-4">
         <h1 className="font-heading text-2xl font-semibold tracking-tight text-[--shell-foreground] flex items-center gap-2">
-          <ArrowRightLeft className="h-6 w-6 text-[var(--shell-brand)]" />
+          <ArrowRightLeft className="h-6 w-6 text-primary" />
           Stock Movement Log & Inventory Audit
         </h1>
         <p className="mt-1 text-sm text-[--shell-muted]">
@@ -67,7 +67,7 @@ export default function StockMovementsPage() {
       <Card>
         <CardHeader>
           <CardTitle className="text-sm font-bold flex items-center gap-2">
-            <ArrowRightLeft className="h-4 w-4 text-[var(--shell-brand)]" /> Recent Transactions ({movements.length})
+            <ArrowRightLeft className="h-4 w-4 text-primary" /> Recent Transactions ({movements.length})
           </CardTitle>
           <CardDescription>Comprehensive audit log of all stock movements</CardDescription>
         </CardHeader>

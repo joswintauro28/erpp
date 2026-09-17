@@ -68,7 +68,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <div className="flex flex-1 flex-col overflow-hidden">
           <Header collapsed={sidebarCollapsed} onToggleSidebar={toggleSidebar} />
           <a href="#main-content" className="skip-to-content">Skip to content</a>
-          <main id="main-content" className="flex-1 overflow-y-auto bg-[var(--shell-bg)] p-6 lg:p-8">
+          <main id="main-content" className="flex-1 overflow-y-auto bg-background p-6 lg:p-8">
             {children}
           </main>
         </div>

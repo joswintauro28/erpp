@@ -10,23 +10,23 @@ export interface PageHeaderProps {
 
 export function PageHeader({ title, subtitle, badge, actions }: PageHeaderProps) {
   return (
-    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[var(--shell-border)] pb-5">
+    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-5">
       <div className="flex flex-col gap-1">
         <div className="flex items-center gap-2.5 flex-wrap">
-          <h1 className="font-heading text-2xl font-bold tracking-tight text-[var(--shell-foreground)]">
+          <h1 className="font-heading text-2xl font-bold tracking-tight text-foreground">
             {title}
           </h1>
           {badge && (
             <Badge
               variant="outline"
-              className="px-2.5 py-0.5 text-xs font-semibold border-[var(--shell-brand)]/40 text-[var(--shell-brand)] bg-[var(--shell-brand)]/10"
+              className="px-2.5 py-0.5 text-xs font-semibold border-[var(--shell-brand)]/40 text-primary bg-primary/10"
             >
               {badge}
             </Badge>
           )}
         </div>
         {subtitle && (
-          <p className="text-xs sm:text-sm text-[var(--shell-muted)] max-w-3xl">
+          <p className="text-xs sm:text-sm text-muted-foreground max-w-3xl">
             {subtitle}
           </p>
         )}

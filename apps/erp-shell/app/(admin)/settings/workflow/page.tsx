@@ -35,19 +35,19 @@ export default function WorkflowAutomation() {
   return (
     <div className="relative space-y-6">
       {/* Brand Sweep Line */}
-      <span className="absolute -top-6 left-0 h-0.5 w-1/3 rounded-full bg-[var(--shell-brand)] shimmer-glow" />
+      <span className="absolute -top-6 left-0 h-0.5 w-1/3 rounded-full bg-primary shimmer-glow" />
 
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-heading text-xl font-semibold tracking-tight text-[var(--shell-foreground)]">
+          <h1 className="font-heading text-xl font-semibold tracking-tight text-foreground">
             Workflow Automation
           </h1>
-          <p className="mt-0.5 text-sm text-[var(--shell-muted)]">
+          <p className="mt-0.5 text-sm text-muted-foreground">
             Define automated rules and triggers
           </p>
         </div>
-        <Button size="sm" className="bg-[var(--shell-brand)] hover:bg-[var(--shell-brand)]/90 text-white shadow">
+        <Button size="sm" className="bg-primary hover:bg-primary/90 text-white shadow">
           <Plus className="mr-1.5 h-3.5 w-3.5" />
           New Rule
         </Button>
@@ -62,24 +62,24 @@ export default function WorkflowAutomation() {
 
       {/* Search and Filters */}
       <div className="relative max-w-xs">
-        <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--shell-muted)]" />
+        <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
         <Input 
           placeholder="Search rules..." 
-          className="pl-8 bg-muted/10 focus:bg-muted/20 border-[var(--shell-border)] text-sm text-[var(--shell-foreground)]" 
+          className="pl-8 bg-muted/10 focus:bg-muted/20 border-border text-sm text-foreground" 
           value={search} 
           onChange={(e) => setSearch(e.target.value)} 
         />
       </div>
 
       {/* Rules Registry Table */}
-      <Card className="border-[var(--shell-border)] bg-[var(--shell-surface)] hover:shadow-md transition-shadow duration-200">
+      <Card className="border-border hover:shadow-md transition-shadow duration-200">
         <CardContent className="p-0">
           {filtered.length === 0 ? (
-            <div className="flex flex-col items-center gap-3 py-20 text-[var(--shell-muted)]">
-              <Repeat className="h-12 w-12 text-[var(--shell-brand)]/60" />
-              <p className="text-base font-medium text-[var(--shell-foreground)]">No workflow rules yet</p>
+            <div className="flex flex-col items-center gap-3 py-20 text-muted-foreground">
+              <Repeat className="h-12 w-12 text-primary/60" />
+              <p className="text-base font-medium text-foreground">No workflow rules yet</p>
               <p className="text-sm">Create automation triggers to handle alerts, emails, and updates.</p>
-              <Button size="sm" className="mt-2 bg-[var(--shell-brand)] hover:bg-[var(--shell-brand)]/90 text-white shadow">
+              <Button size="sm" className="mt-2 bg-primary hover:bg-primary/90 text-white shadow">
                 <Plus className="mr-1.5 h-3.5 w-3.5" />
                 Create First Rule
               </Button>
@@ -87,31 +87,31 @@ export default function WorkflowAutomation() {
           ) : (
             <Table>
               <TableHeader>
-                <TableRow className="border-b border-[var(--shell-border)]/40 hover:bg-transparent">
-                  <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--shell-muted)]">Rule Name</TableHead>
-                  <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--shell-muted)]">Trigger</TableHead>
-                  <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--shell-muted)]">Condition</TableHead>
-                  <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--shell-muted)]">Action</TableHead>
-                  <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--shell-muted)]">Last Run</TableHead>
-                  <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--shell-muted)]">Status</TableHead>
-                  <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--shell-muted)] w-16 text-right">Toggle</TableHead>
+                <TableRow className="border-b border-border/40 hover:bg-transparent">
+                  <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">Rule Name</TableHead>
+                  <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">Trigger</TableHead>
+                  <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">Condition</TableHead>
+                  <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">Action</TableHead>
+                  <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">Last Run</TableHead>
+                  <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">Status</TableHead>
+                  <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground w-16 text-right">Toggle</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filtered.map((r) => (
-                  <TableRow key={r.id} className="border-b border-[var(--shell-border)]/40 hover:bg-[var(--shell-surface-alt)]/30 transition-colors">
-                    <TableCell className="text-sm font-semibold text-[var(--shell-foreground)]">{r.name}</TableCell>
-                    <TableCell className="text-xs text-[var(--shell-muted)] font-mono">{r.trigger}</TableCell>
-                    <TableCell className="text-xs text-[var(--shell-muted)] max-w-xs truncate">{r.condition}</TableCell>
-                    <TableCell className="text-xs text-[var(--shell-foreground)] font-medium">{r.action}</TableCell>
-                    <TableCell className="font-mono text-xs text-[var(--shell-muted)]">{r.last_run}</TableCell>
+                  <TableRow key={r.id} className="border-b border-border/40 hover:bg-secondary/30 transition-colors">
+                    <TableCell className="text-sm font-semibold text-foreground">{r.name}</TableCell>
+                    <TableCell className="text-xs text-muted-foreground font-mono">{r.trigger}</TableCell>
+                    <TableCell className="text-xs text-muted-foreground max-w-xs truncate">{r.condition}</TableCell>
+                    <TableCell className="text-xs text-foreground font-medium">{r.action}</TableCell>
+                    <TableCell className="font-mono text-xs text-muted-foreground">{r.last_run}</TableCell>
                     <TableCell>
                       <Badge 
                         variant={r.is_active ? "default" : "outline"} 
                         className={`text-[10px] font-semibold ${
                           r.is_active 
                             ? "bg-[var(--shell-accent)]/10 text-[var(--shell-accent)] border-[var(--shell-accent)]/20" 
-                            : "border-[var(--shell-border)] text-[var(--shell-muted)]"
+                            : "border-border text-muted-foreground"
                         }`}
                       >
                         {r.is_active ? "Active" : "Inactive"}
@@ -122,12 +122,12 @@ export default function WorkflowAutomation() {
                         variant="ghost" 
                         size="icon-sm" 
                         onClick={() => toggleActive(r.id)}
-                        className="hover:bg-[var(--shell-surface-alt)]"
+                        className="hover:bg-secondary"
                       >
                         {r.is_active ? (
                           <Power className="h-3.5 w-3.5 text-[var(--shell-accent)]" />
                         ) : (
-                          <PowerOff className="h-3.5 w-3.5 text-[var(--shell-muted)]" />
+                          <PowerOff className="h-3.5 w-3.5 text-muted-foreground" />
                         )}
                       </Button>
                     </TableCell>

@@ -65,13 +65,13 @@ function getGreeting(): string {
 
 function MiniStat({ icon: Icon, label, value, color }: { icon: typeof Package; label: string; value: string; color: string }) {
   return (
-    <div className="flex items-center gap-3 rounded-lg border border-[var(--shell-border)] bg-[var(--shell-surface)] px-3.5 py-2.5">
+    <div className="flex items-center gap-3 rounded-lg border px-3.5 py-2.5">
       <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md" style={{ backgroundColor: `${color}15` }}>
         <Icon className="h-4 w-4" style={{ color }} />
       </div>
       <div className="min-w-0">
-        <p className="text-xs text-[var(--shell-muted)] truncate">{label}</p>
-        <p className="font-heading text-sm font-semibold text-[var(--shell-foreground)]">{value}</p>
+        <p className="text-xs text-muted-foreground truncate">{label}</p>
+        <p className="font-heading text-sm font-semibold text-foreground">{value}</p>
       </div>
     </div>
   );
@@ -276,7 +276,7 @@ export default function Dashboard() {
         <SectionHeading label="Analytics" />
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           {/* Revenue Trend */}
-          <Card className="border-[var(--shell-border)] bg-[var(--shell-surface)]">
+          <Card className="border-border">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <div>
                 <CardTitle className="flex items-center gap-2 text-sm">
@@ -287,8 +287,8 @@ export default function Dashboard() {
               </div>
               {totalRevenue > 0 && (
                 <div className="text-right">
-                  <p className="font-heading text-lg font-semibold text-[var(--shell-foreground)]">{f(totalRevenue)}</p>
-                  <p className="text-[10px] text-[var(--shell-muted)]">Total (MTD)</p>
+                  <p className="font-heading text-lg font-semibold text-foreground">{f(totalRevenue)}</p>
+                  <p className="text-[10px] text-muted-foreground">Total (MTD)</p>
                 </div>
               )}
             </CardHeader>
@@ -321,21 +321,21 @@ export default function Dashboard() {
                     </AreaChart>
                   </ResponsiveContainer>
                 ) : (
-                  <div className="flex h-full items-center justify-center text-sm text-[var(--shell-muted)]">No revenue data yet</div>
+                  <div className="flex h-full items-center justify-center text-sm text-muted-foreground">No revenue data yet</div>
                 )}
               </div>
             </CardContent>
           </Card>
 
           {/* Invoice Summary (Donut) */}
-          <Card className="border-[var(--shell-border)] bg-[var(--shell-surface)]">
-            <CardHeader className="flex flex-row items-center justify-between pb-2 border-b border-[var(--shell-border)]/20">
+          <Card className="border-border">
+            <CardHeader className="flex flex-row items-center justify-between pb-2 border-b border-border/20">
               <div>
-                <CardTitle className="flex items-center gap-2 text-sm font-semibold text-[var(--shell-foreground)]">
+                <CardTitle className="flex items-center gap-2 text-sm font-semibold text-foreground">
                   <BarChart3 className="h-4 w-4 text-[var(--shell-accent)]" />
                   Invoice Distribution
                 </CardTitle>
-                <CardDescription className="text-xs text-[var(--shell-muted)]">Real-time invoice lifecycle breakdown</CardDescription>
+                <CardDescription className="text-xs text-muted-foreground">Real-time invoice lifecycle breakdown</CardDescription>
               </div>
             </CardHeader>
             <CardContent className="pt-4">
@@ -343,11 +343,11 @@ export default function Dashboard() {
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center min-h-[300px]">
                   <div className="col-span-12 md:col-span-7 flex justify-center items-center relative h-[250px] md:h-[280px]">
                     <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-0">
-                      <div className="flex flex-col items-center justify-center bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-full h-32 w-32 shadow-engineered">
-                        <span className="font-heading text-4xl font-bold tracking-tight text-[var(--shell-foreground)] leading-none">
+                      <div className="flex flex-col items-center justify-center border border-border rounded-full h-32 w-32 shadow-engineered">
+                        <span className="font-heading text-4xl font-bold tracking-tight text-foreground leading-none">
                           {s?.total_invoices ?? 0}
                         </span>
-                        <span className="text-[11px] font-heading font-semibold uppercase tracking-[0.12em] text-[var(--shell-muted)] mt-1">Invoices</span>
+                        <span className="text-[11px] font-heading font-semibold uppercase tracking-[0.12em] text-muted-foreground mt-1">Invoices</span>
                       </div>
                     </div>
                     <ResponsiveContainer width="100%" height="100%" className="relative z-10">
@@ -377,23 +377,23 @@ export default function Dashboard() {
                     </ResponsiveContainer>
                   </div>
                   <div className="col-span-12 md:col-span-5 space-y-3">
-                    <div className="text-[11px] font-heading font-semibold uppercase tracking-[0.12em] text-[var(--shell-muted)] border-b border-[var(--shell-border)]/20 pb-1.5 mb-3">
+                    <div className="text-[11px] font-heading font-semibold uppercase tracking-[0.12em] text-muted-foreground border-b border-border/20 pb-1.5 mb-3">
                       Lifecycle Summary
                     </div>
                     <div className="space-y-2.5 max-h-[250px] overflow-y-auto pr-1">
                       {data.invoiceSummary.map((item) => (
-                        <div key={item.name} className="flex flex-col gap-1.5 p-2 rounded-lg hover:bg-[var(--shell-border)]/10 transition-all duration-150 group">
+                        <div key={item.name} className="flex flex-col gap-1.5 p-2 rounded-lg hover:bg-border/10 transition-all duration-150 group">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
                               <span className="h-2.5 w-2.5 rounded-full shrink-0 transition-transform group-hover:scale-110" style={{ background: statusColor(item.name) }} />
-                              <span className="text-xs font-heading font-semibold tracking-tight text-[var(--shell-foreground)]">{item.name}</span>
+                              <span className="text-xs font-heading font-semibold tracking-tight text-foreground">{item.name}</span>
                             </div>
                             <div className="flex items-center gap-2">
-                              <span className="text-xs font-mono font-bold text-[var(--shell-foreground)]">{item.count}</span>
-                              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[var(--shell-border)]/30 text-[var(--shell-muted)] font-medium">{item.value}%</span>
+                              <span className="text-xs font-mono font-bold text-foreground">{item.count}</span>
+                              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-border/30 text-muted-foreground font-medium">{item.value}%</span>
                             </div>
                           </div>
-                          <div className="h-1 w-full bg-[var(--shell-border)]/20 rounded-full overflow-hidden">
+                          <div className="h-1 w-full bg-border/20 rounded-full overflow-hidden">
                             <div className="h-full rounded-full transition-all duration-500" style={{ width: `${item.value}%`, background: statusColor(item.name) }} />
                           </div>
                         </div>
@@ -402,7 +402,7 @@ export default function Dashboard() {
                   </div>
                 </div>
               ) : (
-                <div className="flex min-h-[300px] items-center justify-center text-sm text-[var(--shell-muted)] border border-dashed border-[var(--shell-border)] rounded-lg">
+                <div className="flex min-h-[300px] items-center justify-center text-sm text-muted-foreground border border-dashed border-border rounded-lg">
                   No lifecycle metrics available
                 </div>
               )}
@@ -425,11 +425,11 @@ export default function Dashboard() {
         <SectionHeading label="Activity" />
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Recent Invoices */}
-        <Card className="border-[var(--shell-border)] bg-[var(--shell-surface)]">
+        <Card className="border-border">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <div>
               <CardTitle className="flex items-center gap-2 text-sm">
-                <FileText className="h-4 w-4 text-[var(--shell-muted)]" />
+                <FileText className="h-4 w-4 text-muted-foreground" />
                 Recent Invoices
               </CardTitle>
               <CardDescription>Latest invoice activity</CardDescription>
@@ -451,12 +451,12 @@ export default function Dashboard() {
               <TableBody>
                 {(data?.recentInvoices ?? []).length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={4} className="text-center text-[var(--shell-muted)] py-8 text-sm">No invoices yet</TableCell>
+                    <TableCell colSpan={4} className="text-center text-muted-foreground py-8 text-sm">No invoices yet</TableCell>
                   </TableRow>
                 ) : (data?.recentInvoices ?? []).slice(0, 5).map((inv) => (
                   <TableRow key={inv.id} className="cursor-pointer hover:bg-muted/30" onClick={() => router.push(`/billing/invoices/${inv.id}`)}>
                     <TableCell className="font-mono text-xs font-medium">{inv.invoice_number}</TableCell>
-                    <TableCell className="text-sm text-[var(--shell-muted)]">{inv.client_name}</TableCell>
+                    <TableCell className="text-sm text-muted-foreground">{inv.client_name}</TableCell>
                     <TableCell className="text-right font-mono text-sm font-medium">{f(inv.total)}</TableCell>
                     <TableCell>
                       <Badge variant={statusVariant("invoice", inv.status)} className="capitalize text-xs">
@@ -471,11 +471,11 @@ export default function Dashboard() {
         </Card>
 
         {/* Low Stock / Alerts */}
-        <Card className="border-[var(--shell-border)] bg-[var(--shell-surface)]">
+        <Card className="border-border">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <div>
               <CardTitle className="flex items-center gap-2 text-sm">
-                <Package className="h-4 w-4 text-[var(--shell-muted)]" />
+                <Package className="h-4 w-4 text-muted-foreground" />
                 Inventory Status
               </CardTitle>
               <CardDescription>Stock levels and product overview</CardDescription>
@@ -494,7 +494,7 @@ export default function Dashboard() {
                 <p className="text-xs font-medium text-[var(--shell-warning)]">
                   {s!.low_stock_count} product{s!.low_stock_count !== 1 ? "s" : ""} below minimum stock threshold
                 </p>
-                <p className="mt-0.5 text-[11px] text-[var(--shell-muted)]">
+                <p className="mt-0.5 text-[11px] text-muted-foreground">
                   Review and reorder to maintain inventory levels.
                 </p>
               </div>
@@ -514,7 +514,7 @@ export default function Dashboard() {
         <SectionHeading label="Payments & Growth" />
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Payment Analytics */}
-        <Card className="border-[var(--shell-border)] bg-[var(--shell-surface)]">
+        <Card className="border-border">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <div>
               <CardTitle className="flex items-center gap-2 text-sm">
@@ -525,10 +525,10 @@ export default function Dashboard() {
             </div>
             {data?.paymentAnalytics && data.paymentAnalytics.length > 0 && (
               <div className="text-right">
-                <p className="font-heading text-lg font-semibold text-[var(--shell-foreground)]">
+                <p className="font-heading text-lg font-semibold text-foreground">
                   {f(data.paymentAnalytics.reduce((s, p) => s + p.amount, 0))}
                 </p>
-                <p className="text-[10px] text-[var(--shell-muted)]">Total collected</p>
+                <p className="text-[10px] text-muted-foreground">Total collected</p>
               </div>
             )}
           </CardHeader>
@@ -558,14 +558,14 @@ export default function Dashboard() {
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="flex h-full items-center justify-center text-sm text-[var(--shell-muted)]">No payment data yet</div>
+                <div className="flex h-full items-center justify-center text-sm text-muted-foreground">No payment data yet</div>
               )}
             </div>
           </CardContent>
         </Card>
 
         {/* Client Growth */}
-        <Card className="border-[var(--shell-border)] bg-[var(--shell-surface)]">
+        <Card className="border-border">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <div>
               <CardTitle className="flex items-center gap-2 text-sm">
@@ -576,10 +576,10 @@ export default function Dashboard() {
             </div>
             {data?.clientGrowth && data.clientGrowth.length > 0 && (
               <div className="text-right">
-                <p className="font-heading text-lg font-semibold text-[var(--shell-foreground)]">
+                <p className="font-heading text-lg font-semibold text-foreground">
                   {data.clientGrowth.reduce((s, m) => s + m.count, 0)}
                 </p>
-                <p className="text-[10px] text-[var(--shell-muted)]">New this period</p>
+                <p className="text-[10px] text-muted-foreground">New this period</p>
               </div>
             )}
           </CardHeader>
@@ -612,7 +612,7 @@ export default function Dashboard() {
                   </AreaChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="flex h-full items-center justify-center text-sm text-[var(--shell-muted)]">No client growth data yet</div>
+                <div className="flex h-full items-center justify-center text-sm text-muted-foreground">No client growth data yet</div>
               )}
             </div>
           </CardContent>

@@ -252,22 +252,22 @@ export default function TeamManagement() {
   return (
     <div className="relative space-y-6">
       {/* Brand Sweep Line */}
-      <span className="absolute -top-6 left-0 h-0.5 w-1/3 rounded-full bg-[var(--shell-brand)] shimmer-glow" />
+      <span className="absolute -top-6 left-0 h-0.5 w-1/3 rounded-full bg-primary shimmer-glow" />
 
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-heading text-xl font-semibold tracking-tight text-[var(--shell-foreground)]">
+          <h1 className="font-heading text-xl font-semibold tracking-tight text-foreground">
             Identity &amp; Team Management
           </h1>
-          <p className="mt-0.5 text-sm text-[var(--shell-muted)]">
+          <p className="mt-0.5 text-sm text-muted-foreground">
             Manage organization members, assign roles, and customize permission lists
           </p>
         </div>
         <Button 
           size="sm" 
           onClick={() => setInviteOpen(true)}
-          className="bg-[var(--shell-brand)] hover:bg-[var(--shell-brand)]/90 text-white shadow"
+          className="bg-primary hover:bg-primary/90 text-white shadow"
         >
           <Plus className="mr-1.5 h-3.5 w-3.5" />
           Invite Member
@@ -275,13 +275,13 @@ export default function TeamManagement() {
       </div>
 
       {/* Tab Selectors */}
-      <div className="flex items-center gap-2 border-b border-[var(--shell-border)]/40 pb-2">
+      <div className="flex items-center gap-2 border-b border-border/40 pb-2">
         <button
           onClick={() => setActiveTab("directory")}
           className={`px-4 py-1.5 text-sm font-semibold rounded-md transition-all ${
             activeTab === "directory"
-              ? "bg-[var(--shell-brand)]/10 text-[var(--shell-brand)] border border-[var(--shell-brand)]/20"
-              : "text-[var(--shell-muted)] hover:text-[var(--shell-foreground)] hover:bg-[var(--shell-surface-alt)]/40"
+              ? "bg-primary/10 text-primary border border-[var(--shell-brand)]/20"
+              : "text-muted-foreground hover:text-foreground hover:bg-secondary/40"
           }`}
         >
           Members Directory
@@ -295,8 +295,8 @@ export default function TeamManagement() {
           }}
           className={`px-4 py-1.5 text-sm font-semibold rounded-md transition-all ${
             activeTab === "permissions"
-              ? "bg-[var(--shell-brand)]/10 text-[var(--shell-brand)] border border-[var(--shell-brand)]/20"
-              : "text-[var(--shell-muted)] hover:text-[var(--shell-foreground)] hover:bg-[var(--shell-surface-alt)]/40"
+              ? "bg-primary/10 text-primary border border-[var(--shell-brand)]/20"
+              : "text-muted-foreground hover:text-foreground hover:bg-secondary/40"
           }`}
         >
           Roles &amp; Permissions Matrix
@@ -318,7 +318,7 @@ export default function TeamManagement() {
       )}
 
       {loading ? (
-        <div className="flex items-center justify-center py-20 text-[var(--shell-muted)]">
+        <div className="flex items-center justify-center py-20 text-muted-foreground">
           <div className="h-8 w-8 animate-spin rounded-full border-2 border-[var(--shell-muted)] border-t-transparent" />
           <span className="ml-3 text-sm font-medium">Fetching team database...</span>
         </div>
@@ -335,35 +335,35 @@ export default function TeamManagement() {
 
           {/* Search bar */}
           <div className="relative max-w-xs">
-            <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--shell-muted)]" />
+            <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
             <Input 
               placeholder="Search team members..." 
-              className="pl-8 bg-muted/10 border-[var(--shell-border)] text-sm text-[var(--shell-foreground)]" 
+              className="pl-8 bg-muted/10 border-border text-sm text-foreground" 
               value={search} 
               onChange={(e) => setSearch(e.target.value)} 
             />
           </div>
 
           {/* Directory Table */}
-          <Card className="border-[var(--shell-border)] bg-[var(--shell-surface)] hover:shadow-md transition-shadow duration-200">
+          <Card className="border-border hover:shadow-md transition-shadow duration-200">
             <CardContent className="p-0">
               <Table>
                 <TableHeader>
-                  <TableRow className="border-b border-[var(--shell-border)]/40 hover:bg-transparent">
-                    <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--shell-muted)]">Name</TableHead>
-                    <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--shell-muted)]">Email</TableHead>
-                    <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--shell-muted)]">System Role</TableHead>
-                    <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--shell-muted)]">Department</TableHead>
-                    <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--shell-muted)]">Status</TableHead>
-                    <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--shell-muted)] max-w-xs">Role Permissions</TableHead>
-                    <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--shell-muted)] w-24 text-right">Actions</TableHead>
+                  <TableRow className="border-b border-border/40 hover:bg-transparent">
+                    <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">Name</TableHead>
+                    <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">Email</TableHead>
+                    <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">System Role</TableHead>
+                    <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">Department</TableHead>
+                    <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">Status</TableHead>
+                    <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground max-w-xs">Role Permissions</TableHead>
+                    <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground w-24 text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredMembers.map((m) => (
-                    <TableRow key={m.id} className="border-b border-[var(--shell-border)]/40 hover:bg-[var(--shell-surface-alt)]/30 transition-colors">
-                      <TableCell className="text-sm font-semibold text-[var(--shell-foreground)]">{m.name}</TableCell>
-                      <TableCell className="text-xs text-[var(--shell-foreground)] font-mono">{m.email}</TableCell>
+                    <TableRow key={m.id} className="border-b border-border/40 hover:bg-secondary/30 transition-colors">
+                      <TableCell className="text-sm font-semibold text-foreground">{m.name}</TableCell>
+                      <TableCell className="text-xs text-foreground font-mono">{m.email}</TableCell>
                       <TableCell>
                         <Badge 
                           variant="outline" 
@@ -377,14 +377,14 @@ export default function TeamManagement() {
                           {m.role}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-xs text-[var(--shell-muted)]">{m.department}</TableCell>
+                      <TableCell className="text-xs text-muted-foreground">{m.department}</TableCell>
                       <TableCell>
                         <Badge
                           variant={m.status === "active" ? "default" : "outline"}
                           className={`text-[10px] font-semibold ${
                             m.status === "active"
                               ? "bg-[var(--shell-success)]/10 text-[var(--shell-success)] border-[var(--shell-success)]/20"
-                              : "bg-[var(--shell-brand)]/10 text-[var(--shell-brand)] border-[var(--shell-brand)]/20"
+                              : "bg-primary/10 text-primary border-[var(--shell-brand)]/20"
                           }`}
                         >
                           {m.status}
@@ -393,12 +393,12 @@ export default function TeamManagement() {
                       <TableCell className="max-w-xs">
                         <div className="flex flex-wrap gap-1">
                           {m.permissions.length === 0 ? (
-                            <span className="text-[10px] text-[var(--shell-muted)]">No permissions mapped</span>
+                            <span className="text-[10px] text-muted-foreground">No permissions mapped</span>
                           ) : m.permissions.length === permissions.length ? (
                             <Badge variant="outline" className="text-[9px] font-semibold text-[var(--shell-accent)] border-[var(--shell-accent)]/30 bg-[var(--shell-accent)]/5">Full Access Admin</Badge>
                           ) : (
                             m.permissions.map((p) => (
-                              <Badge key={p} variant="outline" className="text-[9px] font-medium border-[var(--shell-border)]/60 text-[var(--shell-muted)]">{p}</Badge>
+                              <Badge key={p} variant="outline" className="text-[9px] font-medium border-border/60 text-muted-foreground">{p}</Badge>
                             ))
                           )}
                         </div>
@@ -417,20 +417,20 @@ export default function TeamManagement() {
                               });
                               setEditRoleOpen(true);
                             }}
-                            className="hover:bg-[var(--shell-surface-alt)]"
+                            className="hover:bg-secondary"
                           >
-                            <Pencil className="h-3.5 w-3.5 text-[var(--shell-muted)] hover:text-[var(--shell-brand)] transition-colors" />
+                            <Pencil className="h-3.5 w-3.5 text-muted-foreground hover:text-primary transition-colors" />
                           </Button>
                           <Button 
                             variant="ghost" 
                             size="icon-sm" 
                             onClick={() => handleToggleStatus(m)}
-                            className="hover:bg-[var(--shell-surface-alt)]"
+                            className="hover:bg-secondary"
                           >
                             {m.status === "disabled" ? (
                               <Power className="h-3.5 w-3.5 text-[var(--shell-success)]" />
                             ) : (
-                              <PowerOff className="h-3.5 w-3.5 text-[var(--shell-muted)]" />
+                              <PowerOff className="h-3.5 w-3.5 text-muted-foreground" />
                             )}
                           </Button>
                           <Button 
@@ -440,7 +440,7 @@ export default function TeamManagement() {
                               setDeleteUserId(m.id);
                               setDeleteConfirmOpen(true);
                             }}
-                            className="hover:bg-[var(--shell-surface-alt)] text-destructive hover:text-destructive"
+                            className="hover:bg-secondary text-destructive hover:text-destructive"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
                           </Button>
@@ -457,9 +457,9 @@ export default function TeamManagement() {
         /* Tab 2: Permissions Matrix */
         <div className="grid grid-cols-4 gap-6 animate-fade-in">
           {/* Roles Selector Sidebar */}
-          <Card className="border-[var(--shell-border)] bg-[var(--shell-surface)] h-fit">
-            <CardHeader className="p-4 pb-2 border-b border-[var(--shell-border)]/40">
-              <CardTitle className="text-xs font-semibold text-[var(--shell-muted)] tracking-wider uppercase">System Roles</CardTitle>
+          <Card className="border-border h-fit">
+            <CardHeader className="p-4 pb-2 border-b border-border/40">
+              <CardTitle className="text-xs font-semibold text-muted-foreground tracking-wider uppercase">System Roles</CardTitle>
             </CardHeader>
             <CardContent className="p-2 space-y-1">
               {roles.map((r) => (
@@ -468,34 +468,34 @@ export default function TeamManagement() {
                   onClick={() => handleRoleSelect(r.id)}
                   className={`w-full text-left px-3.5 py-2.5 rounded-lg text-sm font-semibold transition-all ${
                     selectedRoleId === r.id
-                      ? "bg-[var(--shell-brand)]/10 text-[var(--shell-brand)] border border-[var(--shell-brand)]/20"
-                      : "text-[var(--shell-muted)] hover:text-[var(--shell-foreground)] hover:bg-[var(--shell-surface-alt)]/40"
+                      ? "bg-primary/10 text-primary border border-[var(--shell-brand)]/20"
+                      : "text-muted-foreground hover:text-foreground hover:bg-secondary/40"
                   }`}
                 >
                   <div className="flex items-center justify-between">
                     <span>{r.name}</span>
-                    <Badge variant="outline" className="text-[10px] scale-90 border-[var(--shell-border)] font-semibold">{r.permissions.length} perms</Badge>
+                    <Badge variant="outline" className="text-[10px] scale-90 border-border font-semibold">{r.permissions.length} perms</Badge>
                   </div>
-                  <span className="block text-[11px] text-[var(--shell-muted)] font-normal mt-0.5">{r.description}</span>
+                  <span className="block text-[11px] text-muted-foreground font-normal mt-0.5">{r.description}</span>
                 </button>
               ))}
             </CardContent>
           </Card>
 
           {/* Permissions Matrix */}
-          <Card className="col-span-3 border-[var(--shell-border)] bg-[var(--shell-surface)]">
-            <CardHeader className="p-5 pb-3 border-b border-[var(--shell-border)]/40 flex flex-row items-center justify-between">
+          <Card className="col-span-3">
+            <CardHeader className="p-5 pb-3 border-b border-border/40 flex flex-row items-center justify-between">
               <div>
-                <CardTitle className="text-sm font-semibold text-[var(--shell-foreground)]">
+                <CardTitle className="text-sm font-semibold text-foreground">
                   Permissions Matrix for &quot;{roles.find((r) => r.id === selectedRoleId)?.name || ""}&quot;
                 </CardTitle>
-                <CardDescription className="text-xs text-[var(--shell-muted)]">Check or uncheck permission actions to alter backend access control scopes</CardDescription>
+                <CardDescription className="text-xs text-muted-foreground">Check or uncheck permission actions to alter backend access control scopes</CardDescription>
               </div>
               <Button 
                 onClick={handleSavePermissions}
                 disabled={savingPermissions}
                 size="sm"
-                className="bg-[var(--shell-brand)] hover:bg-[var(--shell-brand)]/90 text-white shadow"
+                className="bg-primary hover:bg-primary/90 text-white shadow"
               >
                 <Key className="mr-1.5 h-3.5 w-3.5" />
                 {savingPermissions ? "Saving Matrix..." : "Save Permissions"}
@@ -503,7 +503,7 @@ export default function TeamManagement() {
             </CardHeader>
             <CardContent className="p-6 space-y-6">
               {Object.entries(permissionsByModule).map(([moduleName, modulePerms]) => (
-                <div key={moduleName} className="space-y-3 pb-4 border-b border-[var(--shell-border)]/20 last:border-0">
+                <div key={moduleName} className="space-y-3 pb-4 border-b border-border/20 last:border-0">
                   <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--shell-accent)]">{moduleName}</h3>
                   <div className="grid grid-cols-2 gap-4">
                     {modulePerms.map((p) => {
@@ -514,19 +514,19 @@ export default function TeamManagement() {
                           onClick={() => handlePermissionToggle(p.id)}
                           className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer select-none transition-all ${
                             isChecked
-                              ? "border-[var(--shell-brand)]/40 bg-[var(--shell-brand)]/5 hover:bg-[var(--shell-brand)]/10"
-                              : "border-[var(--shell-border)] bg-transparent hover:bg-[var(--shell-surface-alt)]/30"
+                              ? "border-[var(--shell-brand)]/40 bg-primary/5 hover:bg-primary/10"
+                              : "border-border bg-transparent hover:bg-secondary/30"
                           }`}
                         >
                           <input 
                             type="checkbox"
                             checked={isChecked}
                             onChange={() => {}} // Controlled via onClick on outer box
-                            className="h-4 w-4 rounded border-[var(--shell-border)] accent-[var(--shell-brand)] mt-0.5 cursor-pointer"
+                            className="h-4 w-4 rounded border-border accent-[var(--shell-brand)] mt-0.5 cursor-pointer"
                           />
                           <div className="space-y-0.5">
-                            <span className="block text-xs font-semibold text-[var(--shell-foreground)]">{p.name || p.code}</span>
-                            <span className="block text-[11px] font-mono text-[var(--shell-muted)]">{p.code}</span>
+                            <span className="block text-xs font-semibold text-foreground">{p.name || p.code}</span>
+                            <span className="block text-[11px] font-mono text-muted-foreground">{p.code}</span>
                           </div>
                         </div>
                       );
@@ -541,15 +541,15 @@ export default function TeamManagement() {
 
       {/* Invite Member Modal */}
       <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
-        <DialogContent className="border-[var(--shell-border)] bg-[var(--shell-surface)]">
+        <DialogContent className="border-border">
           <form onSubmit={handleInviteSubmit}>
-            <DialogHeader className="p-4 border-b border-[var(--shell-border)]/40">
-              <DialogTitle className="text-sm font-semibold text-[var(--shell-foreground)]">Invite Team Member</DialogTitle>
-              <DialogDescription className="text-xs text-[var(--shell-muted)]">Create a new user profile inside this organization</DialogDescription>
+            <DialogHeader className="p-4 border-b border-border/40">
+              <DialogTitle className="text-sm font-semibold text-foreground">Invite Team Member</DialogTitle>
+              <DialogDescription className="text-xs text-muted-foreground">Create a new user profile inside this organization</DialogDescription>
             </DialogHeader>
             <div className="p-5 space-y-4">
               <div className="space-y-1.5">
-                <Label className="text-xs text-[var(--shell-muted)] font-medium">Full Name</Label>
+                <Label className="text-xs text-muted-foreground font-medium">Full Name</Label>
                 <Input 
                   placeholder="Maya Patel" 
                   value={inviteForm.fullName}
@@ -558,7 +558,7 @@ export default function TeamManagement() {
                 />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs text-[var(--shell-muted)] font-medium">Email Address</Label>
+                <Label className="text-xs text-muted-foreground font-medium">Email Address</Label>
                 <Input 
                   type="email" 
                   placeholder="maya@company.com" 
@@ -568,7 +568,7 @@ export default function TeamManagement() {
                 />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs text-[var(--shell-muted)] font-medium">System Role</Label>
+                <Label className="text-xs text-muted-foreground font-medium">System Role</Label>
                 <Select 
                   value={inviteForm.roleId} 
                   onValueChange={(val) => setInviteForm({ ...inviteForm, roleId: val ?? "" })}
@@ -584,7 +584,7 @@ export default function TeamManagement() {
                 </Select>
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs text-[var(--shell-muted)] font-medium">Password (Optional)</Label>
+                <Label className="text-xs text-muted-foreground font-medium">Password (Optional)</Label>
                 <Input 
                   type="password" 
                   placeholder="Leave empty for default 'User@123!'" 
@@ -593,9 +593,9 @@ export default function TeamManagement() {
                 />
               </div>
             </div>
-            <DialogFooter className="p-4 border-t border-[var(--shell-border)]/40 flex justify-end gap-2 bg-[var(--shell-surface-alt)]/25">
-              <Button type="button" variant="outline" size="sm" onClick={() => setInviteOpen(false)} className="hover:bg-[var(--shell-surface-alt)]">Cancel</Button>
-              <Button type="submit" size="sm" disabled={inviting} className="bg-[var(--shell-brand)] hover:bg-[var(--shell-brand)]/90 text-white">
+            <DialogFooter className="p-4 border-t border-border/40 flex justify-end gap-2 bg-secondary/25">
+              <Button type="button" variant="outline" size="sm" onClick={() => setInviteOpen(false)} className="hover:bg-secondary">Cancel</Button>
+              <Button type="submit" size="sm" disabled={inviting} className="bg-primary hover:bg-primary/90 text-white">
                 {inviting ? "Inviting..." : "Create Account"}
               </Button>
             </DialogFooter>
@@ -605,15 +605,15 @@ export default function TeamManagement() {
 
       {/* Edit Role Modal */}
       <Dialog open={editRoleOpen} onOpenChange={setEditRoleOpen}>
-        <DialogContent className="border-[var(--shell-border)] bg-[var(--shell-surface)]">
+        <DialogContent className="border-border">
           <form onSubmit={handleEditRoleSubmit}>
-            <DialogHeader className="p-4 border-b border-[var(--shell-border)]/40">
-              <DialogTitle className="text-sm font-semibold text-[var(--shell-foreground)]">Change Member Role</DialogTitle>
-              <DialogDescription className="text-xs text-[var(--shell-muted)]">Alter the security role maps for &quot;{editRoleForm.userName}&quot;</DialogDescription>
+            <DialogHeader className="p-4 border-b border-border/40">
+              <DialogTitle className="text-sm font-semibold text-foreground">Change Member Role</DialogTitle>
+              <DialogDescription className="text-xs text-muted-foreground">Alter the security role maps for &quot;{editRoleForm.userName}&quot;</DialogDescription>
             </DialogHeader>
             <div className="p-5 space-y-4">
               <div className="space-y-1.5">
-                <Label className="text-xs text-[var(--shell-muted)] font-medium">Assign New Role</Label>
+                <Label className="text-xs text-muted-foreground font-medium">Assign New Role</Label>
                 <Select 
                   value={editRoleForm.roleId} 
                   onValueChange={(val) => setEditRoleForm({ ...editRoleForm, roleId: val ?? "" })}
@@ -629,9 +629,9 @@ export default function TeamManagement() {
                 </Select>
               </div>
             </div>
-            <DialogFooter className="p-4 border-t border-[var(--shell-border)]/40 flex justify-end gap-2 bg-[var(--shell-surface-alt)]/25">
-              <Button type="button" variant="outline" size="sm" onClick={() => setEditRoleOpen(false)} className="hover:bg-[var(--shell-surface-alt)]">Cancel</Button>
-              <Button type="submit" size="sm" disabled={editingRole} className="bg-[var(--shell-brand)] hover:bg-[var(--shell-brand)]/90 text-white">
+            <DialogFooter className="p-4 border-t border-border/40 flex justify-end gap-2 bg-secondary/25">
+              <Button type="button" variant="outline" size="sm" onClick={() => setEditRoleOpen(false)} className="hover:bg-secondary">Cancel</Button>
+              <Button type="submit" size="sm" disabled={editingRole} className="bg-primary hover:bg-primary/90 text-white">
                 {editingRole ? "Updating..." : "Update Role"}
               </Button>
             </DialogFooter>
@@ -641,20 +641,20 @@ export default function TeamManagement() {
 
       {/* Delete Confirmation Modal */}
       <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
-        <DialogContent className="border-[var(--shell-border)] bg-[var(--shell-surface)]">
-          <DialogHeader className="p-4 border-b border-[var(--shell-border)]/40">
+        <DialogContent className="border-border">
+          <DialogHeader className="p-4 border-b border-border/40">
             <div className="flex items-center gap-2 text-destructive">
               <ShieldAlert className="h-5 w-5" />
-              <DialogTitle className="text-sm font-semibold text-[var(--shell-foreground)]">Revoke Access &amp; Delete User</DialogTitle>
+              <DialogTitle className="text-sm font-semibold text-foreground">Revoke Access &amp; Delete User</DialogTitle>
             </div>
-            <DialogDescription className="text-xs text-[var(--shell-muted)]">This action will completely remove this user profile from the organization member roster.</DialogDescription>
+            <DialogDescription className="text-xs text-muted-foreground">This action will completely remove this user profile from the organization member roster.</DialogDescription>
           </DialogHeader>
           <div className="p-5">
-            <p className="text-xs text-[var(--shell-foreground)] font-semibold">Are you absolutely sure you want to delete this user account?</p>
-            <p className="text-xs text-[var(--shell-muted)] mt-1">This user will be logged out and will no longer be able to log into any workstation or portal.</p>
+            <p className="text-xs text-foreground font-semibold">Are you absolutely sure you want to delete this user account?</p>
+            <p className="text-xs text-muted-foreground mt-1">This user will be logged out and will no longer be able to log into any workstation or portal.</p>
           </div>
-          <DialogFooter className="p-4 border-t border-[var(--shell-border)]/40 flex justify-end gap-2 bg-[var(--shell-surface-alt)]/25">
-            <Button type="button" variant="outline" size="sm" onClick={() => { setDeleteConfirmOpen(false); setDeleteUserId(null); }} className="hover:bg-[var(--shell-surface-alt)]">Cancel</Button>
+          <DialogFooter className="p-4 border-t border-border/40 flex justify-end gap-2 bg-secondary/25">
+            <Button type="button" variant="outline" size="sm" onClick={() => { setDeleteConfirmOpen(false); setDeleteUserId(null); }} className="hover:bg-secondary">Cancel</Button>
             <Button type="button" size="sm" disabled={deleting} onClick={handleDeleteSubmit} className="bg-destructive hover:bg-destructive/95 text-white">
               {deleting ? "Deleting..." : "Yes, Delete Member"}
             </Button>

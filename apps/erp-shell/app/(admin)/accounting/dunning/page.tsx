@@ -50,8 +50,8 @@ export default function DunningPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-[var(--shell-foreground)]">Dunning & Collections</h1>
-          <p className="text-sm text-[var(--shell-muted)] mt-1">Overdue invoice escalation tracking</p>
+          <h1 className="text-2xl font-semibold text-foreground">Dunning & Collections</h1>
+          <p className="text-sm text-muted-foreground mt-1">Overdue invoice escalation tracking</p>
         </div>
         <Badge variant="neutral" className="text-xs gap-1.5"><Bell className="h-3 w-3" /> Auto-escalated daily</Badge>
       </div>
@@ -71,7 +71,7 @@ export default function DunningPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-sm"><BellOff className="h-4 w-4 text-[var(--shell-muted)]" /> Dunning Records</CardTitle>
+          <CardTitle className="flex items-center gap-2 text-sm"><BellOff className="h-4 w-4 text-muted-foreground" /> Dunning Records</CardTitle>
           <CardDescription>Escalated overdue invoices and their current dunning level</CardDescription>
         </CardHeader>
         <CardContent className="p-0">
@@ -89,11 +89,11 @@ export default function DunningPage() {
             </TableHeader>
             <TableBody>
               {dunning.length === 0 ? (
-                <TableRow><TableCell colSpan={7} className="text-center text-[var(--shell-muted)] py-8 text-sm">No dunning records. All invoices are current.</TableCell></TableRow>
+                <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8 text-sm">No dunning records. All invoices are current.</TableCell></TableRow>
               ) : dunning.map((r) => (
                 <TableRow key={r.id}>
                   <TableCell className="font-mono text-xs">{r.invoice_number}</TableCell>
-                  <TableCell className="text-xs text-[var(--shell-muted)]">{r.client_name}</TableCell>
+                  <TableCell className="text-xs text-muted-foreground">{r.client_name}</TableCell>
                   <TableCell className="text-right font-mono text-xs font-medium">{money(r.balance_due)}</TableCell>
                   <TableCell className="text-xs font-mono">{r.due_date}</TableCell>
                   <TableCell className="text-xs font-mono">{r.days_overdue}d</TableCell>
@@ -102,7 +102,7 @@ export default function DunningPage() {
                       {levelLabels[r.level] ?? `Level ${r.level}`}
                     </span>
                   </TableCell>
-                  <TableCell className="text-xs text-[var(--shell-muted)]">{r.notified_at}</TableCell>
+                  <TableCell className="text-xs text-muted-foreground">{r.notified_at}</TableCell>
                 </TableRow>
               ))}
             </TableBody>

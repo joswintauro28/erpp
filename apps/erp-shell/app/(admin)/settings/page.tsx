@@ -106,15 +106,15 @@ export default function GeneralSettings() {
   return (
     <div className="relative space-y-6">
       {/* Brand Sweep Line */}
-      <span className="absolute -top-6 left-0 h-0.5 w-1/3 rounded-full bg-[var(--shell-brand)] shimmer-glow" />
+      <span className="absolute -top-6 left-0 h-0.5 w-1/3 rounded-full bg-primary shimmer-glow" />
 
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-heading text-xl font-semibold tracking-tight text-[var(--shell-foreground)]">
+          <h1 className="font-heading text-xl font-semibold tracking-tight text-foreground">
             General Settings
           </h1>
-          <p className="mt-0.5 text-sm text-[var(--shell-muted)]">
+          <p className="mt-0.5 text-sm text-muted-foreground">
             Manage your organisation and business settings
           </p>
         </div>
@@ -136,25 +136,25 @@ export default function GeneralSettings() {
       )}
 
       {/* Company Info */}
-      <Card className="border-[var(--shell-border)] bg-[var(--shell-surface)] hover:shadow-md transition-shadow duration-200">
+      <Card className="border-border hover:shadow-md transition-shadow duration-200">
         <CardHeader className="p-5 pb-3">
           <div className="flex items-center gap-2">
-            <Building2 className="h-4 w-4 text-[var(--shell-brand)]" />
-            <CardTitle className="text-sm font-semibold text-[var(--shell-foreground)]">Company Information</CardTitle>
+            <Building2 className="h-4 w-4 text-primary" />
+            <CardTitle className="text-sm font-semibold text-foreground">Company Information</CardTitle>
           </div>
-          <CardDescription className="text-xs text-[var(--shell-muted)]">Basic details about your business entity</CardDescription>
+          <CardDescription className="text-xs text-muted-foreground">Basic details about your business entity</CardDescription>
         </CardHeader>
         <CardContent className="p-5 pt-0 space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label className="text-xs text-[var(--shell-muted)] font-medium">Company Name</Label>
+              <Label className="text-xs text-muted-foreground font-medium">Company Name</Label>
               <Input 
                 value={company.company_name} 
                 onChange={(e) => setCompany({ ...company, company_name: e.target.value })} 
               />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs text-[var(--shell-muted)] font-medium">Legal Name</Label>
+              <Label className="text-xs text-muted-foreground font-medium">Legal Name</Label>
               <Input 
                 value={company.legal_name} 
                 onChange={(e) => setCompany({ ...company, legal_name: e.target.value })} 
@@ -163,14 +163,14 @@ export default function GeneralSettings() {
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label className="text-xs text-[var(--shell-muted)] font-medium">GSTIN</Label>
+              <Label className="text-xs text-muted-foreground font-medium">GSTIN</Label>
               <Input 
                 value={company.gst_number} 
                 onChange={(e) => setCompany({ ...company, gst_number: e.target.value })} 
               />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs text-[var(--shell-muted)] font-medium">PAN</Label>
+              <Label className="text-xs text-muted-foreground font-medium">PAN</Label>
               <Input 
                 value={company.pan} 
                 onChange={(e) => setCompany({ ...company, pan: e.target.value })} 
@@ -178,7 +178,7 @@ export default function GeneralSettings() {
             </div>
           </div>
           <div className="space-y-1.5">
-            <Label className="text-xs text-[var(--shell-muted)] font-medium">Registered Address</Label>
+            <Label className="text-xs text-muted-foreground font-medium">Registered Address</Label>
             <Input 
               value={company.address} 
               onChange={(e) => setCompany({ ...company, address: e.target.value })} 
@@ -186,7 +186,7 @@ export default function GeneralSettings() {
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label className="text-xs text-[var(--shell-muted)] font-medium">Email</Label>
+              <Label className="text-xs text-muted-foreground font-medium">Email</Label>
               <Input 
                 type="email" 
                 value={company.email} 
@@ -194,7 +194,7 @@ export default function GeneralSettings() {
               />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs text-[var(--shell-muted)] font-medium">Phone</Label>
+              <Label className="text-xs text-muted-foreground font-medium">Phone</Label>
               <Input 
                 value={company.phone} 
                 onChange={(e) => setCompany({ ...company, phone: e.target.value })} 
@@ -203,14 +203,14 @@ export default function GeneralSettings() {
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label className="text-xs text-[var(--shell-muted)] font-medium">Website</Label>
+              <Label className="text-xs text-muted-foreground font-medium">Website</Label>
               <Input 
                 value={company.website} 
                 onChange={(e) => setCompany({ ...company, website: e.target.value })} 
               />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs text-[var(--shell-muted)] font-medium">Business Type</Label>
+              <Label className="text-xs text-muted-foreground font-medium">Business Type</Label>
               <Select 
                 value={company.business_type ?? ""} 
                 onValueChange={(val) => setCompany({ ...company, business_type: val ?? "" })}
@@ -233,25 +233,25 @@ export default function GeneralSettings() {
       </Card>
 
       {/* Financial Settings */}
-      <Card className="border-[var(--shell-border)] bg-[var(--shell-surface)] hover:shadow-md transition-shadow duration-200">
+      <Card className="border-border hover:shadow-md transition-shadow duration-200">
         <CardHeader className="p-5 pb-3">
           <div className="flex items-center gap-2">
-            <DollarSign className="h-4 w-4 text-[var(--shell-brand)]" />
-            <CardTitle className="text-sm font-semibold text-[var(--shell-foreground)]">Financial Settings</CardTitle>
+            <DollarSign className="h-4 w-4 text-primary" />
+            <CardTitle className="text-sm font-semibold text-foreground">Financial Settings</CardTitle>
           </div>
-          <CardDescription className="text-xs text-[var(--shell-muted)]">Fiscal year, currency, and accounting preferences</CardDescription>
+          <CardDescription className="text-xs text-muted-foreground">Fiscal year, currency, and accounting preferences</CardDescription>
         </CardHeader>
         <CardContent className="p-5 pt-0 space-y-4">
           <div className="grid grid-cols-3 gap-4">
             <div className="space-y-1.5">
-              <Label className="text-xs text-[var(--shell-muted)] font-medium">Fiscal Year Start</Label>
+              <Label className="text-xs text-muted-foreground font-medium">Fiscal Year Start</Label>
               <Input 
                 value={financial.fiscal_year_start ?? ""} 
                 onChange={(e) => setFinancial({ ...financial, fiscal_year_start: e.target.value })} 
               />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs text-[var(--shell-muted)] font-medium">Base Currency</Label>
+              <Label className="text-xs text-muted-foreground font-medium">Base Currency</Label>
               <Select 
                 value={financial.base_currency ?? ""} 
                 onValueChange={(val) => setFinancial({ ...financial, base_currency: val ?? "" })}
@@ -268,7 +268,7 @@ export default function GeneralSettings() {
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs text-[var(--shell-muted)] font-medium">Books Closure Date</Label>
+              <Label className="text-xs text-muted-foreground font-medium">Books Closure Date</Label>
               <Input 
                 value={financial.books_closure_date ?? ""} 
                 onChange={(e) => setFinancial({ ...financial, books_closure_date: e.target.value })} 
@@ -277,14 +277,14 @@ export default function GeneralSettings() {
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label className="text-xs text-[var(--shell-muted)] font-medium">Invoice Prefix</Label>
+              <Label className="text-xs text-muted-foreground font-medium">Invoice Prefix</Label>
               <Input 
                 value={financial.invoice_prefix ?? ""} 
                 onChange={(e) => setFinancial({ ...financial, invoice_prefix: e.target.value })} 
               />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs text-[var(--shell-muted)] font-medium">Invoice Number Format</Label>
+              <Label className="text-xs text-muted-foreground font-medium">Invoice Number Format</Label>
               <Input 
                 value={financial.invoice_number_format ?? ""} 
                 onChange={(e) => setFinancial({ ...financial, invoice_number_format: e.target.value })} 
@@ -295,18 +295,18 @@ export default function GeneralSettings() {
       </Card>
 
       {/* Regional Settings */}
-      <Card className="border-[var(--shell-border)] bg-[var(--shell-surface)] hover:shadow-md transition-shadow duration-200">
+      <Card className="border-border hover:shadow-md transition-shadow duration-200">
         <CardHeader className="p-5 pb-3">
           <div className="flex items-center gap-2">
-            <Globe className="h-4 w-4 text-[var(--shell-brand)]" />
-            <CardTitle className="text-sm font-semibold text-[var(--shell-foreground)]">Regional Settings</CardTitle>
+            <Globe className="h-4 w-4 text-primary" />
+            <CardTitle className="text-sm font-semibold text-foreground">Regional Settings</CardTitle>
           </div>
-          <CardDescription className="text-xs text-[var(--shell-muted)]">Timezone, date format, and language preferences</CardDescription>
+          <CardDescription className="text-xs text-muted-foreground">Timezone, date format, and language preferences</CardDescription>
         </CardHeader>
         <CardContent className="p-5 pt-0 space-y-4">
           <div className="grid grid-cols-3 gap-4">
             <div className="space-y-1.5">
-              <Label className="text-xs text-[var(--shell-muted)] font-medium">Timezone</Label>
+              <Label className="text-xs text-muted-foreground font-medium">Timezone</Label>
               <Select 
                 value={regional.timezone ?? ""} 
                 onValueChange={(val) => setRegional({ ...regional, timezone: val ?? "" })}
@@ -323,7 +323,7 @@ export default function GeneralSettings() {
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs text-[var(--shell-muted)] font-medium">Date Format</Label>
+              <Label className="text-xs text-muted-foreground font-medium">Date Format</Label>
               <Select 
                 value={regional.date_format ?? ""} 
                 onValueChange={(val) => setRegional({ ...regional, date_format: val ?? "" })}
@@ -339,7 +339,7 @@ export default function GeneralSettings() {
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs text-[var(--shell-muted)] font-medium">Number Format</Label>
+              <Label className="text-xs text-muted-foreground font-medium">Number Format</Label>
               <Select 
                 value={regional.number_format ?? ""} 
                 onValueChange={(val) => setRegional({ ...regional, number_format: val ?? "" })}
@@ -358,11 +358,11 @@ export default function GeneralSettings() {
         </CardContent>
       </Card>
 
-      <div className="flex items-center justify-end gap-3 pt-2 border-t border-[var(--shell-border)]">
-        <Button variant="outline" size="sm" onClick={() => window.location.reload()} className="hover:bg-[var(--shell-surface-alt)]">Cancel</Button>
+      <div className="flex items-center justify-end gap-3 pt-2 border-t border-border">
+        <Button variant="outline" size="sm" onClick={() => window.location.reload()} className="hover:bg-secondary">Cancel</Button>
         <Button 
           size="sm" 
-          className="bg-[var(--shell-brand)] hover:bg-[var(--shell-brand)]/90 text-white shadow"
+          className="bg-primary hover:bg-primary/90 text-white shadow"
           onClick={handleSave} 
           disabled={saving}
         >

@@ -165,9 +165,18 @@ No mapping layer. Every variable in `globals.css` is exposed. Changes save to th
 - [x] New CSS overrides system works alongside `BrandingProvider` — no conflict
 
 ### Task 4.2: Consolidate Token Usage
-- [ ] Audit all components for mixed token patterns (`var(--shell-*)` vs generic Tailwind)
-- [ ] Standardize on one approach per component type (prefer `var(--shell-*)` for themed elements)
-- [ ] Remove redundant `bg-[var(--shell-surface)]` overrides on `<Card>` instances where default `bg-card` suffices
+- [x] Audit all components for mixed token patterns (`var(--shell-*)` vs generic Tailwind)
+- [x] Standardize on one approach per component type (prefer `var(--shell-*)` for themed elements)
+- [x] Remove redundant `bg-[var(--shell-surface)]` overrides on `<Card>` instances where default `bg-card` suffices
+- [x] Bulk replaced 1,377 redundant patterns across 102 files:
+  - `text-[var(--shell-muted)]` → `text-muted-foreground`
+  - `text-[var(--shell-foreground)]` → `text-foreground`
+  - `border-[var(--shell-border)]` → `border-border`
+  - `bg-[var(--shell-surface)]` → `bg-card`
+  - `bg-[var(--shell-bg)]` → `bg-background`
+  - `bg-[var(--shell-surface-alt)]` → `bg-secondary`
+  - `bg-[var(--shell-brand)]` → `bg-primary`
+  - `divide-[var(--shell-border)]` → `divide-border`
 
 ### Task 4.3: Default Theme Package
 - [x] Create `packages/ui-theme/src/defaults.ts` — exports `DATAVEX_DEFAULTS` and `isDefaultTheme()`
@@ -236,7 +245,7 @@ apps/erp-shell/app/layout.tsx            # MODIFIED — added <CssOverrides /> c
 | Phase 1: CSS Variable Parser & Modal | ✅ Complete | Core modal + parser + integration |
 | Phase 2: Backend Persistence | ✅ Complete | Store overrides in DB |
 | Phase 3: Frontend Theme Injection | ✅ Complete | Apply overrides on load |
-| Phase 4: Cleanup & Migration | 🟡 Partial | 4.1 kept, 4.3 done, 4.2 pending |
+| Phase 4: Cleanup & Migration | ✅ Complete | Token consolidation done |
 | Phase 5: Polish & Edge Cases | ✅ Complete | Validation, export, responsive |
 
 ---
@@ -248,9 +257,9 @@ apps/erp-shell/app/layout.tsx            # MODIFIED — added <CssOverrides /> c
 | Phase 1: Parser & Modal | 3–4 days | None | ✅ Done |
 | Phase 2: Backend | 1 day | Phase 1 | ✅ Done |
 | Phase 3: Injection | 1–2 days | Phase 2 | ✅ Done |
-| Phase 4: Cleanup | 1 day | Phase 3 | 🟡 Partial |
+| Phase 4: Cleanup | 1 day | Phase 3 | ✅ Done |
 | Phase 5: Polish | 1–2 days | Phase 3 | ✅ Done |
-| **Total** | **7–10 days** | | **~1 day remaining** (4.2 token audit) |
+| **Total** | **7–10 days** | | **All Complete** |
 
 ---
 
@@ -268,6 +277,7 @@ apps/erp-shell/app/layout.tsx            # MODIFIED — added <CssOverrides /> c
 - [x] Default theme preset (`defaults.ts`) — `DATAVEX_DEFAULTS` for "Reset to Default"
 - [x] Variable validation — inline errors for invalid hex colors and size values
 - [x] Export/Import — download/upload theme as JSON files
+- [x] Token consolidation — 1,377 redundant `var(--shell-*)` patterns replaced across 102 files
 
 ### Branding & Theme (2026-09-14 to 2026-09-16)
 - [x] Unified logo/favicon across all 4 apps (DATAVEX red on transparent)

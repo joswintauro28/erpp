@@ -221,7 +221,7 @@ export default function Invoices() {
         badge="Billing Console"
         actions={
           <>
-            <div className="flex items-center rounded-lg border border-[var(--shell-border)] bg-[var(--shell-surface)] p-0.5">
+            <div className="flex items-center rounded-lg border p-0.5">
               <Button
                 variant={viewMode === "table" ? "secondary" : "ghost"} size="sm" className="h-8 w-8 p-0"
                 onClick={() => handleViewMode("table")}
@@ -231,7 +231,7 @@ export default function Invoices() {
                 onClick={() => handleViewMode("kanban")}
               ><LayoutGrid className="h-3.5 w-3.5" /></Button>
             </div>
-            <Button size="sm" aria-label="Create Invoice" id="create-invoice-btn" onClick={() => setCreateOpen(true)} className="bg-[var(--shell-brand)] text-white hover:bg-[var(--shell-brand)]/90 gap-1.5 text-xs shadow-sm">
+            <Button size="sm" aria-label="Create Invoice" id="create-invoice-btn" onClick={() => setCreateOpen(true)} className="bg-primary text-white hover:bg-primary/90 gap-1.5 text-xs shadow-sm">
               <Plus className="h-3.5 w-3.5" /> Create Invoice
             </Button>
           </>
@@ -322,11 +322,11 @@ export default function Invoices() {
                             <div className="flex items-center justify-end gap-0.5">
                               {inv.status === "draft" && (
                                 <Button variant="ghost" size="sm" className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => router.push(`/billing/invoices/${inv.id}`)} aria-label="Edit invoice">
-                                  <Pencil className="h-3.5 w-3.5 text-[var(--shell-brand)]" />
+                                  <Pencil className="h-3.5 w-3.5 text-primary" />
                                 </Button>
                               )}
                               <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => router.push(`/billing/invoices/${inv.id}`)} aria-label="View invoice">
-                                <Eye className="h-3.5 w-3.5 text-[var(--shell-brand)]" />
+                                <Eye className="h-3.5 w-3.5 text-primary" />
                               </Button>
                             </div>
                           </TableCell>

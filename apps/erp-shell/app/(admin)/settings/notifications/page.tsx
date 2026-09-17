@@ -35,83 +35,83 @@ export default function Notifications() {
   return (
     <div className="relative space-y-6">
       {/* Brand Sweep Line */}
-      <span className="absolute -top-6 left-0 h-0.5 w-1/3 rounded-full bg-[var(--shell-brand)] shimmer-glow" />
+      <span className="absolute -top-6 left-0 h-0.5 w-1/3 rounded-full bg-primary shimmer-glow" />
 
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-heading text-xl font-semibold tracking-tight text-[var(--shell-foreground)]">
+          <h1 className="font-heading text-xl font-semibold tracking-tight text-foreground">
             Notifications
           </h1>
-          <p className="mt-0.5 text-sm text-[var(--shell-muted)]">
+          <p className="mt-0.5 text-sm text-muted-foreground">
             Configure email, SMS, and push notification preferences
           </p>
         </div>
       </div>
 
       <div className="grid grid-cols-3 gap-6">
-        <Card className="border-[var(--shell-border)] bg-[var(--shell-surface)] hover:shadow-md transition-shadow duration-200">
+        <Card className="border-border hover:shadow-md transition-shadow duration-200">
           <CardHeader className="p-5 pb-3">
             <div className="flex items-center gap-2">
-              <Mail className="h-4 w-4 text-[var(--shell-brand)]" />
-              <CardTitle className="text-sm font-semibold text-[var(--shell-foreground)]">Email Notifications</CardTitle>
+              <Mail className="h-4 w-4 text-primary" />
+              <CardTitle className="text-sm font-semibold text-foreground">Email Notifications</CardTitle>
             </div>
-            <CardDescription className="text-xs text-[var(--shell-muted)]">Configure automated email alerts</CardDescription>
+            <CardDescription className="text-xs text-muted-foreground">Configure automated email alerts</CardDescription>
           </CardHeader>
           <CardContent className="p-5 pt-0 space-y-2">
             {byChannel("email").map((c) => (
-              <label key={c.id} className="flex items-center justify-between py-2 border-b border-[var(--shell-border)]/20 last:border-0 cursor-pointer text-[var(--shell-foreground)] hover:text-[var(--shell-brand)] transition-colors">
+              <label key={c.id} className="flex items-center justify-between py-2 border-b border-border/20 last:border-0 cursor-pointer text-foreground hover:text-primary transition-colors">
                 <span className="text-sm font-medium">{c.label}</span>
                 <input
                   type="checkbox"
                   checked={c.enabled}
                   onChange={() => toggle(c.id)}
-                  className="h-4 w-4 rounded border-[var(--shell-border)] accent-[var(--shell-brand)] cursor-pointer"
+                  className="h-4 w-4 rounded border-border accent-[var(--shell-brand)] cursor-pointer"
                 />
               </label>
             ))}
           </CardContent>
         </Card>
 
-        <Card className="border-[var(--shell-border)] bg-[var(--shell-surface)] hover:shadow-md transition-shadow duration-200">
+        <Card className="border-border hover:shadow-md transition-shadow duration-200">
           <CardHeader className="p-5 pb-3">
             <div className="flex items-center gap-2">
-              <Smartphone className="h-4 w-4 text-[var(--shell-brand)]" />
-              <CardTitle className="text-sm font-semibold text-[var(--shell-foreground)]">SMS Notifications</CardTitle>
+              <Smartphone className="h-4 w-4 text-primary" />
+              <CardTitle className="text-sm font-semibold text-foreground">SMS Notifications</CardTitle>
             </div>
-            <CardDescription className="text-xs text-[var(--shell-muted)]">Configure SMS alerts for critical events</CardDescription>
+            <CardDescription className="text-xs text-muted-foreground">Configure SMS alerts for critical events</CardDescription>
           </CardHeader>
           <CardContent className="p-5 pt-0 space-y-2">
             {byChannel("sms").map((c) => (
-              <label key={c.id} className="flex items-center justify-between py-2 border-b border-[var(--shell-border)]/20 last:border-0 cursor-pointer text-[var(--shell-foreground)] hover:text-[var(--shell-brand)] transition-colors">
+              <label key={c.id} className="flex items-center justify-between py-2 border-b border-border/20 last:border-0 cursor-pointer text-foreground hover:text-primary transition-colors">
                 <span className="text-sm font-medium">{c.label}</span>
                 <input
                   type="checkbox"
                   checked={c.enabled}
                   onChange={() => toggle(c.id)}
-                  className="h-4 w-4 rounded border-[var(--shell-border)] accent-[var(--shell-brand)] cursor-pointer"
+                  className="h-4 w-4 rounded border-border accent-[var(--shell-brand)] cursor-pointer"
                 />
               </label>
             ))}
           </CardContent>
         </Card>
 
-        <Card className="border-[var(--shell-border)] bg-[var(--shell-surface)] hover:shadow-md transition-shadow duration-200">
+        <Card className="border-border hover:shadow-md transition-shadow duration-200">
           <CardHeader className="p-5 pb-3">
             <div className="flex items-center gap-2">
-              <Bell className="h-4 w-4 text-[var(--shell-brand)]" />
-              <CardTitle className="text-sm font-semibold text-[var(--shell-foreground)]">Push Notifications</CardTitle>
+              <Bell className="h-4 w-4 text-primary" />
+              <CardTitle className="text-sm font-semibold text-foreground">Push Notifications</CardTitle>
             </div>
-            <CardDescription className="text-xs text-[var(--shell-muted)]">In-app and browser push alerts</CardDescription>
+            <CardDescription className="text-xs text-muted-foreground">In-app and browser push alerts</CardDescription>
           </CardHeader>
           <CardContent className="p-5 pt-0 space-y-2">
             {byChannel("push").map((c) => (
-              <label key={c.id} className="flex items-center justify-between py-2 border-b border-[var(--shell-border)]/20 last:border-0 cursor-pointer text-[var(--shell-foreground)] hover:text-[var(--shell-brand)] transition-colors">
+              <label key={c.id} className="flex items-center justify-between py-2 border-b border-border/20 last:border-0 cursor-pointer text-foreground hover:text-primary transition-colors">
                 <span className="text-sm font-medium">{c.label}</span>
                 <input
                   type="checkbox"
                   checked={c.enabled}
                   onChange={() => toggle(c.id)}
-                  className="h-4 w-4 rounded border-[var(--shell-border)] accent-[var(--shell-brand)] cursor-pointer"
+                  className="h-4 w-4 rounded border-border accent-[var(--shell-brand)] cursor-pointer"
                 />
               </label>
             ))}
@@ -119,14 +119,14 @@ export default function Notifications() {
         </Card>
       </div>
 
-      <Card className="border-[var(--shell-border)] bg-[var(--shell-surface)] hover:shadow-md transition-shadow duration-200">
+      <Card className="border-border hover:shadow-md transition-shadow duration-200">
         <CardHeader className="p-5 pb-3">
-          <CardTitle className="text-sm font-semibold text-[var(--shell-foreground)]">Alert Thresholds</CardTitle>
-          <CardDescription className="text-xs text-[var(--shell-muted)]">Configure when notifications are triggered</CardDescription>
+          <CardTitle className="text-sm font-semibold text-foreground">Alert Thresholds</CardTitle>
+          <CardDescription className="text-xs text-muted-foreground">Configure when notifications are triggered</CardDescription>
         </CardHeader>
         <CardContent className="p-5 pt-0 grid grid-cols-3 gap-6">
           <div className="space-y-2">
-            <Label className="text-xs text-[var(--shell-muted)] font-medium">Overdue Reminder (days)</Label>
+            <Label className="text-xs text-muted-foreground font-medium">Overdue Reminder (days)</Label>
             <div className="flex items-center gap-2">
               {[1, 3, 7, 14].map((d) => (
                 <Badge 
@@ -134,8 +134,8 @@ export default function Notifications() {
                   variant={d === 7 ? "default" : "outline"} 
                   className={`cursor-pointer text-xs font-semibold px-2.5 py-1 ${
                     d === 7 
-                      ? "bg-[var(--shell-brand)]/10 text-[var(--shell-brand)] border-[var(--shell-brand)]/20 hover:bg-[var(--shell-brand)]/20" 
-                      : "border-[var(--shell-border)] hover:bg-[var(--shell-surface-alt)]"
+                      ? "bg-primary/10 text-primary border-[var(--shell-brand)]/20 hover:bg-primary/20" 
+                      : "border-border hover:bg-secondary"
                   }`}
                 >
                   {d}d
@@ -144,7 +144,7 @@ export default function Notifications() {
             </div>
           </div>
           <div className="space-y-2">
-            <Label className="text-xs text-[var(--shell-muted)] font-medium">Low Stock Threshold</Label>
+            <Label className="text-xs text-muted-foreground font-medium">Low Stock Threshold</Label>
             <div className="flex items-center gap-2">
               {["10%", "20%", "30%", "50%"].map((p) => (
                 <Badge 
@@ -152,8 +152,8 @@ export default function Notifications() {
                   variant={p === "20%" ? "default" : "outline"} 
                   className={`cursor-pointer text-xs font-semibold px-2.5 py-1 ${
                     p === "20%" 
-                      ? "bg-[var(--shell-brand)]/10 text-[var(--shell-brand)] border-[var(--shell-brand)]/20 hover:bg-[var(--shell-brand)]/20" 
-                      : "border-[var(--shell-border)] hover:bg-[var(--shell-surface-alt)]"
+                      ? "bg-primary/10 text-primary border-[var(--shell-brand)]/20 hover:bg-primary/20" 
+                      : "border-border hover:bg-secondary"
                   }`}
                 >
                   {p}
@@ -162,7 +162,7 @@ export default function Notifications() {
             </div>
           </div>
           <div className="space-y-2">
-            <Label className="text-xs text-[var(--shell-muted)] font-medium">Quote Expiry Warning</Label>
+            <Label className="text-xs text-muted-foreground font-medium">Quote Expiry Warning</Label>
             <div className="flex items-center gap-2">
               {["1d", "3d", "7d"].map((d) => (
                 <Badge 
@@ -170,8 +170,8 @@ export default function Notifications() {
                   variant={d === "3d" ? "default" : "outline"} 
                   className={`cursor-pointer text-xs font-semibold px-2.5 py-1 ${
                     d === "3d" 
-                      ? "bg-[var(--shell-brand)]/10 text-[var(--shell-brand)] border-[var(--shell-brand)]/20 hover:bg-[var(--shell-brand)]/20" 
-                      : "border-[var(--shell-border)] hover:bg-[var(--shell-surface-alt)]"
+                      ? "bg-primary/10 text-primary border-[var(--shell-brand)]/20 hover:bg-primary/20" 
+                      : "border-border hover:bg-secondary"
                   }`}
                 >
                   {d}
@@ -182,9 +182,9 @@ export default function Notifications() {
         </CardContent>
       </Card>
 
-      <div className="flex items-center justify-end gap-3 pt-2 border-t border-[var(--shell-border)]">
-        <Button variant="outline" size="sm" className="hover:bg-[var(--shell-surface-alt)]">Cancel</Button>
-        <Button size="sm" className="bg-[var(--shell-brand)] hover:bg-[var(--shell-brand)]/90 text-white shadow">
+      <div className="flex items-center justify-end gap-3 pt-2 border-t border-border">
+        <Button variant="outline" size="sm" className="hover:bg-secondary">Cancel</Button>
+        <Button size="sm" className="bg-primary hover:bg-primary/90 text-white shadow">
           <Save className="mr-1.5 h-3.5 w-3.5" />
           Save Changes
         </Button>

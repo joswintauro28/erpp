@@ -138,8 +138,8 @@ export default function LeadDiscoveryPage() {
     <div className="space-y-10 lg:space-y-12">
       <div>
         <div className="mb-5 flex items-center gap-2">
-          <h2 className="font-heading text-xs font-light uppercase tracking-[0.12em] text-[var(--shell-muted)]">Lead Discovery</h2>
-          <div className="h-px flex-1 bg-[var(--shell-border)]" />
+          <h2 className="font-heading text-xs font-light uppercase tracking-[0.12em] text-muted-foreground">Lead Discovery</h2>
+          <div className="h-px flex-1 bg-border" />
         </div>
 
         <SearchCard
@@ -163,8 +163,8 @@ export default function LeadDiscoveryPage() {
 
       <div>
         <div className="mb-5 flex items-center gap-2">
-          <h2 className="font-heading text-xs font-light uppercase tracking-[0.12em] text-[var(--shell-muted)]">Results</h2>
-          <div className="h-px flex-1 bg-[var(--shell-border)]" />
+          <h2 className="font-heading text-xs font-light uppercase tracking-[0.12em] text-muted-foreground">Results</h2>
+          <div className="h-px flex-1 bg-border" />
         </div>
 
         <div className="flex items-center justify-between mb-4">
@@ -180,26 +180,26 @@ export default function LeadDiscoveryPage() {
           </div>
         </div>
 
-        <div className="flex gap-6 border-b border-[var(--shell-border)] mb-4">
-          <button onClick={() => setActiveTab("search")} className={cn("pb-2 text-sm font-semibold border-b-2 transition-colors cursor-pointer", activeTab === "search" ? "border-[var(--shell-brand)] text-[var(--shell-brand)]" : "border-transparent text-[var(--shell-muted)]")}>
+        <div className="flex gap-6 border-b border-border mb-4">
+          <button onClick={() => setActiveTab("search")} className={cn("pb-2 text-sm font-semibold border-b-2 transition-colors cursor-pointer", activeTab === "search" ? "border-[var(--shell-brand)] text-primary" : "border-transparent text-muted-foreground")}>
             Search Results {results?.companies ? <Badge variant="neutral" className="ml-1.5">{results.companies.length}</Badge> : null}
           </button>
-          <button onClick={() => setActiveTab("pinned")} className={cn("pb-2 text-sm font-semibold border-b-2 transition-colors cursor-pointer", activeTab === "pinned" ? "border-[var(--shell-brand)] text-[var(--shell-brand)]" : "border-transparent text-[var(--shell-muted)]")}>
+          <button onClick={() => setActiveTab("pinned")} className={cn("pb-2 text-sm font-semibold border-b-2 transition-colors cursor-pointer", activeTab === "pinned" ? "border-[var(--shell-brand)] text-primary" : "border-transparent text-muted-foreground")}>
             Pinned Pages {pinnedLeads.length > 0 ? <Badge variant="neutral" className="ml-1.5">{pinnedLeads.length}</Badge> : null}
           </button>
         </div>
 
         {activeTab === "search" && !results && !loading && (
-          <Card className="hover:shadow-engineered transition-shadow duration-200 border-[var(--shell-border)] bg-[var(--shell-surface)]">
+          <Card className="hover:shadow-engineered transition-shadow duration-200">
             <CardContent className="p-10 text-center">
-              <p className="text-sm text-[var(--shell-muted)]">Enter search criteria and click Generate to discover leads.</p>
+              <p className="text-sm text-muted-foreground">Enter search criteria and click Generate to discover leads.</p>
             </CardContent>
           </Card>
         )}
 
         {displayCompanies.length > 0 && (
           <div className="relative mb-3">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--shell-muted)]" />
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <Input placeholder="Search by company name or industry..." value={filterText} onChange={e => setFilterText(e.target.value)} className="pl-9" />
           </div>
         )}
@@ -219,17 +219,17 @@ export default function LeadDiscoveryPage() {
         ))}
 
         {activeTab === "pinned" && pinnedLeads.length === 0 && (
-          <Card className="hover:shadow-engineered transition-shadow duration-200 border-[var(--shell-border)] bg-[var(--shell-surface)]">
+          <Card className="hover:shadow-engineered transition-shadow duration-200">
             <CardContent className="p-10 text-center">
-              <p className="text-sm text-[var(--shell-muted)]">No pinned pages yet. Pin a result from the search tab to save it here.</p>
+              <p className="text-sm text-muted-foreground">No pinned pages yet. Pin a result from the search tab to save it here.</p>
             </CardContent>
           </Card>
         )}
       </div>
 
       {selectedLeads.length > 0 && (
-        <div className="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 bg-[var(--shell-surface)] shadow-engineered rounded-xl border border-[var(--shell-border)] p-4 flex items-center gap-5">
-          <span className="text-sm font-medium text-[var(--shell-foreground)]">{selectedLeads.length} leads selected</span>
+        <div className="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 shadow-engineered rounded-xl border border-border p-4 flex items-center gap-5">
+          <span className="text-sm font-medium text-foreground">{selectedLeads.length} leads selected</span>
           <Button onClick={handleImport} disabled={importing}>
             {importing ? "Importing..." : "Import Selected to Leads"}
           </Button>

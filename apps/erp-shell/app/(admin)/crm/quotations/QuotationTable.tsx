@@ -27,7 +27,7 @@ export default function QuotationTable({ quotations, onView, onEdit, onDelete, o
       render: (row) => {
         const approvalPending = row.approval_status === "Pending Approval";
         return (
-          <span className="font-semibold text-[var(--shell-brand)] hover:underline cursor-pointer flex items-center gap-1.5">
+          <span className="font-semibold text-primary hover:underline cursor-pointer flex items-center gap-1.5">
             {row.quote_no}
             {approvalPending && (
               <span className="inline-flex items-center gap-0.5 rounded-full bg-[var(--shell-warning-surface)] px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-[var(--shell-warning)] border border-[var(--shell-warning)]/30">
@@ -49,7 +49,7 @@ export default function QuotationTable({ quotations, onView, onEdit, onDelete, o
             {Number(row.discount_pct).toFixed(1)}%
           </span>
         ) : (
-          <span className="text-[var(--shell-muted)]">—</span>
+          <span className="text-muted-foreground">—</span>
         )
       ),
     },
@@ -65,7 +65,7 @@ export default function QuotationTable({ quotations, onView, onEdit, onDelete, o
         const canConvert = row.status === "Accepted";
 
         return (
-          <div className="flex gap-2 text-[var(--shell-muted)] items-center">
+          <div className="flex gap-2 text-muted-foreground items-center">
             {approvalPending && onApprovalDecision && (
               <>
                 <Button
@@ -89,7 +89,7 @@ export default function QuotationTable({ quotations, onView, onEdit, onDelete, o
             <Button
               className={cn(
                 "hover:text-[var(--shell-success)] cursor-pointer",
-                !canConvert && "opacity-40 hover:text-[var(--shell-muted)]"
+                !canConvert && "opacity-40 hover:text-muted-foreground"
               )}
               title={
                 canConvert
@@ -102,7 +102,7 @@ export default function QuotationTable({ quotations, onView, onEdit, onDelete, o
             >
               <ShoppingCart size={14} />
             </Button>
-            <Button variant="ghost" size="icon-sm" className="cursor-pointer" onClick={(e) => { e.stopPropagation(); onEdit(row); }} title="Edit"><Edit2 size={14} className="text-[var(--shell-brand)]" /></Button>
+            <Button variant="ghost" size="icon-sm" className="cursor-pointer" onClick={(e) => { e.stopPropagation(); onEdit(row); }} title="Edit"><Edit2 size={14} className="text-primary" /></Button>
             <Button variant="ghost" size="icon-sm" className="cursor-pointer" onClick={(e) => { e.stopPropagation(); onDelete(row); }} title="Delete"><Trash2 size={14} className="text-[var(--shell-danger)]" /></Button>
           </div>
         );

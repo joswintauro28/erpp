@@ -114,14 +114,14 @@ export default function WarehousesPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-4">
         <div>
           <h1 className="font-heading text-2xl font-semibold tracking-tight text-[--shell-foreground] flex items-center gap-2">
-            <Building2 className="h-6 w-6 text-[var(--shell-brand)]" />
+            <Building2 className="h-6 w-6 text-primary" />
             Warehouse Locations & Distribution Hubs
           </h1>
           <p className="mt-1 text-sm text-[--shell-muted]">
             Manage physical warehouse facilities, storage codes, and regional distribution centers.
           </p>
         </div>
-        <Button onClick={() => setIsAddOpen(true)} className="bg-[var(--shell-brand)] text-white hover:bg-[var(--shell-action)]">
+        <Button onClick={() => setIsAddOpen(true)} className="bg-primary text-white hover:bg-[var(--shell-action)]">
           <Plus className="h-4 w-4 mr-2" /> Add New Warehouse
         </Button>
       </div>
@@ -165,7 +165,7 @@ export default function WarehousesPage() {
                 {filtered.map((w) => (
                   <TableRow key={w.id}>
                     <TableCell className="font-semibold text-foreground">{w.name}</TableCell>
-                    <TableCell className="font-mono text-xs font-bold text-[var(--shell-brand)]">{w.code}</TableCell>
+                    <TableCell className="font-mono text-xs font-bold text-primary">{w.code}</TableCell>
                     <TableCell className="text-xs text-muted-foreground max-w-[200px] truncate">{w.address || "Industrial Layout"}</TableCell>
                     <TableCell className="text-xs text-muted-foreground">
                       {[w.city, w.state].filter(Boolean).join(", ") || "India"}
@@ -187,7 +187,7 @@ export default function WarehousesPage() {
                             setState(w.state || "Karnataka");
                           }}
                         >
-                          <Edit3 className="h-3.5 w-3.5 text-muted-foreground hover:text-[var(--shell-brand)]" />
+                          <Edit3 className="h-3.5 w-3.5 text-muted-foreground hover:text-primary" />
                         </Button>
                         <Button
                           variant="ghost"
@@ -271,7 +271,7 @@ export default function WarehousesPage() {
             <Button variant="outline" size="sm" onClick={() => setIsAddOpen(false)}>
               Cancel
             </Button>
-            <Button size="sm" onClick={handleCreateWarehouse} className="bg-[var(--shell-brand)] text-white">
+            <Button size="sm" onClick={handleCreateWarehouse} className="bg-primary text-white">
               Save Warehouse
             </Button>
           </div>
@@ -339,7 +339,7 @@ export default function WarehousesPage() {
               <Button variant="outline" size="sm" onClick={() => setEditingWarehouse(null)}>
                 Cancel
               </Button>
-              <Button size="sm" onClick={handleUpdateWarehouse} className="bg-[var(--shell-brand)] text-white">
+              <Button size="sm" onClick={handleUpdateWarehouse} className="bg-primary text-white">
                 Save Changes
               </Button>
             </div>

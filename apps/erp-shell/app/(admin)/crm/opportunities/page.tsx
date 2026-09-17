@@ -66,7 +66,7 @@ export default function OpportunitiesPage() {
             <Button variant="outline" size="sm" onClick={() => exportToCSV(items, "opportunities")} className="gap-1.5 text-xs">
               <Download size={14} /> Export
             </Button>
-            <Button size="sm" onClick={() => setIsModalOpen(true)} className="bg-[var(--shell-brand)] text-white hover:bg-[var(--shell-brand)]/90 gap-1.5 text-xs shadow-sm">
+            <Button size="sm" onClick={() => setIsModalOpen(true)} className="bg-primary text-white hover:bg-primary/90 gap-1.5 text-xs shadow-sm">
               <Plus size={14} /> New Opportunity
             </Button>
           </>
@@ -86,21 +86,21 @@ export default function OpportunitiesPage() {
       <section>
         <SectionHeading label="Pipeline Records" />
 
-        <Card className="hover:shadow-engineered transition-shadow duration-200 border-[var(--shell-border)] bg-[var(--shell-surface)]">
-          <div className="flex items-center justify-between border-b border-[var(--shell-border)] p-4">
+        <Card className="hover:shadow-engineered transition-shadow duration-200">
+          <div className="flex items-center justify-between border-b border-border p-4">
             <div className="relative flex-1 max-w-xs">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--shell-muted)]" />
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input placeholder="Search opportunities..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 h-9" />
             </div>
             <div className="flex items-center gap-3">
-              <Filter className="h-4 w-4 text-[var(--shell-muted)]" />
-              <div className="flex items-center rounded-lg border border-[var(--shell-border)] bg-[var(--shell-surface)] p-0.5">
+              <Filter className="h-4 w-4 text-muted-foreground" />
+              <div className="flex items-center rounded-lg border p-0.5">
                 <button
                   type="button"
                   onClick={() => setView("kanban")}
                   className={cn(
                     "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition-all cursor-pointer",
-                    view === "kanban" ? "bg-[var(--shell-brand)] text-white shadow-sm" : "text-[var(--shell-muted)] hover:text-[var(--shell-foreground)]"
+                    view === "kanban" ? "bg-primary text-white shadow-sm" : "text-muted-foreground hover:text-foreground"
                   )}
                 >
                   <KanbanSquare className="h-3.5 w-3.5" /> Pipeline
@@ -110,7 +110,7 @@ export default function OpportunitiesPage() {
                   onClick={() => setView("table")}
                   className={cn(
                     "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition-all cursor-pointer",
-                    view === "table" ? "bg-[var(--shell-brand)] text-white shadow-sm" : "text-[var(--shell-muted)] hover:text-[var(--shell-foreground)]"
+                    view === "table" ? "bg-primary text-white shadow-sm" : "text-muted-foreground hover:text-foreground"
                   )}
                 >
                   <Table2 className="h-3.5 w-3.5" /> Table

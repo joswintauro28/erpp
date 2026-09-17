@@ -284,7 +284,7 @@ export default function SerialRegistryPage() {
             Every serial tag mapped to its model/SKU, tracked across its lifecycle from receipt to retirement.
           </p>
         </div>
-        <Button size="sm" onClick={openAdd} className="bg-[var(--shell-brand)] text-white hover:bg-[var(--shell-action)]">
+        <Button size="sm" onClick={openAdd} className="bg-primary text-white hover:bg-[var(--shell-action)]">
           <Plus className="h-4 w-4 mr-2" /> Register Unit
         </Button>
       </div>
@@ -300,7 +300,7 @@ export default function SerialRegistryPage() {
         <CardHeader>
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
             <CardTitle className="flex items-center gap-2 text-base">
-              <ScanBarcode className="h-4 w-4 text-[var(--shell-brand)]" />
+              <ScanBarcode className="h-4 w-4 text-primary" />
               Serial Tag Registry
             </CardTitle>
             <div className="flex flex-col sm:flex-row sm:items-center gap-2">
@@ -325,7 +325,7 @@ export default function SerialRegistryPage() {
               onClick={() => setStatusFilter("ALL")}
               className={`px-2.5 py-1 text-[11px] font-semibold rounded-md transition-colors border ${
                 statusFilter === "ALL"
-                  ? "bg-[var(--shell-brand)] text-white border-[var(--shell-brand)]"
+                  ? "bg-primary text-white border-[var(--shell-brand)]"
                   : "border-border text-[--shell-muted] hover:bg-muted"
               }`}
             >
@@ -340,7 +340,7 @@ export default function SerialRegistryPage() {
                   onClick={() => setStatusFilter(active ? "ALL" : st)}
                   className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-semibold rounded-md transition-colors border ${
                     active
-                      ? "bg-[var(--shell-brand)] text-white border-[var(--shell-brand)]"
+                      ? "bg-primary text-white border-[var(--shell-brand)]"
                       : "border-border text-[--shell-muted] hover:bg-muted"
                   }`}
                 >
@@ -391,7 +391,7 @@ export default function SerialRegistryPage() {
                       <TableRow key={s.id}>
                         <TableCell className="font-mono text-xs font-semibold text-foreground">{s.serial_number}</TableCell>
                         <TableCell>
-                          <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[var(--shell-brand)]">
+                          <span className="inline-flex items-center gap-1.5 text-xs font-bold text-primary">
                             <Tag className="h-3 w-3" />
                             {s.sku || "—"}
                           </span>
@@ -427,7 +427,7 @@ export default function SerialRegistryPage() {
                         <TableCell className="text-right">
                           <div className="flex items-center justify-end gap-1">
                             <Button variant="ghost" size="xs" onClick={() => openEdit(s)}>
-                              <Edit3 className="h-3.5 w-3.5 text-[var(--shell-brand)]" />
+                              <Edit3 className="h-3.5 w-3.5 text-primary" />
                             </Button>
                             <Button variant="ghost" size="xs" onClick={() => setSerialToDelete(s)}>
                               <Trash2 className="h-3.5 w-3.5 text-[var(--shell-danger)]" />
@@ -449,7 +449,7 @@ export default function SerialRegistryPage() {
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <ScanBarcode className="h-5 w-5 text-[var(--shell-brand)]" /> Register Serial Unit
+              <ScanBarcode className="h-5 w-5 text-primary" /> Register Serial Unit
             </DialogTitle>
             <DialogDescription>
               Register a unique hardware unit and bind it to its model/SKU. The SKU is mapped automatically from the selected product.
@@ -546,7 +546,7 @@ export default function SerialRegistryPage() {
           </div>
           <div className="flex justify-end gap-2 mt-4">
             <Button variant="outline" size="sm" onClick={() => setIsAddOpen(false)}>Cancel</Button>
-            <Button size="sm" onClick={handleCreate} className="bg-[var(--shell-brand)] text-white">Register Unit</Button>
+            <Button size="sm" onClick={handleCreate} className="bg-primary text-white">Register Unit</Button>
           </div>
         </DialogContent>
       </Dialog>
@@ -646,7 +646,7 @@ export default function SerialRegistryPage() {
             </div>
             <div className="flex justify-end gap-2 mt-4">
               <Button variant="outline" size="sm" onClick={() => setEditingSerial(null)}>Cancel</Button>
-              <Button size="sm" onClick={handleUpdate} className="bg-[var(--shell-brand)] text-white">Save Changes</Button>
+              <Button size="sm" onClick={handleUpdate} className="bg-primary text-white">Save Changes</Button>
             </div>
           </DialogContent>
         )}

@@ -127,38 +127,38 @@ export default function QuotationCreateModal({ isOpen, onClose, onSuccess, editR
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Account</Label>
+              <Label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Account</Label>
               <Input name="account" value={formData.account} onChange={handleChange} required />
             </div>
             <div>
-              <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Contact Name</Label>
+              <Label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Contact Name</Label>
               <Input name="contact_name" value={formData.contact_name} onChange={handleChange} />
             </div>
           </div>
 
           <div className="grid grid-cols-3 gap-4">
             <div>
-              <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Value (INR)</Label>
+              <Label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Value (INR)</Label>
               <Input type="number" name="value" value={formData.value} onChange={handleChange} />
             </div>
             <div>
-              <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Probability</Label>
+              <Label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Probability</Label>
               <Input name="probability" value={formData.probability} onChange={handleChange} placeholder="e.g. 60%" />
             </div>
             <div>
-              <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Owner</Label>
+              <Label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Owner</Label>
               <Input name="owner" value={formData.owner} onChange={handleChange} required />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Stage</Label>
+              <Label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Stage</Label>
               <select
                 name="stage"
                 value={formData.stage}
                 onChange={handleChange}
-                className="h-9 w-full rounded-md border border-[var(--shell-border)] bg-[var(--shell-bg)] px-3 text-xs text-[var(--shell-foreground)]"
+                className="h-9 w-full rounded-md border border-border bg-background px-3 text-xs text-foreground"
               >
                 <option value="Discovery">Discovery</option>
                 <option value="Needs Analysis">Needs Analysis</option>
@@ -169,12 +169,12 @@ export default function QuotationCreateModal({ isOpen, onClose, onSuccess, editR
               </select>
             </div>
             <div>
-              <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Status</Label>
+              <Label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Status</Label>
               <select
                 name="status"
                 value={formData.status}
                 onChange={handleChange}
-                className="h-9 w-full rounded-md border border-[var(--shell-border)] bg-[var(--shell-bg)] px-3 text-xs text-[var(--shell-foreground)]"
+                className="h-9 w-full rounded-md border border-border bg-background px-3 text-xs text-foreground"
               >
                 <option value="Draft">Draft</option>
                 <option value="Sent">Sent</option>
@@ -187,17 +187,17 @@ export default function QuotationCreateModal({ isOpen, onClose, onSuccess, editR
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Valid Until</Label>
+              <Label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Valid Until</Label>
               <Input type="date" name="valid_until" value={formData.valid_until} onChange={handleChange} />
             </div>
             <div>
-              <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Email</Label>
+              <Label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Email</Label>
               <Input type="email" name="email" value={formData.email} onChange={handleChange} />
             </div>
           </div>
 
           <div>
-            <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Notes</Label>
+            <Label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Notes</Label>
             <Input name="notes" value={formData.notes} onChange={handleChange} placeholder="Quotation notes..." />
           </div>
 

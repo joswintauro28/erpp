@@ -46,8 +46,8 @@ function StepIndicator({
                 className={cn(
                   "flex h-7 w-7 items-center justify-center rounded-full text-xs font-semibold transition-all duration-300",
                   state === "done" && "bg-[var(--shell-accent)] text-[var(--shell-accent-foreground)] shadow-sm shadow-[var(--shell-accent)]/20",
-                  state === "active" && "bg-[var(--shell-brand)] text-white ring-4 ring-[var(--shell-accent)]/30 shadow-sm shadow-[var(--shell-brand)]/20",
-                  state === "pending" && "border border-[var(--shell-border)] bg-[var(--shell-surface-alt)]/50 text-[var(--shell-muted)]/50",
+                  state === "active" && "bg-primary text-white ring-4 ring-[var(--shell-accent)]/30 shadow-sm shadow-[var(--shell-brand)]/20",
+                  state === "pending" && "border border-border bg-secondary/50 text-muted-foreground/50",
                 )}
               >
                 {state === "done" ? <Check className="h-3.5 w-3.5 stroke-[3]" /> : i + 1}
@@ -55,9 +55,9 @@ function StepIndicator({
               <span
                 className={cn(
                   "hidden text-[10px] font-medium leading-tight text-center max-w-16 sm:block transition-colors duration-300",
-                  state === "active" && "text-[var(--shell-foreground)] font-semibold tracking-wide",
+                  state === "active" && "text-foreground font-semibold tracking-wide",
                   state === "done" && "text-[var(--shell-accent-text)]",
-                  state === "pending" && "text-[var(--shell-muted)]/50",
+                  state === "pending" && "text-muted-foreground/50",
                 )}
               >
                 {step.title}
@@ -67,7 +67,7 @@ function StepIndicator({
               <div
                 className={cn(
                   "mx-2 h-0.5 flex-1 rounded-full transition-colors duration-300",
-                  i < currentStep ? "bg-[var(--shell-accent)]" : "bg-[var(--shell-border)]",
+                  i < currentStep ? "bg-[var(--shell-accent)]" : "bg-border",
                 )}
               />
             )}
@@ -113,19 +113,19 @@ export function MultiStepDialog({
         className="sm:max-w-lg px-0 gap-0 overflow-hidden"
         aria-describedby={steps[currentStep]?.description ? descId : undefined}
       >
-        <div className="border-b border-[var(--shell-border)] bg-[var(--shell-surface)] px-8 py-6">
+        <div className="border-b px-8 py-6">
           <DialogHeader className="gap-3">
             <div className="flex items-center justify-between">
-              <DialogTitle className="text-base font-semibold text-[var(--shell-foreground)]">
+              <DialogTitle className="text-base font-semibold text-foreground">
                 {title}
               </DialogTitle>
-              <span className="text-[11px] font-medium text-[var(--shell-muted)] tabular-nums leading-none">
+              <span className="text-[11px] font-medium text-muted-foreground tabular-nums leading-none">
                 Step {currentStep + 1} / {steps.length}
               </span>
             </div>
             <StepIndicator steps={steps} currentStep={currentStep} />
             {steps[currentStep]?.description && (
-              <DialogDescription id={descId} className="!mt-1 text-xs leading-relaxed text-[var(--shell-muted)]">
+              <DialogDescription id={descId} className="!mt-1 text-xs leading-relaxed text-muted-foreground">
                 {steps[currentStep].description}
               </DialogDescription>
             )}
@@ -142,7 +142,7 @@ export function MultiStepDialog({
             </div>
           </div>
 
-          <DialogFooter className="px-8 py-5 border-t border-[var(--shell-border)] bg-[var(--shell-surface-alt)]/50">
+          <DialogFooter className="px-8 py-5 border-t border-border bg-secondary/50">
             <div className="flex w-full items-center justify-between">
               <div>
                 {!isFirstStep && (
@@ -151,7 +151,7 @@ export function MultiStepDialog({
                     variant="ghost"
                     size="sm"
                     onClick={handleBack}
-                    className="text-[var(--shell-muted)] hover:text-[var(--shell-foreground)]"
+                    className="text-muted-foreground hover:text-foreground"
                   >
                     <ChevronLeft className="h-3.5 w-3.5 mr-1" />
                     Back
@@ -164,7 +164,7 @@ export function MultiStepDialog({
                   variant="ghost"
                   size="sm"
                   onClick={() => onOpenChange(false)}
-                  className="text-[var(--shell-muted)] hover:text-[var(--shell-foreground)]"
+                  className="text-muted-foreground hover:text-foreground"
                 >
                   Cancel
                 </Button>
@@ -172,7 +172,7 @@ export function MultiStepDialog({
                   type="submit"
                   size="sm"
                   disabled={isSubmitting || (isLastStep ? false : disableNext)}
-                  className="bg-[var(--shell-brand)] hover:bg-[var(--shell-brand)]/90 text-white font-semibold"
+                  className="bg-primary hover:bg-primary/90 text-white font-semibold"
                 >
                   {isSubmitting && <Spinner className="mr-2 h-4 w-4" />}
                   {isLastStep ? submitLabel : "Next"}

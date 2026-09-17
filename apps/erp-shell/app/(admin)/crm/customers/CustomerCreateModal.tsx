@@ -124,34 +124,34 @@ export default function CustomerCreateModal({ isOpen, onClose, onSuccess, editRe
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Account Name</Label>
+              <Label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Account Name</Label>
               <Input name="account" value={formData.account} onChange={handleChange} required />
             </div>
             <div>
-              <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Industry</Label>
+              <Label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Industry</Label>
               <Input name="industry" value={formData.industry} onChange={handleChange} required />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Email Address</Label>
+              <Label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Email Address</Label>
               <Input type="email" name="email" value={formData.email} onChange={handleChange} />
             </div>
             <div>
-              <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Phone Number</Label>
+              <Label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Phone Number</Label>
               <Input name="phone" value={formData.phone} onChange={handleChange} placeholder="+1234567890" />
             </div>
           </div>
 
           <div className="grid grid-cols-3 gap-4">
             <div>
-              <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Tier</Label>
+              <Label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Tier</Label>
               <select
                 name="tier"
                 value={formData.tier}
                 onChange={handleChange}
-                className="h-9 w-full rounded-md border border-[var(--shell-border)] bg-[var(--shell-bg)] px-3 text-xs text-[var(--shell-foreground)]"
+                className="h-9 w-full rounded-md border border-border bg-background px-3 text-xs text-foreground"
               >
                 <option value="Standard">Standard</option>
                 <option value="Premium">Premium</option>
@@ -160,12 +160,12 @@ export default function CustomerCreateModal({ isOpen, onClose, onSuccess, editRe
               </select>
             </div>
             <div>
-              <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Status</Label>
+              <Label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Status</Label>
               <select
                 name="status"
                 value={formData.status}
                 onChange={handleChange}
-                className="h-9 w-full rounded-md border border-[var(--shell-border)] bg-[var(--shell-bg)] px-3 text-xs text-[var(--shell-foreground)]"
+                className="h-9 w-full rounded-md border border-border bg-background px-3 text-xs text-foreground"
               >
                 <option value="Active">Active</option>
                 <option value="Suspended">Suspended</option>
@@ -173,24 +173,24 @@ export default function CustomerCreateModal({ isOpen, onClose, onSuccess, editRe
               </select>
             </div>
             <div>
-              <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Owner</Label>
+              <Label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Owner</Label>
               <Input name="owner" value={formData.owner} onChange={handleChange} required />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">ARR (USD)</Label>
+              <Label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">ARR (USD)</Label>
               <Input type="number" name="arr" value={formData.arr} onChange={handleChange} placeholder="Annual Recurring Revenue" />
             </div>
             <div>
-              <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Credit Limit (INR)</Label>
+              <Label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Credit Limit (INR)</Label>
               <Input type="number" name="credit_limit" value={formData.credit_limit} onChange={handleChange} placeholder="Credit Limit" />
             </div>
           </div>
 
           <div>
-            <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Notes</Label>
+            <Label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Notes</Label>
             <Input name="notes" value={formData.notes} onChange={handleChange} placeholder="Internal notes..." />
           </div>
 

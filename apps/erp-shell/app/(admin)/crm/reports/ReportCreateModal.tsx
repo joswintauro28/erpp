@@ -106,7 +106,7 @@ export default function ReportCreateModal({
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid gap-4">
             <div>
-              <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">
+              <Label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">
                 Report Title *
               </Label>
               <Input
@@ -120,14 +120,14 @@ export default function ReportCreateModal({
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">
+                <Label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">
                   Category *
                 </Label>
                 <select
                   name="category"
                   value={formData.category}
                   onChange={handleChange}
-                  className="h-9 w-full rounded-md border border-[var(--shell-border)] bg-[var(--shell-bg)] px-3 text-xs text-[var(--shell-foreground)] focus:outline-none focus:ring-1 focus:ring-[var(--shell-brand)]"
+                  className="h-9 w-full rounded-md border border-border bg-background px-3 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-[var(--shell-brand)]"
                   required
                 >
                   <option value="Sales">Sales</option>
@@ -138,7 +138,7 @@ export default function ReportCreateModal({
               </div>
 
               <div>
-                <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">
+                <Label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">
                   Representative *
                 </Label>
                 <Input
@@ -153,7 +153,7 @@ export default function ReportCreateModal({
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">
+                <Label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">
                   Last Run Date *
                 </Label>
                 <input
@@ -161,20 +161,20 @@ export default function ReportCreateModal({
                   name="last_run"
                   value={formData.last_run}
                   onChange={handleChange}
-                  className="h-9 w-full rounded-md border border-[var(--shell-border)] bg-[var(--shell-bg)] px-3 text-xs text-[var(--shell-foreground)] focus:outline-none focus:ring-1 focus:ring-[var(--shell-brand)]"
+                  className="h-9 w-full rounded-md border border-border bg-background px-3 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-[var(--shell-brand)]"
                   required
                 />
               </div>
 
               <div>
-                <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">
+                <Label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">
                   Status *
                 </Label>
                 <select
                   name="status"
                   value={formData.status}
                   onChange={handleChange}
-                  className="h-9 w-full rounded-md border border-[var(--shell-border)] bg-[var(--shell-bg)] px-3 text-xs text-[var(--shell-foreground)] focus:outline-none focus:ring-1 focus:ring-[var(--shell-brand)]"
+                  className="h-9 w-full rounded-md border border-border bg-background px-3 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-[var(--shell-brand)]"
                   required
                 >
                   <option value="Draft">Draft</option>

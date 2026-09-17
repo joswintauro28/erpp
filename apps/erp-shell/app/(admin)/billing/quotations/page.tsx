@@ -132,13 +132,13 @@ export default function Quotations() {
                 {filtered.map((qt) => (
                   <TableRow key={qt.id}>
                     <TableCell className="cursor-pointer" onClick={() => router.push(`/billing/quotations/${qt.id}`)}>
-                      <span className="font-mono text-xs font-medium hover:text-[var(--shell-brand)] transition-colors">{qt.quote_number}</span>
+                      <span className="font-mono text-xs font-medium hover:text-primary transition-colors">{qt.quote_number}</span>
                     </TableCell>
-                    <TableCell className="text-[var(--shell-muted)]">{qt.client_name}</TableCell>
+                    <TableCell className="text-muted-foreground">{qt.client_name}</TableCell>
                     <TableCell className="font-mono text-sm text-right">{money(qt.total)}</TableCell>
                     <TableCell><Badge variant={statusVariant(qt.status)} className="capitalize">{qt.status}</Badge></TableCell>
-                    <TableCell className="text-xs text-[var(--shell-muted)]">{formatDate(qt.issue_date)}</TableCell>
-                    <TableCell className="text-xs text-[var(--shell-muted)]">{formatDate(qt.valid_until)}</TableCell>
+                    <TableCell className="text-xs text-muted-foreground">{formatDate(qt.issue_date)}</TableCell>
+                    <TableCell className="text-xs text-muted-foreground">{formatDate(qt.valid_until)}</TableCell>
                     <TableCell>
                       <div className="flex items-center justify-end gap-1">
                         <Button
@@ -147,7 +147,7 @@ export default function Quotations() {
                           aria-label="View quotation"
                           title="View quotation"
                         >
-                          <Eye className="h-3.5 w-3.5 text-[var(--shell-brand)]" />
+                          <Eye className="h-3.5 w-3.5 text-primary" />
                         </Button>
                         {canEdit && qt.status === "draft" && (
                           <Button
@@ -157,7 +157,7 @@ export default function Quotations() {
                             aria-label="Send quotation"
                             title="Send quotation"
                           >
-                            {actionLoading === qt.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5 text-[var(--shell-brand)]" />}
+                            {actionLoading === qt.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5 text-primary" />}
                           </Button>
                         )}
                         {canEdit && qt.status === "sent" && (
@@ -205,7 +205,7 @@ export default function Quotations() {
       <Dialog open={deleteConfirm !== null} onOpenChange={() => setDeleteConfirm(null)}>
         <DialogContent>
           <DialogHeader><DialogTitle>Delete Quotation</DialogTitle></DialogHeader>
-          <p className="text-sm text-[var(--shell-muted)]">
+          <p className="text-sm text-muted-foreground">
             Are you sure you want to delete this quotation? This action cannot be undone.
           </p>
           <DialogFooter>

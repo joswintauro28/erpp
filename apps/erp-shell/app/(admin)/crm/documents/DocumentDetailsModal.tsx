@@ -178,14 +178,14 @@ export default function DocumentDetailsModal({
         return (
           <iframe
             src={streamUrl}
-            className="w-full h-[420px] border-0 rounded-lg bg-[var(--shell-surface)]"
+            className="w-full h-[420px] border-0 rounded-lg"
             title={activeFile?.name || "PDF Preview"}
           />
         );
       }
       if (isImage) {
         return (
-          <div className="flex items-center justify-center bg-[var(--shell-surface-alt)] border border-[var(--shell-border)] p-4 rounded-lg h-[420px]">
+          <div className="flex items-center justify-center bg-secondary border border-border p-4 rounded-lg h-[420px]">
             <img
               src={streamUrl}
               alt={activeFile?.name || "Preview"}
@@ -195,7 +195,7 @@ export default function DocumentDetailsModal({
         );
       }
       return (
-        <div className="flex flex-col items-center justify-center h-[420px] bg-[var(--shell-surface-alt)] border border-[var(--shell-border)] rounded-lg gap-3 text-[var(--shell-muted)]">
+        <div className="flex flex-col items-center justify-center h-[420px] bg-secondary border border-border rounded-lg gap-3 text-muted-foreground">
           <FileText size={40} strokeWidth={1} />
           <p className="text-sm">Preview not available for this file type.</p>
           <Button variant="outline" size="sm" onClick={() => handleDownloadFile(activeFile)}>
@@ -208,7 +208,7 @@ export default function DocumentDetailsModal({
     return (
       <iframe
         srcDoc={getMockHtml(doc)}
-        className="w-full h-[420px] border border-[var(--shell-border)] rounded-lg bg-card"
+        className="w-full h-[420px] border border-border rounded-lg bg-card"
         title={doc.title || doc.name}
       />
     );
@@ -216,11 +216,11 @@ export default function DocumentDetailsModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
-      <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto bg-[var(--shell-surface)] border-[var(--shell-border)] text-[var(--shell-foreground)]">
-        <DialogHeader className="flex flex-row items-center justify-between border-b border-[var(--shell-border)] pb-3">
+      <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto border-border text-foreground">
+        <DialogHeader className="flex flex-row items-center justify-between border-b border-border pb-3">
           <div className="flex items-center gap-2">
-            <FileText className="size-5 text-[var(--shell-brand)]" />
-            <DialogTitle className="text-lg font-semibold tracking-tight text-[var(--shell-foreground)]">
+            <FileText className="size-5 text-primary" />
+            <DialogTitle className="text-lg font-semibold tracking-tight text-foreground">
               Document Details: {(doc.title || doc.name || "").split(", ")[0]}
             </DialogTitle>
           </div>
@@ -228,45 +228,45 @@ export default function DocumentDetailsModal({
 
         <div className="grid grid-cols-1 md:grid-cols-[260px_1fr] gap-6 py-4">
           {/* Sidebar details */}
-          <div className="flex flex-col gap-4 border-b md:border-b-0 md:border-r border-[var(--shell-border)] pb-4 md:pb-0 md:pr-6">
+          <div className="flex flex-col gap-4 border-b md:border-b-0 md:border-r border-border pb-4 md:pb-0 md:pr-6">
             <div>
-              <span className="text-[10px] font-semibold uppercase tracking-wider text-[var(--shell-muted)] block mb-0.5">
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground block mb-0.5">
                 Document ID
               </span>
-              <span className="text-sm font-medium text-[var(--shell-foreground)]">
+              <span className="text-sm font-medium text-foreground">
                 {doc.id_str}
               </span>
             </div>
 
             <div>
-              <span className="text-[10px] font-semibold uppercase tracking-wider text-[var(--shell-muted)] block mb-0.5">
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground block mb-0.5">
                 Type
               </span>
-              <span className="text-sm font-medium text-[var(--shell-foreground)]">
+              <span className="text-sm font-medium text-foreground">
                 {doc.type}
               </span>
             </div>
 
             <div>
-              <span className="text-[10px] font-semibold uppercase tracking-wider text-[var(--shell-muted)] block mb-0.5">
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground block mb-0.5">
                 Account
               </span>
-              <span className="text-sm font-medium text-[var(--shell-foreground)]">
+              <span className="text-sm font-medium text-foreground">
                 {doc.account}
               </span>
             </div>
 
             <div>
-              <span className="text-[10px] font-semibold uppercase tracking-wider text-[var(--shell-muted)] block mb-0.5">
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground block mb-0.5">
                 Owner
               </span>
-              <span className="text-sm font-medium text-[var(--shell-foreground)]">
+              <span className="text-sm font-medium text-foreground">
                 {doc.owner}
               </span>
             </div>
 
             <div>
-              <span className="text-[10px] font-semibold uppercase tracking-wider text-[var(--shell-muted)] block mb-1">
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground block mb-1">
                 Status
               </span>
               <Badge
@@ -287,18 +287,18 @@ export default function DocumentDetailsModal({
 
             {doc.summary && doc.summary !== "None" && doc.summary.trim() !== "" && (
               <div className="mt-2">
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-[var(--shell-muted)] block mb-1">
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground block mb-1">
                   Summary
                 </span>
-                <p className="text-xs leading-relaxed text-[var(--shell-foreground)] m-0 bg-[var(--shell-surface-alt)] border border-[var(--shell-border)] p-2.5 rounded-lg font-light">
+                <p className="text-xs leading-relaxed text-foreground m-0 bg-secondary border border-border p-2.5 rounded-lg font-light">
                   {doc.summary}
                 </p>
               </div>
             )}
 
             {fileList.length > 0 && (
-              <div className="border-t border-[var(--shell-border)] pt-4 mt-2">
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-[var(--shell-muted)] block mb-2">
+              <div className="border-t border-border pt-4 mt-2">
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground block mb-2">
                   Uploaded Files ({fileList.length})
                 </span>
                 <div className="flex flex-col gap-2">
@@ -307,27 +307,27 @@ export default function DocumentDetailsModal({
                       key={idx}
                       className={`p-2 rounded-lg border cursor-pointer text-xs transition-all ${
                         activeFile?.name === file.name
-                          ? "border-[var(--shell-brand)] bg-[var(--shell-surface-alt)]"
-                          : "border-[var(--shell-border)] hover:bg-[var(--shell-surface-alt)]"
+                          ? "border-[var(--shell-brand)] bg-secondary"
+                          : "border-border hover:bg-secondary"
                       }`}
                       onClick={() => setActiveFile(file)}
                     >
-                      <div className="font-medium text-[var(--shell-foreground)] truncate" title={file.name}>
+                      <div className="font-medium text-foreground truncate" title={file.name}>
                         {file.name}
                       </div>
-                      <div className="flex justify-between items-center mt-1 text-[var(--shell-muted)] text-[10px]">
+                      <div className="flex justify-between items-center mt-1 text-muted-foreground text-[10px]">
                         <span>{file.size}</span>
                         <div className="flex gap-1.5" onClick={(e) => e.stopPropagation()}>
                           <button
                             onClick={() => handleOpenInNewTab(file)}
-                            className="hover:text-[var(--shell-foreground)] cursor-pointer transition-colors"
+                            className="hover:text-foreground cursor-pointer transition-colors"
                             title="Open in new tab"
                           >
                             <ExternalLink size={12} />
                           </button>
                           <button
                             onClick={() => handleDownloadFile(file)}
-                            className="hover:text-[var(--shell-foreground)] cursor-pointer transition-colors"
+                            className="hover:text-foreground cursor-pointer transition-colors"
                             title="Download"
                           >
                             <Download size={12} />
@@ -344,7 +344,7 @@ export default function DocumentDetailsModal({
           {/* Right sidebar frame / preview */}
           <div className="min-w-0 flex flex-col gap-2">
             <div className="flex justify-between items-center">
-              <span className="text-[10px] font-semibold uppercase tracking-wider text-[var(--shell-muted)]">
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                 Document Preview
               </span>
               <div className="flex gap-2">
@@ -352,7 +352,7 @@ export default function DocumentDetailsModal({
                   variant="outline"
                   size="sm"
                   onClick={() => handleOpenInNewTab(null)}
-                  className="h-8 text-xs border-[var(--shell-border)] hover:bg-[var(--shell-surface-alt)]"
+                  className="h-8 text-xs border-border hover:bg-secondary"
                 >
                   <ExternalLink size={12} className="mr-1.5" /> Open
                 </Button>
@@ -360,7 +360,7 @@ export default function DocumentDetailsModal({
                   variant="outline"
                   size="sm"
                   onClick={() => handleDownloadFile(null)}
-                  className="h-8 text-xs border-[var(--shell-border)] hover:bg-[var(--shell-surface-alt)]"
+                  className="h-8 text-xs border-border hover:bg-secondary"
                 >
                   <Download size={12} className="mr-1.5" /> Download
                 </Button>
@@ -370,11 +370,11 @@ export default function DocumentDetailsModal({
           </div>
         </div>
 
-        <div className="flex justify-end pt-3 border-t border-[var(--shell-border)]">
+        <div className="flex justify-end pt-3 border-t border-border">
           <Button
             variant="outline"
             onClick={onClose}
-            className="h-9 text-xs border-[var(--shell-border)] bg-transparent hover:bg-[var(--shell-surface-alt)] text-[var(--shell-foreground)]"
+            className="h-9 text-xs border-border bg-transparent hover:bg-secondary text-foreground"
           >
             Close
           </Button>

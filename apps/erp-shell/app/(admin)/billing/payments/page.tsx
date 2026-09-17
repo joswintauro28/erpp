@@ -166,11 +166,11 @@ export default function Payments() {
                   <TableRow key={p.id}>
                     <TableCell><span className="font-mono text-xs font-medium">{p.payment_id}</span></TableCell>
                     <TableCell className="font-mono text-xs">{p.invoice_number}</TableCell>
-                    <TableCell className="text-[var(--shell-muted)]">{p.client_name}</TableCell>
+                    <TableCell className="text-muted-foreground">{p.client_name}</TableCell>
                     <TableCell className="font-mono text-sm text-right">{money(p.amount)}</TableCell>
                     <TableCell className="capitalize text-xs">{p.method.replace("_", " ")}</TableCell>
-                    <TableCell className="text-xs text-[var(--shell-muted)]">{p.date}</TableCell>
-                    <TableCell className="text-xs text-[var(--shell-muted)]">{p.reference}</TableCell>
+                    <TableCell className="text-xs text-muted-foreground">{p.date}</TableCell>
+                    <TableCell className="text-xs text-muted-foreground">{p.reference}</TableCell>
                     <TableCell>
                       <div className="flex justify-end">
                         <Button
@@ -198,10 +198,10 @@ export default function Payments() {
             <DialogTitle>Record Payment</DialogTitle>
           </DialogHeader>
           <form className="space-y-5" onSubmit={handleRecordPayment}>
-            <div className="rounded-lg border border-[var(--shell-border)] bg-[var(--shell-surface)] p-4">
+            <div className="rounded-lg border p-4">
               <div className="mb-3 flex items-center gap-2">
-                <Receipt className="h-3.5 w-3.5 text-[var(--shell-brand)]" />
-                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--shell-foreground)]">Select Invoice</span>
+                <Receipt className="h-3.5 w-3.5 text-primary" />
+                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-foreground">Select Invoice</span>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="bi-pay-invoice">Invoice</Label>
@@ -217,14 +217,14 @@ export default function Payments() {
                 </Select>
               </div>
               {selectedInvoice && (
-                <div className="mt-3 flex items-center justify-between rounded-md bg-[var(--shell-bg)] px-3 py-2 text-xs">
-                  <span className="text-[var(--shell-muted)]">Balance Due</span>
-                  <span className="font-mono font-semibold text-[var(--shell-brand)]">{money(selectedInvoice.balance)}</span>
+                <div className="mt-3 flex items-center justify-between rounded-md bg-background px-3 py-2 text-xs">
+                  <span className="text-muted-foreground">Balance Due</span>
+                  <span className="font-mono font-semibold text-primary">{money(selectedInvoice.balance)}</span>
                 </div>
               )}
             </div>
 
-            <div className="rounded-lg border border-[var(--shell-border)] bg-[var(--shell-surface)] p-4">
+            <div className="rounded-lg border p-4">
               <div className="mb-3 flex items-center gap-2">
                 <DollarSign className="h-3.5 w-3.5 text-[--shell-accent]" />
                 <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[--shell-foreground]">Payment Details</span>
@@ -243,10 +243,10 @@ export default function Payments() {
               </div>
             </div>
 
-            <div className="rounded-lg border border-[var(--shell-border)] bg-[var(--shell-surface)] p-4">
+            <div className="rounded-lg border p-4">
               <div className="mb-3 flex items-center gap-2">
                 <Building2 className="h-3.5 w-3.5 text-[var(--shell-accent)]" />
-                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--shell-foreground)]">Payment Method</span>
+                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-foreground">Payment Method</span>
               </div>
               <div className="space-y-4">
                 <div className="space-y-2">
@@ -301,7 +301,7 @@ export default function Payments() {
           <DialogFooter className="mt-4">
             <Button variant="outline" size="sm" onClick={() => setRefundConfirmId(null)}>Cancel</Button>
             <Button
-              className="bg-[var(--shell-brand)] hover:bg-[var(--shell-brand)]/90 text-white"
+              className="bg-primary hover:bg-primary/90 text-white"
               onClick={() => refundConfirmId !== null && handleRefund(refundConfirmId)}
               disabled={refunding !== null}
             >

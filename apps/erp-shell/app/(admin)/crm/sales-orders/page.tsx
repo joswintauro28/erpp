@@ -102,7 +102,7 @@ export default function SalesOrdersPage() {
             <Button variant="outline" size="sm" onClick={() => exportToCSV(items, "sales_orders")} className="gap-1.5 text-xs">
               <Download size={14} /> Export
             </Button>
-            <Button size="sm" onClick={() => setIsModalOpen(true)} className="bg-[var(--shell-brand)] text-white hover:bg-[var(--shell-brand)]/90 gap-1.5 text-xs shadow-sm">
+            <Button size="sm" onClick={() => setIsModalOpen(true)} className="bg-primary text-white hover:bg-primary/90 gap-1.5 text-xs shadow-sm">
               <Plus size={14} /> New Sales Order
             </Button>
           </>
@@ -121,13 +121,13 @@ export default function SalesOrdersPage() {
 
       <section>
         <SectionHeading label="Order Records" />
-        <Card className="hover:shadow-engineered transition-shadow duration-200 border-[var(--shell-border)] bg-[var(--shell-surface)]">
-          <div className="flex items-center gap-3 border-b border-[var(--shell-border)] p-4">
+        <Card className="hover:shadow-engineered transition-shadow duration-200">
+          <div className="flex items-center gap-3 border-b border-border p-4">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--shell-muted)]" />
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input placeholder="Search orders..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 h-9" />
             </div>
-            <Filter className="h-4 w-4 text-[var(--shell-muted)]" />
+            <Filter className="h-4 w-4 text-muted-foreground" />
           </div>
           <div className="overflow-x-auto">
             <SalesOrderTable 

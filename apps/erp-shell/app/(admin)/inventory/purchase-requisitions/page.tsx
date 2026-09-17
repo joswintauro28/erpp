@@ -191,14 +191,14 @@ export default function PurchaseRequisitionsPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-4">
         <div>
           <h1 className="font-heading text-2xl font-semibold tracking-tight text-[--shell-foreground] flex items-center gap-2">
-            <ClipboardCheck className="h-6 w-6 text-[var(--shell-brand)]" />
+            <ClipboardCheck className="h-6 w-6 text-primary" />
             Purchase Requisitions
           </h1>
           <p className="mt-1 text-sm text-[--shell-muted]">
             Capture internal buy requests, route them through approval, and convert approved requests into purchase orders.
           </p>
         </div>
-        <Button size="sm" onClick={() => setIsAddOpen(true)} className="bg-[var(--shell-brand)] text-white hover:bg-[var(--shell-action)]">
+        <Button size="sm" onClick={() => setIsAddOpen(true)} className="bg-primary text-white hover:bg-[var(--shell-action)]">
           <Plus className="h-4 w-4 mr-2" /> Create Requisition
         </Button>
       </div>
@@ -259,7 +259,7 @@ export default function PurchaseRequisitionsPage() {
               <TableBody>
                 {filtered.map((r) => (
                   <TableRow key={r.id}>
-                    <TableCell className="font-mono text-xs font-bold text-[var(--shell-brand)]">{r.pr_number}</TableCell>
+                    <TableCell className="font-mono text-xs font-bold text-primary">{r.pr_number}</TableCell>
                     <TableCell>
                       <div className="font-medium text-foreground text-xs">{r.title}</div>
                       <div className="text-[10px] text-muted-foreground">
@@ -279,7 +279,7 @@ export default function PurchaseRequisitionsPage() {
                     <TableCell className="text-center">
                       <div className="flex items-center justify-center gap-1.5">
                         <Button variant="ghost" size="xs" onClick={() => setSelectedReq(r)}>
-                          <FileText className="h-3.5 w-3.5 text-muted-foreground hover:text-[var(--shell-brand)]" />
+                          <FileText className="h-3.5 w-3.5 text-muted-foreground hover:text-primary" />
                         </Button>
                         {r.status === "DRAFT" && (
                           <Button variant="ghost" size="xs" title="Submit for approval" onClick={() => runStatus(r.id, "submit")}>
@@ -358,7 +358,7 @@ export default function PurchaseRequisitionsPage() {
           </div>
           <div className="flex justify-end gap-2 mt-4">
             <Button variant="outline" size="sm" onClick={() => setIsAddOpen(false)}>Cancel</Button>
-            <Button size="sm" onClick={handleCreate} className="bg-[var(--shell-brand)] text-white">Create Requisition</Button>
+            <Button size="sm" onClick={handleCreate} className="bg-primary text-white">Create Requisition</Button>
           </div>
         </DialogContent>
       </Dialog>
@@ -370,7 +370,7 @@ export default function PurchaseRequisitionsPage() {
             <DialogHeader>
               <DialogTitle className="flex items-center justify-between text-base">
                 <span className="flex items-center gap-2">
-                  <FileText className="h-4 w-4 text-[var(--shell-brand)]" /> {selectedReq.pr_number}
+                  <FileText className="h-4 w-4 text-primary" /> {selectedReq.pr_number}
                 </span>
                 <StatusBadge status={selectedReq.status} category="purchase_order" />
               </DialogTitle>
@@ -429,7 +429,7 @@ export default function PurchaseRequisitionsPage() {
                     </select>
                   </div>
                 </div>
-                <Button size="sm" onClick={handleConvert} className="bg-[var(--shell-brand)] text-white w-full">
+                <Button size="sm" onClick={handleConvert} className="bg-primary text-white w-full">
                   <ArrowRight className="h-4 w-4 mr-2" /> Generate Purchase Order
                 </Button>
               </div>
@@ -441,7 +441,7 @@ export default function PurchaseRequisitionsPage() {
                   <Button size="sm" variant="outline" onClick={() => runStatus(selectedReq.id, "reject")}>
                     Reject
                   </Button>
-                  <Button size="sm" onClick={() => runStatus(selectedReq.id, "approve")} className="bg-[var(--shell-brand)] text-white">
+                  <Button size="sm" onClick={() => runStatus(selectedReq.id, "approve")} className="bg-primary text-white">
                     Approve
                   </Button>
                 </>

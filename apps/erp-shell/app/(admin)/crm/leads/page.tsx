@@ -89,7 +89,7 @@ export default function LeadsPage() {
             >
               <BadgeCheck size={14} className="fill-[var(--shell-accent)]/20 text-white" /> Discover Leads
             </Button>
-            <Button size="sm" onClick={() => setIsModalOpen(true)} className="bg-[var(--shell-brand)] text-white hover:bg-[var(--shell-brand)]/90 gap-1.5 text-xs shadow-sm">
+            <Button size="sm" onClick={() => setIsModalOpen(true)} className="bg-primary text-white hover:bg-primary/90 gap-1.5 text-xs shadow-sm">
               <Plus size={14} /> New Lead
             </Button>
           </>
@@ -109,10 +109,10 @@ export default function LeadsPage() {
 
       <section>
         <SectionHeading label="Lead Records" />
-        <Card className="hover:shadow-engineered transition-shadow duration-200 border-[var(--shell-border)] bg-[var(--shell-surface)]">
-          <div className="flex items-center gap-3 p-4 border-b border-[var(--shell-border)]">
+        <Card className="hover:shadow-engineered transition-shadow duration-200">
+          <div className="flex items-center gap-3 p-4 border-b border-border">
             <div className="relative flex-1">
-              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--shell-muted)]" />
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
               <Input placeholder="Search leads..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 h-9 text-sm" />
             </div>
             <button
@@ -122,13 +122,13 @@ export default function LeadsPage() {
                 "inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition-all cursor-pointer",
                 mqlOnly
                   ? "border-[var(--shell-warning)]/40 bg-[var(--shell-warning-surface)] text-[var(--shell-warning)] shadow-sm"
-                  : "border-[var(--shell-border)] text-[var(--shell-muted)] hover:border-[var(--shell-warning)]/30 hover:text-[var(--shell-warning)]"
+                  : "border-border text-muted-foreground hover:border-[var(--shell-warning)]/30 hover:text-[var(--shell-warning)]"
               )}
             >
               <BadgeCheck className="h-3.5 w-3.5" />
               MQL Ready
             </button>
-            <Filter size={15} className="text-[var(--shell-muted)] shrink-0" />
+            <Filter size={15} className="text-muted-foreground shrink-0" />
           </div>
           <LeadTable
             leads={filtered}

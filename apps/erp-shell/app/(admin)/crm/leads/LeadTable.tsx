@@ -108,7 +108,7 @@ export default function LeadTable({ leads, onView, onEdit, onDelete, onQualify }
                 <BadgeCheck size={14} className="text-[var(--shell-warning)]" />
               </Button>
             )}
-            <Button variant="ghost" size="icon-sm" className="cursor-pointer" onClick={(e) => { e.stopPropagation(); onEdit(row); }}><Edit2 size={14} className="text-[var(--shell-brand)]" /></Button>
+            <Button variant="ghost" size="icon-sm" className="cursor-pointer" onClick={(e) => { e.stopPropagation(); onEdit(row); }}><Edit2 size={14} className="text-primary" /></Button>
             <Button variant="ghost" size="icon-sm" className="cursor-pointer" onClick={(e) => { e.stopPropagation(); onDelete(row); }}><Trash2 size={14} className="text-[var(--shell-danger)]" /></Button>
           </div>
         );

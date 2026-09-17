@@ -109,34 +109,34 @@ export default function OpportunityCreateModal({ isOpen, onClose, onSuccess, edi
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Opportunity (Deal) Name</Label>
+              <Label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Opportunity (Deal) Name</Label>
               <Input name="name" value={formData.name} onChange={handleChange} required />
             </div>
             <div>
-              <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Company Name (Account)</Label>
+              <Label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Company Name (Account)</Label>
               <Input name="account" value={formData.account} onChange={handleChange} required />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Estimated Value</Label>
+              <Label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Estimated Value</Label>
               <Input name="value" value={formData.value} onChange={handleChange} placeholder="e.g. 500000 or ₹5,00,000" required />
             </div>
             <div>
-              <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Probability</Label>
+              <Label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Probability</Label>
               <Input name="probability" value={formData.probability} onChange={handleChange} placeholder="e.g. 60%" required />
             </div>
           </div>
 
           <div className="grid grid-cols-3 gap-4">
             <div>
-              <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Stage</Label>
+              <Label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Stage</Label>
               <select
                 name="stage"
                 value={formData.stage}
                 onChange={handleChange}
-                className="h-9 w-full rounded-md border border-[var(--shell-border)] bg-[var(--shell-bg)] px-3 text-xs text-[var(--shell-foreground)]"
+                className="h-9 w-full rounded-md border border-border bg-background px-3 text-xs text-foreground"
                 required
               >
                 <option value="Discovery">Discovery</option>
@@ -147,18 +147,18 @@ export default function OpportunityCreateModal({ isOpen, onClose, onSuccess, edi
               </select>
             </div>
             <div>
-              <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Close Date</Label>
+              <Label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Close Date</Label>
               <input
                 type="date"
                 name="close_date"
                 value={formData.close_date}
                 onChange={handleChange}
-                className="h-9 w-full rounded-md border border-[var(--shell-border)] bg-[var(--shell-bg)] px-3 text-xs text-[var(--shell-foreground)]"
+                className="h-9 w-full rounded-md border border-border bg-background px-3 text-xs text-foreground"
                 required
               />
             </div>
             <div>
-              <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Owner</Label>
+              <Label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Owner</Label>
               <Input name="owner" value={formData.owner} onChange={handleChange} required />
             </div>
           </div>

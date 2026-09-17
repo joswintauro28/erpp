@@ -40,7 +40,7 @@ export function KpiCard({
 }: KpiCardProps) {
   if (loading) {
     return (
-      <div className="flex flex-col gap-3 rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface)] p-5 shadow-engineered">
+      <div className="flex flex-col gap-3 rounded-xl border p-5 shadow-engineered">
         <div className="flex items-center justify-between">
           <div className="h-3.5 w-20 shimmer-glow rounded" />
           <div className="h-7 w-7 rounded-md shimmer-glow" />
@@ -57,8 +57,8 @@ export function KpiCard({
     <div
       className={`animate-kpi relative flex flex-col gap-1.5 rounded-xl border p-4.5 transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1)] overflow-hidden group backdrop-blur-sm ${
         active
-          ? "border-[var(--shell-brand)] bg-[var(--shell-surface-alt)]/50 ring-1 ring-[var(--shell-brand)]"
-          : "border-[var(--shell-border)] bg-[var(--shell-surface)]"
+          ? "border-[var(--shell-brand)] bg-secondary/50 ring-1 ring-[var(--shell-brand)]"
+          : "border-border"
       } ${onClick ? "cursor-pointer" : ""}`}
       style={{ animationDelay: `${index * 0.05}s` }}
       onClick={onClick}
@@ -83,7 +83,7 @@ export function KpiCard({
       </div>
 
       {/* Value */}
-      <span className="relative z-10 font-heading text-xl font-bold tracking-tight text-[var(--shell-foreground)] mt-0.5">
+      <span className="relative z-10 font-heading text-xl font-bold tracking-tight text-foreground mt-0.5">
         {value}
       </span>
 
@@ -106,7 +106,7 @@ export function KpiCard({
           </span>
         )}
         {subtitle && (
-          <span className="text-[11px] text-[var(--shell-muted)] font-medium">
+          <span className="text-[11px] text-muted-foreground font-medium">
             {subtitle}
           </span>
         )}

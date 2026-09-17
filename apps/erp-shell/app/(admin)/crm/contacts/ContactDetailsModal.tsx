@@ -33,8 +33,8 @@ export default function ContactDetailsModal({ record, isOpen, onClose }: Contact
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--shell-brand)]/10">
-              <User className="h-4 w-4 text-[var(--shell-brand)]" />
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
+              <User className="h-4 w-4 text-primary" />
             </div>
             {record.first_name} {record.last_name}
           </DialogTitle>

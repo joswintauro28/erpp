@@ -158,7 +158,7 @@ function ColorPickerPopover({
         ref={triggerRef}
         type="button"
         onClick={() => setOpen(!open)}
-        className="h-8 w-8 rounded-lg border-2 border-[var(--shell-border)] shadow-sm cursor-pointer transition-transform hover:scale-110"
+        className="h-8 w-8 rounded-lg border-2 border-border shadow-sm cursor-pointer transition-transform hover:scale-110"
         style={{ backgroundColor: color }}
         title={`Pick ${label} color`}
       />
@@ -166,7 +166,7 @@ function ColorPickerPopover({
         ReactDOM.createPortal(
           <div
             ref={panelRef}
-            className="fixed z-[9999] p-3 rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface)] shadow-2xl"
+            className="fixed z-[9999] p-3 rounded-xl border shadow-2xl"
             style={{ top: position.top, left: position.left }}
           >
             <HexColorPicker color={color} onChange={onChange} />
@@ -211,7 +211,7 @@ function ThemeColorEditor({
       {Object.entries(COLOR_META).map(([key, meta]) => (
         <div
           key={key}
-          className="flex items-center justify-between py-1.5 border-b border-[var(--shell-border)]/40 last:border-0"
+          className="flex items-center justify-between py-1.5 border-b border-border/40 last:border-0"
         >
           <div className="flex items-center gap-2.5">
             <ColorPickerPopover
@@ -219,10 +219,10 @@ function ThemeColorEditor({
               onChange={(v) => onChange(key as keyof ThemeColorSet, v)}
               label={meta.label}
             />
-            <span className="text-sm font-medium text-[var(--shell-foreground)]">
+            <span className="text-sm font-medium text-foreground">
               {meta.label}
             </span>
-            <span className="text-xs font-mono text-[var(--shell-muted)]">
+            <span className="text-xs font-mono text-muted-foreground">
               {meta.cssVar}
             </span>
           </div>
@@ -488,7 +488,7 @@ export default function Branding() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="h-6 w-6 animate-spin text-[var(--shell-muted)]" />
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
       </div>
     );
   }
@@ -497,14 +497,14 @@ export default function Branding() {
 
   return (
     <div className="relative space-y-6">
-      <span className="absolute -top-6 left-0 h-0.5 w-1/3 rounded-full bg-[var(--shell-brand)] shimmer-glow" />
+      <span className="absolute -top-6 left-0 h-0.5 w-1/3 rounded-full bg-primary shimmer-glow" />
 
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-heading text-xl font-semibold tracking-tight text-[var(--shell-foreground)]">
+          <h1 className="font-heading text-xl font-semibold tracking-tight text-foreground">
             Branding
           </h1>
-          <p className="mt-0.5 text-sm text-[var(--shell-muted)]">
+          <p className="mt-0.5 text-sm text-muted-foreground">
             Customise your brand identity across all modules
           </p>
         </div>
@@ -526,7 +526,7 @@ export default function Branding() {
             variant="outline"
             size="sm"
             onClick={() => setThemeEditorOpen(true)}
-            className="hover:bg-[var(--shell-surface-alt)]"
+            className="hover:bg-secondary"
           >
             <Paintbrush className="mr-1.5 h-3.5 w-3.5" />
             Theme Editor
@@ -536,23 +536,23 @@ export default function Branding() {
 
       <div className="grid grid-cols-2 gap-6">
         {/* ── Logo (unified — sidebar + favicon) ──────────────────────── */}
-        <Card className="border-[var(--shell-border)] bg-[var(--shell-surface)] hover:shadow-md transition-shadow duration-200">
+        <Card className="border-border hover:shadow-md transition-shadow duration-200">
           <CardHeader className="p-5 pb-3">
             <div className="flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-[var(--shell-brand)]" />
-              <CardTitle className="text-sm font-semibold text-[var(--shell-foreground)]">
+              <Sparkles className="h-4 w-4 text-primary" />
+              <CardTitle className="text-sm font-semibold text-foreground">
                 Company Logo
               </CardTitle>
             </div>
-            <CardDescription className="text-xs text-[var(--shell-muted)]">
+            <CardDescription className="text-xs text-muted-foreground">
               Used as sidebar logo and browser favicon across all modules
             </CardDescription>
           </CardHeader>
           <CardContent className="p-5 pt-0 space-y-4">
             <div className="space-y-2">
-              <Label className="text-xs text-[var(--shell-muted)] font-medium">Logo &amp; Favicon</Label>
+              <Label className="text-xs text-muted-foreground font-medium">Logo &amp; Favicon</Label>
               <div className="flex items-center gap-4">
-                <div className="relative flex h-16 w-16 items-center justify-center rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface-alt)] overflow-hidden select-none">
+                <div className="relative flex h-16 w-16 items-center justify-center rounded-xl border border-border bg-secondary overflow-hidden select-none">
                   {logoPreview ? (
                     <img src={logoPreview} alt="Logo" className="h-full w-full object-contain" />
                   ) : (
@@ -577,7 +577,7 @@ export default function Branding() {
                       size="sm"
                       disabled={uploadingLogo}
                       onClick={() => document.getElementById("logo-upload")?.click()}
-                      className="hover:bg-[var(--shell-surface-alt)]"
+                      className="hover:bg-secondary"
                     >
                       {uploadingLogo ? (
                         <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
@@ -601,7 +601,7 @@ export default function Branding() {
                       </Button>
                     )}
                   </div>
-                  <p className="text-[10px] text-[var(--shell-muted)]">
+                  <p className="text-[10px] text-muted-foreground">
                     {logoPreview
                       ? "Used as sidebar logo and browser tab favicon"
                       : "Upload a logo — it becomes the favicon automatically"}
@@ -613,12 +613,12 @@ export default function Branding() {
         </Card>
 
         {/* ── Brand Colors — Light / Dark tabs ──────────────────────────── */}
-        <Card className="border-[var(--shell-border)] bg-[var(--shell-surface)] hover:shadow-md transition-shadow duration-200">
+        <Card className="border-border hover:shadow-md transition-shadow duration-200">
           <CardHeader className="p-5 pb-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-[var(--shell-brand)]" />
-                <CardTitle className="text-sm font-semibold text-[var(--shell-foreground)]">
+                <Sparkles className="h-4 w-4 text-primary" />
+                <CardTitle className="text-sm font-semibold text-foreground">
                   Brand Colors
                 </CardTitle>
               </div>
@@ -628,22 +628,22 @@ export default function Branding() {
                   variant="ghost"
                   size="sm"
                   onClick={handleResetToDefaults}
-                  className="h-7 text-xs text-[var(--shell-muted)] hover:text-[var(--shell-foreground)] hover:bg-[var(--shell-surface-alt)] cursor-pointer"
+                  className="h-7 text-xs text-muted-foreground hover:text-foreground hover:bg-secondary cursor-pointer"
                   title="Reset all colors to system defaults from ui-theme"
                 >
                   <RotateCcw className="mr-1 h-3 w-3" />
                   Reset to Defaults
                 </Button>
                 {/* Theme tabs */}
-                <div className="flex items-center rounded-lg border border-[var(--shell-border)] bg-[var(--shell-surface-alt)] p-0.5">
+                <div className="flex items-center rounded-lg border border-border bg-secondary p-0.5">
                   <button
                     type="button"
                     onClick={() => setActiveTab("light")}
                     className={cn(
                       "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all",
                       activeTab === "light"
-                        ? "bg-[var(--shell-brand)] text-white shadow-sm"
-                        : "text-[var(--shell-muted)] hover:text-[var(--shell-foreground)]",
+                        ? "bg-primary text-white shadow-sm"
+                        : "text-muted-foreground hover:text-foreground",
                     )}
                   >
                     <Sun className="h-3.5 w-3.5" />
@@ -655,8 +655,8 @@ export default function Branding() {
                     className={cn(
                       "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all",
                       activeTab === "dark"
-                        ? "bg-[var(--shell-brand)] text-white shadow-sm"
-                        : "text-[var(--shell-muted)] hover:text-[var(--shell-foreground)]",
+                        ? "bg-primary text-white shadow-sm"
+                        : "text-muted-foreground hover:text-foreground",
                     )}
                   >
                     <Moon className="h-3.5 w-3.5" />
@@ -665,7 +665,7 @@ export default function Branding() {
                 </div>
               </div>
             </div>
-            <CardDescription className="text-xs text-[var(--shell-muted)]">
+            <CardDescription className="text-xs text-muted-foreground">
               {activeTab === "light"
                 ? "Colors for light theme — changes apply as you pick"
                 : "Colors for dark theme — changes apply as you pick"}
@@ -682,19 +682,19 @@ export default function Branding() {
       </div>
 
       {/* ── Email Templates ──────────────────────────────────────────────── */}
-      <Card className="border-[var(--shell-border)] bg-[var(--shell-surface)] hover:shadow-md transition-shadow duration-200">
+      <Card className="border-border hover:shadow-md transition-shadow duration-200">
         <CardHeader className="p-5 pb-3">
-          <CardTitle className="text-sm font-semibold text-[var(--shell-foreground)]">
+          <CardTitle className="text-sm font-semibold text-foreground">
             Email Templates
           </CardTitle>
-          <CardDescription className="text-xs text-[var(--shell-muted)]">
+          <CardDescription className="text-xs text-muted-foreground">
             Customise email sender details and default template
           </CardDescription>
         </CardHeader>
         <CardContent className="p-5 pt-0 space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label className="text-xs text-[var(--shell-muted)] font-medium">Sender Name</Label>
+              <Label className="text-xs text-muted-foreground font-medium">Sender Name</Label>
               <Input
                 value={state.email_templates.sender_name}
                 onChange={(e) =>
@@ -706,7 +706,7 @@ export default function Branding() {
               />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs text-[var(--shell-muted)] font-medium">Sender Email</Label>
+              <Label className="text-xs text-muted-foreground font-medium">Sender Email</Label>
               <Input
                 type="email"
                 value={state.email_templates.sender_email}
@@ -720,7 +720,7 @@ export default function Branding() {
             </div>
           </div>
           <div className="space-y-1.5">
-            <Label className="text-xs text-[var(--shell-muted)] font-medium">Email Footer Text</Label>
+            <Label className="text-xs text-muted-foreground font-medium">Email Footer Text</Label>
             <Input
               value={state.email_templates.footer}
               onChange={(e) =>
@@ -732,13 +732,13 @@ export default function Branding() {
             />
           </div>
           <div className="space-y-2">
-            <Label className="text-xs text-[var(--shell-muted)] font-medium">Email Logo</Label>
+            <Label className="text-xs text-muted-foreground font-medium">Email Logo</Label>
             <div className="flex items-center gap-4">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-[var(--shell-border)] bg-[var(--shell-surface-alt)] overflow-hidden">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-border bg-secondary overflow-hidden">
                 {emailLogoPreview ? (
                   <img src={emailLogoPreview} alt="Email Logo" className="h-full w-full object-contain" />
                 ) : (
-                  <span className="text-xs font-bold text-[var(--shell-muted)]">No</span>
+                  <span className="text-xs font-bold text-muted-foreground">No</span>
                 )}
               </div>
               <div className="flex gap-2">
@@ -758,7 +758,7 @@ export default function Branding() {
                   size="sm"
                   disabled={uploadingEmailLogo}
                   onClick={() => document.getElementById("email-logo-upload")?.click()}
-                  className="hover:bg-[var(--shell-surface-alt)]"
+                  className="hover:bg-secondary"
                 >
                   {uploadingEmailLogo ? (
                     <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
@@ -791,13 +791,13 @@ export default function Branding() {
       </Card>
 
       {/* ── Save Bar ─────────────────────────────────────────────────────── */}
-      <div className="flex items-center justify-between pt-2 border-t border-[var(--shell-border)]">
+      <div className="flex items-center justify-between pt-2 border-t border-border">
         <Button
           type="button"
           variant="outline"
           size="sm"
           onClick={handleResetToDefaults}
-          className="text-xs text-[var(--shell-muted)] hover:text-[var(--shell-foreground)] hover:bg-[var(--shell-surface-alt)]"
+          className="text-xs text-muted-foreground hover:text-foreground hover:bg-secondary"
         >
           <RotateCcw className="mr-1.5 h-3.5 w-3.5" />
           Reset to Defaults
@@ -806,7 +806,7 @@ export default function Branding() {
           <Button
             variant="outline"
             size="sm"
-            className="hover:bg-[var(--shell-surface-alt)]"
+            className="hover:bg-secondary"
             onClick={() => window.location.reload()}
           >
             Cancel
@@ -815,7 +815,7 @@ export default function Branding() {
             size="sm"
             disabled={saving}
             onClick={handleSave}
-            className="bg-[var(--shell-brand)] hover:bg-[var(--shell-brand)]/90 text-white"
+            className="bg-primary hover:bg-primary/90 text-white"
           >
             {saving ? (
               <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />

@@ -133,7 +133,7 @@ export default function InventoryValuationPage() {
         <SectionHeading label="Product Valuation Detail" />
         <Card>
           <CardContent className="p-0">
-            <div className="flex items-center gap-3 border-b border-[var(--shell-border)] p-4">
+            <div className="flex items-center gap-3 border-b border-border p-4">
               <div className="relative flex-1 max-w-xs">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input placeholder="Search products..." className="pl-9 text-xs" value={search} onChange={(e) => setSearch(e.target.value)} />

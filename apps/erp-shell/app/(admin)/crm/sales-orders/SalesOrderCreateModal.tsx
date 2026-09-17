@@ -124,7 +124,7 @@ export default function SalesOrderCreateModal({
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid gap-4">
             <div>
-              <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">
+              <Label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">
                 SO No.
               </Label>
               <Input
@@ -137,7 +137,7 @@ export default function SalesOrderCreateModal({
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">
+                <Label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">
                   Company Name *
                 </Label>
                 <Input
@@ -149,7 +149,7 @@ export default function SalesOrderCreateModal({
                 />
               </div>
               <div>
-                <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">
+                <Label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">
                   From Quotation
                 </Label>
                 <Input
@@ -163,7 +163,7 @@ export default function SalesOrderCreateModal({
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">
+                <Label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">
                   Order Value *
                 </Label>
                 <Input
@@ -175,7 +175,7 @@ export default function SalesOrderCreateModal({
                 />
               </div>
               <div>
-                <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">
+                <Label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">
                   ETA *
                 </Label>
                 <input
@@ -183,7 +183,7 @@ export default function SalesOrderCreateModal({
                   name="eta"
                   value={formData.eta}
                   onChange={handleChange}
-                  className="h-9 w-full rounded-md border border-[var(--shell-border)] bg-[var(--shell-bg)] px-3 text-xs text-[var(--shell-foreground)] focus:outline-none focus:ring-1 focus:ring-[var(--shell-brand)]"
+                  className="h-9 w-full rounded-md border border-border bg-background px-3 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-[var(--shell-brand)]"
                   required
                 />
               </div>
@@ -191,14 +191,14 @@ export default function SalesOrderCreateModal({
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">
+                <Label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">
                   Status *
                 </Label>
                 <select
                   name="status"
                   value={formData.status}
                   onChange={handleChange}
-                  className="h-9 w-full rounded-md border border-[var(--shell-border)] bg-[var(--shell-bg)] px-3 text-xs text-[var(--shell-foreground)] focus:outline-none focus:ring-1 focus:ring-[var(--shell-brand)]"
+                  className="h-9 w-full rounded-md border border-border bg-background px-3 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-[var(--shell-brand)]"
                   required
                 >
                   <option value="Pending">Pending</option>
@@ -212,7 +212,7 @@ export default function SalesOrderCreateModal({
                 </select>
               </div>
               <div>
-                <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">
+                <Label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">
                   Representative *
                 </Label>
                 <Input
@@ -226,7 +226,7 @@ export default function SalesOrderCreateModal({
             </div>
 
             <div>
-              <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">
+              <Label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">
                 Upload Invoice File (PDF or Image)
               </Label>
               <FileUpload

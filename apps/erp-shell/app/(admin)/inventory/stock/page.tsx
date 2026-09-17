@@ -149,7 +149,7 @@ export default function StockPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-4">
         <div>
           <h1 className="font-heading text-2xl font-semibold tracking-tight text-[--shell-foreground] flex items-center gap-2">
-            <Warehouse className="h-6 w-6 text-[var(--shell-brand)]" />
+            <Warehouse className="h-6 w-6 text-primary" />
             Stock Levels & Warehouse Inventory
           </h1>
           <p className="mt-1 text-sm text-[--shell-muted]">
@@ -161,7 +161,7 @@ export default function StockPage() {
             <SlidersHorizontal className="h-4 w-4 mr-2" /> Adjust Stock Count
           </Button>
           <Link href="/inventory/fulfillment">
-            <Button size="sm" className="bg-[var(--shell-brand)] text-white hover:bg-[var(--shell-action)]">
+            <Button size="sm" className="bg-primary text-white hover:bg-[var(--shell-action)]">
               <ClipboardList className="h-4 w-4 mr-2" /> Fulfill Sales Orders <ArrowRight className="h-3.5 w-3.5 ml-1" />
             </Button>
           </Link>
@@ -239,7 +239,7 @@ export default function StockPage() {
                           variant="ghost"
                           size="xs"
                           onClick={() => fetchOrderHistory(s)}
-                          className="hover:bg-muted font-medium text-xs text-[var(--shell-brand)] ml-auto flex items-center gap-1"
+                          className="hover:bg-muted font-medium text-xs text-primary ml-auto flex items-center gap-1"
                         >
                           <TrendingUp className="h-3 w-3" /> View History
                         </Button>
@@ -320,7 +320,7 @@ export default function StockPage() {
             <Button variant="outline" size="sm" onClick={() => setIsAdjustOpen(false)}>
               Cancel
             </Button>
-            <Button size="sm" onClick={handleAdjustStock} className="bg-[var(--shell-brand)] text-white">
+            <Button size="sm" onClick={handleAdjustStock} className="bg-primary text-white">
               Save Adjustment
             </Button>
           </div>
@@ -333,7 +333,7 @@ export default function StockPage() {
           <DialogContent className="w-full max-w-4xl sm:max-w-4xl max-h-[85vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="text-lg font-bold flex items-center gap-2">
-                <TrendingUp className="h-5 w-5 text-[var(--shell-brand)]" />
+                <TrendingUp className="h-5 w-5 text-primary" />
                 Order History: {selectedHistoryItem.product_name || `Product #${selectedHistoryItem.product_id}`}
               </DialogTitle>
               <DialogDescription className="text-xs">
@@ -343,7 +343,7 @@ export default function StockPage() {
 
             {historyLoading ? (
               <div className="flex justify-center items-center py-12">
-                <Loader2 className="h-6 w-6 animate-spin text-[var(--shell-brand)]" />
+                <Loader2 className="h-6 w-6 animate-spin text-primary" />
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 my-2 text-xs">
@@ -415,7 +415,7 @@ export default function StockPage() {
               </div>
             )}
             <div className="flex justify-end pt-2 border-t border-border mt-4">
-              <Button size="sm" onClick={() => setSelectedHistoryItem(null)} className="bg-[var(--shell-brand)] text-white">
+              <Button size="sm" onClick={() => setSelectedHistoryItem(null)} className="bg-primary text-white">
                 Close
               </Button>
             </div>

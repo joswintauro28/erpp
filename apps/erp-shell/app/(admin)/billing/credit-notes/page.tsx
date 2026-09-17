@@ -138,10 +138,10 @@ export default function CreditNotes() {
                   <TableRow key={n.id}>
                     <TableCell><span className="font-mono text-xs font-medium">{n.note_number}</span></TableCell>
                     <TableCell className="font-mono text-xs">{n.invoice_number}</TableCell>
-                    <TableCell className="text-[var(--shell-muted)]">{n.client_name}</TableCell>
+                    <TableCell className="text-muted-foreground">{n.client_name}</TableCell>
                     <TableCell className="font-mono text-sm text-right">{money(n.amount)}</TableCell>
                     <TableCell><Badge variant={statusVariant(n.status)} className="capitalize">{n.status}</Badge></TableCell>
-                    <TableCell className="text-xs text-[var(--shell-muted)]">{n.date}</TableCell>
+                    <TableCell className="text-xs text-muted-foreground">{n.date}</TableCell>
                     <TableCell>
                       <div className="flex justify-end">
                         <Button variant="ghost" size="icon-sm" onClick={() => setDeleteConfirmId(n.id)} disabled={deleting === n.id}>
@@ -161,10 +161,10 @@ export default function CreditNotes() {
         <DialogContent>
           <DialogHeader><DialogTitle>Create Credit Note</DialogTitle></DialogHeader>
           <form className="space-y-5" onSubmit={handleCreate}>
-            <div className="rounded-lg border border-[var(--shell-border)] bg-[var(--shell-surface)] p-4">
+            <div className="rounded-lg border p-4">
               <div className="mb-3 flex items-center gap-2">
-                <Receipt className="h-3.5 w-3.5 text-[var(--shell-brand)]" />
-                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--shell-foreground)]">Invoice Reference</span>
+                <Receipt className="h-3.5 w-3.5 text-primary" />
+                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-foreground">Invoice Reference</span>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="cn-invoice">Invoice</Label>
@@ -180,21 +180,21 @@ export default function CreditNotes() {
                 </Select>
               </div>
               {selectedInvoice && (
-                <div className="mt-3 flex items-center justify-between rounded-md bg-[var(--shell-bg)] px-3 py-2 text-xs">
-                  <span className="text-[var(--shell-muted)]">Invoice Balance</span>
-                  <span className="font-mono font-semibold text-[var(--shell-brand)]">{money(selectedInvoice.balance)}</span>
+                <div className="mt-3 flex items-center justify-between rounded-md bg-background px-3 py-2 text-xs">
+                  <span className="text-muted-foreground">Invoice Balance</span>
+                  <span className="font-mono font-semibold text-primary">{money(selectedInvoice.balance)}</span>
                 </div>
               )}
             </div>
 
-            <div className="rounded-lg border border-[var(--shell-border)] bg-[var(--shell-surface)] p-4">
+            <div className="rounded-lg border p-4">
               <div className="space-y-2">
                 <Label htmlFor="cn-amount">Amount (₹)</Label>
                 <Input id="cn-amount" type="number" min={0.01} step={0.01} placeholder="0.00" required value={formAmount} onChange={(e) => setFormAmount(e.target.value)} />
               </div>
             </div>
 
-            <div className="rounded-lg border border-[var(--shell-border)] bg-[var(--shell-surface)] p-4">
+            <div className="rounded-lg border p-4">
               <div className="space-y-2">
                 <Label htmlFor="cn-reason">Reason</Label>
                 <Textarea id="cn-reason" rows={2} placeholder="Reason for credit note" value={formReason} onChange={(e) => setFormReason(e.target.value)} />

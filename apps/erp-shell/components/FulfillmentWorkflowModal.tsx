@@ -124,7 +124,7 @@ export default function FulfillmentWorkflowModal({
         <DialogHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Boxes className="h-6 w-6 text-[var(--shell-brand)]" />
+              <Boxes className="h-6 w-6 text-primary" />
               <div>
                 <DialogTitle className="text-xl font-bold">{order.sales_order_code}</DialogTitle>
                 <DialogDescription>Customer: {order.customer_name}</DialogDescription>
@@ -135,8 +135,8 @@ export default function FulfillmentWorkflowModal({
         </DialogHeader>
 
         {/* Workflow Stepper */}
-        <div className="my-4 p-4 bg-[var(--shell-surface-alt)]/50 rounded-lg border border-[var(--shell-border)]">
-          <div className="text-xs font-semibold text-[var(--shell-muted)] uppercase tracking-wider mb-3">
+        <div className="my-4 p-4 bg-secondary/50 rounded-lg border border-border">
+          <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
             Fulfillment Workflow Pipeline
           </div>
           <div className="grid grid-cols-5 gap-2 text-center text-xs">
@@ -148,14 +148,14 @@ export default function FulfillmentWorkflowModal({
                 i === 3 ? order.status === "PACKED" :
                 order.status === "DISPATCHED" || order.status === "COMPLETED";
               const colors = [
-                "bg-[var(--shell-brand)] text-white border-[var(--shell-brand)]",
+                "bg-primary text-white border-[var(--shell-brand)]",
                 "bg-[var(--shell-info)] text-white border-[var(--shell-info)]",
                 "bg-[var(--shell-warning)] text-white border-[var(--shell-warning)]",
-                "bg-[var(--shell-accent)] text-[var(--shell-accent-text)] border-[var(--shell-border)]",
+                "bg-[var(--shell-accent)] text-[var(--shell-accent-text)] border-border",
                 "bg-[var(--shell-success)] text-white border-[var(--shell-success)]",
               ];
               return (
-                <div key={step} className={`p-2 rounded font-medium border ${active ? colors[i] : "bg-[var(--shell-surface)] border-[var(--shell-border)] text-[var(--shell-muted)]"}`}>
+                <div key={step} className={`p-2 rounded font-medium border ${active ? colors[i] : "bg-card border-border text-muted-foreground"}`}>
                   {i + 1}. {step}
                 </div>
               );
@@ -165,10 +165,10 @@ export default function FulfillmentWorkflowModal({
 
         {/* Order Items */}
         <div className="space-y-4">
-          <h4 className="text-sm font-semibold text-[var(--shell-foreground)]">Order Items</h4>
-          <div className="border border-[var(--shell-border)] rounded-lg overflow-hidden">
+          <h4 className="text-sm font-semibold text-foreground">Order Items</h4>
+          <div className="border border-border rounded-lg overflow-hidden">
             <table className="w-full text-sm">
-              <thead className="bg-[var(--shell-surface-alt)] text-[var(--shell-muted)] text-left text-xs uppercase">
+              <thead className="bg-secondary text-muted-foreground text-left text-xs uppercase">
                 <tr>
                   <th className="p-3">Product</th>
                   <th className="p-3">SKU</th>
@@ -176,11 +176,11 @@ export default function FulfillmentWorkflowModal({
                   <th className="p-3 text-right">Price</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[var(--shell-border)]">
+              <tbody className="divide-y divide-border">
                 {order.items.map((item) => (
-                  <tr key={item.id} className="hover:bg-[var(--shell-surface-alt)]/20">
-                    <td className="p-3 font-medium text-[var(--shell-foreground)]">{item.product_name}</td>
-                    <td className="p-3 text-[var(--shell-muted)]">{item.sku || "N/A"}</td>
+                  <tr key={item.id} className="hover:bg-secondary/20">
+                    <td className="p-3 font-medium text-foreground">{item.product_name}</td>
+                    <td className="p-3 text-muted-foreground">{item.sku || "N/A"}</td>
                     <td className="p-3 text-right font-bold">{item.ordered_quantity}</td>
                     <td className="p-3 text-right">₹{item.unit_price.toLocaleString()}</td>
                   </tr>
@@ -190,22 +190,22 @@ export default function FulfillmentWorkflowModal({
           </div>
 
           {/* Workflow Action Cards */}
-          <div className="p-4 border border-[var(--shell-border)] rounded-lg bg-[var(--shell-surface)] space-y-4">
+          <div className="p-4 border border-border rounded-lg space-y-4">
             {/* Step 1: Stock Check */}
             {order.status === "QUEUED" && (
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h5 className="font-semibold text-[var(--shell-foreground)]">Step 1: Check Stock Availability</h5>
-                    <p className="text-xs text-[var(--shell-muted)]">Verify physical stock levels before allocation.</p>
+                    <h5 className="font-semibold text-foreground">Step 1: Check Stock Availability</h5>
+                    <p className="text-xs text-muted-foreground">Verify physical stock levels before allocation.</p>
                   </div>
-                  <Button onClick={handleCheckStock} disabled={loading} className="bg-[var(--shell-brand)] text-white">
+                  <Button onClick={handleCheckStock} disabled={loading} className="bg-primary text-white">
                     {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <ClipboardCheck className="h-4 w-4 mr-2" />}
                     Check Stock
                   </Button>
                 </div>
                 {stockCheck && (
-                  <div className="p-3 rounded-md bg-[var(--shell-surface-alt)]/50 border border-[var(--shell-border)] space-y-2 text-xs">
+                  <div className="p-3 rounded-md bg-secondary/50 border border-border space-y-2 text-xs">
                     <div className="flex items-center justify-between font-bold">
                       <span>Stock Status:</span>
                       {stockCheck.overall_available ? (
@@ -214,7 +214,7 @@ export default function FulfillmentWorkflowModal({
                         <span className="text-destructive flex items-center gap-1"><AlertTriangle className="h-4 w-4" /> Shortage</span>
                       )}
                     </div>
-                    <div className="divide-y divide-[var(--shell-border)]/60">
+                    <div className="divide-y divide-border/60">
                       {stockCheck.items.map((item) => (
                         <div key={item.product_id} className="py-1 flex justify-between">
                           <span>{item.product_name} (Req: {item.ordered_quantity})</span>
@@ -245,7 +245,7 @@ export default function FulfillmentWorkflowModal({
               <div className="flex items-center justify-between">
                 <div>
                   <h5 className="font-semibold text-[var(--shell-info)] flex items-center gap-2"><CheckCircle2 className="h-5 w-5" /> Stock Reserved</h5>
-                  <p className="text-xs text-[var(--shell-muted)]">Items locked. Generate Pick List for warehouse.</p>
+                  <p className="text-xs text-muted-foreground">Items locked. Generate Pick List for warehouse.</p>
                 </div>
                 <div className="flex gap-2">
                   <Button variant="outline" size="sm" onClick={handleStepBack} disabled={loading}>← Back</Button>
@@ -259,7 +259,7 @@ export default function FulfillmentWorkflowModal({
               <div className="flex items-center justify-between">
                 <div>
                   <h5 className="font-semibold text-[var(--shell-warning)] flex items-center gap-2"><PackageCheck className="h-5 w-5" /> Items Being Picked</h5>
-                  <p className="text-xs text-[var(--shell-muted)]">Gathering SKUs from bin locations.</p>
+                  <p className="text-xs text-muted-foreground">Gathering SKUs from bin locations.</p>
                 </div>
                 <div className="flex gap-2">
                   <Button variant="outline" size="sm" onClick={handleStepBack} disabled={loading}>← Back</Button>
@@ -273,18 +273,18 @@ export default function FulfillmentWorkflowModal({
               <div className="space-y-3">
                 <div>
                   <h5 className="font-semibold text-[var(--shell-info)] flex items-center gap-2"><Boxes className="h-5 w-5" /> Packed & Ready</h5>
-                  <p className="text-xs text-[var(--shell-muted)]">Enter carrier and tracking details to dispatch.</p>
+                  <p className="text-xs text-muted-foreground">Enter carrier and tracking details to dispatch.</p>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="text-xs font-medium block mb-1">Carrier</label>
                     <input type="text" value={shippingCarrier} onChange={(e) => setShippingCarrier(e.target.value)}
-                      className="w-full text-xs p-2 border border-[var(--shell-border)] rounded bg-[var(--shell-surface)]" />
+                      className="w-full text-xs p-2 border border-border rounded" />
                   </div>
                   <div>
                     <label className="text-xs font-medium block mb-1">Tracking Number</label>
                     <input type="text" value={trackingNumber} onChange={(e) => setTrackingNumber(e.target.value)}
-                      className="w-full text-xs p-2 border border-[var(--shell-border)] rounded bg-[var(--shell-surface)]" />
+                      className="w-full text-xs p-2 border border-border rounded" />
                   </div>
                 </div>
                 <div className="flex justify-end gap-2">
@@ -310,14 +310,14 @@ export default function FulfillmentWorkflowModal({
                 <div className="flex items-center justify-between pt-2">
                   <div>
                     <h6 className="font-semibold text-xs">Billing Status</h6>
-                    <p className="text-xs text-[var(--shell-muted)]">Generate invoice in Billing Workstation.</p>
+                    <p className="text-xs text-muted-foreground">Generate invoice in Billing Workstation.</p>
                   </div>
                   {order.status === "COMPLETED" ? (
                     <Badge className="bg-[var(--shell-success)] text-white flex items-center gap-1"><CheckCircle2 className="h-3.5 w-3.5" /> Billed</Badge>
                   ) : (
                     <div className="flex gap-2">
                       <Button variant="outline" size="sm" onClick={handleStepBack} disabled={loading}>← Rollback</Button>
-                      <Button onClick={handleGenerateInvoice} disabled={loading} className="bg-[var(--shell-brand)] text-white">
+                      <Button onClick={handleGenerateInvoice} disabled={loading} className="bg-primary text-white">
                         <FileText className="h-4 w-4 mr-1" /> Generate Invoice
                       </Button>
                     </div>

@@ -117,40 +117,40 @@ export default function RequirementCreateModal({
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-3">
             <div>
-              <label className="block text-[10px] font-semibold uppercase text-[var(--shell-muted)] mb-1">Description *</label>
+              <label className="block text-[10px] font-semibold uppercase text-muted-foreground mb-1">Description *</label>
               <input
                 type="text"
                 name="name"
                 placeholder="Describe the requirement..."
                 value={formData.name}
                 onChange={handleChange}
-                className="h-8 w-full rounded-md border border-[var(--shell-border)] bg-[var(--shell-surface)] px-2.5 text-xs text-[var(--shell-foreground)]"
+                className="h-8 w-full rounded-md border px-2.5 text-xs text-foreground"
                 required
               />
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-[10px] font-semibold uppercase text-[var(--shell-muted)] mb-1">Company Name *</label>
+                <label className="block text-[10px] font-semibold uppercase text-muted-foreground mb-1">Company Name *</label>
                 <input
                   type="text"
                   name="account"
                   placeholder="e.g. Meridian Foods"
                   value={formData.account}
                   onChange={handleChange}
-                  className="h-8 w-full rounded-md border border-[var(--shell-border)] bg-[var(--shell-surface)] px-2.5 text-xs text-[var(--shell-foreground)]"
+                  className="h-8 w-full rounded-md border px-2.5 text-xs text-foreground"
                   required
                 />
               </div>
               <div>
-                <label className="block text-[10px] font-semibold uppercase text-[var(--shell-muted)] mb-1">Representative *</label>
+                <label className="block text-[10px] font-semibold uppercase text-muted-foreground mb-1">Representative *</label>
                 <input
                   type="text"
                   name="owner"
                   placeholder="e.g. Maya Patel"
                   value={formData.owner}
                   onChange={handleChange}
-                  className="h-8 w-full rounded-md border border-[var(--shell-border)] bg-[var(--shell-surface)] px-2.5 text-xs text-[var(--shell-foreground)]"
+                  className="h-8 w-full rounded-md border px-2.5 text-xs text-foreground"
                   required
                 />
               </div>
@@ -158,12 +158,12 @@ export default function RequirementCreateModal({
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-[10px] font-semibold uppercase text-[var(--shell-muted)] mb-1">Category *</label>
+                <label className="block text-[10px] font-semibold uppercase text-muted-foreground mb-1">Category *</label>
                 <select
                   name="category"
                   value={formData.category}
                   onChange={handleChange}
-                  className="h-8 w-full rounded-md border border-[var(--shell-border)] bg-[var(--shell-surface)] px-2 text-xs text-[var(--shell-foreground)] focus:outline-none focus:ring-1 focus:ring-[var(--shell-brand)]"
+                  className="h-8 w-full rounded-md border px-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-[var(--shell-brand)]"
                   required
                 >
                   <option value="Technical">Technical</option>
@@ -173,12 +173,12 @@ export default function RequirementCreateModal({
                 </select>
               </div>
               <div>
-                <label className="block text-[10px] font-semibold uppercase text-[var(--shell-muted)] mb-1">Priority *</label>
+                <label className="block text-[10px] font-semibold uppercase text-muted-foreground mb-1">Priority *</label>
                 <select
                   name="priority"
                   value={formData.priority}
                   onChange={handleChange}
-                  className="h-8 w-full rounded-md border border-[var(--shell-border)] bg-[var(--shell-surface)] px-2 text-xs text-[var(--shell-foreground)] focus:outline-none focus:ring-1 focus:ring-[var(--shell-brand)]"
+                  className="h-8 w-full rounded-md border px-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-[var(--shell-brand)]"
                   required
                 >
                   <option value="Low">Low</option>
@@ -189,12 +189,12 @@ export default function RequirementCreateModal({
             </div>
 
             <div>
-              <label className="block text-[10px] font-semibold uppercase text-[var(--shell-muted)] mb-1">Status</label>
+              <label className="block text-[10px] font-semibold uppercase text-muted-foreground mb-1">Status</label>
               <select
                 name="status"
                 value={formData.status}
                 onChange={handleChange}
-                className="h-8 w-full rounded-md border border-[var(--shell-border)] bg-[var(--shell-surface)] px-2 text-xs text-[var(--shell-foreground)] focus:outline-none focus:ring-1 focus:ring-[var(--shell-brand)]"
+                className="h-8 w-full rounded-md border px-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-[var(--shell-brand)]"
                 required
               >
                 <option value="Draft">Draft</option>
@@ -207,8 +207,8 @@ export default function RequirementCreateModal({
             </div>
 
             <div>
-              <label className="block text-[10px] font-semibold uppercase text-[var(--shell-muted)] mb-1">
-                Attach File <span className="font-normal lowercase text-[var(--shell-muted)]">(PDF or image, optional)</span>
+              <label className="block text-[10px] font-semibold uppercase text-muted-foreground mb-1">
+                Attach File <span className="font-normal lowercase text-muted-foreground">(PDF or image, optional)</span>
               </label>
               <FileUpload
                 bucket="crm-assets"

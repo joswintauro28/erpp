@@ -110,29 +110,29 @@ export default function LoginPage() {
       <div className="relative z-10 w-full max-w-[400px] px-6 py-12 flex flex-col items-center">
         {/* Brand Header */}
         <div className="mb-8 flex flex-col items-center gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-[var(--shell-border)]/60 bg-[var(--shell-brand)]/10">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-border/60 bg-primary/10">
             <span className="font-heading text-lg font-bold text-[var(--shell-accent)] tracking-[0.05em]">
               D
             </span>
           </div>
           <div className="flex flex-col items-center gap-0.5">
-            <h1 className="font-heading text-lg font-bold text-[var(--shell-foreground)] tracking-[0.05em] uppercase">
+            <h1 className="font-heading text-lg font-bold text-foreground tracking-[0.05em] uppercase">
               DATAVEX
             </h1>
-            <p className="text-xs text-[var(--shell-muted)] uppercase tracking-[0.1em]">Command Center</p>
+            <p className="text-xs text-muted-foreground uppercase tracking-[0.1em]">Command Center</p>
           </div>
         </div>
 
         {/* Login Container */}
-        <div className="relative w-full rounded-xl border border-[var(--shell-border)] bg-card/65 backdrop-blur-md p-6 shadow-xl">
+        <div className="relative w-full rounded-xl border border-border bg-card/65 backdrop-blur-md p-6 shadow-xl">
           <div className="mb-6 flex items-center gap-2">
             <div className="h-[2px] w-4 rounded-full bg-[var(--shell-accent)]" />
-            <span className="font-heading text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--shell-muted)]">
+            <span className="font-heading text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground">
               Secure Authentication
             </span>
           </div>
 
-          <h2 className="font-heading mb-6 text-lg font-semibold text-[var(--shell-foreground)]">
+          <h2 className="font-heading mb-6 text-lg font-semibold text-foreground">
             Sign in to your account
           </h2>
 
@@ -146,7 +146,7 @@ export default function LoginPage() {
             <div className="flex flex-col gap-1.5">
               <label
                 htmlFor="email"
-                className="text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--shell-muted)]"
+                className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground"
               >
                 Email address
               </label>
@@ -159,8 +159,8 @@ export default function LoginPage() {
                   setEmail(e.target.value);
                   if (fieldErrors.email) setFieldErrors((p) => ({ ...p, email: undefined }));
                 }}
-                className={`h-10 rounded-lg border bg-muted/20 px-3 text-sm text-[var(--shell-foreground)] outline-none transition-all placeholder:text-[var(--shell-muted)]/40 focus:border-[var(--shell-brand)]/60 focus:bg-muted/40 ${
-                  fieldErrors.email ? "border-destructive/50" : "border-[var(--shell-border)]"
+                className={`h-10 rounded-lg border bg-muted/20 px-3 text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground/40 focus:border-[var(--shell-brand)]/60 focus:bg-muted/40 ${
+                  fieldErrors.email ? "border-destructive/50" : "border-border"
                 }`}
               />
               {fieldErrors.email && (
@@ -171,7 +171,7 @@ export default function LoginPage() {
             <div className="flex flex-col gap-1.5">
               <label
                 htmlFor="password"
-                className="text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--shell-muted)]"
+                className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground"
               >
                 Password
               </label>
@@ -185,14 +185,14 @@ export default function LoginPage() {
                     setPassword(e.target.value);
                     if (fieldErrors.password) setFieldErrors((p) => ({ ...p, password: undefined }));
                   }}
-                  className={`h-10 w-full rounded-lg border bg-muted/20 px-3 pr-10 text-sm text-[var(--shell-foreground)] outline-none transition-all placeholder:text-[var(--shell-muted)]/40 focus:border-[var(--shell-brand)]/60 focus:bg-muted/40 ${
-                    fieldErrors.password ? "border-destructive/50" : "border-[var(--shell-border)]"
+                  className={`h-10 w-full rounded-lg border bg-muted/20 px-3 pr-10 text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground/40 focus:border-[var(--shell-brand)]/60 focus:bg-muted/40 ${
+                    fieldErrors.password ? "border-destructive/50" : "border-border"
                   }`}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--shell-muted)] hover:text-[var(--shell-foreground)] transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                   tabIndex={-1}
                 >
                   {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
@@ -206,7 +206,7 @@ export default function LoginPage() {
             <Button
               type="submit"
               disabled={isLoading}
-              className="relative mt-2 flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-[var(--shell-brand)] hover:bg-[var(--shell-brand)]/90 text-white font-medium transition-all shadow-md active:scale-[0.99] disabled:opacity-50 disabled:pointer-events-none cursor-pointer"
+              className="relative mt-2 flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-primary hover:bg-primary/90 text-white font-medium transition-all shadow-md active:scale-[0.99] disabled:opacity-50 disabled:pointer-events-none cursor-pointer"
             >
               {isLoading ? (
                 <Loader2 size={15} className="animate-spin" />
@@ -218,8 +218,8 @@ export default function LoginPage() {
           </form>
 
           {/* Secure Footer */}
-          <div className="mt-6 border-t border-[var(--shell-border)]/40 pt-4 flex flex-col items-center gap-2">
-            <p className="flex items-center gap-1.5 text-[10px] text-[var(--shell-muted)]/70">
+          <div className="mt-6 border-t border-border/40 pt-4 flex flex-col items-center gap-2">
+            <p className="flex items-center gap-1.5 text-[10px] text-muted-foreground/70">
               <Lock className="h-3 w-3 text-[var(--shell-accent)]" />
               Secure 256-bit SSL encrypted connection
             </p>

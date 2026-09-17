@@ -724,7 +724,7 @@ export default function ReportsPage() {
                     <CardTitle className="text-xs text-muted-foreground">Inventory Turnover</CardTitle>
                   </CardHeader>
                   <CardContent className="pt-0">
-                    <p className="font-heading text-xl font-bold text-[var(--shell-brand)]">{cogsData?.summary?.inventory_turnover || 0}x</p>
+                    <p className="font-heading text-xl font-bold text-primary">{cogsData?.summary?.inventory_turnover || 0}x</p>
                     <p className="text-[11px] text-muted-foreground mt-1">Annualized turnover ratio</p>
                   </CardContent>
                 </Card>

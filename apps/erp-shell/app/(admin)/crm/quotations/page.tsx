@@ -91,7 +91,7 @@ export default function QuotationsPage() {
             <Button variant="outline" size="sm" onClick={() => exportToCSV(filtered, "quotations")} className="gap-1.5 text-xs">
               <Download size={14} /> Export
             </Button>
-            <Button size="sm" onClick={() => setIsCpqOpen(true)} className="bg-[var(--shell-brand)] text-white hover:bg-[var(--shell-brand)]/90 gap-1.5 text-xs shadow-sm">
+            <Button size="sm" onClick={() => setIsCpqOpen(true)} className="bg-primary text-white hover:bg-primary/90 gap-1.5 text-xs shadow-sm">
               <Plus size={14} /> New Quotation (CPQ)
             </Button>
           </>
@@ -111,13 +111,13 @@ export default function QuotationsPage() {
       <section>
         <SectionHeading label="Quotation Records" />
 
-        <Card className="hover:shadow-engineered transition-shadow duration-200 border-[var(--shell-border)] bg-[var(--shell-surface)]">
-          <div className="flex items-center gap-3 p-4 border-b border-[var(--shell-border)]">
+        <Card className="hover:shadow-engineered transition-shadow duration-200">
+          <div className="flex items-center gap-3 p-4 border-b border-border">
             <div className="relative flex-1">
-              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--shell-muted)]" />
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
               <Input placeholder="Search quotations..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 h-9 text-sm" />
             </div>
-            <Filter size={15} className="text-[var(--shell-muted)] shrink-0" />
+            <Filter size={15} className="text-muted-foreground shrink-0" />
           </div>
           <QuotationTable
             quotations={filtered}

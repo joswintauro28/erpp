@@ -130,14 +130,14 @@ export default function SuppliersPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-4">
         <div>
           <h1 className="font-heading text-2xl font-semibold tracking-tight text-[--shell-foreground] flex items-center gap-2">
-            <Truck className="h-6 w-6 text-[var(--shell-brand)]" />
+            <Truck className="h-6 w-6 text-primary" />
             Supplier Vendor Directory
           </h1>
           <p className="mt-1 text-sm text-[--shell-muted]">
             Registered vendors, contact details, payment terms, and reordering history.
           </p>
         </div>
-        <Button onClick={() => setIsAddOpen(true)} className="bg-[var(--shell-brand)] text-white hover:bg-[var(--shell-action)]">
+        <Button onClick={() => setIsAddOpen(true)} className="bg-primary text-white hover:bg-[var(--shell-action)]">
           <Plus className="h-4 w-4 mr-2" /> Add New Supplier
         </Button>
       </div>
@@ -211,7 +211,7 @@ export default function SuppliersPage() {
                             setStatus((s.status || (s.is_active !== false ? "ACTIVE" : "INACTIVE")).toUpperCase());
                           }}
                         >
-                          <Edit3 className="h-3.5 w-3.5 text-muted-foreground hover:text-[var(--shell-brand)]" />
+                          <Edit3 className="h-3.5 w-3.5 text-muted-foreground hover:text-primary" />
                         </Button>
                         <Button
                           variant="ghost"
@@ -307,7 +307,7 @@ export default function SuppliersPage() {
             <Button variant="outline" size="sm" onClick={() => setIsAddOpen(false)}>
               Cancel
             </Button>
-            <Button size="sm" onClick={handleCreateSupplier} className="bg-[var(--shell-brand)] text-white">
+            <Button size="sm" onClick={handleCreateSupplier} className="bg-primary text-white">
               Save Supplier
             </Button>
           </div>
@@ -398,7 +398,7 @@ export default function SuppliersPage() {
               <Button variant="outline" size="sm" onClick={() => setEditingSupplier(null)}>
                 Cancel
               </Button>
-              <Button size="sm" onClick={handleUpdateSupplier} className="bg-[var(--shell-brand)] text-white">
+              <Button size="sm" onClick={handleUpdateSupplier} className="bg-primary text-white">
                 Save Changes
               </Button>
             </div>

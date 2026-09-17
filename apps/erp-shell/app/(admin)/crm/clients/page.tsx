@@ -165,10 +165,10 @@ export default function Clients() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-heading text-xl font-semibold tracking-tight text-[var(--shell-foreground)]">
+          <h1 className="font-heading text-xl font-semibold tracking-tight text-foreground">
             Clients
           </h1>
-          <p className="mt-0.5 text-sm text-[var(--shell-muted)]">
+          <p className="mt-0.5 text-sm text-muted-foreground">
             Central directory of every account you serve
           </p>
         </div>
@@ -181,10 +181,10 @@ export default function Clients() {
       {/* Client Overview KPIs */}
       <section>
         <div className="mb-5 flex items-center gap-2">
-          <h2 className="font-heading text-xs font-light uppercase tracking-[0.12em] text-[var(--shell-muted)]">
+          <h2 className="font-heading text-xs font-light uppercase tracking-[0.12em] text-muted-foreground">
             Client Overview
           </h2>
-          <div className="h-px flex-1 bg-[var(--shell-border)]" />
+          <div className="h-px flex-1 bg-border" />
         </div>
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
           {[
@@ -195,18 +195,18 @@ export default function Clients() {
           ].map((kpi, i) => (
             <div
               key={kpi.label}
-              className="animate-kpi flex flex-col gap-1.5 rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface)] p-5 transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1)]"
+              className="animate-kpi flex flex-col gap-1.5 rounded-xl border p-5 transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1)]"
               style={{ animationDelay: `${i * 0.05}s` }}
             >
               <div className="flex items-center justify-between">
-                <span className="text-xs font-medium uppercase tracking-[0.08em] text-[var(--shell-muted)]">
+                <span className="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">
                   {kpi.label}
                 </span>
-                <div className="flex h-7 w-7 items-center justify-center rounded-md border border-[var(--shell-border)] bg-[var(--shell-bg)]">
+                <div className="flex h-7 w-7 items-center justify-center rounded-md border border-border bg-background">
                   <kpi.icon className="h-3.5 w-3.5" style={{ color: kpi.color }} />
                 </div>
               </div>
-              <span className="font-heading text-2xl font-semibold tracking-tight text-[var(--shell-foreground)]">
+              <span className="font-heading text-2xl font-semibold tracking-tight text-foreground">
                 {kpi.value}
               </span>
             </div>
@@ -217,15 +217,15 @@ export default function Clients() {
       {/* Client Registry */}
       <section>
         <div className="mb-5 flex items-center gap-2">
-          <h2 className="font-heading text-xs font-light uppercase tracking-[0.12em] text-[var(--shell-muted)]">
+          <h2 className="font-heading text-xs font-light uppercase tracking-[0.12em] text-muted-foreground">
             Client Registry
           </h2>
-          <div className="h-px flex-1 bg-[var(--shell-border)]" />
+          <div className="h-px flex-1 bg-border" />
         </div>
 
         <div className="mb-5 flex flex-wrap items-center gap-3">
           <div className="relative flex-1 max-w-xs">
-            <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--shell-muted)]" />
+            <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
             <Input
               placeholder="Search by name, ID, industry..."
               className="pl-8"
@@ -257,12 +257,12 @@ export default function Clients() {
           </Select>
         </div>
 
-        <Card className="hover:shadow-md transition-shadow duration-200 border-[var(--shell-border)] bg-[var(--shell-surface)]">
+        <Card className="hover:shadow-md transition-shadow duration-200">
           <CardContent className="p-0">
             {filtered.length === 0 ? (
-              <div className="flex flex-col items-center gap-3 py-20 text-[var(--shell-muted)]">
+              <div className="flex flex-col items-center gap-3 py-20 text-muted-foreground">
                 <Users className="h-12 w-12" />
-                <p className="text-base font-medium text-[var(--shell-foreground)]">
+                <p className="text-base font-medium text-foreground">
                   {data?.customers.length === 0 ? "No clients yet" : "No clients match your search"}
                 </p>
                 <p className="text-sm">
@@ -280,24 +280,24 @@ export default function Clients() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--shell-muted)]">ID</TableHead>
-                    <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--shell-muted)]">Account</TableHead>
-                    <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--shell-muted)]">Industry</TableHead>
-                    <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--shell-muted)]">Tier</TableHead>
-                    <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--shell-muted)] text-right">ARR</TableHead>
-                    <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--shell-muted)]">Status</TableHead>
-                    <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--shell-muted)]">Updated</TableHead>
-                    <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--shell-muted)] text-right">Actions</TableHead>
+                    <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">ID</TableHead>
+                    <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">Account</TableHead>
+                    <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">Industry</TableHead>
+                    <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">Tier</TableHead>
+                    <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground text-right">ARR</TableHead>
+                    <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">Status</TableHead>
+                    <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">Updated</TableHead>
+                    <TableHead className="font-heading text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filtered.map((c) => (
                     <TableRow key={c.id} className="hover:bg-muted/30 transition-colors">
                       <TableCell>
-                        <span className="font-mono text-xs text-[var(--shell-muted)]">{c.id_str}</span>
+                        <span className="font-mono text-xs text-muted-foreground">{c.id_str}</span>
                       </TableCell>
                       <TableCell className="font-medium">{c.account}</TableCell>
-                      <TableCell className="text-[var(--shell-muted)]">{c.industry}</TableCell>
+                      <TableCell className="text-muted-foreground">{c.industry}</TableCell>
                       <TableCell>
                         <Badge variant={tierVariant(c.tier)} className="uppercase text-[10px]">
                           {c.tier}
@@ -309,7 +309,7 @@ export default function Clients() {
                           {c.status}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-[var(--shell-muted)] text-xs">{c.updated_at}</TableCell>
+                      <TableCell className="text-muted-foreground text-xs">{c.updated_at}</TableCell>
                       <TableCell>
                         <div className="flex items-center justify-end gap-1">
                           <Button variant="ghost" size="icon-sm" onClick={() => openEdit(c)}>

@@ -81,16 +81,16 @@ export default function QuotationDetailsModal({ record, isOpen, onClose, onSucce
     return (
       <div className="space-y-6">
         {/* Header Card */}
-        <div className="rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface)] p-5 space-y-4">
+        <div className="rounded-xl border p-5 space-y-4">
           <div className="flex items-center gap-4">
-            <div className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-[var(--shell-brand)]/10 border border-[var(--shell-brand)]/20">
-              <FileText className="h-7 w-7 text-[var(--shell-brand)]" />
+            <div className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-primary/10 border border-[var(--shell-brand)]/20">
+              <FileText className="h-7 w-7 text-primary" />
             </div>
             <div>
-              <h3 className="font-heading text-xl font-semibold text-[var(--shell-foreground)]">
+              <h3 className="font-heading text-xl font-semibold text-foreground">
                 {rec.quote_no || rec.quote_number}
               </h3>
-              <p className="text-xs text-[var(--shell-muted)]">{rec.account}</p>
+              <p className="text-xs text-muted-foreground">{rec.account}</p>
             </div>
             <div className="ml-auto">
               <StatusBadge status={rec.status} category="quotation" />
@@ -100,94 +100,94 @@ export default function QuotationDetailsModal({ record, isOpen, onClose, onSucce
           {/* Key Metrics */}
           <div className="grid grid-cols-3 gap-4">
             <div className="flex items-center gap-2">
-              <DollarSign className="h-4 w-4 text-[var(--shell-brand)]" />
-              <span className="text-xs text-[var(--shell-muted)]">Value:</span>
-              <span className="text-sm font-semibold text-[var(--shell-foreground)]">
+              <DollarSign className="h-4 w-4 text-primary" />
+              <span className="text-xs text-muted-foreground">Value:</span>
+              <span className="text-sm font-semibold text-foreground">
                 {typeof rec.value === "string" ? rec.value : formatCurrency(rec.value)}
               </span>
             </div>
             <div className="flex items-center gap-2">
-              <Calendar className="h-4 w-4 text-[var(--shell-muted)]" />
-              <span className="text-xs text-[var(--shell-muted)]">Valid:</span>
-              <span className="text-sm text-[var(--shell-foreground)]">{rec.valid_until}</span>
+              <Calendar className="h-4 w-4 text-muted-foreground" />
+              <span className="text-xs text-muted-foreground">Valid:</span>
+              <span className="text-sm text-foreground">{rec.valid_until}</span>
             </div>
             <div className="flex items-center gap-2">
-              <CheckCircle className="h-4 w-4 text-[var(--shell-muted)]" />
-              <span className="text-xs text-[var(--shell-muted)]">Stage:</span>
-              <span className="text-sm text-[var(--shell-foreground)]">{rec.stage}</span>
+              <CheckCircle className="h-4 w-4 text-muted-foreground" />
+              <span className="text-xs text-muted-foreground">Stage:</span>
+              <span className="text-sm text-foreground">{rec.stage}</span>
             </div>
           </div>
         </div>
 
         {/* Client Details */}
-        <div className="rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface)] p-5">
+        <div className="rounded-xl border p-5">
           <div className="flex items-center gap-2 mb-4">
-            <Building2 className="h-4 w-4 text-[var(--shell-muted)]" />
-            <span className="text-xs font-bold uppercase tracking-wider text-[var(--shell-foreground)]">Client Details</span>
+            <Building2 className="h-4 w-4 text-muted-foreground" />
+            <span className="text-xs font-bold uppercase tracking-wider text-foreground">Client Details</span>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Account</Label>
-              <p className="text-sm text-[var(--shell-foreground)]">{rec.account}</p>
+              <Label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Account</Label>
+              <p className="text-sm text-foreground">{rec.account}</p>
             </div>
             <div>
-              <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Contact</Label>
-              <p className="text-sm text-[var(--shell-foreground)]">{rec.contact_name}</p>
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <Mail className="h-4 w-4 text-[var(--shell-muted)]" />
-                <span className="text-xs text-[var(--shell-muted)]">Email:</span>
-              </div>
-              <p className="text-sm text-[var(--shell-foreground)]">{rec.email}</p>
+              <Label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Contact</Label>
+              <p className="text-sm text-foreground">{rec.contact_name}</p>
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <Phone className="h-4 w-4 text-[var(--shell-muted)]" />
-                <span className="text-xs text-[var(--shell-muted)]">Phone:</span>
+                <Mail className="h-4 w-4 text-muted-foreground" />
+                <span className="text-xs text-muted-foreground">Email:</span>
               </div>
-              <p className="text-sm text-[var(--shell-foreground)]">{rec.phone}</p>
+              <p className="text-sm text-foreground">{rec.email}</p>
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <Phone className="h-4 w-4 text-muted-foreground" />
+                <span className="text-xs text-muted-foreground">Phone:</span>
+              </div>
+              <p className="text-sm text-foreground">{rec.phone}</p>
             </div>
           </div>
         </div>
 
         {/* Quote Details */}
-        <div className="rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface)] p-5">
+        <div className="rounded-xl border p-5">
           <div className="flex items-center gap-2 mb-4">
-            <FileText className="h-4 w-4 text-[var(--shell-muted)]" />
-            <span className="text-xs font-bold uppercase tracking-wider text-[var(--shell-foreground)]">Quote Details</span>
+            <FileText className="h-4 w-4 text-muted-foreground" />
+            <span className="text-xs font-bold uppercase tracking-wider text-foreground">Quote Details</span>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Status</Label>
+              <Label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Status</Label>
               <Badge>{rec.status}</Badge>
             </div>
             <div>
-              <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Owner</Label>
+              <Label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Owner</Label>
               <div className="flex items-center gap-2 mt-1">
-                <Users className="h-4 w-4 text-[var(--shell-muted)]" />
-                <span className="text-sm text-[var(--shell-foreground)]">{rec.owner}</span>
+                <Users className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm text-foreground">{rec.owner}</span>
               </div>
             </div>
             <div>
-              <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Quote Number</Label>
-              <p className="text-sm font-mono text-[var(--shell-foreground)]">{rec.quote_no || rec.quote_number}</p>
+              <Label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Quote Number</Label>
+              <p className="text-sm font-mono text-foreground">{rec.quote_no || rec.quote_number}</p>
             </div>
             <div>
-              <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Probability</Label>
-              <p className="text-sm text-[var(--shell-foreground)]">
+              <Label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Probability</Label>
+              <p className="text-sm text-foreground">
                 {typeof rec.probability === "number" ? `${rec.probability}%` : rec.probability}
               </p>
             </div>
             <div>
-              <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Converted Invoice</Label>
-              <p className="text-sm text-[var(--shell-foreground)]">
+              <Label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Converted Invoice</Label>
+              <p className="text-sm text-foreground">
                 {rec.converted_invoice_id ? `INV-${rec.converted_invoice_id}` : "Not converted"}
               </p>
             </div>
             <div>
-              <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">ID</Label>
-              <p className="text-sm font-mono text-[var(--shell-foreground)]">{rec.id_str}</p>
+              <Label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">ID</Label>
+              <p className="text-sm font-mono text-foreground">{rec.id_str}</p>
             </div>
           </div>
         </div>
@@ -207,21 +207,21 @@ export default function QuotationDetailsModal({ record, isOpen, onClose, onSucce
 
         {/* Notes */}
         {rec.notes && (
-          <div className="rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface)] p-5">
+          <div className="rounded-xl border p-5">
             <div className="flex items-center gap-2 mb-4">
-              <FileText className="h-4 w-4 text-[var(--shell-muted)]" />
-              <span className="text-xs font-bold uppercase tracking-wider text-[var(--shell-foreground)]">Notes</span>
+              <FileText className="h-4 w-4 text-muted-foreground" />
+              <span className="text-xs font-bold uppercase tracking-wider text-foreground">Notes</span>
             </div>
-            <p className="text-sm text-[var(--shell-foreground)]">{rec.notes}</p>
+            <p className="text-sm text-foreground">{rec.notes}</p>
           </div>
         )}
 
         {/* Attached Files from RustFS */}
         {attachedFiles.length > 0 && (
-          <div className="rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface)] p-5">
+          <div className="rounded-xl border p-5">
             <div className="flex items-center gap-2 mb-4">
-              <FileText className="h-4 w-4 text-[var(--shell-muted)]" />
-              <span className="text-xs font-bold uppercase tracking-wider text-[var(--shell-foreground)]">
+              <FileText className="h-4 w-4 text-muted-foreground" />
+              <span className="text-xs font-bold uppercase tracking-wider text-foreground">
                 Attached Documents ({attachedFiles.length})
               </span>
             </div>

@@ -198,7 +198,7 @@ export default function SalesOrderDetailsModal({
     return (
       <iframe
         srcDoc={htmlContent}
-        className="w-full h-[360px] border border-[var(--shell-border)] rounded-lg"
+        className="w-full h-[360px] border border-border rounded-lg"
         title={record.so_no}
       />
     );
@@ -212,7 +212,7 @@ export default function SalesOrderDetailsModal({
   return (
     <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
       <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto rounded-xl">
-        <DialogHeader className="border-b border-[var(--shell-border)] pb-4 mb-4">
+        <DialogHeader className="border-b border-border pb-4 mb-4">
           <div className="flex items-center gap-2">
             <FileText className="size-5 text-accent" />
             <DialogTitle className="m-0 text-base font-bold">Sales Order Summary: {record.so_no}</DialogTitle>
@@ -227,12 +227,12 @@ export default function SalesOrderDetailsModal({
               <div className="space-y-4">
                 {/* Line Items Table */}
                 <div>
-                  <h4 className="text-xs font-semibold uppercase tracking-wider text-[var(--shell-muted)] mb-2">Order Line Items</h4>
+                  <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Order Line Items</h4>
                   {record.line_items && record.line_items.length > 0 ? (
-                    <div className="border border-[var(--shell-border)] rounded-lg overflow-hidden text-xs">
+                    <div className="border border-border rounded-lg overflow-hidden text-xs">
                       <table className="w-full text-left border-collapse">
                         <thead>
-                          <tr className="bg-[var(--shell-bg)] border-b border-[var(--shell-border)]">
+                          <tr className="bg-background border-b border-border">
                             <th className="p-2 font-semibold">Product</th>
                             <th className="p-2 font-semibold">SKU</th>
                             <th className="p-2 font-semibold text-right">Qty</th>
@@ -241,7 +241,7 @@ export default function SalesOrderDetailsModal({
                         </thead>
                         <tbody>
                           {record.line_items.map((item: any, idx: number) => (
-                            <tr key={idx} className="border-b border-[var(--shell-border)] last:border-0">
+                            <tr key={idx} className="border-b border-border last:border-0">
                               <td className="p-2 truncate max-w-[120px]" title={item.product_name}>{item.product_name}</td>
                               <td className="p-2 font-mono">{item.sku}</td>
                               <td className="p-2 text-right">{item.quantity}</td>
@@ -252,50 +252,50 @@ export default function SalesOrderDetailsModal({
                       </table>
                     </div>
                   ) : (
-                    <p className="text-xs italic text-[var(--shell-muted)]">No line items specified.</p>
+                    <p className="text-xs italic text-muted-foreground">No line items specified.</p>
                   )}
                 </div>
 
                 {record.file_id && (
-                  <div className="rounded-lg border border-[var(--shell-border)] bg-[var(--shell-bg)]/50 p-3">
+                  <div className="rounded-lg border border-border bg-background/50 p-3">
                     <div className="mb-2 flex items-center justify-between">
                       <span className="text-xs font-semibold truncate max-w-[200px]">Invoice: {record.file_name || "attachment"}</span>
                       <a
                         href={`/api/files/${record.file_id}/stream`}
                         download={record.file_name || "invoice"}
-                        className="inline-flex shrink-0 items-center justify-center rounded bg-[var(--shell-brand)] px-2 py-0.5 text-xs text-white hover:bg-[var(--shell-action)]"
+                        className="inline-flex shrink-0 items-center justify-center rounded bg-primary px-2 py-0.5 text-xs text-white hover:bg-[var(--shell-action)]"
                       >
                         <Download className="mr-1 size-3" /> Download
                       </a>
                     </div>
-                    <iframe src={`/api/files/${record.file_id}/stream`} className="w-full h-[150px] border border-[var(--shell-border)] rounded" title="Invoice Preview" />
+                    <iframe src={`/api/files/${record.file_id}/stream`} className="w-full h-[150px] border border-border rounded" title="Invoice Preview" />
                   </div>
                 )}
               </div>
             </div>
 
             {/* Linked Data Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 border-t border-[var(--shell-border)] pt-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 border-t border-border pt-4">
               <div>
-                <h4 className="m-0 mb-2 flex items-center gap-1.5 text-xs font-semibold text-[var(--shell-foreground)]">
+                <h4 className="m-0 mb-2 flex items-center gap-1.5 text-xs font-semibold text-foreground">
                   <FileSpreadsheet className="size-4 text-accent" />
                   Linked Quotations
                 </h4>
                 {loadingRelated ? (
-                  <div className="text-xs text-[var(--shell-muted)]">Loading...</div>
+                  <div className="text-xs text-muted-foreground">Loading...</div>
                 ) : relatedQuotations.length === 0 ? (
-                  <div className="text-xs italic text-[var(--shell-muted)]">No linked quotations.</div>
+                  <div className="text-xs italic text-muted-foreground">No linked quotations.</div>
                 ) : (
                   <div className="flex flex-col gap-2">
                     {relatedQuotations.map((q, idx) => {
                       const isTarget = q.quote_no === record.from_quote;
                       return (
-                        <div key={`${q.id_str}-${idx}`} className={`rounded-lg border p-2.5 text-xs ${isTarget ? "border-[var(--shell-warning)]/40 bg-[var(--shell-warning-surface)]" : "border-[var(--shell-border)] bg-[var(--shell-bg)]"}`}>
+                        <div key={`${q.id_str}-${idx}`} className={`rounded-lg border p-2.5 text-xs ${isTarget ? "border-[var(--shell-warning)]/40 bg-[var(--shell-warning-surface)]" : "border-border bg-background"}`}>
                           <div className="mb-0.5 flex items-center justify-between">
                             <span className="font-semibold">{q.quote_no}</span>
-                            <span className="rounded-full bg-[var(--shell-bg)] px-1.5 py-0.5 text-[0.7rem] font-semibold text-[var(--shell-muted)]">{q.status}</span>
+                            <span className="rounded-full bg-background px-1.5 py-0.5 text-[0.7rem] font-semibold text-muted-foreground">{q.status}</span>
                           </div>
-                          <div className="text-[var(--shell-muted)] text-[11px]">Value: {q.value} &middot; Owner: {q.owner}</div>
+                          <div className="text-muted-foreground text-[11px]">Value: {q.value} &middot; Owner: {q.owner}</div>
                         </div>
                       );
                     })}
@@ -304,23 +304,23 @@ export default function SalesOrderDetailsModal({
               </div>
 
               <div>
-                <h4 className="m-0 mb-2 flex items-center gap-1.5 text-xs font-semibold text-[var(--shell-foreground)]">
+                <h4 className="m-0 mb-2 flex items-center gap-1.5 text-xs font-semibold text-foreground">
                   <ClipboardList className="size-4 text-accent" />
                   Linked Requirements
                 </h4>
                 {loadingRelated ? (
-                  <div className="text-xs text-[var(--shell-muted)]">Loading...</div>
+                  <div className="text-xs text-muted-foreground">Loading...</div>
                 ) : relatedRequirements.length === 0 ? (
-                  <div className="text-xs italic text-[var(--shell-muted)]">No linked requirements.</div>
+                  <div className="text-xs italic text-muted-foreground">No linked requirements.</div>
                 ) : (
                   <div className="flex flex-col gap-2">
                     {relatedRequirements.map((r, idx) => (
-                      <div key={`${r.id_str}-${idx}`} className="rounded-lg border border-[var(--shell-border)] bg-[var(--shell-bg)] p-2.5 text-xs">
+                      <div key={`${r.id_str}-${idx}`} className="rounded-lg border border-border bg-background p-2.5 text-xs">
                         <div className="mb-0.5 flex items-center justify-between">
                           <span className="font-semibold">{r.name}</span>
-                          <span className="rounded-full bg-[var(--shell-bg)] px-1.5 py-0.5 text-[0.7rem] font-semibold text-[var(--shell-muted)]">{r.status}</span>
+                          <span className="rounded-full bg-background px-1.5 py-0.5 text-[0.7rem] font-semibold text-muted-foreground">{r.status}</span>
                         </div>
-                        <div className="text-[var(--shell-muted)] text-[11px]">Category: {r.category} &middot; Priority: {r.priority}</div>
+                        <div className="text-muted-foreground text-[11px]">Category: {r.category} &middot; Priority: {r.priority}</div>
                       </div>
                     ))}
                   </div>
@@ -329,7 +329,7 @@ export default function SalesOrderDetailsModal({
             </div>
 
             {/* Footer actions */}
-            <div className="flex items-center justify-between border-t border-[var(--shell-border)] pt-4">
+            <div className="flex items-center justify-between border-t border-border pt-4">
               <div className="flex gap-2">
                 {onApprove && canApprove && (
                   <Button
@@ -375,11 +375,11 @@ export default function SalesOrderDetailsModal({
             {invoiceError && <div className="mb-4 rounded-md bg-[var(--shell-danger-surface)] px-3 py-2 text-xs text-[var(--shell-danger)]">{invoiceError}</div>}
             <form onSubmit={handleInvoiceSubmit} className="flex flex-col gap-4">
               <div>
-                <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Status *</Label>
+                <Label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Status *</Label>
                 <select
                   value={invoiceStatus}
                   onChange={e => setInvoiceStatus(e.target.value)}
-                  className="h-9 w-full rounded-md border border-[var(--shell-border)] bg-[var(--shell-bg)] px-3 text-xs text-[var(--shell-foreground)] focus:outline-none"
+                  className="h-9 w-full rounded-md border border-border bg-background px-3 text-xs text-foreground focus:outline-none"
                   required
                 >
                   <option value="Pending">Pending</option>
@@ -393,7 +393,7 @@ export default function SalesOrderDetailsModal({
                 </select>
               </div>
               <div>
-                <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Upload Invoice (optional)</Label>
+                <Label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Upload Invoice (optional)</Label>
                 <FileUpload
                   bucket="crm-assets"
                   ownerType="sales_order"

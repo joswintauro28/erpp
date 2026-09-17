@@ -140,14 +140,14 @@ export default function Expenses() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-heading text-xl font-semibold tracking-tight text-[var(--shell-foreground)]">
+          <h1 className="font-heading text-xl font-semibold tracking-tight text-foreground">
             Expenses
           </h1>
-          <p className="mt-0.5 text-sm text-[var(--shell-muted)]">
+          <p className="mt-0.5 text-sm text-muted-foreground">
             Track and manage business expenses
           </p>
         </div>
-        <Button className="bg-[var(--shell-brand)] hover:bg-[var(--shell-brand)]/90 text-white" size="sm" onClick={() => setCreateOpen(true)}>
+        <Button className="bg-primary hover:bg-primary/90 text-white" size="sm" onClick={() => setCreateOpen(true)}>
           <Plus className="mr-1.5 h-3.5 w-3.5" />
           Add Expense
         </Button>
@@ -164,24 +164,24 @@ export default function Expenses() {
         {summaryCards.map((item, idx) => (
           <div
             key={item.label}
-            className="animate-kpi relative flex flex-col gap-1.5 rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface)] p-4.5 transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1)] overflow-hidden"
+            className="animate-kpi relative flex flex-col gap-1.5 rounded-xl border p-4.5 transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1)] overflow-hidden"
             style={{ animationDelay: `${idx * 0.05}s` }}
           >
             <div className={`absolute inset-0 bg-gradient-to-br ${item.gradient} pointer-events-none`} />
-            <span className="relative z-10 text-xs font-medium uppercase tracking-[0.08em] text-[var(--shell-muted)]">
+            <span className="relative z-10 text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">
               {item.label}
             </span>
-            <span className={`relative z-10 font-heading text-lg font-semibold tracking-tight ${item.label === "Pending" ? "text-[var(--shell-brand)]" : "text-[var(--shell-foreground)]"}`}>
+            <span className={`relative z-10 font-heading text-lg font-semibold tracking-tight ${item.label === "Pending" ? "text-primary" : "text-foreground"}`}>
               {item.value}
             </span>
-            <span className="relative z-10 text-xs text-[var(--shell-muted)]">{item.subtitle}</span>
+            <span className="relative z-10 text-xs text-muted-foreground">{item.subtitle}</span>
           </div>
         ))}
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
         <div className="relative flex-1 max-w-xs">
-          <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--shell-muted)]" />
+          <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Search expenses..."
             className="pl-8"
@@ -210,7 +210,7 @@ export default function Expenses() {
             <TableBody>
               {filtered.map((e) => (
                 <TableRow key={e.id}>
-                  <TableCell className="font-mono text-xs text-[var(--shell-muted)]">{e.date}</TableCell>
+                  <TableCell className="font-mono text-xs text-muted-foreground">{e.date}</TableCell>
                   <TableCell>
                     <Badge
                       variant="outline"
@@ -221,10 +221,10 @@ export default function Expenses() {
                       {e.category}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-xs text-[var(--shell-foreground)] max-w-sm truncate">{e.description}</TableCell>
-                  <TableCell className="text-xs text-[var(--shell-muted)]">{e.paid_to}</TableCell>
-                  <TableCell className="font-mono text-xs text-[var(--shell-muted)]">{e.bill_number}</TableCell>
-                  <TableCell className="text-xs text-[var(--shell-muted)]">{e.payment_method}</TableCell>
+                  <TableCell className="text-xs text-foreground max-w-sm truncate">{e.description}</TableCell>
+                  <TableCell className="text-xs text-muted-foreground">{e.paid_to}</TableCell>
+                  <TableCell className="font-mono text-xs text-muted-foreground">{e.bill_number}</TableCell>
+                  <TableCell className="text-xs text-muted-foreground">{e.payment_method}</TableCell>
                   <TableCell className="font-mono text-sm text-right">{money(e.amount)}</TableCell>
                   <TableCell>
                     <Badge
@@ -258,10 +258,10 @@ export default function Expenses() {
             <DialogTitle>Add Expense</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleCreate} className="space-y-5">
-            <div className="rounded-lg border border-[var(--shell-border)] bg-[var(--shell-surface)] p-4">
+            <div className="rounded-lg border p-4">
               <div className="mb-3 flex items-center gap-2">
-                <Wallet className="h-3.5 w-3.5 text-[var(--shell-brand)]" />
-                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--shell-foreground)]">Expense Details</span>
+                <Wallet className="h-3.5 w-3.5 text-primary" />
+                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-foreground">Expense Details</span>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -279,10 +279,10 @@ export default function Expenses() {
               </div>
             </div>
 
-            <div className="rounded-lg border border-[var(--shell-border)] bg-[var(--shell-surface)] p-4">
+            <div className="rounded-lg border p-4">
               <div className="mb-3 flex items-center gap-2">
                 <CalendarDays className="h-3.5 w-3.5 text-[var(--shell-accent)]" />
-                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--shell-foreground)]">Payment Info</span>
+                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-foreground">Payment Info</span>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -311,7 +311,7 @@ export default function Expenses() {
 
             <DialogFooter>
               <Button type="button" variant="outline" size="sm" onClick={() => setCreateOpen(false)}>Cancel</Button>
-              <Button type="submit" size="sm" disabled={saving} className="bg-[var(--shell-brand)] hover:bg-[var(--shell-brand)]/90 text-white">
+              <Button type="submit" size="sm" disabled={saving} className="bg-primary hover:bg-primary/90 text-white">
                 {saving && <Loader2 className="mr-1 h-4 w-4 animate-spin" />}
                 Add Expense
               </Button>

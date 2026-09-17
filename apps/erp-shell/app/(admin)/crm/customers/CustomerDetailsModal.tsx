@@ -27,97 +27,97 @@ export default function CustomerDetailsModal({ record, isOpen, onClose }: Custom
     return (
       <div className="space-y-6">
         {/* Header Card */}
-        <div className="rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface)] p-5 space-y-4">
+        <div className="rounded-xl border p-5 space-y-4">
           <div className="flex items-center gap-4">
-            <div className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-[var(--shell-brand)]/10 border border-[var(--shell-brand)]/20">
-              <span className="font-heading text-xl font-bold text-[var(--shell-brand)]">
+            <div className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-primary/10 border border-[var(--shell-brand)]/20">
+              <span className="font-heading text-xl font-bold text-primary">
                 {rec.account?.charAt(0).toUpperCase()}
               </span>
             </div>
             <div>
-              <h3 className="font-heading text-xl font-semibold text-[var(--shell-foreground)]">
+              <h3 className="font-heading text-xl font-semibold text-foreground">
                 {rec.account}
               </h3>
-              <p className="text-xs text-[var(--shell-muted)]">{rec.industry}</p>
+              <p className="text-xs text-muted-foreground">{rec.industry}</p>
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div className="flex items-center gap-2">
-              <Wallet className="h-4 w-4 text-[var(--shell-muted)]" />
-              <span className="text-xs text-[var(--shell-muted)]">ARR:</span>
-              <span className="text-sm font-semibold text-[var(--shell-foreground)]">
+              <Wallet className="h-4 w-4 text-muted-foreground" />
+              <span className="text-xs text-muted-foreground">ARR:</span>
+              <span className="text-sm font-semibold text-foreground">
                 {formatCurrency(rec.arr ?? 0)}
               </span>
             </div>
             <div className="flex items-center gap-2">
-              <ShieldCheck className="h-4 w-4 text-[var(--shell-muted)]" />
-              <span className="text-xs text-[var(--shell-muted)]">Tier:</span>
+              <ShieldCheck className="h-4 w-4 text-muted-foreground" />
+              <span className="text-xs text-muted-foreground">Tier:</span>
               <Badge className="text-xs">{rec.tier}</Badge>
             </div>
           </div>
         </div>
 
         {/* Contact Details */}
-        <div className="rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface)] p-5">
+        <div className="rounded-xl border p-5">
           <div className="flex items-center gap-2 mb-4">
-            <Mail className="h-4 w-4 text-[var(--shell-muted)]" />
-            <span className="text-xs font-bold uppercase tracking-wider text-[var(--shell-foreground)]">Contact Information</span>
+            <Mail className="h-4 w-4 text-muted-foreground" />
+            <span className="text-xs font-bold uppercase tracking-wider text-foreground">Contact Information</span>
           </div>
           <div className="space-y-3">
             <div className="flex items-center gap-3">
-              <Mail className="h-4 w-4 text-[var(--shell-muted)]" />
-              <span className="text-xs text-[var(--shell-muted)]">Email:</span>
-              <span className="text-sm text-[var(--shell-foreground)]">{rec.email}</span>
+              <Mail className="h-4 w-4 text-muted-foreground" />
+              <span className="text-xs text-muted-foreground">Email:</span>
+              <span className="text-sm text-foreground">{rec.email}</span>
             </div>
             <div className="flex items-center gap-3">
-              <Phone className="h-4 w-4 text-[var(--shell-muted)]" />
-              <span className="text-xs text-[var(--shell-muted)]">Phone:</span>
-              <span className="text-sm text-[var(--shell-foreground)]">{rec.phone}</span>
+              <Phone className="h-4 w-4 text-muted-foreground" />
+              <span className="text-xs text-muted-foreground">Phone:</span>
+              <span className="text-sm text-foreground">{rec.phone}</span>
             </div>
             <div className="flex items-center gap-3">
-              <Building2 className="h-4 w-4 text-[var(--shell-muted)]" />
-              <span className="text-xs text-[var(--shell-muted)]">Industry:</span>
-              <span className="text-sm text-[var(--shell-foreground)]">{rec.industry}</span>
+              <Building2 className="h-4 w-4 text-muted-foreground" />
+              <span className="text-xs text-muted-foreground">Industry:</span>
+              <span className="text-sm text-foreground">{rec.industry}</span>
             </div>
           </div>
         </div>
 
         {/* Account Details */}
-        <div className="rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface)] p-5">
+        <div className="rounded-xl border p-5">
           <div className="flex items-center gap-2 mb-4">
-            <Users className="h-4 w-4 text-[var(--shell-muted)]" />
-            <span className="text-xs font-bold uppercase tracking-wider text-[var(--shell-foreground)]">Account Details</span>
+            <Users className="h-4 w-4 text-muted-foreground" />
+            <span className="text-xs font-bold uppercase tracking-wider text-foreground">Account Details</span>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Status</Label>
+              <Label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Status</Label>
               <Badge>{rec.status}</Badge>
             </div>
             <div>
-              <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Owner</Label>
-              <p className="text-sm text-[var(--shell-foreground)]">{rec.owner}</p>
+              <Label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Owner</Label>
+              <p className="text-sm text-foreground">{rec.owner}</p>
             </div>
             <div>
-              <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Credit Limit (INR)</Label>
-              <p className="text-sm text-[var(--shell-foreground)]">
+              <Label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Credit Limit (INR)</Label>
+              <p className="text-sm text-foreground">
                 {rec.credit_limit != null ? `₹${Number(rec.credit_limit).toLocaleString("en-IN")}` : "No limit configured"}
               </p>
             </div>
             <div>
-              <Label className="mb-1 block text-xs font-semibold uppercase text-[var(--shell-muted)]">Customer ID</Label>
-              <p className="text-sm font-mono text-[var(--shell-foreground)]">{rec.id_str}</p>
+              <Label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Customer ID</Label>
+              <p className="text-sm font-mono text-foreground">{rec.id_str}</p>
             </div>
           </div>
         </div>
 
         {/* Notes & Timeline */}
-        <div className="rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface)] p-5">
+        <div className="rounded-xl border p-5">
           <div className="flex items-center gap-2 mb-4">
-            <Clock className="h-4 w-4 text-[var(--shell-muted)]" />
-            <span className="text-xs font-bold uppercase tracking-wider text-[var(--shell-foreground)]">Timeline</span>
+            <Clock className="h-4 w-4 text-muted-foreground" />
+            <span className="text-xs font-bold uppercase tracking-wider text-foreground">Timeline</span>
           </div>
-          <div className="space-y-2 text-xs text-[var(--shell-muted)]">
+          <div className="space-y-2 text-xs text-muted-foreground">
             <div className="flex justify-between py-1">
               <span>Created</span>
               <span>{record?.created_at}</span>
@@ -128,9 +128,9 @@ export default function CustomerDetailsModal({ record, isOpen, onClose }: Custom
             </div>
           </div>
           {rec.notes && (
-            <div className="mt-4 pt-4 border-t border-[var(--shell-border)]">
-              <p className="text-xs font-semibold uppercase tracking-wider text-[var(--shell-muted)] mb-1">Notes</p>
-              <p className="text-sm text-[var(--shell-foreground)]">{rec.notes}</p>
+            <div className="mt-4 pt-4 border-t border-border">
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Notes</p>
+              <p className="text-sm text-foreground">{rec.notes}</p>
             </div>
           )}
         </div>

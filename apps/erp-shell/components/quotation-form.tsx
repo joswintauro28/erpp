@@ -125,17 +125,17 @@ export default function QuotationForm({ mode, initialData, onSuccess }: Quotatio
                 onClick={() => i < step && setStep(i)}
                 className={`flex items-center gap-2 rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-wider transition-all ${
                   done
-                    ? "bg-[var(--shell-brand)] text-white cursor-pointer"
+                    ? "bg-primary text-white cursor-pointer"
                     : active
                       ? "bg-[var(--shell-accent)] text-[var(--shell-accent-foreground)]"
-                      : "bg-[var(--shell-surface)] text-[var(--shell-muted)] border border-[var(--shell-border)] cursor-default"
+                      : "bg-card text-muted-foreground border border-border cursor-default"
                 }`}
               >
                 <Icon className="h-3.5 w-3.5" />
                 {s.title}
               </button>
               {i < steps.length - 1 && (
-                <div className={`mx-2 h-px w-12 ${i < step ? "bg-[var(--shell-brand)]" : "bg-[var(--shell-border)]"}`} />
+                <div className={`mx-2 h-px w-12 ${i < step ? "bg-primary" : "bg-border"}`} />
               )}
             </div>
           );
@@ -147,8 +147,8 @@ export default function QuotationForm({ mode, initialData, onSuccess }: Quotatio
           {step === 0 && (
             <div className="space-y-6">
               <div className="flex items-center gap-2">
-                <User className="h-4 w-4 text-[var(--shell-brand)]" />
-                <h3 className="font-heading text-sm font-semibold text-[var(--shell-foreground)]">Client & Quote Details</h3>
+                <User className="h-4 w-4 text-primary" />
+                <h3 className="font-heading text-sm font-semibold text-foreground">Client & Quote Details</h3>
               </div>
               <div className="space-y-4">
                 <div className="space-y-2">
@@ -201,7 +201,7 @@ export default function QuotationForm({ mode, initialData, onSuccess }: Quotatio
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Package className="h-4 w-4 text-[var(--shell-accent)]" />
-                  <h3 className="font-heading text-sm font-semibold text-[var(--shell-foreground)]">Line Items</h3>
+                  <h3 className="font-heading text-sm font-semibold text-foreground">Line Items</h3>
                 </div>
                 <Button type="button" variant="outline" size="sm" onClick={handleAddItem}>
                   <Plus className="h-3.5 w-3.5" /> Add Item
@@ -211,7 +211,7 @@ export default function QuotationForm({ mode, initialData, onSuccess }: Quotatio
                 {items.map((item, idx) => (
                   <div
                     key={idx}
-                    className="flex items-start gap-2 rounded-lg border border-[var(--shell-border)] bg-[var(--shell-bg)] p-3"
+                    className="flex items-start gap-2 rounded-lg border border-border bg-background p-3"
                   >
                     <div className="flex-1 space-y-2">
                       <Input
@@ -252,7 +252,7 @@ export default function QuotationForm({ mode, initialData, onSuccess }: Quotatio
                       />
                     </div>
                     <div className="flex w-24 flex-col items-end justify-center pt-2">
-                      <span className="font-mono text-xs font-semibold text-[var(--shell-foreground)]">
+                      <span className="font-mono text-xs font-semibold text-foreground">
                         {money(lineTotals[idx])}
                       </span>
                     </div>
@@ -270,9 +270,9 @@ export default function QuotationForm({ mode, initialData, onSuccess }: Quotatio
                   </div>
                 ))}
               </div>
-              <div className="flex items-center justify-between rounded-lg border border-[var(--shell-border)] bg-[var(--shell-surface)] px-4 py-3">
-                <span className="text-sm font-semibold text-[var(--shell-foreground)]">Estimated Total</span>
-                <span className="font-heading text-lg font-bold text-[var(--shell-brand)]">{money(grandTotal)}</span>
+              <div className="flex items-center justify-between rounded-lg border px-4 py-3">
+                <span className="text-sm font-semibold text-foreground">Estimated Total</span>
+                <span className="font-heading text-lg font-bold text-primary">{money(grandTotal)}</span>
               </div>
             </div>
           )}
@@ -281,21 +281,21 @@ export default function QuotationForm({ mode, initialData, onSuccess }: Quotatio
             <div className="space-y-6">
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="h-4 w-4 text-[var(--shell-success)]" />
-                <h3 className="font-heading text-sm font-semibold text-[var(--shell-foreground)]">Review & Confirm</h3>
+                <h3 className="font-heading text-sm font-semibold text-foreground">Review & Confirm</h3>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--shell-muted)]">Client</p>
-                  <p className="text-sm font-medium text-[var(--shell-foreground)]">{clientName}</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Client</p>
+                  <p className="text-sm font-medium text-foreground">{clientName}</p>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--shell-muted)]">Issue Date</p>
-                  <p className="text-sm text-[var(--shell-foreground)]">{formatDate(issueDate)}</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Issue Date</p>
+                  <p className="text-sm text-foreground">{formatDate(issueDate)}</p>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--shell-muted)]">Valid Until</p>
-                  <p className="text-sm text-[var(--shell-foreground)]">{formatDate(validUntil)}</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Valid Until</p>
+                  <p className="text-sm text-foreground">{formatDate(validUntil)}</p>
                 </div>
               </div>
 
@@ -313,8 +313,8 @@ export default function QuotationForm({ mode, initialData, onSuccess }: Quotatio
                 <TableBody>
                   {items.map((item, i) => (
                     <TableRow key={i}>
-                      <TableCell className="text-xs text-[var(--shell-muted)]">{i + 1}</TableCell>
-                      <TableCell className="text-sm font-medium">{item.description || <span className="text-[var(--shell-muted)] italic">No description</span>}</TableCell>
+                      <TableCell className="text-xs text-muted-foreground">{i + 1}</TableCell>
+                      <TableCell className="text-sm font-medium">{item.description || <span className="text-muted-foreground italic">No description</span>}</TableCell>
                       <TableCell className="text-right">{item.quantity}</TableCell>
                       <TableCell className="text-right font-mono text-xs">{money(item.unitPrice)}</TableCell>
                       <TableCell className="text-right">{item.gstRate}%</TableCell>
@@ -324,18 +324,18 @@ export default function QuotationForm({ mode, initialData, onSuccess }: Quotatio
                 </TableBody>
               </Table>
 
-              <div className="flex items-center justify-between rounded-lg border border-[var(--shell-border)] bg-[var(--shell-surface)] px-4 py-3">
+              <div className="flex items-center justify-between rounded-lg border px-4 py-3">
                 <div className="flex items-center gap-2">
                   <DollarSign className="h-4 w-4 text-[var(--shell-accent)]" />
-                  <span className="text-sm font-semibold text-[var(--shell-foreground)]">Grand Total</span>
+                  <span className="text-sm font-semibold text-foreground">Grand Total</span>
                 </div>
-                <span className="font-heading text-xl font-bold text-[var(--shell-brand)]">{money(grandTotal)}</span>
+                <span className="font-heading text-xl font-bold text-primary">{money(grandTotal)}</span>
               </div>
 
               {notes && (
-                <div className="rounded-lg border border-[var(--shell-border)] bg-[var(--shell-surface)] p-3">
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--shell-muted)] mb-1">Notes</p>
-                  <p className="text-sm text-[var(--shell-foreground)] whitespace-pre-wrap">{notes}</p>
+                <div className="rounded-lg border p-3">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">Notes</p>
+                  <p className="text-sm text-foreground whitespace-pre-wrap">{notes}</p>
                 </div>
               )}
             </div>

@@ -24,7 +24,7 @@ export default function SalesOrderTable({ salesOrders, onView, onEdit, onDelete,
     {
       key: "so_no",
       header: "ORDER NO",
-      render: (row) => <span className="font-semibold text-[var(--shell-brand)] hover:underline cursor-pointer">{row.so_no}</span>,
+      render: (row) => <span className="font-semibold text-primary hover:underline cursor-pointer">{row.so_no}</span>,
     },
     { key: "account", header: "ACCOUNT" },
     { key: "value", header: "VALUE", render: (row) => formatCurrency(row.value) },
@@ -44,7 +44,7 @@ export default function SalesOrderTable({ salesOrders, onView, onEdit, onDelete,
             <Lock className="h-3 w-3" /> Rejected
           </span>
         ) : (
-          <span className="text-[11px] text-[var(--shell-muted)]">{creditStatus}</span>
+          <span className="text-[11px] text-muted-foreground">{creditStatus}</span>
         );
       },
     },
@@ -68,7 +68,7 @@ export default function SalesOrderTable({ salesOrders, onView, onEdit, onDelete,
                 <BadgeCheck size={14} className="text-[var(--shell-success)]" />
               </Button>
             )}
-            <Button variant="ghost" size="icon-sm" className="cursor-pointer" onClick={(e) => { e.stopPropagation(); onEdit(row); }}><Edit2 size={14} className="text-[var(--shell-brand)]" /></Button>
+            <Button variant="ghost" size="icon-sm" className="cursor-pointer" onClick={(e) => { e.stopPropagation(); onEdit(row); }}><Edit2 size={14} className="text-primary" /></Button>
             <Button variant="ghost" size="icon-sm" className="cursor-pointer" onClick={(e) => { e.stopPropagation(); onDelete(row); }}><Trash2 size={14} className="text-[var(--shell-danger)]" /></Button>
           </div>
         );

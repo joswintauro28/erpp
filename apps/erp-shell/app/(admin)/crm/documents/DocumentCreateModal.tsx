@@ -166,9 +166,9 @@ export default function DocumentCreateModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
-      <DialogContent className="sm:max-w-md bg-[var(--shell-surface)] border-[var(--shell-border)] text-[var(--shell-foreground)]">
+      <DialogContent className="sm:max-w-md border-border text-foreground">
         <DialogHeader>
-          <DialogTitle className="text-lg font-semibold tracking-tight text-[var(--shell-foreground)]">
+          <DialogTitle className="text-lg font-semibold tracking-tight text-foreground">
             {editRecord ? "Edit Document Metadata" : "Upload New Document"}
           </DialogTitle>
         </DialogHeader>
@@ -181,7 +181,7 @@ export default function DocumentCreateModal({
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1">
-            <Label className="text-xs font-semibold uppercase tracking-wider text-[var(--shell-muted)]">
+            <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Document File (PDF or Image)
             </Label>
             {fileId && existingFile ? (
@@ -200,7 +200,7 @@ export default function DocumentCreateModal({
           </div>
 
           <div className="space-y-1">
-            <Label htmlFor="title" className="text-xs font-semibold uppercase tracking-wider text-[var(--shell-muted)]">
+            <Label htmlFor="title" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Document Title
             </Label>
             <Input
@@ -210,13 +210,13 @@ export default function DocumentCreateModal({
               onChange={handleChange}
               placeholder="e.g. Master Services Agreement"
               required
-              className="h-9 border-[var(--shell-border)] bg-[var(--shell-bg)] text-xs text-[var(--shell-foreground)] focus:ring-1 focus:ring-primary"
+              className="h-9 border-border bg-background text-xs text-foreground focus:ring-1 focus:ring-primary"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
-              <Label htmlFor="type" className="text-xs font-semibold uppercase tracking-wider text-[var(--shell-muted)]">
+              <Label htmlFor="type" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Document Type
               </Label>
               <select
@@ -225,7 +225,7 @@ export default function DocumentCreateModal({
                 value={formData.type}
                 onChange={handleChange}
                 required
-                className="h-9 w-full rounded-md border border-[var(--shell-border)] bg-[var(--shell-bg)] px-3 text-xs text-[var(--shell-foreground)] focus:outline-none focus:ring-1 focus:ring-primary"
+                className="h-9 w-full rounded-md border border-border bg-background px-3 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
               >
                 {["SLA / Agreement", "NDA", "Proposal", "Invoice", "Technical Spec"].map((opt) => (
                   <option key={opt} value={opt}>
@@ -236,7 +236,7 @@ export default function DocumentCreateModal({
             </div>
 
             <div className="space-y-1">
-              <Label htmlFor="status" className="text-xs font-semibold uppercase tracking-wider text-[var(--shell-muted)]">
+              <Label htmlFor="status" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Status
               </Label>
               <select
@@ -245,7 +245,7 @@ export default function DocumentCreateModal({
                 value={formData.status}
                 onChange={handleChange}
                 required
-                className="h-9 w-full rounded-md border border-[var(--shell-border)] bg-[var(--shell-bg)] px-3 text-xs text-[var(--shell-foreground)] focus:outline-none focus:ring-1 focus:ring-primary"
+                className="h-9 w-full rounded-md border border-border bg-background px-3 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
               >
                 {["Draft", "Under Review", "Signed", "Expired"].map((opt) => (
                   <option key={opt} value={opt}>
@@ -258,7 +258,7 @@ export default function DocumentCreateModal({
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
-              <Label htmlFor="account" className="text-xs font-semibold uppercase tracking-wider text-[var(--shell-muted)]">
+              <Label htmlFor="account" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Linked Account
               </Label>
               <Input
@@ -268,12 +268,12 @@ export default function DocumentCreateModal({
                 onChange={handleChange}
                 placeholder="e.g. Acme Corp"
                 required
-                className="h-9 border-[var(--shell-border)] bg-[var(--shell-bg)] text-xs text-[var(--shell-foreground)] focus:ring-1 focus:ring-primary"
+                className="h-9 border-border bg-background text-xs text-foreground focus:ring-1 focus:ring-primary"
               />
             </div>
 
             <div className="space-y-1">
-              <Label htmlFor="owner" className="text-xs font-semibold uppercase tracking-wider text-[var(--shell-muted)]">
+              <Label htmlFor="owner" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Owner / Author
               </Label>
               <Input
@@ -283,13 +283,13 @@ export default function DocumentCreateModal({
                 onChange={handleChange}
                 placeholder="e.g. Aditi Rao"
                 required
-                className="h-9 border-[var(--shell-border)] bg-[var(--shell-bg)] text-xs text-[var(--shell-foreground)] focus:ring-1 focus:ring-primary"
+                className="h-9 border-border bg-background text-xs text-foreground focus:ring-1 focus:ring-primary"
               />
             </div>
           </div>
 
           <div className="space-y-1">
-            <Label htmlFor="summary" className="text-xs font-semibold uppercase tracking-wider text-[var(--shell-muted)]">
+            <Label htmlFor="summary" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Document Summary
             </Label>
             <Textarea
@@ -298,23 +298,23 @@ export default function DocumentCreateModal({
               value={formData.summary}
               onChange={handleChange}
               placeholder="Provide a brief summary of the document's content..."
-              className="min-h-[80px] border-[var(--shell-border)] bg-[var(--shell-bg)] text-xs text-[var(--shell-foreground)] focus:ring-1 focus:ring-primary"
+              className="min-h-[80px] border-border bg-background text-xs text-foreground focus:ring-1 focus:ring-primary"
             />
           </div>
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-[var(--shell-border)]">
+          <div className="flex justify-end gap-3 pt-4 border-t border-border">
             <Button
               type="button"
               variant="outline"
               onClick={onClose}
-              className="h-9 text-xs border-[var(--shell-border)] bg-transparent hover:bg-[var(--shell-surface-alt)]"
+              className="h-9 text-xs border-border bg-transparent hover:bg-secondary"
             >
               Cancel
             </Button>
             <Button
               type="submit"
               disabled={submitting}
-              className="h-9 text-xs font-medium bg-[var(--shell-brand)] hover:bg-[var(--shell-action)] text-white"
+              className="h-9 text-xs font-medium bg-primary hover:bg-[var(--shell-action)] text-white"
             >
               {submitting ? "Saving..." : editRecord ? "Save Changes" : "Upload Document"}
             </Button>

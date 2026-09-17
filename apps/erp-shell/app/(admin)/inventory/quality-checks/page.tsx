@@ -118,14 +118,14 @@ export default function QualityChecksPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-4">
         <div>
           <h1 className="font-heading text-2xl font-semibold tracking-tight text-[--shell-foreground] flex items-center gap-2">
-            <ShieldCheck className="h-6 w-6 text-[var(--shell-brand)]" />
+            <ShieldCheck className="h-6 w-6 text-primary" />
             Quality Checks
           </h1>
           <p className="mt-1 text-sm text-[--shell-muted]">
             Inspect received goods before they move to stock — products flagged QC-required auto-create a pending check on GRN.
           </p>
         </div>
-        <Button size="sm" onClick={() => setIsAddOpen(true)} className="bg-[var(--shell-brand)] text-white hover:bg-[var(--shell-action)]">
+        <Button size="sm" onClick={() => setIsAddOpen(true)} className="bg-primary text-white hover:bg-[var(--shell-action)]">
           <Plus className="h-4 w-4 mr-2" /> Record Inspection
         </Button>
       </div>
@@ -211,7 +211,7 @@ export default function QualityChecksPage() {
                             setSelectedCheck(c);
                             setQcResult("PASS");
                           }}
-                          className="bg-[var(--shell-brand)] text-white"
+                          className="bg-primary text-white"
                         >
                           Record Result
                         </Button>
@@ -275,7 +275,7 @@ export default function QualityChecksPage() {
             </div>
             <div className="flex justify-end gap-2 mt-4">
               <Button variant="outline" size="sm" onClick={() => setSelectedCheck(null)}>Cancel</Button>
-              <Button size="sm" onClick={handleRecord} className="bg-[var(--shell-brand)] text-white">
+              <Button size="sm" onClick={handleRecord} className="bg-primary text-white">
                 Save Result
               </Button>
             </div>
@@ -312,7 +312,7 @@ export default function QualityChecksPage() {
           </div>
           <div className="flex justify-end gap-2 mt-4">
             <Button variant="outline" size="sm" onClick={() => setIsAddOpen(false)}>Cancel</Button>
-            <Button size="sm" onClick={handleCreate} className="bg-[var(--shell-brand)] text-white">Create Check</Button>
+            <Button size="sm" onClick={handleCreate} className="bg-primary text-white">Create Check</Button>
           </div>
         </DialogContent>
       </Dialog>

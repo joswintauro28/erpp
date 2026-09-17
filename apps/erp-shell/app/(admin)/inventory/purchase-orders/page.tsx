@@ -217,14 +217,14 @@ export default function PurchaseOrdersPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-4">
         <div>
           <h1 className="font-heading text-2xl font-semibold tracking-tight text-[--shell-foreground] flex items-center gap-2">
-            <ClipboardList className="h-6 w-6 text-[var(--shell-brand)]" />
+            <ClipboardList className="h-6 w-6 text-primary" />
             Purchase Orders & Reordering
           </h1>
           <p className="mt-1 text-sm text-[--shell-muted]">
             Procure stock from approved suppliers, track receipts, and update stock counts automatically.
           </p>
         </div>
-        <Button onClick={() => setIsAddOpen(true)} className="bg-[var(--shell-brand)] text-white hover:bg-[var(--shell-action)]">
+        <Button onClick={() => setIsAddOpen(true)} className="bg-primary text-white hover:bg-[var(--shell-action)]">
           <Plus className="h-4 w-4 mr-2" /> Create Purchase Order
         </Button>
       </div>
@@ -263,7 +263,7 @@ export default function PurchaseOrdersPage() {
                   const whName = warehouses.find((w) => w.id === po.warehouse_id)?.name || `Warehouse #${po.warehouse_id}`;
                   return (
                     <TableRow key={po.id}>
-                      <TableCell className="font-mono text-xs font-bold text-[var(--shell-brand)]">{po.order_number}</TableCell>
+                      <TableCell className="font-mono text-xs font-bold text-primary">{po.order_number}</TableCell>
                       <TableCell className="font-medium text-foreground text-xs">{supName}</TableCell>
                       <TableCell className="text-xs text-muted-foreground">{whName}</TableCell>
                       <TableCell className="text-center">{getStatusBadge(po.status)}</TableCell>
@@ -281,7 +281,7 @@ export default function PurchaseOrdersPage() {
                               setEditStatus(po.status);
                             }}
                           >
-                            <Edit3 className="h-3.5 w-3.5 text-muted-foreground hover:text-[var(--shell-brand)]" />
+                            <Edit3 className="h-3.5 w-3.5 text-muted-foreground hover:text-primary" />
                           </Button>
                           <Button
                             variant="ghost"
@@ -396,7 +396,7 @@ export default function PurchaseOrdersPage() {
             <Button variant="outline" size="sm" onClick={() => setIsAddOpen(false)}>
               Cancel
             </Button>
-            <Button size="sm" onClick={handleCreatePurchaseOrder} className="bg-[var(--shell-brand)] text-white">
+            <Button size="sm" onClick={handleCreatePurchaseOrder} className="bg-primary text-white">
               Issue Purchase Order
             </Button>
           </div>
@@ -410,7 +410,7 @@ export default function PurchaseOrdersPage() {
             <DialogHeader>
               <DialogTitle className="flex items-center justify-between text-base">
                 <span>Manage Purchase Order</span>
-                <span className="font-mono text-sm text-[var(--shell-brand)]">{selectedOrder.order_number}</span>
+                <span className="font-mono text-sm text-primary">{selectedOrder.order_number}</span>
               </DialogTitle>
               <DialogDescription>Update procurement lifecycle status and view transaction logs.</DialogDescription>
             </DialogHeader>
@@ -431,7 +431,7 @@ export default function PurchaseOrdersPage() {
                   <option value="COMPLETED">Goods Received (Stock Added)</option>
                   <option value="CANCELLED">Cancelled</option>
                 </select>
-                <Button size="xs" onClick={handleUpdateStatus} className="bg-[var(--shell-brand)] text-white hover:bg-[var(--shell-action)]">
+                <Button size="xs" onClick={handleUpdateStatus} className="bg-primary text-white hover:bg-[var(--shell-action)]">
                   Save Status
                 </Button>
               </div>

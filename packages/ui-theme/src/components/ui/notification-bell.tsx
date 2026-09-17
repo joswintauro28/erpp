@@ -25,7 +25,7 @@ const TYPE_META: Record<string, { icon: typeof Info; cls: string }> = {
   SUCCESS: { icon: CheckCircle2, cls: "bg-[var(--shell-success)]/10 text-[var(--shell-success)] border-[var(--shell-success)]/20" },
   WARNING: { icon: AlertTriangle, cls: "bg-[var(--shell-warning)]/10 text-[var(--shell-warning)] border-[var(--shell-warning)]/20" },
   ERROR: { icon: XCircle, cls: "bg-[var(--shell-danger)]/10 text-[var(--shell-danger)] border-[var(--shell-danger)]/20" },
-  ACTION: { icon: ClipboardCheck, cls: "bg-[var(--shell-brand)]/10 text-[var(--shell-brand)] border-[var(--shell-brand)]/20" },
+  ACTION: { icon: ClipboardCheck, cls: "bg-primary/10 text-primary border-[var(--shell-brand)]/20" },
 };
 
 function ModuleBadge({ source }: { source: string }) {
