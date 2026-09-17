@@ -48,6 +48,7 @@ export * from "./components/shared/branding-provider";
 export * from "./components/shared/branding-modal";
 export * from "./components/shared/css-overrides";
 export { applyOverrides } from "./lib/preview-injector";
+export { DATAVEX_DEFAULTS, isDefaultTheme } from "./defaults";
 
 // Theme-aware status badge
 export * from "./components/shared/status-badge";

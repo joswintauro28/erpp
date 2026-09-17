@@ -69,6 +69,26 @@ function EyeOff({ className }: { className?: string }) {
   );
 }
 
+function Download({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+      <polyline points="7 10 12 15 17 10" />
+      <line x1="12" x2="12" y1="15" y2="3" />
+    </svg>
+  );
+}
+
+function Upload({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+      <polyline points="17 8 12 3 7 8" />
+      <line x1="12" x2="12" y1="3" y2="15" />
+    </svg>
+  );
+}
+
 /* ── Color Swatch with Lazy Picker ──────────────────────────────────────── */
 
 function ColorSwatch({
@@ -103,6 +123,31 @@ function ColorSwatch({
   );
 }
 
+/* ── Validation ──────────────────────────────────────────────────────────── */
+
+const HEX_RE = /^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})$/;
+const SIZE_RE = /^\d+(\.\d+)?(px|rem|em|pt|vh|vw|vmin|vmax|ch|ex|cm|mm|in)$/i;
+
+function validateValue(value: string, type: VariableType): string | null {
+  const v = value.trim();
+  if (!v) return "Empty value";
+
+  if (type === "color") {
+    if (!HEX_RE.test(v) && !/^(rgb|rgba|hsl|hsla|oklch|color-mix)\s*\(/.test(v)) {
+      return "Invalid color (use #hex or rgb())";
+    }
+  }
+
+  if (type === "size") {
+    if (v === "0") return null; // 0 is valid without unit
+    if (!SIZE_RE.test(v) && !/^calc\s*\(/.test(v) && !/^var\s*\(/.test(v)) {
+      return "Invalid size (use px, rem, em)";
+    }
+  }
+
+  return null;
+}
+
 /* ── Single Variable Row ─────────────────────────────────────────────────── */
 
 function VariableRow({
@@ -119,6 +164,9 @@ function VariableRow({
   onReset: () => void;
 }) {
   const isColor = variable.type === "color";
+  const error = variable.type === "color" || variable.type === "size"
+    ? validateValue(value, variable.type)
+    : null;
 
   return (
     <div className="flex items-center gap-2.5 py-1.5 border-b border-[var(--shell-border)]/30 last:border-0 group">
@@ -139,12 +187,18 @@ function VariableRow({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           className={cn(
-            "w-full h-7 px-2 rounded-md border border-[var(--shell-border)]/50 bg-[var(--shell-bg)] text-xs font-mono",
+            "w-full h-7 px-2 rounded-md border bg-[var(--shell-bg)] text-xs font-mono",
             "text-[var(--shell-foreground)] placeholder:text-[var(--shell-muted)]/50",
-            "focus:outline-none focus:ring-1 focus:ring-[var(--shell-brand)]/30 focus:border-[var(--shell-brand)]/50",
-            "transition-colors",
+            "focus:outline-none focus:ring-1 transition-colors",
+            error
+              ? "border-red-500/60 focus:ring-red-500/30 focus:border-red-500/50"
+              : "border-[var(--shell-border)]/50 focus:ring-[var(--shell-brand)]/30 focus:border-[var(--shell-brand)]/50",
           )}
+          title={error ?? undefined}
         />
+        {error && (
+          <span className="text-[9px] text-red-500 mt-0.5 block truncate">{error}</span>
+        )}
       </div>
 
       {!isColor && (
@@ -371,6 +425,40 @@ export function BrandingModal({
     onClose();
   }, [overrides, onSave, onClose]);
 
+  // Export theme as JSON
+  const handleExport = React.useCallback(() => {
+    const blob = new Blob([JSON.stringify(overrides, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `datavex-theme-${Date.now()}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [overrides]);
+
+  // Import theme from JSON
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const handleImport = React.useCallback(() => {
+    fileInputRef.current?.click();
+  }, []);
+  const handleImportFile = React.useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const imported = JSON.parse(ev.target?.result as string);
+        if (imported && typeof imported === "object" && imported.light && imported.dark) {
+          setOverrides(imported);
+        }
+      } catch {
+        // Invalid JSON — silently ignore
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = "";
+  }, []);
+
   // Close on escape
   React.useEffect(() => {
     if (!open) return;
@@ -454,6 +542,33 @@ export function BrandingModal({
           </div>
 
           <div className="flex items-center gap-2">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".json"
+              className="hidden"
+              onChange={handleImportFile}
+              tabIndex={-1}
+            />
+            <button
+              type="button"
+              onClick={handleImport}
+              className="flex items-center gap-1.5 h-8 px-2.5 rounded-md text-xs text-[var(--shell-muted)] hover:text-[var(--shell-foreground)] hover:bg-[var(--shell-bg)] transition-colors cursor-pointer"
+              title="Import theme from JSON file"
+            >
+              <Upload className="h-3 w-3" />
+              Import
+            </button>
+            <button
+              type="button"
+              onClick={handleExport}
+              className="flex items-center gap-1.5 h-8 px-2.5 rounded-md text-xs text-[var(--shell-muted)] hover:text-[var(--shell-foreground)] hover:bg-[var(--shell-bg)] transition-colors cursor-pointer"
+              title="Export theme as JSON file"
+            >
+              <Download className="h-3 w-3" />
+              Export
+            </button>
+            <div className="w-px h-4 bg-[var(--shell-border)]" />
             <button
               type="button"
               onClick={handleResetAll}

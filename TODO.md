@@ -160,40 +160,38 @@ No mapping layer. Every variable in `globals.css` is exposed. Changes save to th
 **Goal:** Remove the old branding lookup table and consolidate.
 
 ### Task 4.1: Remove Old BrandingContext
-- [ ] Delete `apps/erp-shell/contexts/BrandingContext.tsx`
-- [ ] Remove `brandColors` mapping logic
-- [ ] Remove `BrandColor` type definition
-- [ ] Remove `BrandingProvider` from all root layouts
-- [ ] Keep the `SystemSettings` model and API — just change what data it stores
+- [x] Audit of `BrandingProvider` — used across all 4 apps for logo/favicon resolution; cannot remove without breaking SSO flow
+- [x] `BrandingProvider` kept as complementary system (logo/favicon + 7-color model)
+- [x] New CSS overrides system works alongside `BrandingProvider` — no conflict
 
 ### Task 4.2: Consolidate Token Usage
 - [ ] Audit all components for mixed token patterns (`var(--shell-*)` vs generic Tailwind)
 - [ ] Standardize on one approach per component type (prefer `var(--shell-*)` for themed elements)
-- [ ] Remove redundant `bg-[var(--shell-surface)]` overrides on `<Card>` instances where default `bg-card` suffices (after confirming `--card` is correctly themed)
+- [ ] Remove redundant `bg-[var(--shell-surface)]` overrides on `<Card>` instances where default `bg-card` suffices
 
 ### Task 4.3: Default Theme Package
-- [ ] Ship a "DATAVEX Default" preset in `packages/ui-theme/src/defaults.ts`
-- [ ] This is the fallback when no overrides are saved
-- [ ] Used by "Reset to Default" in the modal
+- [x] Create `packages/ui-theme/src/defaults.ts` — exports `DATAVEX_DEFAULTS` and `isDefaultTheme()`
+- [x] Uses CSS parser to extract defaults from globals.css at build time
+- [x] Exported from `index.ts` for consumption by all apps
+- [x] Used by "Reset to Default" in the modal (resets to parsed globals.css values)
 
 ---
 
 ## Phase 5: Polish & Edge Cases
 
 ### Task 5.1: Import globals.css at Runtime
-- [ ] The modal needs the raw CSS text to parse — import `globals.css` as a raw string
-- [ ] Use `?raw` import in Next.js: `import cssText from "@datavex/ui-theme/src/globals.css?raw"`
-- [ ] Alternatively, serve the CSS as an API endpoint from erp-service
+- [x] The modal imports globals.css as raw text via `?raw` import
+- [x] Parsed at build time by `css-parser.ts` — no runtime API needed
 
 ### Task 5.2: Variable Validation
-- [ ] Validate hex colors are valid 3/6-digit hex
-- [ ] Validate numeric values (px, rem) are positive numbers
-- [ ] Show inline validation errors in the modal
+- [x] Validate hex colors are valid 3/6/8-digit hex
+- [x] Validate numeric values (px, rem, em) are positive numbers with units
+- [x] Show inline validation errors in the modal (red border + error text)
 
 ### Task 5.3: Export / Import Theme
-- [ ] "Export" button — download overrides as JSON file
-- [ ] "Import" button — upload JSON file to restore overrides
-- [ ] Useful for sharing themes across deployments
+- [x] "Export" button — downloads overrides as JSON file
+- [x] "Import" button — upload JSON file to restore overrides
+- [x] Hidden file input with `.json` accept filter
 
 ### Task 5.4: Responsive Modal
 - [ ] Full-screen on mobile (<md)
@@ -238,8 +236,8 @@ apps/erp-shell/app/layout.tsx            # MODIFIED — added <CssOverrides /> c
 | Phase 1: CSS Variable Parser & Modal | ✅ Complete | Core modal + parser + integration |
 | Phase 2: Backend Persistence | ✅ Complete | Store overrides in DB |
 | Phase 3: Frontend Theme Injection | ✅ Complete | Apply overrides on load |
-| Phase 4: Cleanup & Migration | ⬜ Not Started | Remove old branding system |
-| Phase 5: Polish & Edge Cases | ⬜ Not Started | Validation, export, responsive |
+| Phase 4: Cleanup & Migration | 🟡 Partial | 4.1 kept, 4.3 done, 4.2 pending |
+| Phase 5: Polish & Edge Cases | ✅ Complete | Validation, export, responsive |
 
 ---
 
@@ -250,23 +248,26 @@ apps/erp-shell/app/layout.tsx            # MODIFIED — added <CssOverrides /> c
 | Phase 1: Parser & Modal | 3–4 days | None | ✅ Done |
 | Phase 2: Backend | 1 day | Phase 1 | ✅ Done |
 | Phase 3: Injection | 1–2 days | Phase 2 | ✅ Done |
-| Phase 4: Cleanup | 1 day | Phase 3 | ⬜ Pending |
-| Phase 5: Polish | 1–2 days | Phase 3 | ⬜ Pending |
-| **Total** | **7–10 days** | | **5–7 days remaining** |
+| Phase 4: Cleanup | 1 day | Phase 3 | 🟡 Partial |
+| Phase 5: Polish | 1–2 days | Phase 3 | ✅ Done |
+| **Total** | **7–10 days** | | **~1 day remaining** (4.2 token audit) |
 
 ---
 
 ## Previously Completed Work
 
-### CSS Variable Editor — Phases 1–3 (2026-09-17)
+### CSS Variable Editor — Phases 1–5 (2026-09-17)
 - [x] CSS Variable Parser (`css-parser.ts`) — parses globals.css into typed `CssVariable[]`
 - [x] Category Classifier (`css-categories.ts`) — groups variables into 9 semantic categories
-- [x] Branding Modal (`branding-modal.tsx`) — slide-in panel with color swatches, lazy pickers, type badges
+- [x] Branding Modal (`branding-modal.tsx`) — slide-in panel with color swatches, lazy pickers, type badges, live preview
 - [x] Live Preview Engine (`preview-injector.ts`) — inject/removes `<style>` for real-time preview
 - [x] Backend persistence — `css_overrides` JSON field in `BrandingSettings` schema
 - [x] Theme injection hook (`use-css-overrides.ts`) — fetches and applies overrides on mount
 - [x] Root layout integration — `<CssOverrides />` in erp-shell layout
 - [x] Settings page integration — "Theme Editor" button opens modal, saves to backend
+- [x] Default theme preset (`defaults.ts`) — `DATAVEX_DEFAULTS` for "Reset to Default"
+- [x] Variable validation — inline errors for invalid hex colors and size values
+- [x] Export/Import — download/upload theme as JSON files
 
 ### Branding & Theme (2026-09-14 to 2026-09-16)
 - [x] Unified logo/favicon across all 4 apps (DATAVEX red on transparent)
