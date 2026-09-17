@@ -1,468 +1,299 @@
-# DATAVEX ERP — AI Chatbot Implementation Plan
+# DATAVEX ERP — Project Roadmap
 
-**Created:** 2026-08-28 · **Status:** Phase 1–4 Complete · Phase 5–6 Pending
-
----
-
-## Architecture Decision: Dedicated AI Service
-
-**Decision:** Create a dedicated `ai-service` microservice for all AI functionality.
-
-**Rationale:**
-- **Separation of concerns** — AI logic (LLM orchestration, prompt engineering, session management) is a distinct bounded context from ERP business logic
-- **Resource isolation** — LLM calls are CPU/memory intensive; isolating prevents starving the ERP gateway
-- **Independent deployment** — Changing prompts or LLM providers doesn't risk breaking core ERP operations
-- **Own database** (`erp_ai`) — follows the per-service DB pattern (erp_iam, erp_crm, erp_billing, erp_inventory)
-- **Streaming support** — SSE/WebSocket for AI responses gets its own connection lifecycle
-- **Scalability** — Can scale AI independently under load (e.g., 50 concurrent chat sessions)
-- **Industry pattern** — Matches how companies like Intercom, Linear, Notion separate AI from core services
-
-**Rejected alternative:** Storing AI data in erp_db via erp-service — creates ownership confusion, couples AI lifecycle to ERP, and limits independent scaling.
-
-**Context access:** ai-service calls other services directly via HTTP for live data context (no proxy through erp-service).
+**Last Updated:** 2026-09-16
 
 ---
 
-## Architecture Overview
+## Problem Statement
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                    FRONTEND (4 apps)                     │
-│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐   │
-│  │ erp-shell│ │  crm-ui  │ │billing-ui│ │inventory │   │
-│  │ (Admin)  │ │  (CRM)   │ │ (Billing)│ │  (Inv)   │   │
-│  └────┬─────┘ └────┬─────┘ └────┬─────┘ └────┬─────┘   │
-│       └─────────────┴─────┬──────┴─────────────┘          │
-│              ┌────────────▼────────────┐                 │
-│              │  Shared AIChat component │                 │
-│              │  (ui-theme package)      │                 │
-│              └────────────┬────────────┘                 │
-└───────────────────────────┼─────────────────────────────┘
-                            │ POST /api/ai/chat
-                            ▼
-┌─────────────────────────────────────────────────────────┐
-│              ai-service (FastAPI, port 8005)              │
-│  ┌─────────────────────────────────────────────────┐    │
-│  │  /api/ai/*                                       │    │
-│  │  ├── POST /chat          (send message)          │    │
-│  │  ├── GET  /sessions      (list user sessions)    │    │
-│  │  ├── GET  /history/:id   (session messages)      │    │
-│  │  ├── DELETE /sessions/:id (delete session)       │    │
-│  │  └── GET  /suggestions   (module-aware prompts)  │    │
-│  └─────────────────────────────────────────────────┘    │
-│                                                          │
-│  ┌─────────────────────────────────────────────────┐    │
-│  │  Context Providers (call other services)         │    │
-│  │  ├── crm_client.py      → crm-service (8001)    │    │
-│  │  ├── billing_client.py  → billing-service (8003) │    │
-│  │  └── inventory_client.py→ inventory-service(8004)│    │
-│  └─────────────────────────────────────────────────┘    │
-│                                                          │
-│  ┌─────────────────────────────────────────────────┐    │
-│  │  LLM Provider (pluggable)                       │    │
-│  │  ├── Groq (llama-3.1-8b-instant) — default      │    │
-│  │  └── Gemini — optional                           │    │
-│  └─────────────────────────────────────────────────┘    │
-│                                                          │
-│  ┌─────────────────────────────────────────────────┐    │
-│  │  erp_ai (PostgreSQL)                             │    │
-│  │  ├── ai_sessions  (id, user_id, module, title)   │    │
-│  │  └── ai_messages  (id, session_id, role, content)│    │
-│  └─────────────────────────────────────────────────┘    │
-└─────────────────────────────────────────────────────────┘
+The current branding system maps 5–6 user-selected brand colors to 50+ CSS custom properties via a hardcoded lookup table in `BrandingContext`. Components consume tokens inconsistently — some use `var(--shell-*)`, some use generic Tailwind classes like `text-muted-foreground` or `bg-card`. The mapping always misses some variables, causing visual inconsistencies across dashboards (missing borders, invisible toggles, dark mode mismatches).
 
-┌─────────────────────────────────────────────────────────┐
-│              Other Services (called by ai-service)       │
-│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐   │
-│  │erp-service│ │crm-svc   │ │billing-  │ │inventory-│   │
-│  │ (8000)    │ │ (8001)   │ │svc(8003) │ │svc (8004)│   │
-│  └──────────┘ └──────────┘ └──────────┘ └──────────┘   │
-└─────────────────────────────────────────────────────────┘
-```
+**Root cause:** A leaky abstraction. Mapping a small set of inputs to a large set of outputs via a lookup table will always have gaps.
 
 ---
 
-## Phase 1: Backend — AI Service Foundation
+## Solution: Direct CSS Variable Editor
 
-**Goal:** Stand up the ai-service with session management, LLM integration, and module context.
+Instead of mapping brand colors to CSS variables, expose the actual `globals.css` content directly in a modal. The modal parses every line of `globals.css`, and each CSS variable declaration becomes a visual row with:
 
-### Task 1.1: Project Scaffold
-- [x] Create `services/ai-service/` directory structure
-- [x] `pyproject.toml` with dependencies (fastapi, uvicorn, sqlalchemy, asyncpg, alembic, httpx, pydantic-settings)
-- [x] `app/main.py` — FastAPI app with CORS, lifespan, router mount
-- [x] `app/core/config.py` — Settings class (JWT_SECRET, DB_URL, LLM keys)
-- [x] `app/core/database.py` — AsyncSession factory for `erp_ai`
-- [x] `app/core/deps.py` — `get_current_user_id` dependency (JWT decode)
-- [x] `.env.example` — all required env vars with safe placeholders
+- **Variable name** (e.g., `--primary`, `--shell-border`)
+- **Color swatch** — a solid 24×24px square showing the current value's color, always visible
+- **Hex value** — editable text input showing the current hex code
+- **Lazy color picker** — clicking the swatch opens the native `<input type="color">` picker overlay, which closes on blur (same UX as the current 5-color branding picker)
+- **Non-color variables** (fonts, radius, spacing, shadows) — plain text input with a type badge
 
-### Task 1.2: Database Models + Migration
-- [x] `app/models.py` — SQLAlchemy models:
-  - `AISession`: id (UUID), user_id (int), module (enum: admin/crm/billing/inventory), title (str), created_at, updated_at
-  - `AIMessage`: id (UUID), session_id (FK→AISession), role (enum: user/assistant/system), content (text), created_at
-- [x] Alembic init + migration for `erp_ai` database
-- [x] Seed system prompt messages per module
+No mapping layer. Every variable in `globals.css` is exposed. Changes save to the backend and hot-reload via `<style>` injection.
 
-### Task 1.3: Pydantic Schemas
-- [x] `app/schemas.py` — Request/response models:
-  - `ChatRequest`: message, session_id?, module
-  - `ChatResponse`: session_id, message (assistant response)
-  - `SessionResponse`: id, title, module, message_count, created_at
-  - `HistoryResponse`: messages[] with role, content, created_at
+### How it works
 
-### Task 1.4: LLM Provider Abstraction
-- [x] `app/llm/base.py` — Abstract `LLMProvider` with `async chat(messages, model) -> str`
-- [x] `app/llm/groq.py` — Groq REST API via httpx (default provider)
-- [x] `app/llm/gemini.py` — Gemini stub for future
-- [x] `app/llm/factory.py` — `get_provider()` based on `AI_PROVIDER` env var
-- [x] Env vars: `AI_PROVIDER`, `GROQ_API_KEY`, `GROQ_MODEL`, `GEMINI_API_KEY`
+1. **Load** `globals.css` as raw text via `?raw` import
+2. **Parse** each line — extract `--*` variable declarations from `:root {}` and `.dark {}` blocks
+3. **Classify** into categories (Brand, Surface, Text, Charts, Sidebar, Status, Shadows, Fonts, Layout)
+4. **Render** modal rows — each variable gets a color swatch + hex input (for colors) or a text input (for non-colors)
+5. **Lazy picker** — swatch click opens `<input type="color">`, pick closes on change/blur, updates the row
+6. **Preview** changes live by injecting a `<style>` tag that overrides `:root` / `.dark` variables
+7. **Save** the full override set to the backend (`SystemSettings.branding.css_overrides`)
+8. **Load** overrides on app mount via a `<style>` injection in the root layout, before any components render
 
-### Task 1.5: Module Context Providers
-- [x] `app/context/base.py` — Abstract `ContextProvider` with `async get_context(user_id) -> dict`
-- [x] `app/context/crm.py` — Calls crm-service: customers, pipeline, leads
-- [x] `app/context/billing.py` — Calls billing-service: invoices, payments, outstanding
-- [x] `app/context/inventory.py` — Calls inventory-service: stock, POs, low-stock alerts
-- [x] `app/context/admin.py` — Calls core-iam + other services for cross-module KPIs
-- [x] Each provider returns structured dict for prompt injection
-- [x] HTTP clients: `app/context/clients.py` — crm_client, billing_client, inventory_client
+### Why this is better
 
-### Task 1.6: System Prompt Templates
-- [x] `app/prompts.py` — Per-module system prompts:
-  - `ADMIN_PROMPT` — cross-module overview, system health
-  - `CRM_PROMPT` — customer insights, pipeline analysis, lead scoring
-  - `BILLING_PROMPT` — invoice management, payment tracking, GST
-  - `INVENTORY_PROMPT` — stock levels, procurement, fulfillment
-- [x] Each prompt: role definition, context format, guardrails, INR formatting, Indian date format
-
-### Task 1.7: CRUD Operations
-- [x] `app/crud.py` — Database operations:
-  - `create_session(user_id, module, title?) -> AISession`
-  - `get_session(session_id, user_id) -> AISession?`
-  - `list_sessions(user_id, module?) -> list[AISession]`
-  - `delete_session(session_id, user_id) -> bool`
-  - `add_message(session_id, role, content) -> AIMessage`
-  - `get_history(session_id, limit=50) -> list[AIMessage]`
-
-### Task 1.8: AI Router
-- [x] `app/router.py` — Endpoints:
-  - `POST /api/ai/chat` — Send message, get AI response (streaming-ready)
-  - `GET /api/ai/sessions` — List user's sessions (filterable by module)
-  - `GET /api/ai/history/{session_id}` — Message history
-  - `DELETE /api/ai/sessions/{session_id}` — Delete session + messages
-  - `GET /api/ai/suggestions/{module}` — Module-specific suggestion chips
-- [x] Wire router into `main.py`
+- **Zero mapping gaps** — every variable is directly visible and editable
+- **Visual at a glance** — color swatches show exactly what each variable looks like, no guessing
+- **Lazy picker** — no cluttered UI; picker only appears when user clicks a swatch
+- **Dark mode included** — users see both `:root` and `.dark` blocks side by side
+- **New variables auto-discovered** — when globals.css adds new variables, the modal picks them up automatically
+- **Rollback** — store defaults alongside overrides; "Reset to Default" is trivial
+- **No component changes needed** — components already consume CSS variables; we just let users change them directly
 
 ---
 
-## Phase 2: Frontend — Shared AI Chat Component
+## Phase 1: CSS Variable Parser & Modal UI
 
-**Goal:** Build a reusable chat UI in `ui-theme` that any app can embed.
+**Goal:** Build the modal that reads globals.css and presents editable fields with color swatches and lazy pickers.
 
-### Task 2.1: AIChat Component
-- [x] Create `packages/ui-theme/src/components/shared/ai-chat.tsx`
-  - Props: `module: "admin" | "crm" | "billing" | "inventory"`, `apiBase?: string`
-  - State: messages[], sessionId, input, loading
-  - Auto-scroll to bottom on new messages
-  - Basic markdown rendering (bold, code, lists)
-  - Session selector dropdown (past sessions)
-  - "New Chat" button
-  - Loading skeleton while waiting for response
+### Task 1.1: CSS Variable Parser
+- [ ] Create `packages/ui-theme/src/lib/css-parser.ts`
+- [ ] Parse CSS text line-by-line, extract `--*` variable declarations from `:root {}` and `.dark {}` blocks
+- [ ] Return typed structure: `{ light: CssVariable[], dark: CssVariable[] }`
+- [ ] Each `CssVariable`: `{ name: string, value: string, type: "color" | "size" | "font" | "calc" | "reference" | "other", line: number }`
+- [ ] Detect `type` by value pattern:
+  - `#hex` → `color`
+  - `rgb()`, `hsl()`, `oklch()` → `color`
+  - `px`, `rem`, `em` → `size`
+  - `font-family` values → `font`
+  - `calc()` → `calc`
+  - `var(...)` → `reference`
+  - anything else → `other`
 
-### Task 2.2: AIChat UI Layout
-- [x] Chat header: module icon + title + session selector
-- [x] Message list: user (right, brand), assistant (left, card), system (centered, muted)
-- [x] Input area: textarea + send button, shift+enter newline
-- [x] Suggestion chips on empty/new sessions
-- [x] Empty state: module-specific welcome + suggestions
+### Task 1.2: Variable Category Classifier
+- [ ] Create `packages/ui-theme/src/lib/css-categories.ts`
+- [ ] Group variables by name prefix into categories:
+  - **Brand Colors**: `--primary*`, `--accent*`, `--ring`, `--shell-brand`, `--shell-accent`
+  - **Surface & Background**: `--background`, `--card*`, `--popover*`, `--secondary*`, `--muted`, `--shell-bg`, `--shell-surface*`
+  - **Text & Foreground**: `--foreground`, `*-foreground`, `--muted-foreground`, `--shell-foreground`, `--shell-muted`
+  - **Charts**: `--chart-*`
+  - **Sidebar**: `--sidebar*`
+  - **Status (Semantic)**: `--shell-success*`, `--shell-warning*`, `--shell-danger*`, `--shell-info*`, `--destructive*`
+  - **Shadows**: `--shadow-*`
+  - **Fonts**: `--font-*`
+  - **Layout**: `--header-height`, `--sidebar-width`, `--radius*`, `--spacing`
+- [ ] Return `{ name: string, variables: CssVariable[] }[]`
 
-### Task 2.3: Export from ui-theme
-- [x] Export `AIChat` and types from `packages/ui-theme/src/index.ts`
+### Task 1.3: Branding Modal — Row Component
+- [ ] Create `packages/ui-theme/src/components/shared/branding-modal.tsx`
+- [ ] Props: `open`, `onClose`, `onSave`
+- [ ] Layout: full-height slide-in panel (w-[480px] on desktop, full-screen on mobile)
+- [ ] Header: "Theme Editor" title + close button + "Reset All" + "Save"
+- [ ] Content: scrollable, grouped by category (accordion or collapsible sections)
+- [ ] **Each color variable row:**
+  ```
+  ┌──────────────────────────────────────────────────────┐
+  │ [■■■■]  --primary          #f2470c        [input]   │
+  │  swatch   variable name     hex value      text     │
+  └──────────────────────────────────────────────────────┘
+  ```
+  - **Swatch**: 24×24px rounded-md div with `background-color: <current value>`, `cursor: pointer`, `border: 1px solid var(--shell-border)`
+  - **On swatch click**: open a hidden `<input type="color">` via `.click()`, on `onChange` update the hex value and swatch background
+  - **Hex input**: editable, updates swatch on change
+  - **Variable name**: monospace text, non-editable, muted color
+- [ ] **Each non-color variable row:**
+  ```
+  ┌──────────────────────────────────────────────────────┐
+  │  --font-sans         "Plus Jakarta Sans"   [font]   │
+  │  variable name       value                  badge    │
+  └──────────────────────────────────────────────────────┘
+  ```
+  - Text input with type badge (`px`, `rem`, `font`, `calc`, `ref`)
+- [ ] **Category header**: label + variable count + "Reset Category" button
+- [ ] **Footer**: "Preview" toggle (live inject `<style>`), "Save" button, "Cancel" button
 
----
+### Task 1.4: Live Preview Engine
+- [ ] Create `packages/ui-theme/src/lib/preview-injector.ts`
+- [ ] `injectPreview(overrides: { light: Record<string,string>, dark: Record<string,string> })` — creates/updates `<style id="branding-preview">` in `<head>`
+- [ ] `removePreview()` — removes the preview style tag
+- [ ] Style content: `:root { --var: value; } .dark { --var: value; }`
+- [ ] Used by the modal's "Preview" toggle
 
-## Phase 3: Sidebar Integration
-
-**Goal:** Add AI Assistant section at bottom of every sidebar.
-
-### Task 3.1: Sidebar AI Section
-- [x] `apps/erp-shell/components/Sidebar.tsx` — pinned bottom section, remove `soon: true`
-- [x] `apps/crm-ui/components/Sidebar.tsx` — same pattern
-- [x] `apps/billing-ui/components/Sidebar.tsx` — add section (currently missing)
-- [x] `apps/inventory-ui/components/Sidebar.tsx` — add section (currently missing)
-- [x] Visual separator (border-top) from main nav
-- [x] Collapsed state: Sparkles icon only
-
-### Task 3.2: AI Assistant Pages
-- [x] `apps/erp-shell/app/(admin)/ai-assistant/page.tsx` → `<AIChat module="admin" />`
-- [x] `apps/crm-ui/app/(admin)/ai-assistant/page.tsx` → `<AIChat module="crm" />`
-- [x] `apps/billing-ui/app/(admin)/ai-assistant/page.tsx` → `<AIChat module="billing" />`
-- [x] `apps/inventory-ui/app/(admin)/ai-assistant/page.tsx` → `<AIChat module="inventory" />`
-
----
-
-## Phase 4: Module Context Integration
-
-**Goal:** Make the AI aware of live data from each module.
-
-### Task 4.1: CRM Context
-- [x] Fetch: active customer count, pipeline value, top 5 open opps, recent leads, tier distribution
-- [x] Source: ai-service calls crm-service `/api/customers`, `/api/leads`, `/api/opportunities`
-
-### Task 4.2: Billing Context
-- [x] Fetch: outstanding total, overdue count, recent payments, revenue trend, GST summary
-- [x] Source: ai-service calls billing-service `/api/invoices`, `/api/payments/metrics`
-
-### Task 4.3: Inventory Context
-- [x] Fetch: product count, low-stock alerts, pending POs, warehouse summary, recent movements
-- [x] Source: ai-service calls inventory-service `/api/stock`, `/api/purchase-orders`
-
-### Task 4.4: Admin Context
-- [x] Fetch: user count, system health, recent activity
-- [x] Source: ai-service calls core-iam + other services for aggregated KPIs
-
----
-
-## Phase 5: Advanced Features
-
-### Task 5.1: Conversation Memory
-- [ ] Load last N messages from session for context window
-- [ ] Summarize older messages to stay within token limits
-- [x] Persistent sessions across page reloads
-
-### Task 5.2: Smart Suggestions
-- [ ] Module-specific suggestion chips (static + dynamic based on context)
-- [ ] Dynamic: after viewing an invoice, suggest "Draft payment reminder"
-
-### Task 5.3: Data-Aware Responses
-- [ ] Resolve entity IDs from context for inline links
-- [ ] Format monetary values consistently (INR with commas)
-- [ ] Include clickable links to relevant pages
-
-### Task 5.4: Rate Limiting & Security
-- [ ] Rate limit: 30 requests/minute per user
-- [x] Sanitize input (strip HTML, limit 4000 chars)
-- [ ] Validate module against user permissions
-- [ ] Log all interactions for audit
+### Task 1.5: Integration with Settings Page
+- [ ] Add "Theme Editor" button to `apps/erp-shell/app/(admin)/settings/branding/page.tsx`
+- [ ] Opens the `BrandingModal`
+- [ ] On save, POST overrides to `PUT /api/settings/branding` (erp-service)
+- [ ] On page load, inject saved overrides as `<style>` tag in root layout
 
 ---
 
-## Phase 6: Polish & Production Readiness
+## Phase 2: Backend Persistence
 
-### Task 6.1: Loading & Error States
-- [ ] Streaming response with typing indicator
-- [x] Graceful errors (API key missing, LLM timeout, rate limit)
-- [ ] Retry button on failed messages
+**Goal:** Store CSS variable overrides per user/org in the database.
 
-### Task 6.2: Mobile Responsive
-- [ ] Full-screen chat on mobile (<md)
-- [x] Touch-friendly input and scroll
+### Task 2.1: Schema Update
+- [ ] Add `css_overrides` JSON field to `SystemSettings.settings` schema (in `app/settings/schemas.py`)
+- [ ] Structure: `{ light: Record<string, string>, dark: Record<string, string> }`
+- [ ] Default: `null` (uses globals.css defaults)
 
-### Task 6.3: Accessibility
-- [ ] ARIA labels, keyboard navigation, screen reader support
+### Task 2.2: API Endpoints
+- [ ] `GET /api/settings/branding` — returns current CSS overrides
+- [ ] `PUT /api/settings/branding` — saves CSS overrides
+- [ ] `DELETE /api/settings/branding` — resets to defaults (sets `css_overrides: null`)
 
-### Task 6.4: Analytics
-- [ ] Track: messages/session, response time, module usage, token consumption
+### Task 2.3: Settings Router Update
+- [ ] Add branding-specific endpoints to `apps/erp-service/app/settings/router.py`
+- [ ] Scope by `owner_id` (same as existing settings)
+
+---
+
+## Phase 3: Frontend Theme Injection
+
+**Goal:** Apply saved CSS overrides before any components render to prevent flash.
+
+### Task 3.1: Theme Injection Hook
+- [ ] Create `packages/ui-theme/src/hooks/use-css-overrides.ts`
+- [ ] On mount, fetch `GET /api/settings/branding`
+- [ ] If `css_overrides` is non-null, inject `<style id="branding-overrides">` into `<head>`
+- [ ] Style content: `:root { --var: value; } .dark { --var: value; }`
+- [ ] Clean up on unmount
+
+### Task 3.2: Root Layout Integration
+- [ ] Add `<CssOverrides />` component to all 4 app root layouts
+- [ ] Must render before `<body>` content to prevent flash of default theme
+- [ ] Use `next/script` or inline `<head>` injection for SSR compatibility
+
+### Task 3.3: Live Preview During Edit
+- [ ] In the branding modal, "Preview" mode injects temporary `<style>` tag
+- [ ] On save, permanent override replaces the temporary one
+- [ ] On cancel, remove temporary tag
+
+---
+
+## Phase 4: Cleanup & Migration
+
+**Goal:** Remove the old branding lookup table and consolidate.
+
+### Task 4.1: Remove Old BrandingContext
+- [ ] Delete `apps/erp-shell/contexts/BrandingContext.tsx`
+- [ ] Remove `brandColors` mapping logic
+- [ ] Remove `BrandColor` type definition
+- [ ] Remove `BrandingProvider` from all root layouts
+- [ ] Keep the `SystemSettings` model and API — just change what data it stores
+
+### Task 4.2: Consolidate Token Usage
+- [ ] Audit all components for mixed token patterns (`var(--shell-*)` vs generic Tailwind)
+- [ ] Standardize on one approach per component type (prefer `var(--shell-*)` for themed elements)
+- [ ] Remove redundant `bg-[var(--shell-surface)]` overrides on `<Card>` instances where default `bg-card` suffices (after confirming `--card` is correctly themed)
+
+### Task 4.3: Default Theme Package
+- [ ] Ship a "DATAVEX Default" preset in `packages/ui-theme/src/defaults.ts`
+- [ ] This is the fallback when no overrides are saved
+- [ ] Used by "Reset to Default" in the modal
+
+---
+
+## Phase 5: Polish & Edge Cases
+
+### Task 5.1: Import globals.css at Runtime
+- [ ] The modal needs the raw CSS text to parse — import `globals.css` as a raw string
+- [ ] Use `?raw` import in Next.js: `import cssText from "@datavex/ui-theme/src/globals.css?raw"`
+- [ ] Alternatively, serve the CSS as an API endpoint from erp-service
+
+### Task 5.2: Variable Validation
+- [ ] Validate hex colors are valid 3/6-digit hex
+- [ ] Validate numeric values (px, rem) are positive numbers
+- [ ] Show inline validation errors in the modal
+
+### Task 5.3: Export / Import Theme
+- [ ] "Export" button — download overrides as JSON file
+- [ ] "Import" button — upload JSON file to restore overrides
+- [ ] Useful for sharing themes across deployments
+
+### Task 5.4: Responsive Modal
+- [ ] Full-screen on mobile (<md)
+- [ ] Sidebar panel on desktop (w-96, slide-in from right)
 
 ---
 
 ## File Structure
 
 ```
-services/ai-service/                          # NEW — FastAPI, port 8005
-├── app/
-│   ├── __init__.py
-│   ├── main.py                               # FastAPI app entry
-│   ├── core/
-│   │   ├── __init__.py
-│   │   ├── config.py                         # Settings (JWT_SECRET, DB, LLM keys)
-│   │   ├── database.py                       # SQLAlchemy AsyncSession for erp_ai
-│   │   └── deps.py                           # get_current_user_id (JWT decode)
-│   ├── models.py                             # AISession, AIMessage (SQLAlchemy)
-│   ├── schemas.py                            # Pydantic request/response models
-│   ├── crud.py                               # Database operations
-│   ├── router.py                             # /api/ai/* endpoints
-│   ├── prompts.py                            # System prompt templates per module
-│   ├── llm/
-│   │   ├── __init__.py
-│   │   ├── base.py                           # Abstract LLMProvider
-│   │   ├── groq.py                           # Groq REST API (default)
-│   │   └── gemini.py                         # Gemini stub
-│   └── context/
-│       ├── __init__.py
-│       ├── base.py                           # Abstract ContextProvider
-│       ├── clients.py                        # HTTP clients for other services
-│       ├── crm.py                            # CRM context provider
-│       ├── billing.py                        # Billing context provider
-│       ├── inventory.py                      # Inventory context provider
-│       └── admin.py                          # Admin cross-module context
-├── alembic/
-│   ├── env.py
-│   └── versions/
-├── alembic.ini
-├── pyproject.toml
-├── requirements.txt
-├── .env.example
-└── .env
+packages/ui-theme/src/
+├── lib/
+│   ├── css-parser.ts                    # NEW — parse globals.css into CssVariable[]
+│   ├── css-categories.ts                # NEW — classify variables by category
+│   └── preview-injector.ts              # NEW — inject/remove <style> for live preview
+├── components/shared/
+│   ├── branding-modal.tsx               # NEW — slide-in panel with swatches + lazy pickers
+│   └── theme-toggle.tsx                 # EXISTING — no changes
+├── hooks/
+│   └── use-css-overrides.ts             # NEW — fetch + inject CSS overrides on mount
+├── defaults.ts                          # NEW — default theme preset for "Reset"
+└── globals.css                          # EXISTING — source of truth (loaded via ?raw)
 
-packages/ui-theme/src/components/shared/
-├── ai-chat.tsx                               # Shared chat UI component
+services/erp-service/app/settings/
+├── router.py                            # MODIFY — add branding CRUD endpoints
+└── schemas.py                           # MODIFY — add css_overrides to settings schema
 
-apps/*/app/(admin)/ai-assistant/
-├── page.tsx                                  # Renders <AIChat module="..." />
-└── loading.tsx                               # Skeleton loading state
+apps/*/app/(admin)/settings/branding/
+└── page.tsx                             # MODIFY — add "Theme Editor" button
 
-apps/*/proxy.ts                               # Add /api/ai/* → ai-service (8005)
+apps/*/app/layout.tsx                    # MODIFY — add <CssOverrides /> component
 ```
 
 ---
 
-## Proxy Routing (frontend)
+## Current Phase Status
 
-All 4 frontend apps add this to their `proxy.ts`:
-
-```ts
-// /api/ai/* → ai-service (port 8005)
-{ source: '/api/ai/:path*', destination: 'http://localhost:8005/api/ai/:path*' },
-```
-
----
-
-## Dependencies
-
-### ai-service (Python)
-| Package | Purpose | Version |
-|---|---|---|
-| `fastapi` | Web framework | >=0.115 |
-| `uvicorn[standard]` | ASGI server | >=0.34 |
-| `sqlalchemy[asyncio]` | ORM | >=2.0 |
-| `asyncpg` | PostgreSQL async driver | >=0.30 |
-| `alembic` | Migrations | >=1.14 |
-| `httpx` | HTTP client (LLM + service calls) | >=0.28 |
-| `pydantic-settings` | Config management | >=2.0 |
-
-### Frontend (shared)
-| Package | Purpose | Install |
-|---|---|---|
-| `react-markdown` | Markdown rendering in chat | `bun add react-markdown` |
-
----
-
-## Environment Variables
-
-```bash
-# ai-service .env
-DATABASE_URL=postgresql+asyncpg://datavex:datavex@localhost:5432/erp_ai
-JWT_SECRET=development-jwt-secret-key-123
-AI_PROVIDER=groq
-GROQ_API_KEY=gsk_xxxxx
-GROQ_MODEL=llama-3.1-8b-instant
-GEMINI_API_KEY=
-CRM_SERVICE_URL=http://localhost:8001
-BILLING_SERVICE_URL=http://localhost:8003
-INVENTORY_SERVICE_URL=http://localhost:8004
-```
-
----
-
-## Nx Registration
-
-Add to `nx.json` and root `package.json` workspaces:
-
-```json
-// nx.json — projects
-"ai-service": { "tags": ["backend", "python", "ai"] }
-```
-
-```json
-// package.json — scripts
-"dev:ai": "bun nx run ai-service:dev"
-```
-
----
-
-## Success Criteria
-
-- [x] User can open AI chat from any of 4 workstations
-- [x] Chat context is module-aware (CRM data for CRM, billing for billing, etc.)
-- [x] Sessions persist across page reloads (stored in erp_ai DB)
-- [ ] Responses grounded in actual data (not hallucinated)
-- [ ] Mobile-responsive chat UI
-- [ ] < 3s first-token latency
-- [x] All 4 apps compile clean
-- [x] ai-service has own DB (erp_ai), own Alembic chain, independent deployment
+| Phase | Status | Description |
+|-------|--------|-------------|
+| Phase 1: CSS Variable Parser & Modal | ⬜ Not Started | Core modal + parser |
+| Phase 2: Backend Persistence | ⬜ Not Started | Store overrides in DB |
+| Phase 3: Frontend Theme Injection | ⬜ Not Started | Apply overrides on load |
+| Phase 4: Cleanup & Migration | ⬜ Not Started | Remove old branding system |
+| Phase 5: Polish & Edge Cases | ⬜ Not Started | Validation, export, responsive |
 
 ---
 
 ## Effort Estimate
 
 | Phase | Effort | Dependencies |
-|---|---|---|
-| Phase 1: Backend Foundation | 2–3 days | None |
-| Phase 2: Shared UI Component | 1–2 days | Phase 1 |
-| Phase 3: Sidebar Integration | 0.5 day | Phase 2 |
-| Phase 4: Module Context | 1–2 days | Phase 1 |
-| Phase 5: Advanced Features | 2–3 days | Phase 2 + 4 |
-| Phase 6: Polish | 1–2 days | All above |
-| **Total** | **8–12 days** | |
+|-------|--------|-------------|
+| Phase 1: Parser & Modal | 3–4 days | None |
+| Phase 2: Backend | 1 day | Phase 1 |
+| Phase 3: Injection | 1–2 days | Phase 2 |
+| Phase 4: Cleanup | 1 day | Phase 3 |
+| Phase 5: Polish | 1–2 days | Phase 3 |
+| **Total** | **7–10 days** | |
 
 ---
 
-## Docker Infrastructure Audit — 2026-08-29
+## Previously Completed Work
 
-**Scope:** Full audit of all Docker infrastructure (compose, Dockerfiles, env, build/seed scripts) across 10 services.
+### Branding & Theme (2026-09-14 to 2026-09-16)
+- [x] Unified logo/favicon across all 4 apps (DATAVEX red on transparent)
+- [x] Light/dark brand colors: `--primary: #f2470c` (light), `--primary: #f2470c` (dark)
+- [x] `BrandingContext` + `useBranding()` hook (will be replaced by Phase 1)
+- [x] `BrandSettings` component with 5-color picker (will be replaced by Phase 1)
+- [x] `StatusBadge` shared component
+- [x] 200+ hardcoded Tailwind colors eliminated from dashboard pages
+- [x] `kpi-enter` animation in globals.css
+- [x] All dashboard cards standardized with `border-[var(--shell-border)] bg-[var(--shell-surface)]`
+- [x] Theme toggle visibility fix (h-9, border, text-foreground/70)
+- [x] Committed as `e60eb19`, `0a846e3`, `5143f42`
 
-### Issues Found & Fixed
+### RustFS Migration (2026-09-16)
+- [x] Replace MinIO with RustFS across entire monorepo
+- [x] Boto3 SDK replacing minio Python package
+- [x] All env vars renamed: `MINIO_*` → `RUSTFS_*`
+- [x] Docker service names: `minio:` → `rustfs:`, container names updated
+- [x] Nginx routes: `/minio/` → `/rustfs/`, server_names updated
+- [x] Default credentials: `minioadmin` → `datavex-rustfs-admin`
+- [x] Hosts scripts updated
+- [x] Auto-create buckets on erp-service startup via Boto3
+- [x] Seed script fix: `AsyncSessionLocal` → `async_session_factory`
+- [x] Committed as `d1dcd6e`, `1a910bb`, `48dd06a`, `07ba550`
 
-#### 1. Proxy Configuration — Root Cause of Build Failure ✅ FIXED
-**Problem:** `.env.docker` had `HTTP_PROXY=http://http.docker.internal:3128` uncommented. Docker Desktop's built-in proxy is unreliable for Docker builds — it causes TLS errors on Alpine CDN and connection-refused on Debian repos, preventing `dumb-init` and `openssl` from being installed.
+### AI Chatbot (2026-08-28 to 2026-09-14)
+- [x] Phase 1–4 complete: Backend, Shared UI, Sidebar Integration, Module Context
+- [ ] Phase 5–6 pending: Advanced Features, Polish
 
-**Why previous builds worked:** Docker layer caching meant `apk add`/`apt-get` steps were never re-executed. `--no-cache` forced fresh downloads, which hit the broken proxy.
-
-**Fix:** Commented out proxy settings in `.env.docker` with clear documentation. Builds now use direct connections.
-
-**Files changed:** `infrastructure/local/.env.docker`
-
-#### 2. PYTHONPATH Missing from FastAPI Dockerfiles ✅ FIXED
-**Problem:** Only `ai-service/Dockerfile` had `PYTHONPATH` set. The other 3 FastAPI services (`erp-service`, `inventory-service`, `crm-service`) were missing it, which could cause Alembic to fail finding the `app` module during `alembic upgrade head`.
-
-**Fix:** Added `PYTHONPATH="/app/services/<service-name>"` to all 3 Dockerfiles.
-
-**Files changed:** `services/erp-service/Dockerfile`, `services/inventory-service/Dockerfile`, `services/crm-service/Dockerfile`
-
-#### 3. openssl Missing from erp-service Builder ✅ FIXED
-**Problem:** `erp-service/Dockerfile` didn't install `openssl` in the builder stage, unlike all other Python services. Some pip packages (like `cryptography`) need openssl headers to build.
-
-**Fix:** Added `apt-get install -y --no-install-recommends openssl` to erp-service's builder stage.
-
-**Files changed:** `services/erp-service/Dockerfile`
-
-#### 4. Missing `app/ai_assistant` Module in crm-service ✅ FIXED (prior session)
-**Problem:** CRM seed script imported `from app.ai_assistant.models import AIAssistantLog` but the module didn't exist, causing `ModuleNotFoundError`.
-
-**Fix:** Created `services/crm-service/app/ai_assistant/__init__.py` and `models.py` with the `AIAssistantLog` model matching the existing `ai_logs` table schema.
-
-**Files changed:** `services/crm-service/app/ai_assistant/__init__.py`, `services/crm-service/app/ai_assistant/models.py`, `services/crm-service/app/models.py`, `services/crm-service/scripts/seed.py`
-
-### Status of Other Items
-
-| Item | Status | Notes |
-|------|--------|-------|
-| `dumb-init` in Dockerfiles | ⚠️ Environment | Not a code issue — was proxy blocking Alpine CDN |
-| Frontend Dockerfile deduplication | 💡 Optimization | All 4 copy identical monorepo package.jsons |
-| Docker Bake file | 💡 Optimization | Could replace parallel compose builds |
-| Resource limits (mem/cpus) | 💡 Hardening | No limits set — one service could starve others |
-| Python version consistency | ⚠️ Note | erp/crm = 3.12, ai/inventory = 3.13 (intentional) |
-| NestJS services use `dumb-init` | ✅ OK | FastAPI doesn't need it (uvicorn handles signals) |
-
-### Files Changed in This Audit
-
-```
-infrastructure/local/.env.docker                    # Proxy commented out, documented
-services/erp-service/Dockerfile                      # +PYTHONPATH, +openssl builder
-services/inventory-service/Dockerfile                # +PYTHONPATH
-services/crm-service/Dockerfile                      # +PYTHONPATH
-services/crm-service/app/ai_assistant/__init__.py    # New module (created in prior session)
-services/crm-service/app/ai_assistant/models.py      # AIAssistantLog model (prior session)
-services/crm-service/app/models.py                   # Registered AIAssistantLog import (prior session)
-services/crm-service/scripts/seed.py                 # Fixed TRUNCATE + create_all (prior session)
-services/ai-service/alembic/env.py                   # Added settings import + URL override (prior session)
-```
+### Docker Infrastructure (2026-08-29)
+- [x] Full audit: proxy config, PYTHONPATH, openssl, AI module
+- [x] All 10 services building and running
