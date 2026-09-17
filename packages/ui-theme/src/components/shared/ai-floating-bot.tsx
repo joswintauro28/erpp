@@ -188,7 +188,7 @@ function renderSimpleMarkdown(text: string): React.ReactNode {
 
 export function AIFloatingBot({
   defaultModule = "admin",
-  positionClassName = "fixed bottom-6 right-6 z-50",
+  positionClassName = "fixed bottom-6 right-6 z-40",
 }: AIFloatingBotProps) {
   const [isAiPage, setIsAiPage] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
