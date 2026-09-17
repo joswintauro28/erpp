@@ -323,7 +323,7 @@ export function BrandingModal({
   initialOverrides,
 }: BrandingModalProps) {
   // Parse globals.css
-  const parsed = React.useMemo(() => parseGlobalsCss(globalsCssText as string), []);
+  const parsed = React.useMemo(() => parseGlobalsCss((globalsCssText as string) || ""), []);
   const defaults = React.useMemo(() => extractDefaults(parsed), [parsed]);
 
   // Classify light variables (same categories for both themes)
