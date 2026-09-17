@@ -21,14 +21,48 @@ import { api } from "@/services/api";
 import { KpiCard } from "@datavex/ui-theme";
 import type { TeamMember } from "@/types/settings";
 
-const roleColors: Record<string, string> = {
-  "Organization Owner": "var(--shell-brand)",
-  "Accountant": "var(--shell-accent)",
-  "Sales Executive": "var(--shell-info)",
-  "Inventory Manager": "var(--shell-success)",
-  "Auditor": "var(--chart-5)",
-  "Employee": "var(--shell-muted)",
+const roleStyles: Record<string, { color: string; bg: string; border: string }> = {
+  "Organization Owner": {
+    color: "var(--primary, #f2470c)",
+    bg: "color-mix(in srgb, var(--primary, #f2470c) 12%, transparent)",
+    border: "color-mix(in srgb, var(--primary, #f2470c) 35%, transparent)",
+  },
+  "Accountant": {
+    color: "#7c3aed", // Indigo/Violet - rich contrast for finance
+    bg: "color-mix(in srgb, #7c3aed 12%, transparent)",
+    border: "color-mix(in srgb, #7c3aed 35%, transparent)",
+  },
+  "Sales Executive": {
+    color: "#0284c7", // Sky blue
+    bg: "color-mix(in srgb, #0284c7 12%, transparent)",
+    border: "color-mix(in srgb, #0284c7 35%, transparent)",
+  },
+  "Inventory Manager": {
+    color: "#059669", // Emerald
+    bg: "color-mix(in srgb, #059669 12%, transparent)",
+    border: "color-mix(in srgb, #059669 35%, transparent)",
+  },
+  "Auditor": {
+    color: "#d97706", // Amber
+    bg: "color-mix(in srgb, #d97706 12%, transparent)",
+    border: "color-mix(in srgb, #d97706 35%, transparent)",
+  },
+  "Employee": {
+    color: "var(--muted-foreground)",
+    bg: "var(--muted)",
+    border: "var(--border)",
+  },
 };
+
+function getRoleStyle(role: string) {
+  return (
+    roleStyles[role] || {
+      color: "var(--foreground)",
+      bg: "var(--secondary)",
+      border: "var(--border)",
+    }
+  );
+}
 
 export default function TeamManagement() {
   const [activeTab, setActiveTab] = useState<"directory" | "permissions">("directory");
@@ -330,7 +364,7 @@ export default function TeamManagement() {
             <KpiCard label="Total Members" value={members.length} subtitle="Registered profiles" icon={Users} color="var(--chart-1)" index={0} />
             <KpiCard label="Active Users" value={members.filter((m) => m.status === "active").length} subtitle="Authorized to login" icon={CheckCircle2} color="var(--shell-success)" index={1} />
             <KpiCard label="Deactivated Users" value={members.filter((m) => m.status === "disabled").length} subtitle="Access revoked" icon={PowerOff} color="var(--shell-danger)" index={2} />
-            <KpiCard label="Available Roles" value={roles.length} subtitle="Configured access groups" icon={Shield} color="var(--shell-accent)" index={3} />
+            <KpiCard label="Available Roles" value={roles.length} subtitle="Configured access groups" icon={Shield} color="var(--chart-4)" index={3} />
           </div>
 
           {/* Search bar */}
@@ -360,49 +394,51 @@ export default function TeamManagement() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredMembers.map((m) => (
-                    <TableRow key={m.id} className="border-b border-border/40 hover:bg-secondary/30 transition-colors">
-                      <TableCell className="text-sm font-semibold text-foreground">{m.name}</TableCell>
-                      <TableCell className="text-xs text-foreground font-mono">{m.email}</TableCell>
-                      <TableCell>
-                        <Badge 
-                          variant="outline" 
-                          className="text-xs font-semibold px-2 py-0.5" 
-                          style={{ 
-                            borderColor: `${roleColors[m.role] || "var(--shell-border)"}40`, 
-                            color: roleColors[m.role] || "var(--shell-foreground)",
-                            backgroundColor: `${roleColors[m.role] || "var(--shell-border)"}10`
-                          }}
-                        >
-                          {m.role}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-xs text-muted-foreground">{m.department}</TableCell>
-                      <TableCell>
-                        <Badge
-                          variant={m.status === "active" ? "default" : "outline"}
-                          className={`text-[10px] font-semibold ${
-                            m.status === "active"
-                              ? "bg-[var(--shell-success)]/10 text-[var(--shell-success)] border-[var(--shell-success)]/20"
-                              : "bg-primary/10 text-primary border-[var(--shell-brand)]/20"
-                          }`}
-                        >
-                          {m.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="max-w-xs">
-                        <div className="flex flex-wrap gap-1">
-                          {m.permissions.length === 0 ? (
-                            <span className="text-[10px] text-muted-foreground">No permissions mapped</span>
-                          ) : m.permissions.length === permissions.length ? (
-                            <Badge variant="outline" className="text-[9px] font-semibold text-[var(--shell-accent)] border-[var(--shell-accent)]/30 bg-[var(--shell-accent)]/5">Full Access Admin</Badge>
-                          ) : (
-                            m.permissions.map((p) => (
-                              <Badge key={p} variant="outline" className="text-[9px] font-medium border-border/60 text-muted-foreground">{p}</Badge>
-                            ))
-                          )}
-                        </div>
-                      </TableCell>
+                  {filteredMembers.map((m) => {
+                    const rStyle = getRoleStyle(m.role);
+                    return (
+                      <TableRow key={m.id} className="border-b border-border/40 hover:bg-secondary/30 transition-colors">
+                        <TableCell className="text-sm font-semibold text-foreground">{m.name}</TableCell>
+                        <TableCell className="text-xs text-foreground font-mono">{m.email}</TableCell>
+                        <TableCell>
+                          <Badge 
+                            variant="outline" 
+                            className="text-xs font-semibold px-2.5 py-0.5 shadow-2xs" 
+                            style={{ 
+                              borderColor: rStyle.border, 
+                              color: rStyle.color,
+                              backgroundColor: rStyle.bg,
+                            }}
+                          >
+                            {m.role}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-xs text-muted-foreground">{m.department}</TableCell>
+                        <TableCell>
+                          <Badge
+                            variant={m.status === "active" ? "default" : "outline"}
+                            className={`text-[10px] font-semibold px-2 py-0.5 shadow-2xs ${
+                              m.status === "active"
+                                ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30"
+                                : "bg-destructive/10 text-destructive border-destructive/30"
+                            }`}
+                          >
+                            {m.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="max-w-xs">
+                          <div className="flex flex-wrap gap-1">
+                            {m.permissions.length === 0 ? (
+                              <span className="text-[10px] text-muted-foreground">No permissions mapped</span>
+                            ) : m.permissions.length === permissions.length ? (
+                              <Badge variant="outline" className="text-[9px] font-semibold text-primary border-primary/40 bg-primary/10 shadow-2xs">Full Access Admin</Badge>
+                            ) : (
+                              m.permissions.map((p) => (
+                                <span key={p} className="inline-block text-[9.5px] font-mono font-medium bg-muted/80 text-foreground/80 px-1.5 py-0.5 rounded border border-border/70 shadow-2xs">{p}</span>
+                              ))
+                            )}
+                          </div>
+                        </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-1.5">
                           <Button 
@@ -447,7 +483,8 @@ export default function TeamManagement() {
                         </div>
                       </TableCell>
                     </TableRow>
-                  ))}
+                  );
+                })}
                 </TableBody>
               </Table>
             </CardContent>
@@ -462,23 +499,32 @@ export default function TeamManagement() {
               <CardTitle className="text-xs font-semibold text-muted-foreground tracking-wider uppercase">System Roles</CardTitle>
             </CardHeader>
             <CardContent className="p-2 space-y-1">
-              {roles.map((r) => (
-                <button
-                  key={r.id}
-                  onClick={() => handleRoleSelect(r.id)}
-                  className={`w-full text-left px-3.5 py-2.5 rounded-lg text-sm font-semibold transition-all ${
-                    selectedRoleId === r.id
-                      ? "bg-primary/10 text-primary border border-[var(--shell-brand)]/20"
-                      : "text-muted-foreground hover:text-foreground hover:bg-secondary/40"
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <span>{r.name}</span>
-                    <Badge variant="outline" className="text-[10px] scale-90 border-border font-semibold">{r.permissions.length} perms</Badge>
-                  </div>
-                  <span className="block text-[11px] text-muted-foreground font-normal mt-0.5">{r.description}</span>
-                </button>
-              ))}
+              {roles.map((r) => {
+                const rStyle = getRoleStyle(r.name);
+                return (
+                  <button
+                    key={r.id}
+                    onClick={() => handleRoleSelect(r.id)}
+                    className={`w-full text-left px-3.5 py-2.5 rounded-lg text-sm font-semibold transition-all ${
+                      selectedRoleId === r.id
+                        ? "bg-primary/10 text-primary border border-primary/30 shadow-2xs"
+                        : "text-muted-foreground hover:text-foreground hover:bg-secondary/40"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span
+                          className="h-2 w-2 rounded-full shrink-0"
+                          style={{ backgroundColor: rStyle.color }}
+                        />
+                        <span>{r.name}</span>
+                      </div>
+                      <Badge variant="outline" className="text-[10px] scale-90 border-border/70 font-semibold">{r.permissions.length} perms</Badge>
+                    </div>
+                    <span className="block text-[11px] text-muted-foreground font-normal mt-0.5 ml-4">{r.description}</span>
+                  </button>
+                );
+              })}
             </CardContent>
           </Card>
 
@@ -503,30 +549,40 @@ export default function TeamManagement() {
             </CardHeader>
             <CardContent className="p-6 space-y-6">
               {Object.entries(permissionsByModule).map(([moduleName, modulePerms]) => (
-                <div key={moduleName} className="space-y-3 pb-4 border-b border-border/20 last:border-0">
-                  <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--shell-accent)]">{moduleName}</h3>
-                  <div className="grid grid-cols-2 gap-4">
+                <div key={moduleName} className="space-y-3 pb-4 border-b border-border/30 last:border-0">
+                  <div className="flex items-center gap-2">
+                    <span className="h-2 w-2 rounded-full bg-primary" />
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">{moduleName}</h3>
+                    <Badge variant="outline" className="text-[10px] py-0 px-1.5 font-mono text-muted-foreground border-border/70 bg-muted/30">
+                      {modulePerms.filter((p) => selectedRolePermIds.includes(p.id)).length}/{modulePerms.length}
+                    </Badge>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3.5">
                     {modulePerms.map((p) => {
                       const isChecked = selectedRolePermIds.includes(p.id);
                       return (
                         <div 
                           key={p.id}
                           onClick={() => handlePermissionToggle(p.id)}
-                          className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer select-none transition-all ${
+                          className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer select-none transition-all ${
                             isChecked
-                              ? "border-[var(--shell-brand)]/40 bg-primary/5 hover:bg-primary/10"
-                              : "border-border bg-transparent hover:bg-secondary/30"
+                              ? "border-primary/50 bg-primary/10 shadow-xs hover:bg-primary/15"
+                              : "border-border/80 bg-card hover:bg-muted/40 hover:border-border"
                           }`}
                         >
                           <input 
                             type="checkbox"
                             checked={isChecked}
                             onChange={() => {}} // Controlled via onClick on outer box
-                            className="h-4 w-4 rounded border-border accent-[var(--shell-brand)] mt-0.5 cursor-pointer"
+                            className="h-4 w-4 rounded border-border accent-[var(--primary)] mt-0.5 cursor-pointer"
                           />
-                          <div className="space-y-0.5">
-                            <span className="block text-xs font-semibold text-foreground">{p.name || p.code}</span>
-                            <span className="block text-[11px] font-mono text-muted-foreground">{p.code}</span>
+                          <div className="space-y-0.5 min-w-0">
+                            <span className={`block text-xs font-semibold ${isChecked ? "text-primary font-bold" : "text-foreground"}`}>
+                              {p.name || p.code}
+                            </span>
+                            <span className="block text-[11px] font-mono text-muted-foreground truncate">
+                              {p.code}
+                            </span>
                           </div>
                         </div>
                       );
