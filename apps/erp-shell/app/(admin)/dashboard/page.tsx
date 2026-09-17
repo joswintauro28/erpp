@@ -174,18 +174,18 @@ export default function Dashboard() {
           badges={
             <>
               {hasOverdue && (
-                <Badge variant="destructive" className="text-xs">
+                <Badge variant="destructive" className="text-xs font-medium">
                   {data!.alerts.overdue_invoices} overdue invoice{data!.alerts.overdue_invoices !== 1 ? "s" : ""}
                 </Badge>
               )}
               {hasLowStock && (
-                <Badge variant="outline" className="border-[var(--shell-warning)]/30 text-[var(--shell-warning)] text-xs">
+                <Badge variant="outline" className="border-amber-500/40 text-amber-700 dark:text-amber-400 bg-amber-500/10 text-xs font-medium">
                   {data!.alerts.low_stock_products} low-stock item{data!.alerts.low_stock_products !== 1 ? "s" : ""}
                 </Badge>
               )}
               {hasRecommendations && (
-                <Badge variant="outline" className="border-[var(--shell-accent)]/40 text-[var(--shell-accent-text)] bg-[var(--shell-accent)]/10 text-xs">
-                  <Lightbulb className="h-3 w-3 mr-1 inline text-[var(--shell-accent)]" />
+                <Badge variant="outline" className="border-primary/40 text-primary bg-primary/10 text-xs font-medium">
+                  <Lightbulb className="h-3 w-3 mr-1 inline text-primary" />
                   {data.recommendations.length} AI insight{data.recommendations.length !== 1 ? "s" : ""}
                 </Badge>
               )}

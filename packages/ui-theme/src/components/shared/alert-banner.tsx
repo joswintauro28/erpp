@@ -11,24 +11,24 @@ interface AlertBannerProps {
 const variantStyles = {
   accent: {
     wrapper:
-      "border-[var(--shell-accent)]/20 bg-gradient-to-r from-[var(--shell-accent)]/5 to-transparent",
-    iconBg: "bg-[var(--shell-accent)]/10",
-    iconColor: "text-[var(--shell-accent)]",
-    textColor: "text-[var(--shell-accent-text)]",
+      "border-border bg-card/80 shadow-xs backdrop-blur-xs",
+    iconBg: "bg-amber-500/15 border border-amber-500/30",
+    iconColor: "text-amber-600 dark:text-amber-400",
+    textColor: "text-foreground font-medium",
   },
   danger: {
     wrapper:
-      "border-[var(--shell-danger)]/20 bg-gradient-to-r from-[var(--shell-danger)]/5 to-transparent",
-    iconBg: "bg-[var(--shell-danger)]/10",
+      "border-[var(--shell-danger)]/30 bg-[var(--shell-danger-surface)]/60 shadow-xs backdrop-blur-xs",
+    iconBg: "bg-[var(--shell-danger)]/15 border border-[var(--shell-danger)]/30",
     iconColor: "text-[var(--shell-danger)]",
-    textColor: "text-[var(--shell-danger)]",
+    textColor: "text-foreground font-medium",
   },
   warning: {
     wrapper:
-      "border-[var(--shell-warning)]/20 bg-gradient-to-r from-[var(--shell-warning)]/5 to-transparent",
-    iconBg: "bg-[var(--shell-warning)]/10",
-    iconColor: "text-[var(--shell-warning)]",
-    textColor: "text-[var(--shell-warning)]",
+      "border-amber-500/30 bg-amber-500/5 shadow-xs backdrop-blur-xs",
+    iconBg: "bg-amber-500/15 border border-amber-500/30",
+    iconColor: "text-amber-600 dark:text-amber-400",
+    textColor: "text-foreground font-medium",
   },
 };
 

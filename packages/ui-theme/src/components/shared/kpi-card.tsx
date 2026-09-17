@@ -63,20 +63,25 @@ export function KpiCard({
       style={{ animationDelay: `${index * 0.05}s` }}
       onClick={onClick}
     >
-      {/* Gradient background overlay */}
-      <div className={`absolute inset-0 bg-gradient-to-br ${gradient} pointer-events-none`} />
+      {/* Glow / accent background overlay */}
+      <div
+        className="absolute inset-0 pointer-events-none opacity-60 group-hover:opacity-100 transition-opacity"
+        style={{
+          background: `radial-gradient(ellipse at top right, color-mix(in srgb, ${color} 10%, transparent), transparent 70%)`,
+        }}
+      />
 
       {/* Header: label + icon */}
       <div className="relative z-10 flex items-center justify-between">
-        <span
-          className="text-[10px] font-bold uppercase tracking-[0.1em]"
-          style={{ color }}
-        >
+        <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground group-hover:text-foreground transition-colors">
           {label}
         </span>
         <div
-          className="flex h-7 w-7 items-center justify-center rounded-lg border transition-transform duration-300 group-hover:scale-110"
-          style={{ backgroundColor: `${color}15`, borderColor: `${color}30` }}
+          className="flex h-7 w-7 items-center justify-center rounded-lg border transition-transform duration-300 group-hover:scale-110 shadow-2xs"
+          style={{
+            backgroundColor: `color-mix(in srgb, ${color} 12%, transparent)`,
+            borderColor: `color-mix(in srgb, ${color} 28%, transparent)`,
+          }}
         >
           <Icon className="h-3.5 w-3.5" style={{ color }} />
         </div>
