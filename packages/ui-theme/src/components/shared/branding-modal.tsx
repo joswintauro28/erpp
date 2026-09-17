@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { cn } from "../../lib/utils";
-import { parseGlobalsCss, extractDefaults, type CssVariable, type ParsedCss } from "../../lib/css-parser";
+import { parseGlobalsCss, extractDefaults, type CssVariable, type ParsedCss, type VariableType } from "../../lib/css-parser";
 import { classifyVariables, type VariableCategory } from "../../lib/css-categories";
 import { injectPreview, removePreview } from "../../lib/preview-injector";
 
