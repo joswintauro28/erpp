@@ -103,6 +103,23 @@ async function uploadFile(
   return api.post<{ id: number }>("/files/confirm-upload", { file_id });
 }
 
+const COLOR_PRESETS = [
+  "#f2470c", // Primary Orange-Red
+  "#8c1d24", // Deep Brand / Crimson
+  "#e5b83c", // Accent Gold
+  "#10b981", // Success Emerald
+  "#d97706", // Warning Amber
+  "#ef4444", // Danger Red
+  "#2563eb", // Info Blue
+  "#6366f1", // Indigo
+  "#09090b", // Deep Dark
+  "#18181b", // Zinc 900
+  "#52525b", // Muted Slate
+  "#e2e8f0", // Border Slate
+  "#ffffff", // White
+  "#fff0eb", // Peachy Accent Surface
+];
+
 /* ── Color Picker Popover (portal-based to escape overflow-hidden) ───────── */
 
 function ColorPickerPopover({
@@ -122,10 +139,21 @@ function ColorPickerPopover({
   const updatePosition = React.useCallback(() => {
     if (triggerRef.current) {
       const rect = triggerRef.current.getBoundingClientRect();
-      setPosition({
-        top: rect.bottom + window.scrollY + 8,
-        left: rect.left + window.scrollX,
-      });
+      const panelWidth = 240;
+      const panelHeight = 280;
+
+      let left = rect.left;
+      if (left + panelWidth > window.innerWidth - 10) {
+        left = window.innerWidth - panelWidth - 10;
+      }
+      if (left < 10) left = 10;
+
+      let top = rect.bottom + 8;
+      if (top + panelHeight > window.innerHeight - 10) {
+        top = Math.max(10, rect.top - panelHeight - 8);
+      }
+
+      setPosition({ top, left });
     }
   }, []);
 
@@ -143,11 +171,16 @@ function ColorPickerPopover({
         setOpen(false);
       }
     };
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
     const handleScroll = () => { if (open) updatePosition(); };
     document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleKey);
     window.addEventListener("scroll", handleScroll, true);
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleKey);
       window.removeEventListener("scroll", handleScroll, true);
     };
   }, [open, updatePosition]);
@@ -158,19 +191,62 @@ function ColorPickerPopover({
         ref={triggerRef}
         type="button"
         onClick={() => setOpen(!open)}
-        className="h-8 w-8 rounded-lg border-2 border-border shadow-sm cursor-pointer transition-transform hover:scale-110"
-        style={{ backgroundColor: color }}
-        title={`Pick ${label} color`}
-      />
+        className="relative h-8 w-8 shrink-0 rounded-lg border-2 border-border shadow-xs cursor-pointer transition-transform hover:scale-110 active:scale-95 overflow-hidden ring-1 ring-inset ring-black/10 dark:ring-white/20"
+        style={{
+          backgroundImage:
+            "linear-gradient(45deg, #ccc 25%, transparent 25%), linear-gradient(-45deg, #ccc 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #ccc 75%), linear-gradient(-45deg, transparent 75%, #ccc 75%)",
+          backgroundSize: "8px 8px",
+          backgroundPosition: "0 0, 0 4px, 4px -4px, -4px 0px",
+        }}
+        title={`Pick ${label} color (current: ${color})`}
+      >
+        <span
+          className="absolute inset-0 block rounded-[6px]"
+          style={{ backgroundColor: color }}
+        />
+      </button>
       {open &&
         ReactDOM.createPortal(
           <div
             ref={panelRef}
-            className="fixed z-[9999] p-3 rounded-xl border shadow-2xl"
+            className="fixed z-[9999] w-[240px] p-3 rounded-xl border border-border bg-card text-card-foreground shadow-2xl animate-in fade-in zoom-in-95 duration-150 select-none"
             style={{ top: position.top, left: position.left }}
           >
-            <HexColorPicker color={color} onChange={onChange} />
-            <div className="mt-2 flex items-center gap-2">
+            <div className="flex items-center justify-between pb-2 mb-2 border-b border-border/60">
+              <span className="text-xs font-semibold text-foreground">{label} Color</span>
+              <button
+                type="button"
+                onClick={() => setOpen(false)}
+                className="h-5 w-5 flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-secondary cursor-pointer"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </div>
+
+            <div className="overflow-hidden rounded-lg border border-border">
+              <HexColorPicker color={color} onChange={onChange} className="!w-full !h-[140px]" />
+            </div>
+
+            {/* Quick Presets */}
+            <div className="mt-2.5">
+              <span className="text-[10px] font-medium text-muted-foreground block mb-1">
+                Presets
+              </span>
+              <div className="grid grid-cols-7 gap-1">
+                {COLOR_PRESETS.map((preset) => (
+                  <button
+                    key={preset}
+                    type="button"
+                    onClick={() => onChange(preset)}
+                    className="h-5 w-5 rounded-md border border-border/80 shadow-2xs hover:scale-115 transition-transform cursor-pointer ring-1 ring-inset ring-black/10 dark:ring-white/20"
+                    style={{ backgroundColor: preset }}
+                    title={preset}
+                  />
+                ))}
+              </div>
+            </div>
+
+            <div className="mt-2.5 flex items-center gap-1.5 pt-2 border-t border-border/60">
               <Input
                 value={color}
                 onChange={(e) => {
@@ -183,7 +259,8 @@ function ColorPickerPopover({
                   if (!v.startsWith("#")) v = "#" + v;
                   if (/^#[0-9A-Fa-f]{6}$/.test(v) && v !== color) onChange(v);
                 }}
-                className="h-7 w-24 font-mono text-xs"
+                className="h-7 font-mono text-xs"
+                placeholder="#000000"
               />
             </div>
           </div>,

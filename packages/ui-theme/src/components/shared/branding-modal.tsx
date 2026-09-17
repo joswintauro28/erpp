@@ -1,11 +1,13 @@
 "use client";
 
 import * as React from "react";
+import { createPortal } from "react-dom";
 import { cn } from "../../lib/utils";
 import { extractDefaults, type CssVariable, type VariableType } from "../../lib/css-parser";
 import { classifyVariables, type VariableCategory } from "../../lib/css-categories";
 import { injectPreview, removePreview } from "../../lib/preview-injector";
 import { HARDCODED_PARSED_CSS } from "../../lib/css-defaults";
+import { HexColorPicker } from "../ui/color-picker";
 
 /* ── Types ──────────────────────────────────────────────────────────────── */
 
@@ -87,37 +89,252 @@ function Upload({ className }: { className?: string }) {
   );
 }
 
-/* ── Color Swatch with Lazy Picker ──────────────────────────────────────── */
+/* ── Color Presets & Resolver ───────────────────────────────────────────── */
+
+const COLOR_PRESETS = [
+  "#f2470c", // Primary Orange-Red
+  "#8c1d24", // Deep Brand / Crimson
+  "#e5b83c", // Accent Gold
+  "#10b981", // Success Emerald
+  "#d97706", // Warning Amber
+  "#ef4444", // Danger Red
+  "#2563eb", // Info Blue
+  "#6366f1", // Indigo
+  "#09090b", // Deep Dark
+  "#18181b", // Zinc 900
+  "#52525b", // Muted Slate
+  "#e2e8f0", // Border Slate
+  "#ffffff", // White
+  "#fff0eb", // Peachy Accent Surface
+];
+
+function resolveColorToHex(val: string, allValues?: Record<string, string>): string {
+  if (!val) return "#000000";
+  let v = val.trim();
+
+  // If CSS variable reference e.g. var(--accent) or var(--accent, #fff)
+  if (v.startsWith("var(")) {
+    const match = v.match(/var\(\s*(--[a-zA-Z0-9_-]+)(?:\s*,\s*([^)]+))?\s*\)/);
+    if (match) {
+      const varName = match[1];
+      const fallback = match[2];
+      if (allValues && allValues[varName]) {
+        return resolveColorToHex(allValues[varName], allValues);
+      }
+      if (fallback) {
+        return resolveColorToHex(fallback, allValues);
+      }
+      if (typeof window !== "undefined" && document.documentElement) {
+        const comp = getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
+        if (comp) return resolveColorToHex(comp, allValues);
+      }
+    }
+  }
+
+  // 3-digit hex #abc
+  if (/^#([0-9A-Fa-f]{3})$/.test(v)) {
+    return `#${v[1]}${v[1]}${v[2]}${v[2]}${v[3]}${v[3]}`.toLowerCase();
+  }
+  // 6-digit hex
+  if (/^#([0-9A-Fa-f]{6})$/.test(v)) {
+    return v.toLowerCase();
+  }
+  // 8-digit hex (strip alpha)
+  if (/^#([0-9A-Fa-f]{8})$/.test(v)) {
+    return `#${v.slice(1, 7)}`.toLowerCase();
+  }
+  // rgb(...)
+  const rgbMatch = v.match(/^rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/);
+  if (rgbMatch) {
+    const r = parseInt(rgbMatch[1], 10).toString(16).padStart(2, "0");
+    const g = parseInt(rgbMatch[2], 10).toString(16).padStart(2, "0");
+    const b = parseInt(rgbMatch[3], 10).toString(16).padStart(2, "0");
+    return `#${r}${g}${b}`.toLowerCase();
+  }
+
+  return v.startsWith("#") ? v : "#000000";
+}
+
+/* ── Color Swatch with Rich Popover Picker ───────────────────────────────── */
 
 function ColorSwatch({
   value,
   onChange,
   disabled,
+  allValues,
 }: {
   value: string;
   onChange: (hex: string) => void;
   disabled?: boolean;
+  allValues?: Record<string, string>;
 }) {
-  const inputRef = React.useRef<HTMLInputElement>(null);
+  const [open, setOpen] = React.useState(false);
+  const triggerRef = React.useRef<HTMLButtonElement>(null);
+  const panelRef = React.useRef<HTMLDivElement>(null);
+  const nativeInputRef = React.useRef<HTMLInputElement>(null);
+  const [coords, setCoords] = React.useState<{ top: number; left: number }>({ top: 0, left: 0 });
+
+  const resolvedHex = React.useMemo(() => resolveColorToHex(value, allValues), [value, allValues]);
+
+  const updatePosition = React.useCallback(() => {
+    if (!triggerRef.current) return;
+    const rect = triggerRef.current.getBoundingClientRect();
+    const panelWidth = 240;
+    const panelHeight = 280;
+
+    let left = rect.left - panelWidth + 24;
+    if (left < 10) left = 10;
+    if (left + panelWidth > window.innerWidth - 10) {
+      left = window.innerWidth - panelWidth - 10;
+    }
+
+    let top = rect.bottom + 6;
+    if (top + panelHeight > window.innerHeight - 10) {
+      top = Math.max(10, rect.top - panelHeight - 6);
+    }
+
+    setCoords({ top, left });
+  }, []);
+
+  React.useEffect(() => {
+    if (open) {
+      updatePosition();
+    }
+  }, [open, updatePosition]);
+
+  React.useEffect(() => {
+    if (!open) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        panelRef.current &&
+        !panelRef.current.contains(e.target as Node) &&
+        triggerRef.current &&
+        !triggerRef.current.contains(e.target as Node)
+      ) {
+        setOpen(false);
+      }
+    };
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleKey);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleKey);
+    };
+  }, [open]);
 
   return (
-    <button
-      type="button"
-      disabled={disabled}
-      onClick={() => inputRef.current?.click()}
-      className="h-6 w-6 shrink-0 rounded-md border border-border shadow-sm cursor-pointer transition-transform hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed"
-      style={{ backgroundColor: value }}
-      title={`Pick color (current: ${value})`}
-    >
-      <input
-        ref={inputRef}
-        type="color"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="sr-only"
-        tabIndex={-1}
-      />
-    </button>
+    <>
+      <button
+        ref={triggerRef}
+        type="button"
+        disabled={disabled}
+        onClick={() => setOpen(!open)}
+        className="relative h-6 w-6 shrink-0 rounded-md border border-border shadow-xs cursor-pointer transition-transform hover:scale-110 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden ring-1 ring-inset ring-black/10 dark:ring-white/20"
+        title={`Pick color: ${value} (resolved: ${resolvedHex})`}
+        style={{
+          backgroundImage:
+            "linear-gradient(45deg, #ccc 25%, transparent 25%), linear-gradient(-45deg, #ccc 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #ccc 75%), linear-gradient(-45deg, transparent 75%, #ccc 75%)",
+          backgroundSize: "8px 8px",
+          backgroundPosition: "0 0, 0 4px, 4px -4px, -4px 0px",
+        }}
+      >
+        <span
+          className="absolute inset-0 block rounded-[5px]"
+          style={{ backgroundColor: resolvedHex || value }}
+        />
+      </button>
+
+      {open &&
+        createPortal(
+          <div
+            ref={panelRef}
+            className="fixed z-[120] w-[240px] p-3 rounded-xl border border-border bg-card text-card-foreground shadow-2xl animate-in fade-in zoom-in-95 duration-150 select-none"
+            style={{ top: coords.top, left: coords.left }}
+          >
+            <div className="flex items-center justify-between pb-2 mb-2 border-b border-border/60">
+              <span className="text-[11px] font-semibold text-foreground">Color Picker</span>
+              <button
+                type="button"
+                onClick={() => setOpen(false)}
+                className="h-5 w-5 flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-secondary cursor-pointer"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </div>
+
+            {/* Visual Color Picker */}
+            <div className="overflow-hidden rounded-lg border border-border">
+              <HexColorPicker
+                color={resolvedHex}
+                onChange={onChange}
+                className="!w-full !h-[140px]"
+              />
+            </div>
+
+            {/* Quick Presets */}
+            <div className="mt-2.5">
+              <span className="text-[10px] font-medium text-muted-foreground block mb-1">
+                Presets
+              </span>
+              <div className="grid grid-cols-7 gap-1">
+                {COLOR_PRESETS.map((preset) => (
+                  <button
+                    key={preset}
+                    type="button"
+                    onClick={() => onChange(preset)}
+                    className="h-5 w-5 rounded-md border border-border/80 shadow-2xs hover:scale-115 transition-transform cursor-pointer ring-1 ring-inset ring-black/10 dark:ring-white/20"
+                    style={{ backgroundColor: preset }}
+                    title={preset}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* Direct Hex Input & Eyedropper */}
+            <div className="mt-2.5 flex items-center gap-1.5 pt-2 border-t border-border/60">
+              <input
+                type="text"
+                value={value}
+                onChange={(e) => onChange(e.target.value)}
+                placeholder="#rrggbb or var(--...)"
+                className="flex-1 h-7 px-2 rounded-md border border-border bg-background text-xs font-mono text-foreground focus:outline-none focus:ring-1 focus:ring-primary/40"
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  try {
+                    nativeInputRef.current?.showPicker?.();
+                  } catch {
+                    nativeInputRef.current?.click();
+                  }
+                }}
+                className="relative h-7 w-7 shrink-0 flex items-center justify-center rounded-md border border-border bg-secondary hover:bg-secondary/80 text-foreground cursor-pointer shadow-2xs"
+                title="Open system color picker"
+              >
+                <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="m2 22 1-1h3l9-9" />
+                  <path d="M3 21v-3l9-9" />
+                  <path d="m15 6 3.4-3.4a2.1 2.1 0 1 1 3 3L18 9" />
+                </svg>
+                <input
+                  ref={nativeInputRef}
+                  type="color"
+                  value={resolvedHex}
+                  onChange={(e) => onChange(e.target.value)}
+                  className="sr-only"
+                  tabIndex={-1}
+                />
+              </button>
+            </div>
+          </div>,
+          document.body,
+        )}
+    </>
   );
 }
 
@@ -154,12 +371,14 @@ function VariableRow({
   onChange,
   isDefault,
   onReset,
+  allValues,
 }: {
   variable: CssVariable;
   value: string;
   onChange: (val: string) => void;
   isDefault: boolean;
   onReset: () => void;
+  allValues?: Record<string, string>;
 }) {
   const isColor = variable.type === "color";
   const error = variable.type === "color" || variable.type === "size"
@@ -172,6 +391,7 @@ function VariableRow({
         <ColorSwatch
           value={value}
           onChange={onChange}
+          allValues={allValues}
         />
       )}
 
@@ -304,6 +524,7 @@ function CategorySection({
               }}
               isDefault={defaultBlock[v.cssVar] === values[v.cssVar]}
               onReset={() => onResetVariable(v.cssVar)}
+              allValues={values}
             />
           ))}
         </div>
@@ -477,7 +698,7 @@ export function BrandingModal({
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm"
+        className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm"
         onClick={() => {
           setPreviewing(false);
           removePreview();
@@ -486,7 +707,7 @@ export function BrandingModal({
       />
 
       {/* Panel */}
-      <div className="fixed inset-y-0 right-0 z-50 w-full max-w-[520px] bg-background border-l border-border shadow-2xl flex flex-col animate-in slide-in-from-right duration-200">
+      <div className="fixed inset-y-0 right-0 z-[100] w-full max-w-[520px] bg-background border-l border-border shadow-2xl flex flex-col animate-in slide-in-from-right duration-200">
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-border">
           <div>
@@ -610,7 +831,7 @@ export function BrandingModal({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between px-5 py-4 border-t">
+        <div className="flex items-center justify-between px-5 py-4 border-t border-border bg-background z-10 shrink-0">
           <p className="text-[10px] text-muted-foreground">
             {Object.keys(overrides.light).length + Object.keys(overrides.dark).length} variables loaded from globals.css
           </p>
