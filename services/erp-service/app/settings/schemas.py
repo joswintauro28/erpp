@@ -58,6 +58,7 @@ class BrandingSettings(BaseModel):
     favicon_file_id: Optional[int] = None
     brand_colors: BrandColors = Field(default_factory=BrandColors)
     email_templates: EmailTemplateSettings = Field(default_factory=EmailTemplateSettings)
+    css_overrides: Optional[dict] = None
 
 class SettingsSchema(BaseModel):
     company: CompanyInfo = Field(default_factory=CompanyInfo)

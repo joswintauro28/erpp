@@ -8,10 +8,10 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Sun, Moon, Save, Sparkles, Upload, X, Loader2, CheckCircle2, RotateCcw } from "lucide-react";
+import { Sun, Moon, Save, Sparkles, Upload, X, Loader2, CheckCircle2, RotateCcw, Paintbrush } from "lucide-react";
 import { api } from "@datavex/auth-middleware";
-import { useBranding, cn, DEFAULT_LIGHT_COLORS, DEFAULT_DARK_COLORS } from "@datavex/ui-theme";
-import type { ThemeColorSet } from "@datavex/ui-theme";
+import { useBranding, cn, DEFAULT_LIGHT_COLORS, DEFAULT_DARK_COLORS, BrandingModal, applyOverrides } from "@datavex/ui-theme";
+import type { ThemeColorSet, BrandingOverrides } from "@datavex/ui-theme";
 
 /* ── Types ──────────────────────────────────────────────────────────────── */
 
@@ -280,6 +280,10 @@ export default function Branding() {
   const [uploadingLogo, setUploadingLogo] = React.useState(false);
   const [uploadingEmailLogo, setUploadingEmailLogo] = React.useState(false);
 
+  // Theme Editor modal state
+  const [themeEditorOpen, setThemeEditorOpen] = React.useState(false);
+  const [cssOverrides, setCssOverrides] = React.useState<BrandingOverrides | null>(null);
+
   // Sync active tab with theme
   React.useEffect(() => {
     setActiveTab(resolvedTheme === "dark" ? "dark" : "light");
@@ -363,6 +367,13 @@ export default function Branding() {
             email_logo_file_id: b.email_templates?.email_logo_file_id ?? null,
           },
         });
+
+        // Load and apply CSS overrides
+        const overrides: BrandingOverrides | null = b.css_overrides ?? null;
+        setCssOverrides(overrides);
+        if (overrides) {
+          applyOverrides(overrides);
+        }
 
         const [logoUrl, emailLogoUrl] = await Promise.all([
           resolveFileUrl(b.logo_file_id),
@@ -457,6 +468,23 @@ export default function Branding() {
     }
   }, [state, refresh]);
 
+  /* ── Theme Editor save handler ──────────────────────────────────────── */
+  const handleThemeEditorSave = React.useCallback(async (overrides: BrandingOverrides) => {
+    setSaving(true);
+    setMessage(null);
+    try {
+      await api.put("/settings", { branding: { css_overrides: overrides } });
+      setCssOverrides(overrides);
+      applyOverrides(overrides);
+      setMessage({ type: "success", text: "Theme saved successfully" });
+      await refresh();
+    } catch (err: any) {
+      setMessage({ type: "error", text: err.message || "Failed to save theme" });
+    } finally {
+      setSaving(false);
+    }
+  }, [refresh]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -480,19 +508,30 @@ export default function Branding() {
             Customise your brand identity across all modules
           </p>
         </div>
-        {message && (
-          <div
-            className={cn(
-              "flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium",
-              message.type === "success"
-                ? "bg-[var(--shell-success-surface)] text-[var(--shell-success)]"
-                : "bg-[var(--shell-danger-surface)] text-[var(--shell-danger)]",
-            )}
+        <div className="flex items-center gap-2">
+          {message && (
+            <div
+              className={cn(
+                "flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium",
+                message.type === "success"
+                  ? "bg-[var(--shell-success-surface)] text-[var(--shell-success)]"
+                  : "bg-[var(--shell-danger-surface)] text-[var(--shell-danger)]",
+              )}
+            >
+              {message.type === "success" ? <CheckCircle2 className="h-4 w-4" /> : null}
+              {message.text}
+            </div>
+          )}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setThemeEditorOpen(true)}
+            className="hover:bg-[var(--shell-surface-alt)]"
           >
-            {message.type === "success" ? <CheckCircle2 className="h-4 w-4" /> : null}
-            {message.text}
-          </div>
-        )}
+            <Paintbrush className="mr-1.5 h-3.5 w-3.5" />
+            Theme Editor
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-6">
@@ -787,6 +826,14 @@ export default function Branding() {
           </Button>
         </div>
       </div>
+
+      {/* ── Theme Editor Modal ─────────────────────────────────────────── */}
+      <BrandingModal
+        open={themeEditorOpen}
+        onClose={() => setThemeEditorOpen(false)}
+        onSave={handleThemeEditorSave}
+        initialOverrides={cssOverrides}
+      />
     </div>
   );
 }
