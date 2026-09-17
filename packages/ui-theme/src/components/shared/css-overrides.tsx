@@ -1,6 +1,6 @@
 "use client";
 
-import { useCssOverrides } from "../hooks/use-css-overrides";
+import { useCssOverrides } from "../../hooks/use-css-overrides";
 
 /**
  * Injects saved CSS variable overrides into <head> on mount.
