@@ -522,15 +522,6 @@ export default function Branding() {
               {message.text}
             </div>
           )}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setThemeEditorOpen(true)}
-            className="hover:bg-secondary"
-          >
-            <Paintbrush className="mr-1.5 h-3.5 w-3.5" />
-            Theme Editor
-          </Button>
         </div>
       </div>
 
@@ -633,6 +624,15 @@ export default function Branding() {
                 >
                   <RotateCcw className="mr-1 h-3 w-3" />
                   Reset to Defaults
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setThemeEditorOpen(true)}
+                  className="h-7 text-xs hover:bg-secondary cursor-pointer"
+                >
+                  <Paintbrush className="mr-1 h-3 w-3" />
+                  Theme Editor
                 </Button>
                 {/* Theme tabs */}
                 <div className="flex items-center rounded-lg border border-border bg-secondary p-0.5">

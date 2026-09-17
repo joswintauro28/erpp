@@ -1,33 +1,20 @@
 /**
  * DATAVEX Default Theme Preset
  *
- * Extracted from globals.css via the CSS parser.
+ * Hardcoded from globals.css — reliable in Docker/SSR builds.
  * Used by the branding modal's "Reset to Default" and as the
  * fallback when no overrides are saved in the backend.
  */
 
-// @ts-expect-error — ?raw import supported by Next.js / Turbopack
-import globalsCssText from "./globals.css?raw";
-import { parseGlobalsCss, extractDefaults } from "./lib/css-parser";
+import { extractDefaults } from "./lib/css-parser";
+import { HARDCODED_PARSED_CSS } from "./lib/css-defaults";
 import type { BrandingOverrides } from "./components/shared/branding-modal";
-
-const EMPTY_DEFAULTS: BrandingOverrides = { light: {}, dark: {} };
-
-function computeDefaults(): BrandingOverrides {
-  if (typeof globalsCssText !== "string") return EMPTY_DEFAULTS;
-  try {
-    const parsed = parseGlobalsCss(globalsCssText);
-    return extractDefaults(parsed);
-  } catch {
-    return EMPTY_DEFAULTS;
-  }
-}
 
 /**
  * The default DATAVEX theme — all CSS variable values as defined in globals.css.
  * This is the canonical source of truth for "Reset to Default".
  */
-export const DATAVEX_DEFAULTS: BrandingOverrides = computeDefaults();
+export const DATAVEX_DEFAULTS: BrandingOverrides = extractDefaults(HARDCODED_PARSED_CSS);
 
 /**
  * Check whether a given set of overrides matches the defaults (i.e. no changes).

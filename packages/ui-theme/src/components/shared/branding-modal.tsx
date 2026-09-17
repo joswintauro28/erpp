@@ -2,12 +2,10 @@
 
 import * as React from "react";
 import { cn } from "../../lib/utils";
-import { parseGlobalsCss, extractDefaults, type CssVariable, type ParsedCss, type VariableType } from "../../lib/css-parser";
+import { extractDefaults, type CssVariable, type VariableType } from "../../lib/css-parser";
 import { classifyVariables, type VariableCategory } from "../../lib/css-categories";
 import { injectPreview, removePreview } from "../../lib/preview-injector";
-
-// @ts-expect-error — ?raw import supported by Next.js / Turbopack
-import globalsCssText from "../../globals.css?raw";
+import { HARDCODED_PARSED_CSS } from "../../lib/css-defaults";
 
 /* ── Types ──────────────────────────────────────────────────────────────── */
 
@@ -322,8 +320,8 @@ export function BrandingModal({
   onSave,
   initialOverrides,
 }: BrandingModalProps) {
-  // Parse globals.css
-  const parsed = React.useMemo(() => parseGlobalsCss((globalsCssText as string) || ""), []);
+  // Use hardcoded defaults from globals.css (works in Docker/SSR builds)
+  const parsed = React.useMemo(() => HARDCODED_PARSED_CSS, []);
   const defaults = React.useMemo(() => extractDefaults(parsed), [parsed]);
 
   // Classify light variables (same categories for both themes)
