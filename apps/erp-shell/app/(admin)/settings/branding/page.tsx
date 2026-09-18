@@ -353,8 +353,10 @@ export default function Branding() {
   });
 
   const [logoPreview, setLogoPreview] = React.useState<string | null>(null);
+  const [faviconPreview, setFaviconPreview] = React.useState<string | null>(null);
   const [emailLogoPreview, setEmailLogoPreview] = React.useState<string | null>(null);
   const [uploadingLogo, setUploadingLogo] = React.useState(false);
+  const [uploadingFavicon, setUploadingFavicon] = React.useState(false);
   const [uploadingEmailLogo, setUploadingEmailLogo] = React.useState(false);
 
   // Theme Editor modal state
@@ -435,11 +437,13 @@ export default function Branding() {
           applyOverrides(overrides);
         }
 
-        const [logoUrl, emailLogoUrl] = await Promise.all([
+        const [logoUrl, faviconUrl, emailLogoUrl] = await Promise.all([
           resolveFileUrl(b.logo_file_id),
+          resolveFileUrl(b.favicon_file_id),
           resolveFileUrl(b.email_templates?.email_logo_file_id),
         ]);
         if (logoUrl) setLogoPreview(logoUrl);
+        if (faviconUrl) setFaviconPreview(faviconUrl);
         if (emailLogoUrl) setEmailLogoPreview(emailLogoUrl);
       } catch {
         // Use defaults
@@ -460,12 +464,30 @@ export default function Branding() {
       setState((s) => ({
         ...s,
         logo_file_id: record.id,
-        favicon_file_id: record.id,
       }));
     } catch (err: any) {
       setMessage({ type: "error", text: err.message || "Logo upload failed" });
     } finally {
       setUploadingLogo(false);
+    }
+  }, []);
+
+  /* ── Favicon upload ──────────────────────────────────────────────────── */
+  const handleUploadFavicon = React.useCallback(async (file: File) => {
+    setUploadingFavicon(true);
+    setMessage(null);
+    try {
+      const record = await uploadFile(file, "erp-backups", "branding_favicon", 0);
+      const url = URL.createObjectURL(file);
+      setFaviconPreview(url);
+      setState((s) => ({
+        ...s,
+        favicon_file_id: record.id,
+      }));
+    } catch (err: any) {
+      setMessage({ type: "error", text: err.message || "Favicon upload failed" });
+    } finally {
+      setUploadingFavicon(false);
     }
   }, []);
 
@@ -586,7 +608,7 @@ export default function Branding() {
       </div>
 
       <div className="grid grid-cols-2 gap-6">
-        {/* ── Logo (unified — sidebar + favicon) ──────────────────────── */}
+        {/* ── Logo (sidebar) ──────────────────────────────── */}
         <Card className="border-border hover:shadow-md transition-shadow duration-200">
           <CardHeader className="p-5 pb-3">
             <div className="flex items-center gap-2">
@@ -596,14 +618,14 @@ export default function Branding() {
               </CardTitle>
             </div>
             <CardDescription className="text-xs text-muted-foreground">
-              Used as sidebar logo and browser favicon across all modules
+              Displayed in the sidebar across all modules
             </CardDescription>
           </CardHeader>
           <CardContent className="p-5 pt-0 space-y-4">
             <div className="space-y-2">
-              <Label className="text-xs text-muted-foreground font-medium">Logo &amp; Favicon</Label>
+              <Label className="text-xs text-muted-foreground font-medium">Sidebar Logo</Label>
               <div className="flex items-center gap-4">
-                <div className="relative flex h-16 w-16 items-center justify-center rounded-xl border border-border bg-secondary overflow-hidden select-none">
+                <div className="relative flex h-16 w-40 items-center justify-center rounded-xl border border-border bg-secondary overflow-hidden select-none">
                   {logoPreview ? (
                     <img src={logoPreview} alt="Logo" className="h-full w-full object-contain" />
                   ) : (
@@ -642,7 +664,7 @@ export default function Branding() {
                         variant="ghost"
                         size="sm"
                         onClick={() => {
-                          setState((s) => ({ ...s, logo_file_id: null, favicon_file_id: null }));
+                          setState((s) => ({ ...s, logo_file_id: null }));
                           setLogoPreview(null);
                         }}
                         className="text-destructive hover:bg-destructive/10"
@@ -654,8 +676,85 @@ export default function Branding() {
                   </div>
                   <p className="text-[10px] text-muted-foreground">
                     {logoPreview
-                      ? "Used as sidebar logo and browser tab favicon"
-                      : "Upload a logo — it becomes the favicon automatically"}
+                      ? "Full-width logo in the sidebar header"
+                      : "Upload a logo for the sidebar"}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* ── Favicon (browser tab) ──────────────────────────── */}
+        <Card className="border-border hover:shadow-md transition-shadow duration-200">
+          <CardHeader className="p-5 pb-3">
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-primary" />
+              <CardTitle className="text-sm font-semibold text-foreground">
+                Favicon
+              </CardTitle>
+            </div>
+            <CardDescription className="text-xs text-muted-foreground">
+              Browser tab icon across all modules
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-5 pt-0 space-y-4">
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground font-medium">Browser Tab Icon</Label>
+              <div className="flex items-center gap-4">
+                <div className="relative flex h-16 w-16 items-center justify-center rounded-xl border border-border bg-secondary overflow-hidden select-none">
+                  {faviconPreview ? (
+                    <img src={faviconPreview} alt="Favicon" className="h-full w-full object-contain" />
+                  ) : (
+                    <span className="text-xl font-bold text-[var(--shell-accent)]">DV</span>
+                  )}
+                </div>
+                <div className="flex flex-col gap-2">
+                  <div className="flex gap-2">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      id="favicon-upload"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handleUploadFavicon(file);
+                        e.target.value = "";
+                      }}
+                    />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={uploadingFavicon}
+                      onClick={() => document.getElementById("favicon-upload")?.click()}
+                      className="hover:bg-secondary"
+                    >
+                      {uploadingFavicon ? (
+                        <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <Upload className="mr-1.5 h-3.5 w-3.5" />
+                      )}
+                      {uploadingFavicon ? "Uploading..." : "Upload Favicon"}
+                    </Button>
+                    {state.favicon_file_id && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setState((s) => ({ ...s, favicon_file_id: null }));
+                          setFaviconPreview(null);
+                        }}
+                        className="text-destructive hover:bg-destructive/10"
+                      >
+                        <X className="mr-1 h-3.5 w-3.5" />
+                        Remove
+                      </Button>
+                    )}
+                  </div>
+                  <p className="text-[10px] text-muted-foreground">
+                    {faviconPreview
+                      ? "Used as the browser tab icon"
+                      : "Upload a square icon (16x16 or 32x32)"}
                   </p>
                 </div>
               </div>
