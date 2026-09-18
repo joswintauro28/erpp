@@ -22,6 +22,8 @@ export function proxy(request: NextRequest) {
     url = new URL(`/api${path}${search}`, AI_URL);
   } else if (path === "/files" || path.startsWith("/files/")) {
     url = new URL(`/api${path}${search}`, ERP_URL);
+  } else if (path === "/settings" || path.startsWith("/settings/")) {
+    url = new URL(`${path}${search}`, ERP_URL);
   } else {
     url = new URL(`/api${path}${search}`, BILLING_URL);
   }
