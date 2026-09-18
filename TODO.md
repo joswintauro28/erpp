@@ -289,6 +289,12 @@ apps/erp-shell/app/layout.tsx            # MODIFIED — added <CssOverrides /> c
 - [x] nginx 502 fix — add `erp-service` and `rustfs` to nginx `depends_on`, add erp-service healthcheck
 - [x] Hardcoded CSS variable defaults in `css-defaults.ts` — `?raw` import fails in Docker/SSR builds
 - [x] Moved Theme Editor button inside Brand Colors card header
+- [x] Merge logo + favicon into single card with separate rows
+
+### Cross-Module Branding Persistence (2026-09-18)
+- [x] Route `/api/settings` to erp-service in crm-ui, billing-ui, inventory-ui proxies
+- [x] Add `<CssOverrides />` to crm-ui, billing-ui, inventory-ui layouts
+- [x] Branding (logo, favicon, colors, css_overrides) now applies to all 4 apps within same organization
 
 ### Branding & Theme (2026-09-14 to 2026-09-16)
 - [x] Unified logo/favicon across all 4 apps (DATAVEX red on transparent)
