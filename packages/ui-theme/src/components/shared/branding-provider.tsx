@@ -170,9 +170,21 @@ function setFavicon(url: string | null) {
   if (!faviconLinkEl) {
     faviconLinkEl = document.createElement("link");
     faviconLinkEl.rel = "icon";
-    faviconLinkEl.type = "image/x-icon";
     document.head.appendChild(faviconLinkEl);
   }
+
+  // Detect MIME type from URL extension, default to png
+  const ext = url.split(".").pop()?.split("?")[0]?.toLowerCase() ?? "";
+  const mimeMap: Record<string, string> = {
+    ico: "image/x-icon",
+    png: "image/png",
+    jpg: "image/jpeg",
+    jpeg: "image/jpeg",
+    gif: "image/gif",
+    svg: "image/svg+xml",
+    webp: "image/webp",
+  };
+  faviconLinkEl.type = mimeMap[ext] ?? "image/png";
   faviconLinkEl.href = url;
 }
 

@@ -206,7 +206,10 @@ export default function Sidebar({ collapsed }: { collapsed: boolean }) {
           <img
             src={logoUrl}
             alt={companyName}
-            className="h-9 w-9 shrink-0 rounded-md object-contain shadow-md transition-transform duration-300 hover:rotate-6"
+            className={cn(
+              "shrink-0 object-contain shadow-md transition-transform duration-300 hover:rotate-6",
+              collapsed ? "h-9 w-9 rounded-md" : "h-10 w-auto max-w-[180px]"
+            )}
           />
         ) : (
           <div className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-sidebar-primary text-sm font-extrabold text-sidebar-primary-foreground shadow-md transition-transform duration-300 hover:rotate-6 select-none">
@@ -214,19 +217,21 @@ export default function Sidebar({ collapsed }: { collapsed: boolean }) {
             D
           </div>
         )}
-        <div
-          className={cn(
-            "flex flex-col overflow-hidden transition-all duration-300",
-            collapsed ? "w-0 opacity-0" : "w-auto opacity-100"
-          )}
-        >
-          <span className="font-heading text-sm font-bold tracking-[0.18em] text-sidebar-primary select-none">
-            {companyName}
-          </span>
-          <span className="text-[9px] font-medium tracking-[0.1em] text-sidebar-foreground/50 uppercase mt-0.5 select-none">
-            ERP Control Suite
-          </span>
-        </div>
+        {!collapsed && !logoUrl && (
+          <div
+            className={cn(
+              "flex flex-col overflow-hidden transition-all duration-300",
+              collapsed ? "w-0 opacity-0" : "w-auto opacity-100"
+            )}
+          >
+            <span className="font-heading text-sm font-bold tracking-[0.18em] text-sidebar-primary select-none">
+              {companyName}
+            </span>
+            <span className="text-[9px] font-medium tracking-[0.1em] text-sidebar-foreground/50 uppercase mt-0.5 select-none">
+              ERP Control Suite
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Primary Navigation Hub */}

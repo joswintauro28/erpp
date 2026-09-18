@@ -391,23 +391,6 @@ export default function Branding() {
     }
   }, [state.brand_colors, activeTab]);
 
-  /* ── LIVE favicon ──────────────────────────────────────────────────── */
-  React.useEffect(() => {
-    if (typeof document === "undefined") return;
-    let el = document.querySelector<HTMLLinkElement>("link[data-branding-favicon]");
-    if (logoPreview) {
-      if (!el) {
-        el = document.createElement("link");
-        el.rel = "icon";
-        el.setAttribute("data-branding-favicon", "true");
-        document.head.appendChild(el);
-      }
-      el.href = logoPreview;
-    } else if (el) {
-      el.remove();
-    }
-  }, [logoPreview]);
-
   /* ── Load settings ──────────────────────────────────────────────────── */
   React.useEffect(() => {
     (async () => {
