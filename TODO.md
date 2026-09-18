@@ -293,7 +293,10 @@ apps/erp-shell/app/layout.tsx            # MODIFIED — added <CssOverrides /> c
 
 ### Cross-Module Branding Persistence (2026-09-18)
 - [x] Route `/api/settings` to erp-service in crm-ui, billing-ui, inventory-ui proxies
-- [x] Add `<CssOverrides />` to crm-ui, billing-ui, inventory-ui layouts
+- [x] Add `<CssOverrides />` to crm-ui, billing-ui, inventory-ui layouts (inside BrandingProvider)
+- [x] BrandingProvider caches branding in localStorage — works on login page (no auth) and all workstations
+- [x] useCssOverrides caches CSS overrides in localStorage with same fallback
+- [x] Moved CssOverrides inside BrandingProvider in all 4 layouts so auth is available when fetched
 - [x] Branding (logo, favicon, colors, css_overrides) now applies to all 4 apps within same organization
 
 ### Branding & Theme (2026-09-14 to 2026-09-16)
