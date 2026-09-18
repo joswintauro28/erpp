@@ -1,6 +1,6 @@
 # DATAVEX ERP — Project Roadmap
 
-**Last Updated:** 2026-09-17
+**Last Updated:** 2026-09-18
 
 ---
 
@@ -278,6 +278,17 @@ apps/erp-shell/app/layout.tsx            # MODIFIED — added <CssOverrides /> c
 - [x] Variable validation — inline errors for invalid hex colors and size values
 - [x] Export/Import — download/upload theme as JSON files
 - [x] Token consolidation — 1,377 redundant `var(--shell-*)` patterns replaced across 102 files
+
+### Logo & Favicon Separation (2026-09-18)
+- [x] Split logo and favicon into two separate uploads (were sharing one file)
+- [x] Logo: sidebar display only — full-width image replacing "Datavex" text
+- [x] Favicon: browser tab icon — separate upload with square preview
+- [x] Fix favicon MIME type detection (was hardcoding `image/x-icon`, rejected by browsers)
+- [x] Fix favicon not persisting — remove ALL existing `<link rel="icon">` before injecting (Next.js default was taking priority)
+- [x] Remove duplicate favicon effect from branding page (BrandingProvider handles it)
+- [x] nginx 502 fix — add `erp-service` and `rustfs` to nginx `depends_on`, add erp-service healthcheck
+- [x] Hardcoded CSS variable defaults in `css-defaults.ts` — `?raw` import fails in Docker/SSR builds
+- [x] Moved Theme Editor button inside Brand Colors card header
 
 ### Branding & Theme (2026-09-14 to 2026-09-16)
 - [x] Unified logo/favicon across all 4 apps (DATAVEX red on transparent)
