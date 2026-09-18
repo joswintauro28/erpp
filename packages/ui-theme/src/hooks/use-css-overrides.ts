@@ -5,6 +5,21 @@ import { api } from "@datavex/auth-middleware";
 import { applyOverrides } from "../lib/preview-injector";
 import type { BrandingOverrides } from "../components/shared/branding-modal";
 
+const CSS_OVERRIDES_CACHE_KEY = "datavex_css_overrides_cache";
+
+function cacheOverrides(data: BrandingOverrides) {
+  if (typeof window === "undefined") return;
+  try { localStorage.setItem(CSS_OVERRIDES_CACHE_KEY, JSON.stringify(data)); } catch { /* ignore */ }
+}
+
+function readCachedOverrides(): BrandingOverrides | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(CSS_OVERRIDES_CACHE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
+}
+
 /**
  * Fetches saved CSS variable overrides from the backend and injects them
  * as a <style> tag in <head> before any components render.
@@ -23,9 +38,14 @@ export function useCssOverrides() {
 
         if (!cancelled && overrides && typeof overrides === "object") {
           applyOverrides(overrides);
+          cacheOverrides(overrides);
         }
       } catch {
-        // Not authenticated or settings unavailable — use CSS defaults
+        // Not authenticated — try cached overrides (e.g. login page)
+        const cached = readCachedOverrides();
+        if (!cancelled && cached && typeof cached === "object") {
+          applyOverrides(cached);
+        }
       }
     }
 

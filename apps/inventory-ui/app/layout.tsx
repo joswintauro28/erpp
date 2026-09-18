@@ -35,9 +35,9 @@ export default function RootLayout({
     >
       <body className="min-h-full flex">
         <ThemeProvider>
-          <CssOverrides />
           <AuthProvider>
             <BrandingProvider>
+              <CssOverrides />
               <NotificationProvider>{children}</NotificationProvider>
             </BrandingProvider>
           </AuthProvider>

@@ -185,6 +185,26 @@ function setFavicon(url: string | null) {
   document.head.appendChild(faviconLinkEl);
 }
 
+/* ── Cache (for login page / unauthenticated views) ────────────────────── */
+
+const BRANDING_CACHE_KEY = "datavex_branding_cache";
+
+function cacheBranding(data: BrandingData, logo: string | null, favicon: string | null) {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(BRANDING_CACHE_KEY, JSON.stringify({ branding: data, logoUrl: logo, faviconUrl: favicon }));
+  } catch { /* ignore */ }
+}
+
+function readCachedBranding(): { branding: BrandingData; logoUrl: string | null; faviconUrl: string | null } | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(BRANDING_CACHE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch { return null; }
+}
+
 /* ── Provider ───────────────────────────────────────────────────────────── */
 
 export function BrandingProvider({ children }: { children: React.ReactNode }) {
@@ -213,8 +233,18 @@ export function BrandingProvider({ children }: { children: React.ReactNode }) {
 
       // Inject favicon
       setFavicon(favicon);
+
+      // Cache for unauthenticated views (login page)
+      cacheBranding(b, logo, favicon);
     } catch {
-      // Not authenticated or settings not available — use defaults
+      // Not authenticated — try cached branding (e.g. login page)
+      const cached = readCachedBranding();
+      if (cached) {
+        setBranding(cached.branding);
+        setLogoUrl(cached.logoUrl);
+        setFaviconUrl(cached.faviconUrl);
+        setFavicon(cached.faviconUrl);
+      }
     } finally {
       setLoading(false);
     }
