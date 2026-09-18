@@ -608,20 +608,21 @@ export default function Branding() {
       </div>
 
       <div className="grid grid-cols-2 gap-6">
-        {/* ── Logo (sidebar) ──────────────────────────────── */}
+        {/* ── Company Logo & Favicon ──────────────────────── */}
         <Card className="border-border hover:shadow-md transition-shadow duration-200">
           <CardHeader className="p-5 pb-3">
             <div className="flex items-center gap-2">
               <Sparkles className="h-4 w-4 text-primary" />
               <CardTitle className="text-sm font-semibold text-foreground">
-                Company Logo
+                Company Logo &amp; Favicon
               </CardTitle>
             </div>
             <CardDescription className="text-xs text-muted-foreground">
-              Displayed in the sidebar across all modules
+              Sidebar logo and browser tab icon across all modules
             </CardDescription>
           </CardHeader>
-          <CardContent className="p-5 pt-0 space-y-4">
+          <CardContent className="p-5 pt-0 space-y-5">
+            {/* Logo */}
             <div className="space-y-2">
               <Label className="text-xs text-muted-foreground font-medium">Sidebar Logo</Label>
               <div className="flex items-center gap-4">
@@ -675,30 +676,15 @@ export default function Branding() {
                     )}
                   </div>
                   <p className="text-[10px] text-muted-foreground">
-                    {logoPreview
-                      ? "Full-width logo in the sidebar header"
-                      : "Upload a logo for the sidebar"}
+                    {logoPreview ? "Full-width logo in the sidebar header" : "Upload a logo for the sidebar"}
                   </p>
                 </div>
               </div>
             </div>
-          </CardContent>
-        </Card>
 
-        {/* ── Favicon (browser tab) ──────────────────────────── */}
-        <Card className="border-border hover:shadow-md transition-shadow duration-200">
-          <CardHeader className="p-5 pb-3">
-            <div className="flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-primary" />
-              <CardTitle className="text-sm font-semibold text-foreground">
-                Favicon
-              </CardTitle>
-            </div>
-            <CardDescription className="text-xs text-muted-foreground">
-              Browser tab icon across all modules
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="p-5 pt-0 space-y-4">
+            <div className="border-t border-border" />
+
+            {/* Favicon */}
             <div className="space-y-2">
               <Label className="text-xs text-muted-foreground font-medium">Browser Tab Icon</Label>
               <div className="flex items-center gap-4">
@@ -752,9 +738,7 @@ export default function Branding() {
                     )}
                   </div>
                   <p className="text-[10px] text-muted-foreground">
-                    {faviconPreview
-                      ? "Used as the browser tab icon"
-                      : "Upload a square icon (16x16 or 32x32)"}
+                    {faviconPreview ? "Used as the browser tab icon" : "Upload a square icon (16x16 or 32x32)"}
                   </p>
                 </div>
               </div>
