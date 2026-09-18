@@ -159,19 +159,12 @@ let faviconLinkEl: HTMLLinkElement | null = null;
 function setFavicon(url: string | null) {
   if (typeof document === "undefined") return;
 
-  if (!url) {
-    if (faviconLinkEl) {
-      faviconLinkEl.remove();
-      faviconLinkEl = null;
-    }
-    return;
-  }
+  // Remove ALL existing favicon links (including Next.js default)
+  const existing = document.querySelectorAll<HTMLLinkElement>("link[rel='icon'], link[rel='shortcut icon']");
+  existing.forEach((el) => el.remove());
+  faviconLinkEl = null;
 
-  if (!faviconLinkEl) {
-    faviconLinkEl = document.createElement("link");
-    faviconLinkEl.rel = "icon";
-    document.head.appendChild(faviconLinkEl);
-  }
+  if (!url) return;
 
   // Detect MIME type from URL extension, default to png
   const ext = url.split(".").pop()?.split("?")[0]?.toLowerCase() ?? "";
@@ -184,8 +177,12 @@ function setFavicon(url: string | null) {
     svg: "image/svg+xml",
     webp: "image/webp",
   };
+
+  faviconLinkEl = document.createElement("link");
+  faviconLinkEl.rel = "icon";
   faviconLinkEl.type = mimeMap[ext] ?? "image/png";
   faviconLinkEl.href = url;
+  document.head.appendChild(faviconLinkEl);
 }
 
 /* ── Provider ───────────────────────────────────────────────────────────── */
