@@ -6,6 +6,7 @@ import { Eye, EyeOff, Loader2, LogIn, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { getAccessToken, setAccessToken } from "@datavex/auth-middleware";
+import { useBranding } from "@datavex/ui-theme";
 
 const BILLING_APP_URL = process.env.NEXT_PUBLIC_BILLING_APP_URL || "http://localhost:3002";
 const CRM_APP_URL = process.env.NEXT_PUBLIC_CRM_APP_URL || "http://localhost:3001";
@@ -13,7 +14,9 @@ const INVENTORY_APP_URL = process.env.NEXT_PUBLIC_INVENTORY_APP_URL || "http://l
 
 export default function LoginPage() {
   const { login } = useAuth();
+  const { logoUrl, branding } = useBranding();
   const router = useRouter();
+  const companyName = branding.company_name || "DATAVEX";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -110,14 +113,18 @@ export default function LoginPage() {
       <div className="relative z-10 w-full max-w-[400px] px-6 py-12 flex flex-col items-center">
         {/* Brand Header */}
         <div className="mb-8 flex flex-col items-center gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-border/60 bg-primary/10">
-            <span className="font-heading text-lg font-bold text-[var(--shell-accent)] tracking-[0.05em]">
-              D
-            </span>
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-border/60 bg-primary/10 overflow-hidden">
+            {logoUrl ? (
+              <img src={logoUrl} alt={companyName} className="h-full w-full object-contain" />
+            ) : (
+              <span className="font-heading text-lg font-bold text-[var(--shell-accent)] tracking-[0.05em]">
+                {companyName.charAt(0)}
+              </span>
+            )}
           </div>
           <div className="flex flex-col items-center gap-0.5">
             <h1 className="font-heading text-lg font-bold text-foreground tracking-[0.05em] uppercase">
-              DATAVEX
+              {companyName}
             </h1>
             <p className="text-xs text-muted-foreground uppercase tracking-[0.1em]">Command Center</p>
           </div>
