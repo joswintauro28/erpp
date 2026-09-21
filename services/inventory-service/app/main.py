@@ -7,7 +7,7 @@ from fastapi.responses import JSONResponse
 
 from app.core.config import settings
 from app.core.database import engine, Base
-from app.core.middleware import SecurityHeadersMiddleware
+from app.core.middleware import SecurityHeadersMiddleware, RequestBodyLimitMiddleware
 
 from app.product.models import Product
 from app.warehouse.models import Warehouse
@@ -58,6 +58,7 @@ app = FastAPI(
 )
 
 app.add_middleware(SecurityHeadersMiddleware)
+app.add_middleware(RequestBodyLimitMiddleware)
 
 app.add_middleware(
     CORSMiddleware,

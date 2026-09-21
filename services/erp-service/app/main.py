@@ -8,7 +8,7 @@ from fastapi.openapi.utils import get_openapi
 
 from app.core.config import settings
 from app.core.exceptions import TooManyRequestsException
-from app.core.middleware import SecurityHeadersMiddleware
+from app.core.middleware import SecurityHeadersMiddleware, RequestBodyLimitMiddleware
 from app.core.request_logging import RequestLoggingMiddleware
 from app.core.rate_limiter import limiter, rate_limit_exceeded_handler
 
@@ -90,6 +90,9 @@ app.openapi = custom_openapi
 
 # Security middleware
 app.add_middleware(SecurityHeadersMiddleware)
+
+# Request body size limit (5 MB)
+app.add_middleware(RequestBodyLimitMiddleware)
 
 # Request logging with request IDs
 app.add_middleware(RequestLoggingMiddleware)

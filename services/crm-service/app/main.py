@@ -8,6 +8,7 @@ from sqlalchemy import select
 from app import models, database
 from app.core.deps import get_current_token_payload
 from app.core.idgen import next_document_id, next_customer_id
+from app.core.middleware import SecurityHeadersMiddleware, RequestBodyLimitMiddleware
 
 # Import feature routers
 from app.dashboard.router import router as dashboard_router
@@ -93,6 +94,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.add_middleware(SecurityHeadersMiddleware)
+app.add_middleware(RequestBodyLimitMiddleware)
 
 @app.get("/health", tags=["system"])
 async def health_check():
