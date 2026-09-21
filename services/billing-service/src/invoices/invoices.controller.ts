@@ -68,7 +68,7 @@ export class InvoicesController {
     @Body() dto: CreateInvoiceDto,
     @CurrentUser() user: JwtPayload,
   ) {
-    return this.invoicesService.create(user.organization_id, dto);
+    return this.invoicesService.create(user.organization_id, dto, user.email);
   }
 
   @Put(":id")
@@ -78,7 +78,7 @@ export class InvoicesController {
     @Body() dto: UpdateInvoiceDto,
     @CurrentUser() user: JwtPayload,
   ) {
-    return this.invoicesService.update(id, user.organization_id, dto);
+    return this.invoicesService.update(id, user.organization_id, dto, user.email);
   }
 
   @Post("from-dispatch")
@@ -87,7 +87,7 @@ export class InvoicesController {
     @Body() dto: CreateInvoiceFromDispatchDto,
     @CurrentUser() user: JwtPayload,
   ) {
-    return this.invoicesService.createFromDispatch(user.organization_id, dto);
+    return this.invoicesService.createFromDispatch(user.organization_id, dto, user.email);
   }
 
   @Put(":id/status")
@@ -97,7 +97,7 @@ export class InvoicesController {
     @Body() dto: UpdateInvoiceStatusDto,
     @CurrentUser() user: JwtPayload,
   ) {
-    return this.invoicesService.updateStatus(id, user.organization_id, dto.status);
+    return this.invoicesService.updateStatus(id, user.organization_id, dto.status, user.email);
   }
 
   @Delete(":id")
@@ -106,6 +106,6 @@ export class InvoicesController {
     @Param("id", ParseIntPipe) id: number,
     @CurrentUser() user: JwtPayload,
   ) {
-    await this.invoicesService.delete(id, user.organization_id);
+    await this.invoicesService.delete(id, user.organization_id, user.email);
   }
 }

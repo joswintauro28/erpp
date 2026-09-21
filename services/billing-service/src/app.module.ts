@@ -21,6 +21,7 @@ import { RevenueModule } from "./revenue/revenue.module";
 import { AppController } from "./app.controller";
 import { RmqModule } from "./common/rmq.module";
 import { DocumentNumberModule } from "./common/document-number.module";
+import { AuditModule } from "./common/audit.module";
 
 @Module({
   imports: [
@@ -49,6 +50,7 @@ import { DocumentNumberModule } from "./common/document-number.module";
     InternalModule,
     EventBusModule,
     RevenueModule,
+    AuditModule,
   ],
   controllers: [AppController],
   providers: [

@@ -33,7 +33,7 @@ export class DebitNotesController {
     @Body() dto: CreateDebitNoteDto,
     @CurrentUser() user: JwtPayload,
   ) {
-    return this.debitNotesService.create(user.organization_id, dto);
+    return this.debitNotesService.create(user.organization_id, dto, user.email);
   }
 
   @Delete(":id")
@@ -42,6 +42,6 @@ export class DebitNotesController {
     @Param("id", ParseIntPipe) id: number,
     @CurrentUser() user: JwtPayload,
   ) {
-    await this.debitNotesService.remove(id, user.organization_id);
+    await this.debitNotesService.remove(id, user.organization_id, user.email);
   }
 }

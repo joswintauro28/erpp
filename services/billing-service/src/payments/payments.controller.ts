@@ -44,7 +44,7 @@ export class PaymentsController {
     @Body() dto: CreatePaymentDto,
     @CurrentUser() user: JwtPayload,
   ) {
-    return this.paymentsService.create(user.organization_id, dto);
+    return this.paymentsService.create(user.organization_id, dto, user.email);
   }
 
   @Post(":id/clear")
@@ -53,7 +53,7 @@ export class PaymentsController {
     @Param("id", ParseIntPipe) id: number,
     @CurrentUser() user: JwtPayload,
   ) {
-    return this.paymentsService.clearPayment(id, user.organization_id);
+    return this.paymentsService.clearPayment(id, user.organization_id, user.email);
   }
 
   @Post(":id/refund")
@@ -62,6 +62,6 @@ export class PaymentsController {
     @Param("id", ParseIntPipe) id: number,
     @CurrentUser() user: JwtPayload,
   ) {
-    return this.paymentsService.refund(id, user.organization_id);
+    return this.paymentsService.refund(id, user.organization_id, user.email);
   }
 }

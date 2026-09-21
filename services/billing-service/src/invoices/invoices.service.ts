@@ -13,6 +13,7 @@ import { EventBusService } from "../event-bus/event-bus.service";
 import { Events } from "../event-bus/event-types";
 import { PostingEngineService } from "../accounting/posting-engine.service";
 import { DocumentNumberService } from "../common/document-number.service";
+import { AuditService } from "../common/audit.service";
 
 @Injectable()
 export class InvoicesService {
@@ -23,6 +24,7 @@ export class InvoicesService {
     private readonly eventBus: EventBusService,
     private readonly postingEngine: PostingEngineService,
     private readonly documentNumbers: DocumentNumberService,
+    private readonly audit: AuditService,
   ) {}
 
 
@@ -179,7 +181,7 @@ export class InvoicesService {
     };
   }
 
-  async create(organizationId: number, dto: CreateInvoiceDto): Promise<any> {
+  async create(organizationId: number, dto: CreateInvoiceDto, performedBy?: string): Promise<any> {
     this.logger.log(`Creating new invoice for client: ${dto.clientName} under org: ${organizationId}`);
     const gstTreatment = dto.gstTreatment ?? GstTreatment.intrastate;
 
@@ -256,6 +258,14 @@ export class InvoicesService {
 
     const result = this.flattenInvoice(raw);
 
+    if (performedBy) {
+      await this.audit.log(organizationId, "invoice", raw.id, "create", performedBy, {
+        invoiceNumber: result.invoiceNumber,
+        clientName: dto.clientName,
+        total: result.total,
+      });
+    }
+
     this.eventBus.emit(Events.InvoiceCreated, {
       organizationId,
       invoiceId: raw.id,
@@ -273,6 +283,7 @@ export class InvoicesService {
     id: number,
     organizationId: number,
     dto: UpdateInvoiceDto,
+    performedBy?: string,
   ): Promise<any> {
     this.logger.log(`Updating invoice ${id} for org: ${organizationId}`);
 
@@ -369,6 +380,12 @@ export class InvoicesService {
 
       const result = this.flattenInvoice(updated);
 
+      if (performedBy) {
+        await this.audit.log(organizationId, "invoice", id, "update", performedBy, {
+          invoiceNumber: result.invoiceNumber,
+        });
+      }
+
       this.eventBus.emit(Events.InvoiceUpdated, {
         organizationId,
         invoiceId: id,
@@ -380,7 +397,7 @@ export class InvoicesService {
     });
   }
 
-  async createFromDispatch(organizationId: number, dto: any): Promise<any> {
+  async createFromDispatch(organizationId: number, dto: any, performedBy?: string): Promise<any> {
     this.logger.log(`Creating invoice from dispatch for client: ${dto.clientName}`);
 
     const gstTreatment = "intrastate" as const;
@@ -441,6 +458,13 @@ export class InvoicesService {
 
     await this.writeSentLedgerEntries(this.prisma, organizationId, raw);
 
+    if (performedBy) {
+      await this.audit.log(organizationId, "invoice", raw.id, "create", performedBy, {
+        invoiceNumber: raw.invoiceNumber,
+        source: "dispatch",
+      });
+    }
+
     this.logger.log(`Invoice #${raw.id} created from dispatch`);
     return this.flattenInvoice(raw);
   }
@@ -463,7 +487,7 @@ export class InvoicesService {
     }
   }
 
-  async updateStatus(id: number, organizationId: number, status: InvoiceStatus): Promise<any> {
+  async updateStatus(id: number, organizationId: number, status: InvoiceStatus, performedBy?: string): Promise<any> {
     this.logger.log(`Updating status of invoice ${id} to ${status} for org: ${organizationId}`);
     const invoice = await this.prisma.invoice.findFirst({
       where: { id, organizationId },
@@ -503,6 +527,14 @@ export class InvoicesService {
 
 
       const result = this.flattenInvoice(updated);
+
+      if (performedBy) {
+        await this.audit.log(organizationId, "invoice", id, "status_change", performedBy, {
+          invoiceNumber: result.invoiceNumber,
+          fromStatus: invoice.status,
+          toStatus: status,
+        });
+      }
 
       this.eventBus.emit(Events.InvoiceStatusChanged, {
         organizationId,
@@ -606,11 +638,17 @@ export class InvoicesService {
   }
 
 
-  async delete(id: number, organizationId: number) {
+  async delete(id: number, organizationId: number, performedBy?: string) {
     const invoice = await this.prisma.invoice.findFirst({
       where: { id, organizationId },
     });
     if (!invoice) throw new NotFoundException("Invoice not found");
+
+    if (performedBy) {
+      await this.audit.log(organizationId, "invoice", id, "delete", performedBy, {
+        invoiceNumber: invoice.invoiceNumber,
+      });
+    }
 
     await this.prisma.invoice.delete({ where: { id } });
   }

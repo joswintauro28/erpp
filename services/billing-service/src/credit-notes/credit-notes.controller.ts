@@ -33,7 +33,7 @@ export class CreditNotesController {
     @Body() dto: CreateCreditNoteDto,
     @CurrentUser() user: JwtPayload,
   ) {
-    return this.creditNotesService.create(user.organization_id, dto);
+    return this.creditNotesService.create(user.organization_id, dto, user.email);
   }
 
   @Delete(":id")
@@ -42,6 +42,6 @@ export class CreditNotesController {
     @Param("id", ParseIntPipe) id: number,
     @CurrentUser() user: JwtPayload,
   ) {
-    await this.creditNotesService.remove(id, user.organization_id);
+    await this.creditNotesService.remove(id, user.organization_id, user.email);
   }
 }

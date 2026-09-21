@@ -8,12 +8,14 @@ import { Prisma } from "@prisma/client";
 import { CreatePaymentDto } from "./dto/create-payment.dto";
 import { EventBusService } from "../event-bus/event-bus.service";
 import { Events, type EventName, type EventPayload } from "../event-bus/event-types";
+import { AuditService } from "../common/audit.service";
 
 @Injectable()
 export class PaymentsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly eventBus: EventBusService,
+    private readonly audit: AuditService,
   ) {}
 
   private async getAccountIds(organizationId: number) {
@@ -91,7 +93,7 @@ export class PaymentsService {
     }));
   }
 
-  async clearPayment(id: number, organizationId: number) {
+  async clearPayment(id: number, organizationId: number, performedBy?: string) {
     // H13: collect events during transaction, emit after commit
     const pendingEvents: Array<{ event: EventName; payload: EventPayload }> = [];
     const result = await this.prisma.$transaction(async (tx) => {
@@ -194,10 +196,16 @@ export class PaymentsService {
     for (const { event, payload } of pendingEvents) {
       this.eventBus.emit(event, payload);
     }
+    if (performedBy) {
+      await this.audit.log(organizationId, "payment", id, "status_change", performedBy, {
+        fromStatus: "pending",
+        toStatus: "cleared",
+      });
+    }
     return result;
   }
 
-  async create(organizationId: number, dto: CreatePaymentDto) {
+  async create(organizationId: number, dto: CreatePaymentDto, performedBy?: string) {
     // H13: collect events during transaction, emit after commit
     const pendingEvents: Array<{ event: EventName; payload: EventPayload }> = [];
 
@@ -243,10 +251,16 @@ export class PaymentsService {
     for (const { event, payload } of pendingEvents) {
       this.eventBus.emit(event, payload);
     }
+    if (performedBy) {
+      await this.audit.log(organizationId, "payment", result.id, "create", performedBy, {
+        amount: dto.amount,
+        invoiceId: dto.invoiceId,
+      });
+    }
     return result;
   }
 
-  async refund(id: number, organizationId: number) {
+  async refund(id: number, organizationId: number, performedBy?: string) {
     const { cashBankId, arId } = await this.getAccountIds(organizationId);
     // H13: collect events during transaction, emit after commit
     const pendingEvents: Array<{ event: EventName; payload: EventPayload }> = [];
@@ -340,6 +354,12 @@ export class PaymentsService {
     // H13: emit events after successful commit
     for (const { event, payload } of pendingEvents) {
       this.eventBus.emit(event, payload);
+    }
+    if (performedBy) {
+      await this.audit.log(organizationId, "payment", id, "status_change", performedBy, {
+        fromStatus: "cleared",
+        toStatus: "refunded",
+      });
     }
     return result;
   }

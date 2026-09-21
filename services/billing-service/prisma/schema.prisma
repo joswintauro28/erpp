@@ -809,6 +809,22 @@ model OutboxRecord {
   @@map("outbox_records")
 }
 
+model BillingAuditLog {
+  id              Int      @id @default(autoincrement())
+  organizationId  Int      @map("organization_id")
+  entityType      String   @map("entity_type") // invoice, payment, credit_note, debit_note, quotation
+  entityId        Int      @map("entity_id")
+  action          String   // create, update, delete, status_change
+  details         Json?    @db.Json
+  performedBy     String   @map("performed_by") // email from JWT
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  @@index([organizationId])
+  @@index([entityType, entityId])
+  @@index([createdAt])
+  @@map("billing_audit_logs")
+}
+
 model RevenueAuditLog {
   id              Int                     @id @default(autoincrement())
   organizationId  Int                     @map("organization_id")

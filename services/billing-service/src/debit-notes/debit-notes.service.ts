@@ -6,6 +6,7 @@ import { EventBusService } from "../event-bus/event-bus.service";
 import { Events } from "../event-bus/event-types";
 import { PostingEngineService } from "../accounting/posting-engine.service";
 import { DocumentNumberService } from "../common/document-number.service";
+import { AuditService } from "../common/audit.service";
 
 @Injectable()
 export class DebitNotesService {
@@ -14,6 +15,7 @@ export class DebitNotesService {
     private readonly eventBus: EventBusService,
     private readonly postingEngine: PostingEngineService,
     private readonly documentNumbers: DocumentNumberService,
+    private readonly audit: AuditService,
   ) {}
 
 
@@ -44,7 +46,7 @@ export class DebitNotesService {
     return notes.map((n) => this.flatten(n));
   }
 
-  async create(organizationId: number, dto: CreateDebitNoteDto) {
+  async create(organizationId: number, dto: CreateDebitNoteDto, performedBy?: string) {
     return this.prisma.$transaction(async (tx) => {
       const invoice = await tx.invoice.findFirst({
         where: { id: dto.invoiceId, organizationId },
@@ -139,11 +141,18 @@ export class DebitNotesService {
         timestamp: new Date(),
       });
 
+      if (performedBy) {
+        await this.audit.log(organizationId, "debit_note", debitNote.id, "create", performedBy, {
+          invoiceId: dto.invoiceId,
+          amount: dto.amount,
+        });
+      }
+
       return this.flatten(debitNote);
     });
   }
 
-  async remove(id: number, organizationId: number) {
+  async remove(id: number, organizationId: number, performedBy?: string) {
     return this.prisma.$transaction(async (tx) => {
       const note = await tx.debitNote.findFirst({
         where: { id, organizationId },
@@ -174,6 +183,13 @@ export class DebitNotesService {
             },
           });
         }
+      }
+
+      if (performedBy) {
+        await this.audit.log(organizationId, "debit_note", id, "delete", performedBy, {
+          invoiceId: note.invoiceId,
+          amount: Number(note.amount),
+        });
       }
 
       await tx.debitNote.delete({ where: { id } });

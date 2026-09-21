@@ -6,6 +6,7 @@ import { EventBusService } from "../event-bus/event-bus.service";
 import { Events } from "../event-bus/event-types";
 import { PostingEngineService } from "../accounting/posting-engine.service";
 import { DocumentNumberService } from "../common/document-number.service";
+import { AuditService } from "../common/audit.service";
 
 @Injectable()
 export class CreditNotesService {
@@ -14,6 +15,7 @@ export class CreditNotesService {
     private readonly eventBus: EventBusService,
     private readonly postingEngine: PostingEngineService,
     private readonly documentNumbers: DocumentNumberService,
+    private readonly audit: AuditService,
   ) {}
 
 
@@ -44,7 +46,7 @@ export class CreditNotesService {
     return notes.map((n) => this.flatten(n));
   }
 
-  async create(organizationId: number, dto: CreateCreditNoteDto) {
+  async create(organizationId: number, dto: CreateCreditNoteDto, performedBy?: string) {
     return this.prisma.$transaction(async (tx) => {
       const invoice = await tx.invoice.findFirst({
         where: { id: dto.invoiceId, organizationId },
@@ -146,11 +148,18 @@ export class CreditNotesService {
         timestamp: new Date(),
       });
 
+      if (performedBy) {
+        await this.audit.log(organizationId, "credit_note", creditNote.id, "create", performedBy, {
+          invoiceId: dto.invoiceId,
+          amount: dto.amount,
+        });
+      }
+
       return this.flatten(creditNote);
     });
   }
 
-  async remove(id: number, organizationId: number) {
+  async remove(id: number, organizationId: number, performedBy?: string) {
     return this.prisma.$transaction(async (tx) => {
       const note = await tx.creditNote.findFirst({
         where: { id, organizationId },
@@ -200,6 +209,13 @@ export class CreditNotesService {
             },
           });
         }
+      }
+
+      if (performedBy) {
+        await this.audit.log(organizationId, "credit_note", id, "delete", performedBy, {
+          invoiceId: note.invoiceId,
+          amount: Number(note.amount),
+        });
       }
 
       await tx.creditNote.delete({ where: { id } });
