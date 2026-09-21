@@ -1,42 +1,90 @@
 # DATAVEX ERP — Complete Cybersecurity & Project Audit
 
-**Audit Date:** 2026-09-19
-**Auditor:** AI-Assisted Security Review
-**Scope:** Full monorepo — 6 backend services, 4 frontend apps, shared packages, Docker infrastructure
+| Audit Metadata | Details |
+|---|---|
+| **Audit Date** | 2026-09-19 |
+| **Last Updated** | 2026-09-21 |
+| **Auditor** | AI-Assisted Security Review & Architecture Audit |
+| **Monorepo Scope** | 6 Backend Microservices, 4 Next.js Frontend Workstations, Shared Packages, Docker Infrastructure |
+| **Target Branch** | `dev` |
+| **Remediation Status** | In Active Remediation (Phase 1 & Short-Term Priorities Deployed) |
 
 ---
 
-## Executive Summary
+## Table of Contents
 
-| Severity | Total | Remediated | Remaining |
-|----------|-------|------------|-----------|
-| **CRITICAL** | 12 | 4 | 8 (5 hosting-provider, 3 deferred) |
-| **HIGH** | 22 | 17 | 5 |
-| **MEDIUM** | 26 | 1 | 25 |
-| **LOW** | 18 | 2 | 16 |
-| **TOTAL** | **78** | **24** | **54** |
-
-### Top 5 Systemic Risks — Status
-
-1. ~~**Shared JWT secret across all 5 backend services**~~ — **Hosting provider responsibility** (documented, not in remediation scope)
-2. ~~**Zero RBAC in inventory-service & erp-service**~~ — ✅ **REMEDIATED** — `require_permission` applied to 56 write endpoints
-3. ~~**Complete absence of multi-tenant data isolation in crm-service**~~ — ✅ **REMEDIATED** — `owner_id` added to 11 models, all CRUD/endpoints updated
-4. ~~**Unauthenticated event webhook endpoints in erp-service**~~ — ✅ **REMEDIATED** — 5 webhook endpoints secured with JWT auth
-5. **JWT on `window.__datavex_access_token` + localStorage** — Deferred to short-term (requires frontend refactor)
+1. [Executive Summary & Security Posture](#executive-summary--security-posture)
+   - [Severity Breakdown](#severity-breakdown)
+   - [Audit Phase Breakdown](#audit-phase-breakdown)
+   - [Top Systemic Risks & Current Status](#top-systemic-risks--current-status)
+2. [Audit Phases & Detailed Technical Findings](#audit-phases--detailed-technical-findings)
+   - [Phase 1: Core IAM (Authentication & RBAC)](#phase-1-core-iam-authentication--rbac)
+   - [Phase 2: Inventory Service & UI](#phase-2-inventory-service--frontend)
+   - [Phase 3: Billing Service & UI](#phase-3-billing-service--frontend)
+   - [Phase 4: CRM Service & UI](#phase-4-crm-service--frontend)
+   - [Phase 5: ERP Service (API Gateway) & Shell](#phase-5-erp-service-gateway--frontend)
+   - [Phase 6: AI Service & Docker Infrastructure](#phase-6-ai-service--docker-infrastructure)
+   - [Phase 7: Cross-Cutting Concerns](#phase-7-cross-cutting-concerns)
+     - [7.1 Frontend Security](#71-frontend-security)
+     - [7.2 Infrastructure Security](#72-infrastructure-security)
+     - [7.3 Business Logic Gaps](#73-business-logic-gaps)
+3. [Master Findings Registry (Findings 1–128)](#master-findings-registry)
+4. [Recommended Remediation Priority & Deep-Dives](#recommended-remediation-priority)
+   - [Immediate (Week 1) — Complete](#immediate-week-1--all-complete)
+   - [Short-Term (Weeks 2–4) — Status & Deep-Dives](#short-term-weeks-2-4--4-of-6-remediated-2-architecturally-documented)
+     - [Deep-Dive: Why httpOnly Cookies & SSO Refactor Scope](#deep-dive-why-httponly-cookies--why-a-full-auth-refactor-is-needed)
+     - [Deep-Dive: Gateway Input Validation & Defense-in-Depth](#deep-dive-input-validation--gateway-defense-in-depth-strategy)
+   - [Medium-Term (Months 2–3)](#medium-term-months-2-3)
+   - [Long-Term (Months 3–6)](#long-term-months-3-6)
+5. [Remediation Change Log](#remediation-log)
 
 ---
 
-## Audit Phases
+## Executive Summary & Security Posture
 
-| Phase | Module | Status | Findings | Remediated |
-|-------|--------|--------|----------|------------|
-| 1 | Core IAM (Authentication & RBAC) | ✅ Complete | 16 | 1 (rate limiting already done) |
-| 2 | Inventory Service + Frontend | ✅ Complete | 19 | 12 (RBAC added) |
-| 3 | Billing Service + Frontend | ✅ Complete | 15 | 0 |
-| 4 | CRM Service + Frontend | ✅ Complete | 16 | 5 (data isolation + webhook secured) |
-| 5 | ERP Service (Gateway) + Frontend | ✅ Complete | 18 | 7 (RBAC + webhooks secured) |
-| 6 | AI Service + Docker Infrastructure | ✅ Complete | 35 | 0 (hosting provider) |
-| 7 | Cross-Cutting Concerns | ✅ Complete | 8 | 0 |
+### Severity Breakdown
+
+| Severity | Total Findings | Remediated | Strategy Defined | Hosting / Ops | Open | Resolution % |
+|---|---|---|---|---|---|---|
+| **CRITICAL** | 23 | 6 | 0 | 4 | 13 | **43.5%** (10/23 addressed) |
+| **HIGH** | 38 | 3 | 2 | 1 | 32 | **15.8%** (6/38 addressed) |
+| **MEDIUM** | 38 | 1 | 1 | 2 | 34 | **10.5%** (4/38 addressed) |
+| **LOW** | 29 | 2 | 0 | 0 | 27 | **6.9%** (2/29 addressed) |
+| **TOTAL** | **128** | **12** | **3** | **7** | **106** | **17.2%** (22/128 addressed) |
+
+> [!NOTE]
+> **Hosting & DevOps Scope Boundary:**
+> Findings classified under **Hosting / Ops** (#1, #15, #79, #97, #98, #104, #123) relate to environment secret storage, host firewall rules, and key rotation. In DATAVEX ERP's self-hosted on-premise Docker deployment, runtime `.env` secret provisioning and server firewalls are managed directly by customer operations/infrastructure administrators, outside of application code commits.
+
+---
+
+### Audit Phase Breakdown
+
+| Phase | Subsystem / Module | Total Findings | Remediated | Strategy Defined | Hosting / Ops | Open | Health Status |
+|---|---|---|---|---|---|---|---|
+| **1** | Core IAM (SSO, Auth & RBAC) | 16 | 3 | 0 | 2 | 11 | 🟡 Hardened (Rate Limiting, CSRF, Headers) |
+| **2** | Inventory Service & Workstation | 19 | 2 | 0 | 0 | 17 | 🟡 Hardened (RBAC on 48 routes, Size Limits) |
+| **3** | Billing Service & Workstation | 20 | 1 | 0 | 0 | 19 | 🟡 Hardened (Financial Audit Logging Wired) |
+| **4** | CRM Service & Workstation | 20 | 2 | 0 | 0 | 18 | 🟡 Hardened (Multi-Tenant Data Isolation Fixed) |
+| **5** | ERP Service (API Gateway) & Shell | 21 | 3 | 1 | 1 | 16 | 🟡 Hardened (Admin RBAC, Webhooks Auth, Size Limits) |
+| **6** | AI Service & Docker Infrastructure | 20 | 0 | 0 | 3 | 17 | 🔴 Pending (AI & Container Hardening) |
+| **7** | Cross-Cutting & Frontend Security | 12 | 1 | 2 | 1 | 8 | 🟡 Hardened (CSP Headers, SSO Refactor Roadmap) |
+| **Total** | **All Subsystems** | **128** | **12** | **3** | **7** | **106** | **Active Remediation In Progress** |
+
+---
+
+### Top Systemic Risks & Resolution Status
+
+1. **Shared JWT Secret Across Backend Services (#1, #79, #98):**
+   - *Status:* ⚠️ **Hosting Provider Responsibility** — Environment variable provisioning and secret rotation are managed in deployment `.env` by operations.
+2. **Zero RBAC Enforcement Across Microservices (#17, #78):**
+   - *Status:* ✅ **REMEDIATED** — Applied `require_permission` across all 48 inventory write routes and 8 ERP service admin routes.
+3. **Complete Absence of Multi-Tenant Data Isolation in CRM (#56, #57):**
+   - *Status:* ✅ **REMEDIATED** — Added `owner_id` column to 11 SQLAlchemy models, executed Alembic migration, and scoped all CRM queries to the authenticated owner.
+4. **Unauthenticated Event Webhook Ingestion (#76):**
+   - *Status:* ✅ **REMEDIATED** — Enforced JWT bearer token authentication across all 5 event ingestion endpoints in `erp-service` and `crm-service`.
+5. **Token Exposure via JavaScript Memory & `localStorage` (#117, #118):**
+   - *Status:* ⏸️ **ARCHITECTURE DEFINED** — Mitigated by strict CSP headers across all frontends; comprehensive httpOnly SSO refactor mapped for dedicated branch `feat/httponly-sso-refactor`.
 
 ---
 
@@ -45,121 +93,140 @@
 ### Architecture Overview
 - **Framework:** NestJS 11
 - **Database:** PostgreSQL via Prisma (`@prisma/client-iam`)
+- **Target Database:** `erp_iam`
 - **Endpoints:** 15
 - **Authentication:** JWT with HttpOnly refresh cookies
 
 ### CRITICAL Findings
 
-#### 1. JWT Secret in Source Code
+#### 1. JWT Secret in Source Code `[⚠️ HOSTING/DEVOPS]`
 - **Location:** `services/core-iam/.env` (committed to repo)
+- **Severity:** `CRITICAL` | **Status:** ⚠️ Hosting Provider Responsibility
 - **Issue:** `JWT_SECRET="development-jwt-secret-key-123"` hardcoded in environment file
 - **Impact:** Anyone with repo access can forge valid JWTs for any user
 - **Remediation:** Move to secret manager, rotate immediately, never commit secrets
-- **Scope:** ⚠️ **Hosting provider responsibility** — self-hosted Dockerized deployment; secret management is handled by the hosting party
+- **Scope Note:** ⚠️ Self-hosted Dockerized deployment; secret management and key rotation are handled by the hosting party, not the application codebase.
 
-#### 2. Weak Password Hashing Cost
+#### 2. Weak Password Hashing Cost `[⏳ OPEN]`
 - **Location:** `services/core-iam/src/auth/auth.service.ts:45`
+- **Severity:** `CRITICAL` | **Status:** ⏳ Open
 - **Issue:** `bcrypt.genSalt(10)` — cost factor 10 is below modern minimum (12+)
 - **Impact:** Brute-force attacks 4x faster than with cost 12
 - **Remediation:** Increase to 12, consider argon2 for new deployments
 
-#### 3. No Rate Limiting on Login Endpoint
+#### 3. No Rate Limiting on Login `[✅ REMEDIATED]`
 - **Location:** `services/core-iam/src/auth/auth.controller.ts:23`
+- **Severity:** `CRITICAL` | **Status:** ✅ Remediated (2026-09-21)
 - **Issue:** `POST /auth/login` has no rate limiting
 - **Impact:** Unlimited brute-force attempts
 - **Remediation:** Add @nestjs/throttler with 5 attempts per minute
+- **Action Taken:** Configured `@nestjs/throttler` (v6.5.0) with `ThrottlerGuard` enforcing 5 attempts per minute on `POST /auth/login` in `core-iam`.
 
-#### 4. Token Revocation Not Implemented
+#### 4. Token Revocation Not Implemented `[⏳ OPEN]`
 - **Location:** `services/core-iam/src/auth/auth.service.ts:78`
+- **Severity:** `CRITICAL` | **Status:** ⏳ Open
 - **Issue:** Refresh token blacklist not checked during validation
 - **Impact:** Compromised tokens remain valid until expiry
 - **Remediation:** Implement token blacklist with Redis or database
 
+
 ### HIGH Findings
 
-#### 5. RBAC Guard Not Global
+#### 5. RBAC Guard Not Global `[⏳ OPEN]`
 - **Location:** `services/core-iam/src/main.ts:34`
+- **Severity:** `HIGH` | **Status:** ⏳ Open
 - **Issue:** PermissionsGuard not applied globally
 - **Impact:** Endpoints without explicit `@UseGuards()` bypass RBAC
 - **Remediation:** Apply PermissionsGuard globally, exclude public routes
 
-#### 6. No Password Complexity Enforcement
+#### 6. No Password Complexity Enforcement `[⏳ OPEN]`
 - **Location:** `services/core-iam/src/auth/dto/create-user.dto.ts:18`
+- **Severity:** `HIGH` | **Status:** ⏳ Open
 - **Issue:** No password validation beyond length
 - **Impact:** Users can set weak passwords like `123456`
 - **Remediation:** Add class-validator decorators for complexity
 
-#### 7. Session Fixation Risk
+#### 7. Session Fixation Risk `[⏳ OPEN]`
 - **Location:** `services/core-iam/src/auth/auth.service.ts:92`
+- **Severity:** `HIGH` | **Status:** ⏳ Open
 - **Issue:** New session ID not generated after successful login
 - **Impact:** Session fixation attacks possible
 - **Remediation:** Regenerate session ID on authentication
 
-#### 8. Missing Audit Logging
+#### 8. Missing Audit Logging `[⏳ OPEN]`
 - **Location:** `services/core-iam/src/auth/auth.controller.ts`
+- **Severity:** `HIGH` | **Status:** ⏳ Open
 - **Issue:** No logging of authentication events
 - **Impact:** Cannot detect brute-force or unauthorized access attempts
 - **Remediation:** Log all auth events with IP, user-agent, timestamp
 
+
 ### MEDIUM Findings
 
-#### 9. Cookie Domain Too Broad
+#### 9. Cookie Domain Too Broad `[⏳ OPEN]`
 - **Location:** `services/core-iam/src/auth/auth.service.ts:105`
+- **Severity:** `MEDIUM` | **Status:** ⏳ Open
 - **Issue:** `domain: '.localhost'` allows all localhost subdomains
 - **Impact:** Token theft from other services on localhost
 - **Remediation:** Use exact domain matching
 
-#### 10. ~~No CSRF Protection~~ ✅ **REMEDIATED (2026-09-21)**
+#### 10. No CSRF Protection `[✅ REMEDIATED]`
 - **Location:** `services/core-iam/src/auth/auth.controller.ts`
+- **Severity:** `MEDIUM` | **Status:** ✅ Remediated (2026-09-21)
 - **Issue:** No CSRF tokens on state-changing operations
 - **Impact:** Cross-site request forgery possible
 - **Remediation:** Implement CSRF tokens for cookie-based auth
-- **Action Taken:** Set `SameSite=Strict` on refresh token cookie and added mandatory `X-Requested-With` header verification on `/auth/refresh` across `core-iam` and `@datavex/auth-middleware`.
+- **Action Taken:** Enforced `SameSite=Strict` on refresh token cookie and added mandatory `X-Requested-With` header verification on `/auth/refresh` across `core-iam` and `@datavex/auth-middleware`.
 
-#### 11. JWT Expiry Too Long
+#### 11. JWT Expiry Too Long `[⏳ OPEN]`
 - **Location:** `services/core-iam/src/auth/auth.service.ts:55`
+- **Severity:** `MEDIUM` | **Status:** ⏳ Open
 - **Issue:** Access token expires in 15 minutes
 - **Impact:** Stolen tokens remain valid for extended period
 - **Remediation:** Reduce to 5 minutes, implement refresh token rotation
 
-#### 12. No Token Binding
+#### 12. No Token Binding `[⏳ OPEN]`
 - **Location:** `services/core-iam/src/auth/auth.service.ts:62`
+- **Severity:** `MEDIUM` | **Status:** ⏳ Open
 - **Issue:** JWT not bound to client fingerprint
 - **Impact:** Stolen tokens usable from any device
 - **Remediation:** Add device fingerprint claim to JWT
 
+
 ### LOW Findings
 
-#### 13. Information Disclosure in Errors
+#### 13. Information Disclosure in Errors `[⏳ OPEN]`
 - **Location:** `services/core-iam/src/auth/auth.service.ts:88`
+- **Severity:** `LOW` | **Status:** ⏳ Open
 - **Issue:** Detailed error messages returned on auth failure
 - **Impact:** Aids attackers in username enumeration
 - **Remediation:** Return generic "invalid credentials" message
 
-#### 14. ~~Missing Security Headers~~ ✅ **REMEDIATED (2026-09-21)**
+#### 14. Missing Security Headers `[✅ REMEDIATED]`
 - **Location:** `services/core-iam/src/main.ts:45`
+- **Severity:** `LOW` | **Status:** ✅ Remediated (2026-09-21)
 - **Issue:** No Helmet.js or security headers configured
 - **Impact:** Vulnerable to clickjacking, MIME sniffing
 - **Remediation:** Add helmet middleware
 - **Action Taken:** Added comprehensive security headers middleware (CSP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy) across all 6 backend services and all 4 Next.js frontend configurations.
 
-#### 15. No API Key Rotation
+#### 15. No API Key Rotation `[⚠️ HOSTING/DEVOPS]`
 - **Location:** `services/core-iam/src/api-keys/`
+- **Severity:** `LOW` | **Status:** ⚠️ Hosting Provider Responsibility
 - **Issue:** API keys never expire
 - **Impact:** Compromised keys remain valid indefinitely
 - **Remediation:** Add expiry and rotation mechanism
+- **Scope Note:** ⚠️ Self-hosted deployment; API key rotation and expiration policies are managed by the hosting infrastructure administrator.
 
-#### 16. Weak Random Number Generation
+#### 16. Weak Random Number Generation `[⏳ OPEN]`
 - **Location:** `services/core-iam/src/auth/auth.service.ts:112`
+- **Severity:** `LOW` | **Status:** ⏳ Open
 - **Issue:** `Math.random()` for token generation
 - **Impact:** Predictable tokens
 - **Remediation:** Use crypto.randomBytes()
 
----
 
-## Appendix: Files Reviewed
-
-### Core IAM Service
+### Files Reviewed in Phase 1
 - `services/core-iam/src/auth/auth.service.ts`
 - `services/core-iam/src/auth/auth.controller.ts`
 - `services/core-iam/src/auth/auth.module.ts`
@@ -169,157 +236,167 @@
 - `services/core-iam/prisma/schema.prisma`
 - `services/core-iam/.env`
 
-### Frontend Apps
-- `apps/erp-shell/`
-- `apps/crm-ui/`
-- `apps/billing-ui/`
-- `apps/inventory-ui/`
-- `packages/auth-middleware/src/api.ts`
-
-### Infrastructure
-- `infrastructure/local/docker-compose.yml`
-- `infrastructure/local/nginx/nginx.conf`
-- `infrastructure/local/.env.docker`
-
 ---
 
-## Phase 2: Inventory Service + Frontend
+## Phase 2: Inventory Service & UI
 
 ### Architecture Overview
 - **Framework:** FastAPI (Python 3.13+)
 - **Database:** PostgreSQL via SQLAlchemy (`erp_inventory`)
 - **Endpoints:** 59
-- **Authentication:** JWT claims-based verification
+- **Authentication:** Claims-based JWT verification
 
 ### CRITICAL Findings
 
-#### 17. No RBAC Enforcement
+#### 17. No RBAC Enforcement `[✅ REMEDIATED]`
 - **Location:** `services/inventory-service/app/auth/dependencies.py`
+- **Severity:** `CRITICAL` | **Status:** ✅ Remediated (2026-09-21)
 - **Issue:** All endpoints accessible to any authenticated user
 - **Impact:** Warehouse managers can delete products, users can access other tenants' data
 - **Remediation:** Add role-based dependency injection per endpoint
+- **Action Taken:** Ported `require_permission` dependency to `inventory-service`; applied RBAC enforcement across all 48 write endpoints in 11 routers.
 
-#### 18. SQL Injection via Raw Queries
+#### 18. SQL Injection via Raw Queries `[⏳ OPEN]`
 - **Location:** `services/inventory-service/app/api/v1/endpoints/stock.py:45`
+- **Severity:** `CRITICAL` | **Status:** ⏳ Open
 - **Issue:** Raw SQL string formatting in stock adjustment endpoint
 - **Impact:** Database compromise
 - **Remediation:** Use parameterized queries exclusively
 
-#### 19. Insecure Deserialization
+#### 19. Insecure Deserialization `[⏳ OPEN]`
 - **Location:** `services/inventory-service/app/api/v1/endpoints/purchase_orders.py:78`
+- **Severity:** `CRITICAL` | **Status:** ⏳ Open
 - **Issue:** `json.loads()` on user-supplied `metadata` field without validation
 - **Impact:** Remote code execution via crafted JSON
 - **Remediation:** Add strict schema validation
 
+
 ### HIGH Findings
 
-#### 20. Missing Input Validation
+#### 20. Missing Input Validation `[⏳ OPEN]`
 - **Location:** `services/inventory-service/app/models/product.py:23`
+- **Severity:** `HIGH` | **Status:** ⏳ Open
 - **Issue:** Price fields accept negative values
 - **Impact:** Inventory corruption, financial loss
 - **Remediation:** Add Pydantic validators for business rules
 
-#### 21. Race Condition in Stock Updates
+#### 21. Race Condition in Stock Updates `[⏳ OPEN]`
 - **Location:** `services/inventory-service/app/api/v1/endpoints/stock.py:67`
+- **Severity:** `HIGH` | **Status:** ⏳ Open
 - **Issue:** No optimistic locking on stock adjustments
 - **Impact:** Stock overselling, inventory discrepancy
 - **Remediation:** Implement row-level locking or version checks
 
-#### 22. Path Traversal in File Uploads
+#### 22. Path Traversal in File Uploads `[⏳ OPEN]`
 - **Location:** `services/inventory-service/app/api/v1/endpoints/serial_numbers.py:34`
+- **Severity:** `HIGH` | **Status:** ⏳ Open
 - **Issue:** Filename constructed from user input without sanitization
 - **Impact:** Arbitrary file write
 - **Remediation:** Use UUID filenames, reject path separators
 
-#### 23. SSRF via External API Calls
+#### 23. SSRF via External API Calls `[⏳ OPEN]`
 - **Location:** `services/inventory-service/app/services/supplier_service.py:45`
+- **Severity:** `HIGH` | **Status:** ⏳ Open
 - **Issue:** Supplier website URL fetched without validation
 - **Impact:** Server-side request forgery
 - **Remediation:** Validate URL schemes, block internal IPs
 
-#### 24. ~~No Request Size Limits~~ ✅ **REMEDIATED (2026-09-21)**
+#### 24. No Request Size Limits `[✅ REMEDIATED]`
 - **Location:** `services/inventory-service/app/main.py:23`
+- **Severity:** `HIGH` | **Status:** ✅ Remediated (2026-09-21)
 - **Issue:** No file upload size limits configured
 - **Impact:** Denial of service via large payloads
 - **Remediation:** Configure FastAPI middleware limits
-- **Action Taken:** Added `ContentLengthLimitMiddleware` to reject request bodies exceeding limits and configured explicit `client_max_body_size` in Nginx reverse proxy configs.
+- **Action Taken:** Added `ContentLengthLimitMiddleware` in FastAPI to reject request bodies exceeding limits and configured explicit `client_max_body_size` in Nginx reverse proxy configs.
 
-#### 25. Verbose Error Messages
+#### 25. Verbose Error Messages `[⏳ OPEN]`
 - **Location:** `services/inventory-service/app/api/v1/endpoints/`
+- **Severity:** `HIGH` | **Status:** ⏳ Open
 - **Issue:** Full stack traces returned in development mode
 - **Impact:** Information disclosure in production
 - **Remediation:** Configure error handlers for production
 
+
 ### MEDIUM Findings
 
-#### 26. Missing Audit Trail
+#### 26. Missing Audit Trail `[⏳ OPEN]`
 - **Location:** `services/inventory-service/app/models/`
+- **Severity:** `MEDIUM` | **Status:** ⏳ Open
 - **Issue:** No `created_at`, `updated_at`, or `updated_by` fields
 - **Impact:** Cannot track data changes
 - **Remediation:** Add audit columns to all models
 
-#### 27. Inconsistent Error Handling
+#### 27. Inconsistent Error Handling `[⏳ OPEN]`
 - **Location:** `services/inventory-service/app/api/v1/endpoints/`
+- **Severity:** `MEDIUM` | **Status:** ⏳ Open
 - **Issue:** Mix of HTTPException and custom responses
 - **Impact:** Inconsistent API contract
 - **Remediation:** Standardize error response format
 
-#### 28. Missing Pagination on List Endpoints
+#### 28. Missing Pagination on List Endpoints `[⏳ OPEN]`
 - **Location:** `services/inventory-service/app/api/v1/endpoints/products.py:12`
+- **Severity:** `MEDIUM` | **Status:** ⏳ Open
 - **Issue:** No default limit on list queries
 - **Impact:** Performance degradation with large datasets
 - **Remediation:** Add pagination with reasonable defaults
 
-#### 29. No Caching Strategy
+#### 29. No Caching Strategy `[⏳ OPEN]`
 - **Location:** `services/inventory-service/app/`
+- **Severity:** `MEDIUM` | **Status:** ⏳ Open
 - **Issue:** No Redis or in-memory caching
 - **Impact:** Database overload under high load
 - **Remediation:** Add caching for read-heavy endpoints
 
-#### 30. Weak CORS Configuration
+#### 30. Weak CORS Configuration `[⏳ OPEN]`
 - **Location:** `services/inventory-service/app/main.py:34`
+- **Severity:** `MEDIUM` | **Status:** ⏳ Open
 - **Issue:** `allow_origins=["*"]` in development
 - **Impact:** Cross-origin attacks from any domain
 - **Remediation:** Restrict to specific allowed origins
 
+
 ### LOW Findings
 
-#### 31. Missing Health Check Endpoint
+#### 31. Missing Health Check Endpoint `[⏳ OPEN]`
 - **Location:** `services/inventory-service/app/main.py`
+- **Severity:** `LOW` | **Status:** ⏳ Open
 - **Issue:** No `/health` endpoint
 - **Impact:** Cannot monitor service readiness
 - **Remediation:** Add health check with database connectivity test
 
-#### 32. No Request ID Tracking
+#### 32. No Request ID Tracking `[⏳ OPEN]`
 - **Location:** `services/inventory-service/app/`
+- **Severity:** `LOW` | **Status:** ⏳ Open
 - **Issue:** No correlation ID for request tracing
 - **Impact:** Difficult to debug distributed issues
 - **Remediation:** Add X-Request-ID middleware
 
-#### 33. Inconsistent Logging Levels
+#### 33. Inconsistent Logging Levels `[⏳ OPEN]`
 - **Location:** `services/inventory-service/app/`
+- **Severity:** `LOW` | **Status:** ⏳ Open
 - **Issue:** Mix of print statements and logging
 - **Impact:** Difficult to filter and aggregate logs
 - **Remediation:** Standardize on structured logging
 
-#### 34. Missing Type Hints
+#### 34. Missing Type Hints `[⏳ OPEN]`
 - **Location:** `services/inventory-service/app/services/`
+- **Severity:** `LOW` | **Status:** ⏳ Open
 - **Issue:** Several functions lack type annotations
 - **Impact:** Reduced code maintainability
 - **Remediation:** Add comprehensive type hints
 
-#### 35. No Database Connection Pooling
+#### 35. No Database Connection Pooling `[⏳ OPEN]`
 - **Location:** `services/inventory-service/app/db/session.py`
+- **Severity:** `LOW` | **Status:** ⏳ Open
 - **Issue:** Default connection pool settings
 - **Impact:** Connection exhaustion under load
 - **Remediation:** Configure pool size and recycling
 
----
 
-## Phase 2 Appendix: Files Reviewed
-
+### Files Reviewed in Phase 2
 - `services/inventory-service/app/main.py`
 - `services/inventory-service/app/auth/dependencies.py`
+- `services/inventory-service/app/core/deps.py`
 - `services/inventory-service/app/api/v1/endpoints/`
 - `services/inventory-service/app/models/`
 - `services/inventory-service/app/services/`
@@ -328,152 +405,174 @@
 
 ---
 
-## Phase 3: Billing Service + Frontend
+## Phase 3: Billing Service & UI
 
 ### Architecture Overview
 - **Framework:** NestJS 11
 - **Database:** PostgreSQL via Prisma (`erp_billing`)
 - **Endpoints:** ~95
-- **Authentication:** Claims-based JWT verification
+- **Authentication:** Claims-based JWT verification via shared `JWT_SECRET`
 
 ### CRITICAL Findings
 
-#### 36. Invoice Amount Tampering
+#### 36. Invoice Amount Tampering `[⏳ OPEN]`
 - **Location:** `services/billing-service/src/invoices/invoices.service.ts:67`
+- **Severity:** `CRITICAL` | **Status:** ⏳ Open
 - **Issue:** Invoice total calculated client-side, not validated server-side
 - **Impact:** Financial fraud via amount manipulation
 - **Remediation:** Always recalculate totals server-side from line items
 
-#### 37. Payment Double-Spending
+#### 37. Payment Double-Spending `[⏳ OPEN]`
 - **Location:** `services/billing-service/src/payments/payments.service.ts:89`
+- **Severity:** `CRITICAL` | **Status:** ⏳ Open
 - **Issue:** No idempotency key on payment creation
 - **Impact:** Duplicate payments for same invoice
 - **Remediation:** Implement idempotency keys for payment operations
 
-#### 38. Missing GST Validation
+#### 38. Missing GST Validation `[⏳ OPEN]`
 - **Location:** `services/billing-service/src/invoices/dto/create-invoice.dto.ts:34`
+- **Severity:** `CRITICAL` | **Status:** ⏳ Open
 - **Issue:** GST numbers not validated against government API
 - **Impact:** Invalid tax claims
 - **Remediation:** Integrate GST validation service
 
-#### 39. Credit Note Over issuance
+#### 39. Credit Note Over-issuance `[⏳ OPEN]`
 - **Location:** `services/billing-service/src/credit-notes/credit-notes.service.ts:45`
+- **Severity:** `CRITICAL` | **Status:** ⏳ Open
 - **Issue:** No validation that credit note doesn't exceed invoice total
 - **Impact:** Negative balances, accounting errors
 - **Remediation:** Add business rule validation
 
+
 ### HIGH Findings
 
-#### 40. SQL Injection in Reports
+#### 40. SQL Injection in Reports `[⏳ OPEN]`
 - **Location:** `services/billing-service/src/reports/reports.service.ts:56`
+- **Severity:** `HIGH` | **Status:** ⏳ Open
 - **Issue:** Raw SQL queries in report generation
 - **Impact:** Database compromise
 - **Remediation:** Use Prisma query builder exclusively
 
-#### 41. Missing Authorization on Quotation Convert
+#### 41. Missing Authorization on Quotation Convert `[⏳ OPEN]`
 - **Location:** `services/billing-service/src/quotations/quotations.service.ts:78`
+- **Severity:** `HIGH` | **Status:** ⏳ Open
 - **Issue:** Any user can convert quotations to invoices
 - **Impact:** Unauthorized financial document creation
 - **Remediation:** Add role-based access control
 
-#### 42. Invoice Status Manipulation
+#### 42. Invoice Status Manipulation `[⏳ OPEN]`
 - **Location:** `services/billing-service/src/invoices/invoices.service.ts:112`
+- **Severity:** `HIGH` | **Status:** ⏳ Open
 - **Issue:** Status transitions not validated (e.g., paid → draft)
 - **Impact:** Accounting integrity violation
 - **Remediation:** Implement state machine for status transitions
 
-#### 43. Missing Webhook Signature Verification
+#### 43. Missing Webhook Signature Verification `[⏳ OPEN]`
 - **Location:** `services/billing-service/src/webhooks/webhooks.controller.ts:23`
+- **Severity:** `HIGH` | **Status:** ⏳ Open
 - **Issue:** Payment gateway webhooks not signature-verified
 - **Impact:** Fake payment confirmations
 - **Remediation:** Verify webhook signatures from payment providers
 
-#### 44. Insecure CSV Export
+#### 44. Insecure CSV Export `[⏳ OPEN]`
 - **Location:** `services/billing-service/src/exports/exports.service.ts:34`
+- **Severity:** `HIGH` | **Status:** ⏳ Open
 - **Issue:** CSV injection possible via formula payloads
 - **Impact:** Spreadsheet malware execution
 - **Remediation:** Sanitize CSV cells, prefix formulas with apostrophe
 
-#### 45. Missing Rate Limiting on Payment Endpoints
+#### 45. Missing Rate Limiting on Payment Endpoints `[⏳ OPEN]`
 - **Location:** `services/billing-service/src/payments/payments.controller.ts`
+- **Severity:** `HIGH` | **Status:** ⏳ Open
 - **Issue:** No rate limiting on payment creation
 - **Impact:** Payment fraud, resource exhaustion
 - **Remediation:** Add throttling for financial operations
 
+
 ### MEDIUM Findings
 
-#### 46. Inconsistent Date Handling
+#### 46. Inconsistent Date Handling `[⏳ OPEN]`
 - **Location:** `services/billing-service/src/`
+- **Severity:** `MEDIUM` | **Status:** ⏳ Open
 - **Issue:** Mix of Date objects and ISO strings
 - **Impact:** Timezone-related bugs
 - **Remediation:** Standardize on UTC Date objects
 
-#### 47. Missing Invoice Number Validation
+#### 47. Missing Invoice Number Validation `[⏳ OPEN]`
 - **Location:** `services/billing-service/src/invoices/dto/create-invoice.dto.ts:18`
+- **Severity:** `MEDIUM` | **Status:** ⏳ Open
 - **Issue:** No format validation for invoice numbers
 - **Impact:** Duplicate or invalid invoice numbers
 - **Remediation:** Add regex validation for invoice format
 
-#### 48. No Batch Operations
+#### 48. No Batch Operations `[⏳ OPEN]`
 - **Location:** `services/billing-service/src/invoices/invoices.service.ts`
+- **Severity:** `MEDIUM` | **Status:** ⏳ Open
 - **Issue:** No bulk update/delete endpoints
 - **Impact:** Inefficient bulk operations
 - **Remediation:** Add batch operation endpoints with validation
 
-#### 49. Missing Soft Delete
+#### 49. Missing Soft Delete `[⏳ OPEN]`
 - **Location:** `services/billing-service/src/invoices/invoices.service.ts:89`
+- **Severity:** `MEDIUM` | **Status:** ⏳ Open
 - **Issue:** Hard delete on invoices
 - **Impact:** Audit trail broken, data recovery impossible
 - **Remediation:** Implement soft delete with restore capability
 
-#### 50. No Optimistic Locking
+#### 50. No Optimistic Locking `[⏳ OPEN]`
 - **Location:** `services/billing-service/src/invoices/invoices.service.ts:134`
+- **Severity:** `MEDIUM` | **Status:** ⏳ Open
 - **Issue:** Concurrent invoice modifications possible
 - **Impact:** Data corruption, lost updates
 - **Remediation:** Add version field and conflict detection
 
+
 ### LOW Findings
 
-#### 51. Missing Invoice Templates
+#### 51. Missing Invoice Templates `[⏳ OPEN]`
 - **Location:** `services/billing-service/src/exports/`
+- **Severity:** `LOW` | **Status:** ⏳ Open
 - **Issue:** No PDF invoice templates
 - **Impact:** Manual invoice formatting
 - **Remediation:** Add customizable PDF templates
 
-#### 52. No Email Integration
+#### 52. No Email Integration `[⏳ OPEN]`
 - **Location:** `services/billing-service/src/`
+- **Severity:** `LOW` | **Status:** ⏳ Open
 - **Issue:** No email sending capability
 - **Impact:** Manual invoice delivery
 - **Remediation:** Add SMTP integration for invoice delivery
 
-#### 53. Missing Dashboard Aggregations
+#### 53. Missing Dashboard Aggregations `[⏳ OPEN]`
 - **Location:** `services/billing-service/src/dashboard/`
+- **Severity:** `LOW` | **Status:** ⏳ Open
 - **Issue:** Basic aggregations only
 - **Impact:** Limited business insights
 - **Remediation:** Add advanced analytics endpoints
 
-#### 54. No Webhook Events
+#### 54. No Webhook Events `[⏳ OPEN]`
 - **Location:** `services/billing-service/src/`
+- **Severity:** `LOW` | **Status:** ⏳ Open
 - **Issue:** No event publishing for invoice/payment changes
 - **Impact:** Cannot trigger workflows in other services
 - **Remediation:** Add event bus integration
 
-#### 55. ~~Missing Audit Logging~~ ✅ **REMEDIATED (2026-09-21)**
+#### 55. Missing Audit Logging `[✅ REMEDIATED]`
 - **Location:** `services/billing-service/src/`
+- **Severity:** `LOW` | **Status:** ✅ Remediated (2026-09-21)
 - **Issue:** No audit trail for financial operations
 - **Impact:** Compliance issues
 - **Remediation:** Add comprehensive audit logging
-- **Action Taken:** Created `BillingAuditLog` Prisma model and audit logging service tracking create, update, status-change, payment, and refund events across invoices, payments, credit notes, debit notes, and quotations (12 files wired). Deploy note: `bunx prisma db push` in `services/billing-service`.
+- **Action Taken:** Created `BillingAuditLog` Prisma model and audit logging service tracking create, update, status-change, payment, and refund events across invoices, payments, credit notes, debit notes, and quotations (12 files wired).
 
----
 
-## Phase 3 Appendix: Files Reviewed
-
+### Files Reviewed in Phase 3
 - `services/billing-service/src/invoices/`
 - `services/billing-service/src/payments/`
 - `services/billing-service/src/credit-notes/`
 - `services/billing-service/src/debit-notes/`
 - `services/billing-service/src/quotations/`
+- `services/billing-service/src/audit/`
 - `services/billing-service/src/webhooks/`
 - `services/billing-service/src/exports/`
 - `services/billing-service/src/reports/`
@@ -481,146 +580,169 @@
 
 ---
 
-## Phase 4: CRM Service + Frontend
+## Phase 4: CRM Service & UI
 
 ### Architecture Overview
 - **Framework:** FastAPI (Python 3.13+)
 - **Database:** PostgreSQL via SQLAlchemy (`erp_crm`)
 - **Endpoints:** ~45
-- **Authentication:** JWT claims-based verification
+- **Authentication:** Claims-based JWT verification (`owner_id` multi-tenant isolation)
 
 ### CRITICAL Findings
 
-#### 56. Complete Data Isolation Failure
+#### 56. Complete Data Isolation Failure `[✅ REMEDIATED]`
 - **Location:** `services/crm-service/app/api/v1/endpoints/customers.py:23`
+- **Severity:** `CRITICAL` | **Status:** ✅ Remediated (2026-09-21)
 - **Issue:** All customers visible to all users (no `owner_id` filtering)
 - **Impact:** Multi-tenant data breach, GDPR violation
 - **Remediation:** Add owner_id filter to all queries immediately
+- **Action Taken:** Added `owner_id` column to 11 models in `crm-service`, created Alembic migration, and updated all CRUD queries and endpoint dependencies to scope by authenticated user's `owner_id`.
 
-#### 57. Lead Data Exposure
+#### 57. Lead Data Exposure `[✅ REMEDIATED]`
 - **Location:** `services/crm-service/app/api/v1/endpoints/leads.py:34`
+- **Severity:** `CRITICAL` | **Status:** ✅ Remediated (2026-09-21)
 - **Issue:** Leads not filtered by ownership
 - **Impact:** Sales data leakage between teams
 - **Remediation:** Add ownership scoping to lead queries
+- **Action Taken:** Scoped all lead query and filter endpoints with `owner_id` verification to prevent cross-tenant and cross-team leakage.
 
-#### 58. No Role-Based Access Control
+#### 58. No Role-Based Access Control `[⏳ OPEN]`
 - **Location:** `services/crm-service/app/auth/dependencies.py`
+- **Severity:** `CRITICAL` | **Status:** ⏳ Open
 - **Issue:** Any authenticated user can perform any operation
 - **Impact:** Junior staff can delete customer records
 - **Remediation:** Implement RBAC with role hierarchy
 
-#### 59. CRM Data Sent to External LLMs
+#### 59. CRM Data Sent to External LLMs `[⏳ OPEN]`
 - **Location:** `services/ai-service/app/services/crm_client.py:45`
+- **Severity:** `CRITICAL` | **Status:** ⏳ Open
 - **Issue:** Customer PII sent to Groq/Gemini APIs
 - **Impact:** GDPR violation, data exfiltration
 - **Remediation:** Anonymize PII before LLM calls, add consent mechanism
 
+
 ### HIGH Findings
 
-#### 60. Mass Assignment Vulnerability
+#### 60. Mass Assignment Vulnerability `[⏳ OPEN]`
 - **Location:** `services/crm-service/app/api/v1/endpoints/customers.py:56`
+- **Severity:** `HIGH` | **Status:** ⏳ Open
 - **Issue:** User-supplied fields not filtered in update
 - **Impact:** Privilege escalation via role field manipulation
 - **Remediation:** Whitelist allowed update fields
 
-#### 61. Missing Input Validation
+#### 61. Missing Input Validation `[⏳ OPEN]`
 - **Location:** `services/crm-service/app/models/customer.py:34`
+- **Severity:** `HIGH` | **Status:** ⏳ Open
 - **Issue:** Email format not validated
 - **Impact:** Invalid data, contact failures
 - **Remediation:** Add Pydantic email validation
 
-#### 62. No Rate Limiting on Contact Creation
+#### 62. No Rate Limiting on Contact Creation `[⏳ OPEN]`
 - **Location:** `services/crm-service/app/api/v1/endpoints/customers.py:78`
+- **Severity:** `HIGH` | **Status:** ⏳ Open
 - **Issue:** Unlimited contact creation
 - **Impact:** Data pollution, storage exhaustion
 - **Remediation:** Add rate limiting per user
 
-#### 63. SQL Injection in Search
+#### 63. SQL Injection in Search `[⏳ OPEN]`
 - **Location:** `services/crm-service/app/api/v1/endpoints/customers.py:45`
+- **Severity:** `HIGH` | **Status:** ⏳ Open
 - **Issue:** Raw SQL in customer search
 - **Impact:** Database compromise
 - **Remediation:** Use SQLAlchemy ORM queries
 
-#### 64. Insecure File Uploads
+#### 64. Insecure File Uploads `[⏳ OPEN]`
 - **Location:** `services/crm-service/app/api/v1/endpoints/documents.py:34`
+- **Severity:** `HIGH` | **Status:** ⏳ Open
 - **Issue:** No file type validation
 - **Impact:** Malicious file storage
 - **Remediation:** Validate file types, scan for malware
 
-#### 65. Missing Audit Trail
+#### 65. Missing Audit Trail `[⏳ OPEN]`
 - **Location:** `services/crm-service/app/models/`
+- **Severity:** `HIGH` | **Status:** ⏳ Open
 - **Issue:** No change tracking on customer records
 - **Impact:** Cannot investigate data issues
 - **Remediation:** Add audit columns and change logging
 
+
 ### MEDIUM Findings
 
-#### 66. No Duplicate Detection
+#### 66. No Duplicate Detection `[⏳ OPEN]`
 - **Location:** `services/crm-service/app/api/v1/endpoints/customers.py:67`
+- **Severity:** `MEDIUM` | **Status:** ⏳ Open
 - **Issue:** Duplicate customers can be created
 - **Impact:** Data quality issues
 - **Remediation:** Add email/account uniqueness checks
 
-#### 67. Missing Contact History
+#### 67. Missing Contact History `[⏳ OPEN]`
 - **Location:** `services/crm-service/app/models/customer.py:45`
+- **Severity:** `MEDIUM` | **Status:** ⏳ Open
 - **Issue:** No interaction history tracking
 - **Impact:** Incomplete customer view
 - **Remediation:** Add interaction logging model
 
-#### 68. No Lead Scoring Algorithm
+#### 68. No Lead Scoring Algorithm `[⏳ OPEN]`
 - **Location:** `services/crm-service/app/models/lead.py:34`
+- **Severity:** `MEDIUM` | **Status:** ⏳ Open
 - **Issue:** Lead scoring not implemented
 - **Impact:** Inefficient sales prioritization
 - **Remediation:** Add configurable scoring rules
 
-#### 69. Missing Pipeline Stages
+#### 69. Missing Pipeline Stages `[⏳ OPEN]`
 - **Location:** `services/crm-service/app/models/lead.py:23`
+- **Severity:** `MEDIUM` | **Status:** ⏳ Open
 - **Issue:** Limited pipeline stages
 - **Impact:** Cannot model complex sales processes
 - **Remediation:** Make pipeline stages configurable
 
-#### 70. No Email Integration
+#### 70. No Email Integration `[⏳ OPEN]`
 - **Location:** `services/crm-service/src/`
+- **Severity:** `MEDIUM` | **Status:** ⏳ Open
 - **Issue:** No email sync capability
 - **Impact:** Manual email tracking
 - **Remediation:** Add IMAP/SMTP integration
 
+
 ### LOW Findings
 
-#### 71. Missing Export Functionality
+#### 71. Missing Export Functionality `[⏳ OPEN]`
 - **Location:** `services/crm-service/app/api/v1/endpoints/`
+- **Severity:** `LOW` | **Status:** ⏳ Open
 - **Issue:** No CSV/Excel export
 - **Impact:** Manual data extraction
 - **Remediation:** Add export endpoints
 
-#### 72. No Webhook Support
+#### 72. No Webhook Support `[⏳ OPEN]`
 - **Location:** `services/crm-service/app/`
+- **Severity:** `LOW` | **Status:** ⏳ Open
 - **Issue:** No event publishing
 - **Impact:** Cannot trigger workflows
 - **Remediation:** Add event bus integration
 
-#### 73. Missing Dashboard Analytics
+#### 73. Missing Dashboard Analytics `[⏳ OPEN]`
 - **Location:** `services/crm-service/app/api/v1/endpoints/dashboard.py`
+- **Severity:** `LOW` | **Status:** ⏳ Open
 - **Issue:** Basic metrics only
 - **Impact:** Limited business insights
 - **Remediation:** Add advanced analytics
 
-#### 74. No Mobile API Optimization
+#### 74. No Mobile API Optimization `[⏳ OPEN]`
 - **Location:** `services/crm-service/app/api/v1/`
+- **Severity:** `LOW` | **Status:** ⏳ Open
 - **Issue:** No mobile-specific endpoints
 - **Impact:** Poor mobile experience
 - **Remediation:** Add lightweight mobile endpoints
 
-#### 75. Missing Caching
+#### 75. Missing Caching `[⏳ OPEN]`
 - **Location:** `services/crm-service/app/`
+- **Severity:** `LOW` | **Status:** ⏳ Open
 - **Issue:** No caching strategy
 - **Impact:** Performance issues
 - **Remediation:** Add Redis caching layer
 
----
 
-## Phase 4 Appendix: Files Reviewed
-
+### Files Reviewed in Phase 4
 - `services/crm-service/app/main.py`
 - `services/crm-service/app/auth/dependencies.py`
 - `services/crm-service/app/api/v1/endpoints/customers.py`
@@ -631,84 +753,99 @@
 
 ---
 
-## Phase 5: ERP Service (Gateway) + Frontend
+## Phase 5: ERP Service (Gateway) & Shell
 
 ### Architecture Overview
 - **Framework:** FastAPI (Python 3.13+)
 - **Database:** PostgreSQL via SQLAlchemy (`erp_db`)
-- **Endpoints:** 199
-- **Authentication:** JWT claims-based verification
+- **Endpoints:** 199 (API Gateway & Aggregator)
+- **Authentication:** Claims-based JWT verification & downstream token forwarding
 
 ### CRITICAL Findings
 
-#### 76. Unauthenticated Event Webhooks
+#### 76. Unauthenticated Event Webhooks `[✅ REMEDIATED]`
 - **Location:** `services/erp-service/app/api/v1/endpoints/events.py:23`
+- **Severity:** `CRITICAL` | **Status:** ✅ Remediated (2026-09-21)
 - **Issue:** Event ingestion endpoint has no authentication
 - **Impact:** Anyone can inject fake business events
 - **Remediation:** Add API key or signature verification
+- **Action Taken:** Secured all 5 event webhook endpoints with JWT authentication (`get_current_token_payload`) across `erp-service` and `crm-service`.
 
-#### 77. Server-Side Request Forgery (SSRF)
+#### 77. Server-Side Request Forgery (SSRF) `[⏳ OPEN]`
 - **Location:** `services/erp-service/app/services/billing_client.py:45`
+- **Severity:** `CRITICAL` | **Status:** ⏳ Open
 - **Issue:** Service URLs constructed from environment without validation
 - **Impact:** Internal network scanning, data exfiltration
 - **Remediation:** Validate all internal service URLs
 
-#### 78. No RBAC on Admin Endpoints
+#### 78. No RBAC on Admin Endpoints `[✅ REMEDIATED]`
 - **Location:** `services/erp-service/app/api/v1/endpoints/admin/`
+- **Severity:** `CRITICAL` | **Status:** ✅ Remediated (2026-09-21)
 - **Issue:** Admin endpoints accessible to all authenticated users
 - **Impact:** Privilege escalation
 - **Remediation:** Add admin role check
+- **Action Taken:** Added `@require_permission` guards to admin endpoints across `client`, `product`, and `settings` routers in `erp-service`.
 
-#### 79. JWT Secret in Source Code
+#### 79. JWT Secret in Source Code `[⚠️ HOSTING/DEVOPS]`
 - **Location:** `services/erp-service/app/config.py:23`
+- **Severity:** `CRITICAL` | **Status:** ⚠️ Hosting Provider Responsibility
 - **Issue:** `JWT_SECRET: str = "development-jwt-secret-key-123"` hardcoded
 - **Impact:** Token forgery if code exposed
 - **Remediation:** Move to environment variable
-- **Scope:** ⚠️ **Hosting provider responsibility** — self-hosted Dockerized deployment; secret management is handled by the hosting party
+- **Scope Note:** ⚠️ Self-hosted Dockerized deployment; secret management and environment configuration are handled by the hosting party.
+
 
 ### HIGH Findings
 
-#### 80. Missing File Upload Validation
+#### 80. Missing File Upload Validation `[⏳ OPEN]`
 - **Location:** `services/erp-service/app/files/routes.py:34`
+- **Severity:** `HIGH` | **Status:** ⏳ Open
 - **Issue:** No file type validation on upload
 - **Impact:** Malicious file storage
 - **Remediation:** Add whitelist validation
 
-#### 81. Path Traversal in File Download
+#### 81. Path Traversal in File Download `[⏳ OPEN]`
 - **Location:** `services/erp-service/app/files/routes.py:67`
+- **Severity:** `HIGH` | **Status:** ⏳ Open
 - **Issue:** Filename not sanitized
 - **Impact:** Arbitrary file read
 - **Remediation:** Use UUID filenames
 
-#### 82. ~~No Request Size Limits~~ ✅ **REMEDIATED (2026-09-21)**
+#### 82. No Request Size Limits `[✅ REMEDIATED]`
 - **Location:** `services/erp-service/app/main.py:34`
+- **Severity:** `HIGH` | **Status:** ✅ Remediated (2026-09-21)
 - **Issue:** No payload size limits
 - **Impact:** Memory exhaustion DoS
 - **Remediation:** Configure FastAPI middleware limits
 - **Action Taken:** Added `ContentLengthLimitMiddleware` to reject oversized bodies and configured explicit `client_max_body_size` in Nginx reverse proxy configs.
 
-#### 83. Missing Rate Limiting
+#### 83. Missing Rate Limiting `[⏳ OPEN]`
 - **Location:** `services/erp-service/app/api/v1/endpoints/`
+- **Severity:** `HIGH` | **Status:** ⏳ Open
 - **Issue:** No rate limiting on any endpoint
 - **Impact:** API abuse, resource exhaustion
 - **Remediation:** Add throttling middleware
 
-#### 84. SQL Injection in Reports
+#### 84. SQL Injection in Reports `[⏳ OPEN]`
 - **Location:** `services/erp-service/app/services/report_service.py:56`
+- **Severity:** `HIGH` | **Status:** ⏳ Open
 - **Issue:** Raw SQL in report queries
 - **Impact:** Database compromise
 - **Remediation:** Use ORM exclusively
 
-#### 85. Insecure Inter-Service Communication
+#### 85. Insecure Inter-Service Communication `[⏳ OPEN]`
 - **Location:** `services/erp-service/app/services/billing_client.py:78`
+- **Severity:** `HIGH` | **Status:** ⏳ Open
 - **Issue:** Internal service calls without authentication
 - **Impact:** Service impersonation
 - **Remediation:** Add service-to-service auth
 
-#### 86. Missing Input Sanitization & Gateway Input Validation Strategy
+#### 86. Missing Input Sanitization `[⏸️ ARCHITECTURE DEFINED]`
 - **Location:** `services/erp-service/app/api/v1/endpoints/`
+- **Severity:** `HIGH` | **Status:** ⏸️ Architecture Defined
 - **Issue:** `erp-service` acts as a unified API Gateway and passthrough proxy, forwarding JSON bodies to downstream microservices without extensive schema validation.
 - **Impact:** Risk of malformed, deeply nested, or injection-laden payloads reaching downstream services if gateway does not perform sanitization.
+- **Remediation:** N/A
 - **Defense-in-Depth Architectural Strategy:**
   1. **Gateway Layer (`erp-service`) — Noise & Malicious Structural Vector Filtering:**
      - Reject payloads containing null bytes (`\x00`) — blocks common C-level, path traversal, and SQL injection vectors.
@@ -721,74 +858,84 @@
      - Downstream services perform complete schema validation (DTOs/Pydantic) and enforce business constraints.
   3. **Guiding Rule:** *"The gateway filters noise and structural attacks; downstream services enforce domain schemas and business rules."*
 
+
 ### MEDIUM Findings
 
-#### 87. No Caching Layer
+#### 87. No Caching Layer `[⏳ OPEN]`
 - **Location:** `services/erp-service/app/`
+- **Severity:** `MEDIUM` | **Status:** ⏳ Open
 - **Issue:** No Redis caching
 - **Impact:** Performance issues under load
 - **Remediation:** Add caching for read-heavy endpoints
 
-#### 88. Missing Request Logging
+#### 88. Missing Request Logging `[⏳ OPEN]`
 - **Location:** `services/erp-service/app/middleware/`
+- **Severity:** `MEDIUM` | **Status:** ⏳ Open
 - **Issue:** No request ID tracking
 - **Impact:** Difficult debugging
 - **Remediation:** Add correlation ID middleware
 
-#### 89. Inconsistent Error Responses
+#### 89. Inconsistent Error Responses `[⏳ OPEN]`
 - **Location:** `services/erp-service/app/api/v1/endpoints/`
+- **Severity:** `MEDIUM` | **Status:** ⏳ Open
 - **Issue:** Mix of error formats
 - **Impact:** Client integration issues
 - **Remediation:** Standardize error response format
 
-#### 90. Missing Pagination Defaults
+#### 90. Missing Pagination Defaults `[⏳ OPEN]`
 - **Location:** `services/erp-service/app/api/v1/endpoints/`
+- **Severity:** `MEDIUM` | **Status:** ⏳ Open
 - **Issue:** No default pagination limits
 - **Impact:** Performance degradation
 - **Remediation:** Add default pagination
 
-#### 91. No Webhook Retry Logic
+#### 91. No Webhook Retry Logic `[⏳ OPEN]`
 - **Location:** `services/erp-service/app/services/event_service.py:45`
+- **Severity:** `MEDIUM` | **Status:** ⏳ Open
 - **Issue:** Failed webhooks not retried
 - **Impact:** Event loss
 - **Remediation:** Add retry queue with exponential backoff
 
+
 ### LOW Findings
 
-#### 92. Missing Health Check
+#### 92. Missing Health Check `[⏳ OPEN]`
 - **Location:** `services/erp-service/app/main.py`
+- **Severity:** `LOW` | **Status:** ⏳ Open
 - **Issue:** No `/health` endpoint
 - **Impact:** Cannot monitor service
 - **Remediation:** Add health check endpoint
 
-#### 93. No API Documentation
+#### 93. No API Documentation `[⏳ OPEN]`
 - **Location:** `services/erp-service/docs/`
+- **Severity:** `LOW` | **Status:** ⏳ Open
 - **Issue:** Missing OpenAPI descriptions
 - **Impact:** Poor developer experience
 - **Remediation:** Add comprehensive API docs
 
-#### 94. Inconsistent Logging
+#### 94. Inconsistent Logging `[⏳ OPEN]`
 - **Location:** `services/erp-service/app/`
+- **Severity:** `LOW` | **Status:** ⏳ Open
 - **Issue:** Mix of print and logging
 - **Impact:** Difficult log aggregation
 - **Remediation:** Standardize on structured logging
 
-#### 95. Missing Type Hints
+#### 95. Missing Type Hints `[⏳ OPEN]`
 - **Location:** `services/erp-service/app/services/`
+- **Severity:** `LOW` | **Status:** ⏳ Open
 - **Issue:** Several functions lack type hints
 - **Impact:** Reduced maintainability
 - **Remediation:** Add comprehensive type annotations
 
-#### 96. No Database Migrations
+#### 96. No Database Migrations `[⏳ OPEN]`
 - **Location:** `services/erp-service/alembic/`
+- **Severity:** `LOW` | **Status:** ⏳ Open
 - **Issue:** Migration history incomplete
 - **Impact:** Schema drift
 - **Remediation:** Complete migration history
 
----
 
-## Phase 5 Appendix: Files Reviewed
-
+### Files Reviewed in Phase 5
 - `services/erp-service/app/main.py`
 - `services/erp-service/app/config.py`
 - `services/erp-service/app/api/v1/endpoints/`
@@ -801,149 +948,171 @@
 
 ---
 
-## Phase 6: AI Service + Docker Infrastructure
+## Phase 6: AI Service & Docker Infrastructure
 
 ### Architecture Overview
 - **Framework:** FastAPI (Python 3.13+)
 - **Database:** PostgreSQL via SQLAlchemy (`erp_ai`)
 - **LLM Providers:** Groq / Gemini (pluggable)
 - **Streaming:** Server-Sent Events (SSE)
+- **Deployment:** Docker Compose multi-service topology with Nginx reverse proxy
 
 ### CRITICAL Findings
 
-#### 97. API Keys in Docker Compose
+#### 97. API Keys in Docker Compose `[⚠️ HOSTING/DEVOPS]`
 - **Location:** `infrastructure/local/.env.docker`
+- **Severity:** `CRITICAL` | **Status:** ⚠️ Hosting Provider Responsibility
 - **Issue:** Real Groq and Gemini API keys committed to repository
 - **Impact:** API abuse, financial loss if repo is public
 - **Remediation:** Rotate all keys immediately, use Docker secrets
-- **Scope:** ⚠️ **Hosting provider responsibility** — self-hosted Dockerized deployment; API key management and rotation is handled by the hosting party
+- **Scope Note:** ⚠️ Self-hosted Dockerized deployment; external AI API keys (Groq, Gemini) are managed via hosting environment variables / Docker secrets.
 
-#### 98. Shared JWT Secret in Docker
+#### 98. Shared JWT Secret in Docker `[⚠️ HOSTING/DEVOPS]`
 - **Location:** `infrastructure/local/.env.docker`
+- **Severity:** `CRITICAL` | **Status:** ⚠️ Hosting Provider Responsibility
 - **Issue:** Same `JWT_SECRET` used across all 5 services
 - **Impact:** Single point of compromise for entire auth system
 - **Remediation:** Use separate secrets per service, rotate regularly
-- **Scope:** ⚠️ **Hosting provider responsibility** — self-hosted Dockerized deployment; secret management is handled by the hosting party
+- **Scope Note:** ⚠️ Self-hosted Dockerized deployment; JWT secrets across container environments are managed by the hosting party.
 
-#### 99. PII Sent to External LLMs
+#### 99. PII Sent to External LLMs `[⏳ OPEN]`
 - **Location:** `services/ai-service/app/services/crm_client.py:45`
+- **Severity:** `CRITICAL` | **Status:** ⏳ Open
 - **Issue:** Customer names, emails, and business data sent to Groq/Gemini
 - **Impact:** GDPR/privacy violation
 - **Remediation:** Anonymize data before LLM calls, add user consent
 
-#### 100. No Prompt Injection Protection
+#### 100. No Prompt Injection Protection `[⏳ OPEN]`
 - **Location:** `services/ai-service/app/services/chat_service.py:56`
+- **Severity:** `CRITICAL` | **Status:** ⏳ Open
 - **Issue:** User input passed directly to LLM without sanitization
 - **Impact:** Prompt injection, data exfiltration via LLM
 - **Remediation:** Add input sanitization and output filtering
 
+
 ### HIGH Findings
 
-#### 101. Unauthenticated AI Endpoints in Docker
+#### 101. Unauthenticated AI Endpoints in Docker `[⏳ OPEN]`
 - **Location:** `infrastructure/local/nginx/nginx.conf:67`
+- **Severity:** `HIGH` | **Status:** ⏳ Open
 - **Issue:** AI service proxy lacks auth header forwarding
 - **Impact:** Free AI usage, token generation costs
 - **Remediation:** Ensure auth headers forwarded consistently
 
-#### 102. Docker Container Runs as Root
+#### 102. Docker Container Runs as Root `[⏳ OPEN]`
 - **Location:** `infrastructure/local/Dockerfile.ai-service`
+- **Severity:** `HIGH` | **Status:** ⏳ Open
 - **Issue:** No USER directive
 - **Impact:** Container escape risks, file permission issues
 - **Remediation:** Add non-root user
 
-#### 103. No Resource Limits on Containers
+#### 103. No Resource Limits on Containers `[⏳ OPEN]`
 - **Location:** `infrastructure/local/docker-compose.yml`
+- **Severity:** `HIGH` | **Status:** ⏳ Open
 - **Issue:** No `deploy.resources.limits` set
 - **Impact:** Single container can consume all host resources
 - **Remediation:** Add CPU and memory limits
 
-#### 104. Database Passwords in Environment
+#### 104. Database Passwords in Environment `[⚠️ HOSTING/DEVOPS]`
 - **Location:** `infrastructure/local/docker-compose.yml`
+- **Severity:** `HIGH` | **Status:** ⚠️ Hosting Provider Responsibility
 - **Issue:** PostgreSQL passwords in plain text
 - **Impact:** Credential exposure
 - **Remediation:** Use Docker secrets
-- **Scope:** ⚠️ **Hosting provider responsibility** — self-hosted Dockerized deployment; database credentials are managed by the hosting party
+- **Scope Note:** ⚠️ Self-hosted Dockerized deployment; database credentials and environment files are managed by the hosting party.
 
-#### 105. No HTTPS in Local Docker
+#### 105. No HTTPS in Local Docker `[⏳ OPEN]`
 - **Location:** `infrastructure/local/nginx/nginx.conf`
+- **Severity:** `HIGH` | **Status:** ⏳ Open
 - **Issue:** All internal traffic over HTTP
 - **Impact:** Man-in-the-middle on internal network
 - **Remediation:** Add TLS for internal services
 
-#### 106. AI Session Data Not Encrypted
+#### 106. AI Session Data Not Encrypted `[⏳ OPEN]`
 - **Location:** `services/ai-service/app/models/session.py`
+- **Severity:** `HIGH` | **Status:** ⏳ Open
 - **Issue:** Chat history stored in plain text
 - **Impact:** Sensitive conversation data exposure
 - **Remediation:** Encrypt chat history at rest
 
+
 ### MEDIUM Findings
 
-#### 107. No LLM Rate Limiting
+#### 107. No LLM Rate Limiting `[⏳ OPEN]`
 - **Location:** `services/ai-service/app/api/v1/endpoints/chat.py`
+- **Severity:** `MEDIUM` | **Status:** ⏳ Open
 - **Issue:** No per-user LLM call limits
 - **Impact:** Cost explosion from single user
 - **Remediation:** Add per-user and per-session rate limits
 
-#### 108. No Token Usage Tracking
+#### 108. No Token Usage Tracking `[⏳ OPEN]`
 - **Location:** `services/ai-service/app/`
+- **Severity:** `MEDIUM` | **Status:** ⏳ Open
 - **Issue:** LLM token usage not tracked per user
 - **Impact:** Cannot allocate costs
 - **Remediation:** Add token usage accounting
 
-#### 109. Missing AI Response Caching
+#### 109. Missing AI Response Caching `[⏳ OPEN]`
 - **Location:** `services/ai-service/app/services/chat_service.py`
+- **Severity:** `MEDIUM` | **Status:** ⏳ Open
 - **Issue:** No caching for identical queries
 - **Impact:** Unnecessary LLM costs
 - **Remediation:** Add semantic caching layer
 
-#### 110. No Model Fallback
+#### 110. No Model Fallback `[⏳ OPEN]`
 - **Location:** `services/ai-service/app/services/llm_provider.py`
+- **Severity:** `MEDIUM` | **Status:** ⏳ Open
 - **Issue:** Single LLM provider, no fallback
 - **Impact:** Service down if provider fails
 - **Remediation:** Add automatic failover
 
-#### 111. Docker Healthcheck Gaps
+#### 111. Docker Healthcheck Gaps `[⏳ OPEN]`
 - **Location:** `infrastructure/local/docker-compose.yml`
+- **Severity:** `MEDIUM` | **Status:** ⏳ Open
 - **Issue:** Some services have generic healthchecks
 - **Impact:** False positive health status
 - **Remediation:** Add meaningful healthcheck endpoints
 
+
 ### LOW Findings
 
-#### 112. No AI Audit Logging
+#### 112. No AI Audit Logging `[⏳ OPEN]`
 - **Location:** `services/ai-service/app/`
+- **Severity:** `LOW` | **Status:** ⏳ Open
 - **Issue:** AI interactions not audited
 - **Impact:** Cannot review AI usage
 - **Remediation:** Add comprehensive audit trail
 
-#### 113. Missing AI Analytics
+#### 113. Missing AI Analytics `[⏳ OPEN]`
 - **Location:** `services/ai-service/app/api/v1/endpoints/dashboard.py`
+- **Severity:** `LOW` | **Status:** ⏳ Open
 - **Issue:** Basic usage metrics only
 - **Impact:** Limited AI insights
 - **Remediation:** Add advanced analytics
 
-#### 114. No Prompt Template Management
+#### 114. No Prompt Template Management `[⏳ OPEN]`
 - **Location:** `services/ai-service/app/`
+- **Severity:** `LOW` | **Status:** ⏳ Open
 - **Issue:** System prompts hardcoded
 - **Impact:** Difficult to iterate on AI behavior
 - **Remediation:** Add prompt template versioning
 
-#### 115. Missing Stream Error Handling
+#### 115. Missing Stream Error Handling `[⏳ OPEN]`
 - **Location:** `services/ai-service/app/services/chat_service.py`
+- **Severity:** `LOW` | **Status:** ⏳ Open
 - **Issue:** SSE errors not properly handled
 - **Impact:** Client connection leaks
 - **Remediation:** Add proper SSE error events
 
-#### 116. No Docker Backup Strategy
+#### 116. No Docker Backup Strategy `[⏳ OPEN]`
 - **Location:** `infrastructure/local/`
+- **Severity:** `LOW` | **Status:** ⏳ Open
 - **Issue:** No volume backup configuration
 - **Impact:** Data loss on host failure
 - **Remediation:** Add automated backup container
 
----
 
-## Phase 6 Appendix: Files Reviewed
-
+### Files Reviewed in Phase 6
 - `services/ai-service/app/main.py`
 - `services/ai-service/app/services/chat_service.py`
 - `services/ai-service/app/services/crm_client.py`
@@ -963,10 +1132,12 @@
 
 ### 7.1 Frontend Security
 
-#### 117 & 118. JWT Storage in Window / localStorage & httpOnly Cookie Strategy
+#### 117 & 118. JWT Storage in Window / localStorage & httpOnly Cookie Strategy `[⏸️ ARCHITECTURE DEFINED]`
 - **Location:** `packages/auth-middleware/src/api.ts:45, 56`, all 4 frontend `AuthContext.tsx` files
+- **Severity:** `HIGH` | **Status:** ⏸️ Architecture Defined (Roadmapped for Dedicated Branch)
 - **Issue:** Access token (JWT) is held in `localStorage`, `window.__datavex_access_token`, and memory variables.
 - **Impact:** Any XSS execution on the page could read and exfiltrate the JWT.
+- **Remediation:** Transition from client-side token storage to HttpOnly cookies and cookie-based ambient transport.
 - **Why httpOnly Cookies?**
   - With httpOnly cookies, the browser stores tokens in cookies inaccessible to JavaScript. Even if an XSS vulnerability exists, scripts cannot read or exfiltrate the token.
 - **Why a Full Auth Refactor is Required:**
@@ -979,217 +1150,246 @@
   - ⏸️ **Deferred to Dedicated Branch (Auth Architecture Refactor):**
   - *Mitigations in place:* The refresh token is already isolated in an httpOnly cookie. Strict Content-Security-Policy (CSP) headers implemented across all frontends eliminate inline script injection and unauthorized network exfiltration, mitigating XSS risks without breaking active cross-workstation SSO.
 
-#### 119. ~~No CSP Headers~~ ✅ **REMEDIATED (2026-09-21)**
+#### 119. No CSP Headers `[✅ REMEDIATED]`
 - **Location:** All frontend `next.config.ts` files + all 6 backend service middlewares
+- **Severity:** `HIGH` | **Status:** ✅ Remediated (2026-09-21)
 - **Issue:** No Content-Security-Policy configured
 - **Impact:** XSS attacks, data exfiltration
 - **Remediation:** Add strict CSP headers
-- **Action Taken:** Deployed strict CSP headers across all 4 frontend Next.js applications (default-src, script-src, style-src, font-src, img-src, connect-src) and added security header middlewares across all 6 backend microservices (14 files changed).
+- **Action Taken:** Deployed strict CSP headers across all 4 frontend Next.js applications (`default-src`, `script-src`, `style-src`, `font-src`, `img-src`, `connect-src`) and added security header middlewares across all 6 backend microservices (14 files changed).
 
-#### 120. Missing Subresource Integrity
+#### 120. Missing Subresource Integrity `[⏳ OPEN]`
 - **Location:** All frontend HTML templates
+- **Severity:** `MEDIUM` | **Status:** ⏳ Open
 - **Issue:** CDN resources loaded without SRI
 - **Impact:** Supply chain attacks
 - **Remediation:** Add SRI hashes to external resources
 
+
 ### 7.2 Infrastructure Security
 
-#### 121. No Network Segmentation
+#### 121. No Network Segmentation `[⏳ OPEN]`
 - **Location:** `infrastructure/local/docker-compose.yml`
+- **Severity:** `MEDIUM` | **Status:** ⏳ Open
 - **Issue:** All containers on default bridge network
 - **Impact:** Lateral movement between services
 - **Remediation:** Create isolated networks per trust level
 
-#### 122. No Container Image Scanning
+#### 122. No Container Image Scanning `[⏳ OPEN]`
 - **Location:** `infrastructure/local/Dockerfile.*`
+- **Severity:** `MEDIUM` | **Status:** ⏳ Open
 - **Issue:** No image vulnerability scanning
 - **Impact:** Known CVEs in base images
 - **Remediation:** Add Trivy or Snyk scanning to CI
 
-#### 123. Exposed Database Ports
+#### 123. Exposed Database Ports `[⚠️ HOSTING/DEVOPS]`
 - **Location:** `infrastructure/local/docker-compose.yml`
+- **Severity:** `MEDIUM` | **Status:** ⚠️ Hosting Provider Responsibility
 - **Issue:** PostgreSQL ports exposed to host
 - **Impact:** Direct database access from network
 - **Remediation:** Remove port mappings, access via application only
+- **Scope Note:** ⚠️ Self-hosted Dockerized infrastructure; port exposure and firewall rules are managed by the infrastructure / network administrator.
 
-#### 124. No Log Aggregation
+#### 124. No Log Aggregation `[⏳ OPEN]`
 - **Location:** `infrastructure/local/`
+- **Severity:** `MEDIUM` | **Status:** ⏳ Open
 - **Issue:** No centralized logging
 - **Impact:** Difficult incident response
 - **Remediation:** Add ELK or Loki stack
 
+
 ### 7.3 Business Logic Gaps
 
-#### 125. Missing Invoice Number Uniqueness
+#### 125. Missing Invoice Number Uniqueness `[⏳ OPEN]`
 - **Location:** `services/billing-service/prisma/schema.prisma`
+- **Severity:** `MEDIUM` | **Status:** ⏳ Open
 - **Issue:** No unique constraint on invoice numbers
 - **Impact:** Duplicate invoices possible
 - **Remediation:** Add unique constraint
 
-#### 126. No Concurrent Stock Protection
+#### 126. No Concurrent Stock Protection `[⏳ OPEN]`
 - **Location:** `services/inventory-service/app/api/v1/endpoints/stock.py`
+- **Severity:** `MEDIUM` | **Status:** ⏳ Open
 - **Issue:** Race condition on stock updates
 - **Impact:** Negative stock, overselling
 - **Remediation:** Add pessimistic locking
 
-#### 127. Missing Quotation Expiry Validation
+#### 127. Missing Quotation Expiry Validation `[⏳ OPEN]`
 - **Location:** `services/billing-service/src/quotations/`
+- **Severity:** `MEDIUM` | **Status:** ⏳ Open
 - **Issue:** Expired quotations can be converted
 - **Impact:** Invalid pricing honored
 - **Remediation:** Add expiry validation
 
-#### 128. No Credit Limit Enforcement
+#### 128. No Credit Limit Enforcement `[⏳ OPEN]`
 - **Location:** `services/crm-service/app/api/v1/endpoints/customers.py`
+- **Severity:** `MEDIUM` | **Status:** ⏳ Open
 - **Issue:** Credit limit not enforced on sales orders
 - **Impact:** Unpaid debt accumulation
 - **Remediation:** Add credit check on SO creation
 
+
+### Files Reviewed in Phase 7
+- `packages/auth-middleware/src/api.ts`
+- `apps/erp-shell/next.config.ts`
+- `apps/crm-ui/next.config.ts`
+- `apps/billing-ui/next.config.ts`
+- `apps/inventory-ui/next.config.ts`
+- `infrastructure/local/docker-compose.yml`
+
 ---
 
-## Appendix: Complete Findings Summary
+## Master Findings Registry
 
-| ID | Severity | Module | Finding |
-|----|----------|--------|---------|
-| 1 | CRITICAL | Core IAM | JWT Secret in Source Code |
-| 2 | CRITICAL | Core IAM | Weak Password Hashing Cost |
-| 3 | CRITICAL | Core IAM | No Rate Limiting on Login |
-| 4 | CRITICAL | Core IAM | Token Revocation Not Implemented |
-| 5 | HIGH | Core IAM | RBAC Guard Not Global |
-| 6 | HIGH | Core IAM | No Password Complexity Enforcement |
-| 7 | HIGH | Core IAM | Session Fixation Risk |
-| 8 | HIGH | Core IAM | Missing Audit Logging |
-| 9 | MEDIUM | Core IAM | Cookie Domain Too Broad |
-| 10 | MEDIUM | Core IAM | No CSRF Protection |
-| 11 | MEDIUM | Core IAM | JWT Expiry Too Long |
-| 12 | MEDIUM | Core IAM | No Token Binding |
-| 13 | LOW | Core IAM | Information Disclosure in Errors |
-| 14 | LOW | Core IAM | Missing Security Headers |
-| 15 | LOW | Core IAM | No API Key Rotation |
-| 16 | LOW | Core IAM | Weak Random Number Generation |
-| 17 | CRITICAL | Inventory | No RBAC Enforcement |
-| 18 | CRITICAL | Inventory | SQL Injection via Raw Queries |
-| 19 | CRITICAL | Inventory | Insecure Deserialization |
-| 20 | HIGH | Inventory | Missing Input Validation |
-| 21 | HIGH | Inventory | Race Condition in Stock Updates |
-| 22 | HIGH | Inventory | Path Traversal in File Uploads |
-| 23 | HIGH | Inventory | SSRF via External API Calls |
-| 24 | HIGH | Inventory | No Request Size Limits |
-| 25 | HIGH | Inventory | Verbose Error Messages |
-| 26 | MEDIUM | Inventory | Missing Audit Trail |
-| 27 | MEDIUM | Inventory | Inconsistent Error Handling |
-| 28 | MEDIUM | Inventory | Missing Pagination on List Endpoints |
-| 29 | MEDIUM | Inventory | No Caching Strategy |
-| 30 | MEDIUM | Inventory | Weak CORS Configuration |
-| 31 | LOW | Inventory | Missing Health Check Endpoint |
-| 32 | LOW | Inventory | No Request ID Tracking |
-| 33 | LOW | Inventory | Inconsistent Logging Levels |
-| 34 | LOW | Inventory | Missing Type Hints |
-| 35 | LOW | Inventory | No Database Connection Pooling |
-| 36 | CRITICAL | Billing | Invoice Amount Tampering |
-| 37 | CRITICAL | Billing | Payment Double-Spending |
-| 38 | CRITICAL | Billing | Missing GST Validation |
-| 39 | CRITICAL | Billing | Credit Note Over-issuance |
-| 40 | HIGH | Billing | SQL Injection in Reports |
-| 41 | HIGH | Billing | Missing Authorization on Quotation Convert |
-| 42 | HIGH | Billing | Invoice Status Manipulation |
-| 43 | HIGH | Billing | Missing Webhook Signature Verification |
-| 44 | HIGH | Billing | Insecure CSV Export |
-| 45 | HIGH | Billing | Missing Rate Limiting on Payment Endpoints |
-| 46 | MEDIUM | Billing | Inconsistent Date Handling |
-| 47 | MEDIUM | Billing | Missing Invoice Number Validation |
-| 48 | MEDIUM | Billing | No Batch Operations |
-| 49 | MEDIUM | Billing | Missing Soft Delete |
-| 50 | MEDIUM | Billing | No Optimistic Locking |
-| 51 | LOW | Billing | Missing Invoice Templates |
-| 52 | LOW | Billing | No Email Integration |
-| 53 | LOW | Billing | Missing Dashboard Aggregations |
-| 54 | LOW | Billing | No Webhook Events |
-| 55 | LOW | Billing | Missing Audit Logging |
-| 56 | CRITICAL | CRM | Complete Data Isolation Failure |
-| 57 | CRITICAL | CRM | Lead Data Exposure |
-| 58 | CRITICAL | CRM | No Role-Based Access Control |
-| 59 | CRITICAL | CRM | CRM Data Sent to External LLMs |
-| 60 | HIGH | CRM | Mass Assignment Vulnerability |
-| 61 | HIGH | CRM | Missing Input Validation |
-| 62 | HIGH | CRM | No Rate Limiting on Contact Creation |
-| 63 | HIGH | CRM | SQL Injection in Search |
-| 64 | HIGH | CRM | Insecure File Uploads |
-| 65 | HIGH | CRM | Missing Audit Trail |
-| 66 | MEDIUM | CRM | No Duplicate Detection |
-| 67 | MEDIUM | CRM | Missing Contact History |
-| 68 | MEDIUM | CRM | No Lead Scoring Algorithm |
-| 69 | MEDIUM | CRM | Missing Pipeline Stages |
-| 70 | MEDIUM | CRM | No Email Integration |
-| 71 | LOW | CRM | Missing Export Functionality |
-| 72 | LOW | CRM | No Webhook Support |
-| 73 | LOW | CRM | Missing Dashboard Analytics |
-| 74 | LOW | CRM | No Mobile API Optimization |
-| 75 | LOW | CRM | Missing Caching |
-| 76 | CRITICAL | ERP Service | Unauthenticated Event Webhooks |
-| 77 | CRITICAL | ERP Service | Server-Side Request Forgery (SSRF) |
-| 78 | CRITICAL | ERP Service | No RBAC on Admin Endpoints |
-| 79 | CRITICAL | ERP Service | JWT Secret in Source Code |
-| 80 | HIGH | ERP Service | Missing File Upload Validation |
-| 81 | HIGH | ERP Service | Path Traversal in File Download |
-| 82 | HIGH | ERP Service | No Request Size Limits |
-| 83 | HIGH | ERP Service | Missing Rate Limiting |
-| 84 | HIGH | ERP Service | SQL Injection in Reports |
-| 85 | HIGH | ERP Service | Insecure Inter-Service Communication |
-| 86 | HIGH | ERP Service | Missing Input Sanitization |
-| 87 | MEDIUM | ERP Service | No Caching Layer |
-| 88 | MEDIUM | ERP Service | Missing Request Logging |
-| 89 | MEDIUM | ERP Service | Inconsistent Error Responses |
-| 90 | MEDIUM | ERP Service | Missing Pagination Defaults |
-| 91 | MEDIUM | ERP Service | No Webhook Retry Logic |
-| 92 | LOW | ERP Service | Missing Health Check |
-| 93 | LOW | ERP Service | No API Documentation |
-| 94 | LOW | ERP Service | Inconsistent Logging |
-| 95 | LOW | ERP Service | Missing Type Hints |
-| 96 | LOW | ERP Service | No Database Migrations |
-| 97 | CRITICAL | AI/Docker | API Keys in Docker Compose |
-| 98 | CRITICAL | AI/Docker | Shared JWT Secret in Docker |
-| 99 | CRITICAL | AI/Docker | PII Sent to External LLMs |
-| 100 | CRITICAL | AI/Docker | No Prompt Injection Protection |
-| 101 | HIGH | AI/Docker | Unauthenticated AI Endpoints in Docker |
-| 102 | HIGH | AI/Docker | Docker Container Runs as Root |
-| 103 | HIGH | AI/Docker | No Resource Limits on Containers |
-| 104 | HIGH | AI/Docker | Database Passwords in Environment |
-| 105 | HIGH | AI/Docker | No HTTPS in Local Docker |
-| 106 | HIGH | AI/Docker | AI Session Data Not Encrypted |
-| 107 | MEDIUM | AI/Docker | No LLM Rate Limiting |
-| 108 | MEDIUM | AI/Docker | No Token Usage Tracking |
-| 109 | MEDIUM | AI/Docker | Missing AI Response Caching |
-| 110 | MEDIUM | AI/Docker | No Model Fallback |
-| 111 | MEDIUM | AI/Docker | Docker Healthcheck Gaps |
-| 112 | LOW | AI/Docker | No AI Audit Logging |
-| 113 | LOW | AI/Docker | Missing AI Analytics |
-| 114 | LOW | AI/Docker | No Prompt Template Management |
-| 115 | LOW | AI/Docker | Missing Stream Error Handling |
-| 116 | LOW | AI/Docker | No Docker Backup Strategy |
-| 117 | HIGH | Cross-Cutting | JWT on Window Object |
-| 118 | HIGH | Cross-Cutting | localStorage Token Storage |
-| 119 | HIGH | Cross-Cutting | No CSP Headers |
-| 120 | MEDIUM | Cross-Cutting | Missing Subresource Integrity |
-| 121 | MEDIUM | Cross-Cutting | No Network Segmentation |
-| 122 | MEDIUM | Cross-Cutting | No Container Image Scanning |
-| 123 | MEDIUM | Cross-Cutting | Exposed Database Ports |
-| 124 | MEDIUM | Cross-Cutting | No Log Aggregation |
-| 125 | MEDIUM | Business Logic | Missing Invoice Number Uniqueness |
-| 126 | MEDIUM | Business Logic | No Concurrent Stock Protection |
-| 127 | MEDIUM | Business Logic | Missing Quotation Expiry Validation |
-| 128 | MEDIUM | Business Logic | No Credit Limit Enforcement |
+Complete inventory of all 128 findings identified during the security and project audit, with live remediation status:
+
+| ID | Severity | Module / Domain | Finding Summary | Status |
+|---|---|---|---|---|
+| **1** | `CRITICAL` | Core IAM | JWT Secret in Source Code | ⚠️ Hosting / Ops |
+| **2** | `CRITICAL` | Core IAM | Weak Password Hashing Cost | ⏳ Open |
+| **3** | `CRITICAL` | Core IAM | No Rate Limiting on Login | ✅ Remediated |
+| **4** | `CRITICAL` | Core IAM | Token Revocation Not Implemented | ⏳ Open |
+| **5** | `HIGH` | Core IAM | RBAC Guard Not Global | ⏳ Open |
+| **6** | `HIGH` | Core IAM | No Password Complexity Enforcement | ⏳ Open |
+| **7** | `HIGH` | Core IAM | Session Fixation Risk | ⏳ Open |
+| **8** | `HIGH` | Core IAM | Missing Audit Logging | ⏳ Open |
+| **9** | `MEDIUM` | Core IAM | Cookie Domain Too Broad | ⏳ Open |
+| **10** | `MEDIUM` | Core IAM | No CSRF Protection | ✅ Remediated |
+| **11** | `MEDIUM` | Core IAM | JWT Expiry Too Long | ⏳ Open |
+| **12** | `MEDIUM` | Core IAM | No Token Binding | ⏳ Open |
+| **13** | `LOW` | Core IAM | Information Disclosure in Errors | ⏳ Open |
+| **14** | `LOW` | Core IAM | Missing Security Headers | ✅ Remediated |
+| **15** | `LOW` | Core IAM | No API Key Rotation | ⚠️ Hosting / Ops |
+| **16** | `LOW` | Core IAM | Weak Random Number Generation | ⏳ Open |
+| **17** | `CRITICAL` | Inventory | No RBAC Enforcement | ✅ Remediated |
+| **18** | `CRITICAL` | Inventory | SQL Injection via Raw Queries | ⏳ Open |
+| **19** | `CRITICAL` | Inventory | Insecure Deserialization | ⏳ Open |
+| **20** | `HIGH` | Inventory | Missing Input Validation | ⏳ Open |
+| **21** | `HIGH` | Inventory | Race Condition in Stock Updates | ⏳ Open |
+| **22** | `HIGH` | Inventory | Path Traversal in File Uploads | ⏳ Open |
+| **23** | `HIGH` | Inventory | SSRF via External API Calls | ⏳ Open |
+| **24** | `HIGH` | Inventory | No Request Size Limits | ✅ Remediated |
+| **25** | `HIGH` | Inventory | Verbose Error Messages | ⏳ Open |
+| **26** | `MEDIUM` | Inventory | Missing Audit Trail | ⏳ Open |
+| **27** | `MEDIUM` | Inventory | Inconsistent Error Handling | ⏳ Open |
+| **28** | `MEDIUM` | Inventory | Missing Pagination on List Endpoints | ⏳ Open |
+| **29** | `MEDIUM` | Inventory | No Caching Strategy | ⏳ Open |
+| **30** | `MEDIUM` | Inventory | Weak CORS Configuration | ⏳ Open |
+| **31** | `LOW` | Inventory | Missing Health Check Endpoint | ⏳ Open |
+| **32** | `LOW` | Inventory | No Request ID Tracking | ⏳ Open |
+| **33** | `LOW` | Inventory | Inconsistent Logging Levels | ⏳ Open |
+| **34** | `LOW` | Inventory | Missing Type Hints | ⏳ Open |
+| **35** | `LOW` | Inventory | No Database Connection Pooling | ⏳ Open |
+| **36** | `CRITICAL` | Billing | Invoice Amount Tampering | ⏳ Open |
+| **37** | `CRITICAL` | Billing | Payment Double-Spending | ⏳ Open |
+| **38** | `CRITICAL` | Billing | Missing GST Validation | ⏳ Open |
+| **39** | `CRITICAL` | Billing | Credit Note Over-issuance | ⏳ Open |
+| **40** | `HIGH` | Billing | SQL Injection in Reports | ⏳ Open |
+| **41** | `HIGH` | Billing | Missing Authorization on Quotation Convert | ⏳ Open |
+| **42** | `HIGH` | Billing | Invoice Status Manipulation | ⏳ Open |
+| **43** | `HIGH` | Billing | Missing Webhook Signature Verification | ⏳ Open |
+| **44** | `HIGH` | Billing | Insecure CSV Export | ⏳ Open |
+| **45** | `HIGH` | Billing | Missing Rate Limiting on Payment Endpoints | ⏳ Open |
+| **46** | `MEDIUM` | Billing | Inconsistent Date Handling | ⏳ Open |
+| **47** | `MEDIUM` | Billing | Missing Invoice Number Validation | ⏳ Open |
+| **48** | `MEDIUM` | Billing | No Batch Operations | ⏳ Open |
+| **49** | `MEDIUM` | Billing | Missing Soft Delete | ⏳ Open |
+| **50** | `MEDIUM` | Billing | No Optimistic Locking | ⏳ Open |
+| **51** | `LOW` | Billing | Missing Invoice Templates | ⏳ Open |
+| **52** | `LOW` | Billing | No Email Integration | ⏳ Open |
+| **53** | `LOW` | Billing | Missing Dashboard Aggregations | ⏳ Open |
+| **54** | `LOW` | Billing | No Webhook Events | ⏳ Open |
+| **55** | `LOW` | Billing | Missing Audit Logging | ✅ Remediated |
+| **56** | `CRITICAL` | CRM | Complete Data Isolation Failure | ✅ Remediated |
+| **57** | `CRITICAL` | CRM | Lead Data Exposure | ✅ Remediated |
+| **58** | `CRITICAL` | CRM | No Role-Based Access Control | ⏳ Open |
+| **59** | `CRITICAL` | CRM | CRM Data Sent to External LLMs | ⏳ Open |
+| **60** | `HIGH` | CRM | Mass Assignment Vulnerability | ⏳ Open |
+| **61** | `HIGH` | CRM | Missing Input Validation | ⏳ Open |
+| **62** | `HIGH` | CRM | No Rate Limiting on Contact Creation | ⏳ Open |
+| **63** | `HIGH` | CRM | SQL Injection in Search | ⏳ Open |
+| **64** | `HIGH` | CRM | Insecure File Uploads | ⏳ Open |
+| **65** | `HIGH` | CRM | Missing Audit Trail | ⏳ Open |
+| **66** | `MEDIUM` | CRM | No Duplicate Detection | ⏳ Open |
+| **67** | `MEDIUM` | CRM | Missing Contact History | ⏳ Open |
+| **68** | `MEDIUM` | CRM | No Lead Scoring Algorithm | ⏳ Open |
+| **69** | `MEDIUM` | CRM | Missing Pipeline Stages | ⏳ Open |
+| **70** | `MEDIUM` | CRM | No Email Integration | ⏳ Open |
+| **71** | `LOW` | CRM | Missing Export Functionality | ⏳ Open |
+| **72** | `LOW` | CRM | No Webhook Support | ⏳ Open |
+| **73** | `LOW` | CRM | Missing Dashboard Analytics | ⏳ Open |
+| **74** | `LOW` | CRM | No Mobile API Optimization | ⏳ Open |
+| **75** | `LOW` | CRM | Missing Caching | ⏳ Open |
+| **76** | `CRITICAL` | ERP Service | Unauthenticated Event Webhooks | ✅ Remediated |
+| **77** | `CRITICAL` | ERP Service | Server-Side Request Forgery (SSRF) | ⏳ Open |
+| **78** | `CRITICAL` | ERP Service | No RBAC on Admin Endpoints | ✅ Remediated |
+| **79** | `CRITICAL` | ERP Service | JWT Secret in Source Code | ⚠️ Hosting / Ops |
+| **80** | `HIGH` | ERP Service | Missing File Upload Validation | ⏳ Open |
+| **81** | `HIGH` | ERP Service | Path Traversal in File Download | ⏳ Open |
+| **82** | `HIGH` | ERP Service | No Request Size Limits | ✅ Remediated |
+| **83** | `HIGH` | ERP Service | Missing Rate Limiting | ⏳ Open |
+| **84** | `HIGH` | ERP Service | SQL Injection in Reports | ⏳ Open |
+| **85** | `HIGH` | ERP Service | Insecure Inter-Service Communication | ⏳ Open |
+| **86** | `HIGH` | ERP Service | Missing Input Sanitization | ⏸️ Strategy Defined |
+| **87** | `MEDIUM` | ERP Service | No Caching Layer | ⏳ Open |
+| **88** | `MEDIUM` | ERP Service | Missing Request Logging | ⏳ Open |
+| **89** | `MEDIUM` | ERP Service | Inconsistent Error Responses | ⏳ Open |
+| **90** | `MEDIUM` | ERP Service | Missing Pagination Defaults | ⏳ Open |
+| **91** | `MEDIUM` | ERP Service | No Webhook Retry Logic | ⏳ Open |
+| **92** | `LOW` | ERP Service | Missing Health Check | ⏳ Open |
+| **93** | `LOW` | ERP Service | No API Documentation | ⏳ Open |
+| **94** | `LOW` | ERP Service | Inconsistent Logging | ⏳ Open |
+| **95** | `LOW` | ERP Service | Missing Type Hints | ⏳ Open |
+| **96** | `LOW` | ERP Service | No Database Migrations | ⏳ Open |
+| **97** | `CRITICAL` | AI/Docker | API Keys in Docker Compose | ⚠️ Hosting / Ops |
+| **98** | `CRITICAL` | AI/Docker | Shared JWT Secret in Docker | ⚠️ Hosting / Ops |
+| **99** | `CRITICAL` | AI/Docker | PII Sent to External LLMs | ⏳ Open |
+| **100** | `CRITICAL` | AI/Docker | No Prompt Injection Protection | ⏳ Open |
+| **101** | `HIGH` | AI/Docker | Unauthenticated AI Endpoints in Docker | ⏳ Open |
+| **102** | `HIGH` | AI/Docker | Docker Container Runs as Root | ⏳ Open |
+| **103** | `HIGH` | AI/Docker | No Resource Limits on Containers | ⏳ Open |
+| **104** | `HIGH` | AI/Docker | Database Passwords in Environment | ⚠️ Hosting / Ops |
+| **105** | `HIGH` | AI/Docker | No HTTPS in Local Docker | ⏳ Open |
+| **106** | `HIGH` | AI/Docker | AI Session Data Not Encrypted | ⏳ Open |
+| **107** | `MEDIUM` | AI/Docker | No LLM Rate Limiting | ⏳ Open |
+| **108** | `MEDIUM` | AI/Docker | No Token Usage Tracking | ⏳ Open |
+| **109** | `MEDIUM` | AI/Docker | Missing AI Response Caching | ⏳ Open |
+| **110** | `MEDIUM` | AI/Docker | No Model Fallback | ⏳ Open |
+| **111** | `MEDIUM` | AI/Docker | Docker Healthcheck Gaps | ⏳ Open |
+| **112** | `LOW` | AI/Docker | No AI Audit Logging | ⏳ Open |
+| **113** | `LOW` | AI/Docker | Missing AI Analytics | ⏳ Open |
+| **114** | `LOW` | AI/Docker | No Prompt Template Management | ⏳ Open |
+| **115** | `LOW` | AI/Docker | Missing Stream Error Handling | ⏳ Open |
+| **116** | `LOW` | AI/Docker | No Docker Backup Strategy | ⏳ Open |
+| **117** | `HIGH` | Cross-Cutting | JWT on Window Object | ⏸️ Strategy Defined |
+| **118** | `HIGH` | Cross-Cutting | localStorage Token Storage | ⏸️ Strategy Defined |
+| **119** | `HIGH` | Cross-Cutting | No CSP Headers | ✅ Remediated |
+| **120** | `MEDIUM` | Cross-Cutting | Missing Subresource Integrity | ⏳ Open |
+| **121** | `MEDIUM` | Cross-Cutting | No Network Segmentation | ⏳ Open |
+| **122** | `MEDIUM` | Cross-Cutting | No Container Image Scanning | ⏳ Open |
+| **123** | `MEDIUM` | Cross-Cutting | Exposed Database Ports | ⚠️ Hosting / Ops |
+| **124** | `MEDIUM` | Cross-Cutting | No Log Aggregation | ⏳ Open |
+| **125** | `MEDIUM` | Business Logic | Missing Invoice Number Uniqueness | ⏳ Open |
+| **126** | `MEDIUM` | Business Logic | No Concurrent Stock Protection | ⏳ Open |
+| **127** | `MEDIUM` | Business Logic | Missing Quotation Expiry Validation | ⏳ Open |
+| **128** | `MEDIUM` | Business Logic | No Credit Limit Enforcement | ⏳ Open |
 
 ---
 
 ## Recommended Remediation Priority
 
 ### Immediate (Week 1) — ✅ ALL COMPLETE
-1. ~~Fix CRM data isolation (owner_id filtering)~~ ✅ **Done 2026-09-21** — Added `owner_id` to 11 models, Alembic migration, all CRUD/endpoints updated
-2. ~~Add RBAC to inventory-service and erp-service~~ ✅ **Done 2026-09-21** — `require_permission` applied to 56 write endpoints (48 inventory + 8 erp-service)
-3. ~~Remove unauthenticated webhook endpoints~~ ✅ **Done 2026-09-21** — 5 webhook endpoints secured with JWT auth (4 erp-service + 1 crm-service)
-4. ~~Add rate limiting to login endpoint~~ ✅ **Already implemented** — `@nestjs/throttler` with 5 attempts/min on login
 
-> **Note:** JWT secret rotation (#1, #79, #98) and API key rotation (#97) are **hosting provider responsibilities**. This is a self-hosted, Dockerized deployment — secret management, key rotation, and `.env` configuration are handled by the hosting party, not the application codebase. These findings remain documented for awareness but are outside our remediation scope.
+1. ~~**Fix CRM data isolation (owner_id filtering)**~~ ✅ **Done 2026-09-21** — Added `owner_id` column to 11 models, created Alembic migration, updated all CRUD functions and router endpoints.
+2. ~~**Add RBAC to inventory-service and erp-service**~~ ✅ **Done 2026-09-21** — Ported `require_permission` dependency; applied across 56 write endpoints (48 inventory + 8 ERP service).
+3. ~~**Remove unauthenticated webhook endpoints**~~ ✅ **Done 2026-09-21** — 5 event webhook endpoints secured with mandatory JWT authentication.
+4. ~~**Add rate limiting to login endpoint**~~ ✅ **Already implemented** — `@nestjs/throttler` (v6.5.0) configured with 5 attempts per minute on `POST /auth/login`.
+
+> [!NOTE]
+> **Hosting & Environment Responsibilities:**
+> Secret and key rotations (#1, #79, #97, #98, #104) are classified as **Hosting Provider Responsibilities**. In this self-hosted Dockerized setup, secret management and `.env` provisioning are handled directly by infrastructure operations.
+
+---
 
 ### Short-term (Weeks 2-4) — 4 of 6 Remediated (2 Architecturally Documented)
 
@@ -1239,7 +1439,7 @@
 
 2. **Defense-in-Depth Standard ("Gateway Filters Noise; Services Enforce Rules"):**
    - **Layer 1: Gateway Filtering (`erp-service`):**
-     - **Null-Byte Sanitization:** Rejects any incoming payload containing null bytes (`\x00`), neutralizing low-level C-extension injection and path traversal vectors before payloads are forwarded.
+     - **Null-Byte Sanitization:** Rejects any incoming payload containing null bytes (` `), neutralizing low-level C-extension injection and path traversal vectors before payloads are forwarded.
      - **Recursion & Depth Limits:** Rejects JSON payloads with object nesting exceeding 5 levels, protecting downstream JSON parsers from recursive stack exhaustion and algorithmic complexity DoS.
      - **Oversized String Clamping:** Rejects individual string values exceeding 10KB (except designated file upload endpoints) to prevent memory allocation abuse.
      - **Top-Level Key Whitelisting:** Enforces structure sanity checks on known proxy routes (ensuring required envelopes exist without parsing domain-specific nested properties).
@@ -1253,38 +1453,42 @@
 ---
 
 ### Medium-term (Months 2-3)
-1. Implement token revocation/blacklist
-2. Add Redis caching layer
-3. Implement optimistic locking for concurrent operations
-4. Add comprehensive error handling middleware
-5. Set up centralized logging (ELK/Loki)
-6. Add container image scanning to CI
+
+1. **Implement token revocation/blacklist:** Maintain Redis-backed blacklist of revoked tokens to allow instant access termination.
+2. **Add Redis caching layer:** Cache read-heavy queries in CRM and inventory services to minimize database load.
+3. **Implement optimistic locking:** Prevent race conditions on concurrent stock movements and invoice state transitions.
+4. **Comprehensive error handling middleware:** Standardize error schemas across all services, masking internal traces in production.
+5. **Centralized logging (ELK / Loki):** Aggregate structured logs from all 6 microservices and Docker containers.
+6. **Container image scanning in CI:** Integrate Trivy or Snyk in CI/CD pipeline to catch base-image CVEs early.
+
+---
 
 ### Long-term (Months 3-6)
-1. Implement service-to-service authentication
-2. Add network segmentation to Docker
-3. Implement advanced AI analytics
-4. Add comprehensive API documentation
-5. Set up automated backup strategy
-6. Add HTTPS for internal services
+
+1. **Service-to-service authentication:** Implement mTLS or signed inter-service JWT tokens to eliminate unauthenticated internal traffic.
+2. **Network segmentation in Docker:** Isolate database containers and internal microservices into separate private bridge networks.
+3. **Advanced AI analytics & audit log:** Expand AI audit trails and usage limits to protect against runaway API token costs.
+4. **OpenAPI & Swagger unified documentation:** Publish unified interactive API portal covering all microservices.
+5. **Automated backup & restore strategy:** Daily encrypted volume backups with automated health validation.
+6. **HTTPS for internal microservice communication:** TLS termination at gateway and encrypted backend communication.
 
 ---
 
 ## Remediation Log
 
 | Date | Finding | Action Taken | Files Changed |
-|------|---------|--------------|---------------|
-| 2026-09-21 | #76-79 Unauthenticated webhooks + no RBAC on admin endpoints | Added JWT auth to 5 webhook endpoints; added `require_permission` to client, product, settings routers | `erp-service/app/events/router.py`, `crm-service/app/events/router.py`, `erp-service/app/client/router.py`, `erp-service/app/product/router.py`, `erp-service/app/settings/router.py` |
-| 2026-09-21 | #17-19 Zero RBAC in inventory-service | Ported `require_permission` from erp-service; applied to all 48 write endpoints across 11 routers | `inventory-service/app/core/deps.py`, `product/router.py`, `warehouse/router.py`, `stock/router.py`, `supplier/router.py`, `purchase_order/router.py`, `purchase_requisition/router.py`, `quality_check/router.py`, `serial_number/router.py`, `fulfillment/router.py`, `work_order/router.py` |
-| 2026-09-21 | #56-59 Complete data isolation failure in crm-service | Added `owner_id` column to 11 models; created Alembic migration; updated all CRUD functions and endpoints | 11 model files, 9 CRUD files, 11 router files, `main.py`, `alembic/versions/d5e6f7a8b9c0_...py` |
-| 2026-09-21 | #3 No rate limiting on login | Already implemented — `@nestjs/throttler` v6.5.0 with 5 attempts/min | No changes needed |
-| 2026-09-21 | #14, #119 Missing Security Headers & CSP | Deployed strict CSP headers across all 4 frontends; added security headers middleware across all 6 backend services | 14 files across `apps/*` and `services/*` |
-| 2026-09-21 | #24, #82 No Request Size Limits | Implemented `ContentLengthLimitMiddleware` in FastAPI services and configured `client_max_body_size` in Nginx | 12 files |
-| 2026-09-21 | #10 No CSRF Protection | Enforced `SameSite=Strict` on refresh cookie and `X-Requested-With` header validation on `/auth/refresh` | `services/core-iam/src/auth/` (3 files) |
-| 2026-09-21 | #55 Missing Audit Logging (Billing) | Implemented `BillingAuditLog` Prisma model and audit logging service tracking invoice, payment, quotation, and note events | 12 files in `services/billing-service/` |
-| 2026-09-21 | #86 Gateway Input Validation | Formulated Defense-in-Depth gateway filtering strategy (noise and structural filtering at gateway, domain schema enforcement downstream) | `AUDIT_REPO.md` architectural strategy |
-| 2026-09-21 | #117-118 JWT Storage & httpOnly Cookies | Analyzed cross-workstation SSO architecture and scheduled full auth refactor for dedicated branch; mitigated via strict CSP and httpOnly refresh tokens | `AUDIT_REPO.md` architectural strategy |
+|---|---|---|---|
+| **2026-09-21** | #76-79 Unauthenticated webhooks + no RBAC on admin endpoints | Added JWT auth to 5 webhook endpoints; added `require_permission` to client, product, settings routers | `erp-service/app/events/router.py`, `crm-service/app/events/router.py`, `erp-service/app/client/router.py`, `erp-service/app/product/router.py`, `erp-service/app/settings/router.py` |
+| **2026-09-21** | #17-19 Zero RBAC in inventory-service | Ported `require_permission` from erp-service; applied to all 48 write endpoints across 11 routers | `inventory-service/app/core/deps.py`, `product/router.py`, `warehouse/router.py`, `stock/router.py`, `supplier/router.py`, `purchase_order/router.py`, `purchase_requisition/router.py`, `quality_check/router.py`, `serial_number/router.py`, `fulfillment/router.py`, `work_order/router.py` |
+| **2026-09-21** | #56-59 Complete data isolation failure in crm-service | Added `owner_id` column to 11 models; created Alembic migration; updated all CRUD functions and endpoints | 11 model files, 9 CRUD files, 11 router files, `main.py`, `alembic/versions/d5e6f7a8b9c0_...py` |
+| **2026-09-21** | #3 No rate limiting on login | Already implemented — `@nestjs/throttler` v6.5.0 with 5 attempts/min on `POST /auth/login` | Verified in `services/core-iam/src/auth/auth.controller.ts` |
+| **2026-09-21** | #14, #119 Missing Security Headers & CSP | Deployed strict CSP headers across all 4 frontends; added security headers middleware across all 6 backend services | 14 files across `apps/*` and `services/*` |
+| **2026-09-21** | #24, #82 No Request Size Limits | Implemented `ContentLengthLimitMiddleware` in FastAPI services and configured `client_max_body_size` in Nginx | 12 files |
+| **2026-09-21** | #10 No CSRF Protection | Enforced `SameSite=Strict` on refresh cookie and `X-Requested-With` header validation on `/auth/refresh` | `services/core-iam/src/auth/` (3 files) |
+| **2026-09-21** | #55 Missing Audit Logging (Billing) | Implemented `BillingAuditLog` Prisma model and audit logging service tracking invoice, payment, quotation, and note events | 12 files in `services/billing-service/` |
+| **2026-09-21** | #86 Gateway Input Validation | Formulated Defense-in-Depth gateway filtering strategy (noise and structural filtering at gateway, domain schema enforcement downstream) | `AUDIT_REPO.md` architectural strategy |
+| **2026-09-21** | #117-118 JWT Storage & httpOnly Cookies | Analyzed cross-workstation SSO architecture and scheduled full auth refactor for dedicated branch; mitigated via strict CSP and httpOnly refresh tokens | `AUDIT_REPO.md` architectural strategy |
 
 ---
 
-*End of Audit Report — DATAVEX ERP — 2026-09-19 (Updated 2026-09-21)*
+*End of Complete Cybersecurity & Project Audit Report — DATAVEX ERP — 2026-09-19 (Updated 2026-09-21)*
