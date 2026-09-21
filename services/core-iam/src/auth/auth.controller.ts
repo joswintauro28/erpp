@@ -49,7 +49,7 @@ export class AuthController {
     res.cookie('refresh_token', token, {
       httpOnly: true,
       secure: nodeEnv === 'production',
-      sameSite: 'lax',
+      sameSite: 'strict',
       maxAge: expireSeconds * 1000,
       path: '/api/auth',
       ...(domain ? { domain } : {}),
@@ -62,7 +62,7 @@ export class AuthController {
     res.clearCookie('refresh_token', {
       httpOnly: true,
       secure: nodeEnv === 'production',
-      sameSite: 'lax',
+      sameSite: 'strict',
       path: '/api/auth',
       ...(domain ? { domain } : {}),
     });
@@ -139,6 +139,13 @@ export class AuthController {
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ) {
+    // CSRF protection: reject cross-origin form submissions by requiring
+    // a custom header that cannot be set by HTML forms.
+    const requestedWith = req.headers['x-requested-with'];
+    if (!requestedWith) {
+      throw new UnauthorizedException('Missing X-Requested-With header');
+    }
+
     const refreshToken = req.cookies['refresh_token'];
     if (!refreshToken) {
       throw new UnauthorizedException('No refresh token provided');
