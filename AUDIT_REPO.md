@@ -47,10 +47,10 @@
 | Severity | Total Findings | Remediated | Strategy Defined | Hosting / Ops | Open | Resolution % |
 |---|---|---|---|---|---|---|
 | **CRITICAL** | 23 | 6 | 0 | 4 | 13 | **43.5%** (10/23 addressed) |
-| **HIGH** | 38 | 3 | 2 | 1 | 32 | **15.8%** (6/38 addressed) |
+| **HIGH** | 38 | 5 | 2 | 1 | 30 | **21.1%** (8/38 addressed) |
 | **MEDIUM** | 38 | 1 | 1 | 2 | 34 | **10.5%** (4/38 addressed) |
 | **LOW** | 29 | 2 | 0 | 0 | 27 | **6.9%** (2/29 addressed) |
-| **TOTAL** | **128** | **12** | **3** | **7** | **106** | **17.2%** (22/128 addressed) |
+| **TOTAL** | **128** | **14** | **3** | **7** | **104** | **18.8%** (24/128 addressed) |
 
 > [!NOTE]
 > **Hosting & DevOps Scope Boundary:**
@@ -62,14 +62,14 @@
 
 | Phase | Subsystem / Module | Total Findings | Remediated | Strategy Defined | Hosting / Ops | Open | Health Status |
 |---|---|---|---|---|---|---|---|
-| **1** | Core IAM (SSO, Auth & RBAC) | 16 | 3 | 0 | 2 | 11 | 🟡 Hardened (Rate Limiting, CSRF, Headers) |
+| **1** | Core IAM (SSO, Auth & RBAC) | 16 | 5 | 0 | 2 | 9 | 🟢 Hardened (Rate Limiting, CSRF, Headers, Complexity, Fixation) |
 | **2** | Inventory Service & Workstation | 19 | 2 | 0 | 0 | 17 | 🟡 Hardened (RBAC on 48 routes, Size Limits) |
 | **3** | Billing Service & Workstation | 20 | 1 | 0 | 0 | 19 | 🟡 Hardened (Financial Audit Logging Wired) |
 | **4** | CRM Service & Workstation | 20 | 2 | 0 | 0 | 18 | 🟡 Hardened (Multi-Tenant Data Isolation Fixed) |
 | **5** | ERP Service (API Gateway) & Shell | 21 | 3 | 1 | 1 | 16 | 🟡 Hardened (Admin RBAC, Webhooks Auth, Size Limits) |
 | **6** | AI Service & Docker Infrastructure | 20 | 0 | 0 | 3 | 17 | 🔴 Pending (AI & Container Hardening) |
 | **7** | Cross-Cutting & Frontend Security | 12 | 1 | 2 | 1 | 8 | 🟡 Hardened (CSP Headers, SSO Refactor Roadmap) |
-| **Total** | **All Subsystems** | **128** | **12** | **3** | **7** | **106** | **Active Remediation In Progress** |
+| **Total** | **All Subsystems** | **128** | **14** | **3** | **7** | **104** | **Active Remediation In Progress** |
 
 ---
 
@@ -139,19 +139,21 @@
 - **Impact:** Endpoints without explicit `@UseGuards()` bypass RBAC
 - **Remediation:** Apply PermissionsGuard globally, exclude public routes
 
-#### 6. No Password Complexity Enforcement `[⏳ OPEN]`
-- **Location:** `services/core-iam/src/auth/dto/create-user.dto.ts:18`
-- **Severity:** `HIGH` | **Status:** ⏳ Open
+#### 6. No Password Complexity Enforcement `[✅ REMEDIATED]`
+- **Location:** `services/core-iam/src/auth/dto/register.dto.ts`, `services/core-iam/src/auth/dto/team.dto.ts`, `services/core-iam/src/auth/dto/create-user.dto.ts`
+- **Severity:** `HIGH` | **Status:** ✅ Remediated (2026-09-21)
 - **Issue:** No password validation beyond length
 - **Impact:** Users can set weak passwords like `123456`
 - **Remediation:** Add class-validator decorators for complexity
+- **Action Taken:** Enforced enterprise password complexity using `@IsStrongPassword` (min 8 chars, 1 uppercase, 1 lowercase, 1 number, 1 special character) and `@MaxLength(128)` across `RegisterDto`, `InviteUserDto`, and created `CreateUserDto` with comprehensive unit test coverage in `auth.security.spec.ts`.
 
-#### 7. Session Fixation Risk `[⏳ OPEN]`
-- **Location:** `services/core-iam/src/auth/auth.service.ts:92`
-- **Severity:** `HIGH` | **Status:** ⏳ Open
+#### 7. Session Fixation Risk `[✅ REMEDIATED]`
+- **Location:** `services/core-iam/src/auth/auth.service.ts:140`, `services/core-iam/src/auth/auth.controller.ts:71`
+- **Severity:** `HIGH` | **Status:** ✅ Remediated (2026-09-21)
 - **Issue:** New session ID not generated after successful login
 - **Impact:** Session fixation attacks possible
 - **Remediation:** Regenerate session ID on authentication
+- **Action Taken:** Implemented complete session fixation defense: pre-login revocation and clearance of existing refresh tokens/cookies, cryptographically unique `sessionId` (`crypto.randomUUID()`) generated on every authentication event and bound to JWT `jti` and `sessionId` claims, plus `regenerateSession` helper with unit test verification in `auth.security.spec.ts`.
 
 #### 8. Missing Audit Logging `[⏳ OPEN]`
 - **Location:** `services/core-iam/src/auth/auth.controller.ts`
@@ -1250,8 +1252,8 @@ Complete inventory of all 128 findings identified during the security and projec
 | **3** | `CRITICAL` | Core IAM | No Rate Limiting on Login | ✅ Remediated |
 | **4** | `CRITICAL` | Core IAM | Token Revocation Not Implemented | ⏳ Open |
 | **5** | `HIGH` | Core IAM | RBAC Guard Not Global | ⏳ Open |
-| **6** | `HIGH` | Core IAM | No Password Complexity Enforcement | ⏳ Open |
-| **7** | `HIGH` | Core IAM | Session Fixation Risk | ⏳ Open |
+| **6** | `HIGH` | Core IAM | No Password Complexity Enforcement | ✅ Remediated |
+| **7** | `HIGH` | Core IAM | Session Fixation Risk | ✅ Remediated |
 | **8** | `HIGH` | Core IAM | Missing Audit Logging | ⏳ Open |
 | **9** | `MEDIUM` | Core IAM | Cookie Domain Too Broad | ⏳ Open |
 | **10** | `MEDIUM` | Core IAM | No CSRF Protection | ✅ Remediated |
@@ -1488,6 +1490,8 @@ Complete inventory of all 128 findings identified during the security and projec
 | **2026-09-21** | #55 Missing Audit Logging (Billing) | Implemented `BillingAuditLog` Prisma model and audit logging service tracking invoice, payment, quotation, and note events | 12 files in `services/billing-service/` |
 | **2026-09-21** | #86 Gateway Input Validation | Formulated Defense-in-Depth gateway filtering strategy (noise and structural filtering at gateway, domain schema enforcement downstream) | `AUDIT_REPO.md` architectural strategy |
 | **2026-09-21** | #117-118 JWT Storage & httpOnly Cookies | Analyzed cross-workstation SSO architecture and scheduled full auth refactor for dedicated branch; mitigated via strict CSP and httpOnly refresh tokens | `AUDIT_REPO.md` architectural strategy |
+| **2026-09-21** | #6 No Password Complexity Enforcement | Enforced `@IsStrongPassword` (min 8 chars, 1 uppercase, 1 lowercase, 1 number, 1 symbol) & `@MaxLength(128)` in `RegisterDto`, `InviteUserDto`, `CreateUserDto` | `services/core-iam/src/auth/dto/` (3 files), `auth.security.spec.ts` |
+| **2026-09-21** | #7 Session Fixation Risk | Invalidate pre-existing tokens/cookies on login/register, generate unique `sessionId` (`crypto.randomUUID()`) bound to `jti`, and provide session regeneration | `services/core-iam/src/auth/auth.service.ts`, `auth.controller.ts`, `auth.security.spec.ts` |
 
 ---
 

@@ -4,6 +4,8 @@ import {
   IsOptional,
   IsString,
   MinLength,
+  MaxLength,
+  IsStrongPassword,
 } from 'class-validator';
 
 export class RegisterDto {
@@ -12,7 +14,22 @@ export class RegisterDto {
   email: string;
 
   @IsNotEmpty({ message: 'Password is required' })
-  @MinLength(6, { message: 'Password must be at least 6 characters' })
+  @IsString({ message: 'Password must be a string' })
+  @MinLength(8, { message: 'Password must be at least 8 characters' })
+  @MaxLength(128, { message: 'Password must not exceed 128 characters' })
+  @IsStrongPassword(
+    {
+      minLength: 8,
+      minLowercase: 1,
+      minUppercase: 1,
+      minNumbers: 1,
+      minSymbols: 1,
+    },
+    {
+      message:
+        'Password is too weak. It must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character',
+    },
+  )
   password: string;
 
   @IsNotEmpty({ message: 'Full name is required' })

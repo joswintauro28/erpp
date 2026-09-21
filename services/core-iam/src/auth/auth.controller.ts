@@ -76,6 +76,24 @@ export class AuthController {
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ) {
+    // Session Fixation Mitigation: Invalidate any pre-existing refresh token or session
+    const preExistingToken = req.cookies?.['refresh_token'];
+    if (preExistingToken) {
+      try {
+        await this.authService.revokeRefreshToken(preExistingToken);
+      } catch {
+        // Ignore if already invalid
+      }
+      this.clearRefreshTokenCookie(res);
+    }
+
+    // Regenerate session container if session middleware exists
+    if (typeof (req as any).session?.regenerate === 'function') {
+      await new Promise<void>((resolve) => {
+        (req as any).session.regenerate(() => resolve());
+      });
+    }
+
     const user = await this.authService.validateUser(
       loginDto.email,
       loginDto.password,
@@ -95,6 +113,7 @@ export class AuthController {
 
     return {
       access_token: result.accessToken,
+      session_id: result.sessionId,
       expires_in: this.configService.get<number>(
         'ACCESS_TOKEN_EXPIRE_SECONDS',
         900,
@@ -109,6 +128,24 @@ export class AuthController {
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ) {
+    // Session Fixation Mitigation: Invalidate any pre-existing refresh token or session
+    const preExistingToken = req.cookies?.['refresh_token'];
+    if (preExistingToken) {
+      try {
+        await this.authService.revokeRefreshToken(preExistingToken);
+      } catch {
+        // Ignore if already invalid
+      }
+      this.clearRefreshTokenCookie(res);
+    }
+
+    // Regenerate session container if session middleware exists
+    if (typeof (req as any).session?.regenerate === 'function') {
+      await new Promise<void>((resolve) => {
+        (req as any).session.regenerate(() => resolve());
+      });
+    }
+
     const user = await this.authService.register(registerDto);
 
     const userAgent = req.headers['user-agent'];
@@ -125,6 +162,7 @@ export class AuthController {
 
     return {
       access_token: result.accessToken,
+      session_id: result.sessionId,
       expires_in: this.configService.get<number>(
         'ACCESS_TOKEN_EXPIRE_SECONDS',
         900,

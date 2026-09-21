@@ -142,10 +142,15 @@ export class AuthService {
     userAgent?: string,
     ipAddress?: string,
   ) {
+    // Session Fixation Prevention: Generate a fresh, unique cryptographic session ID for every authentication
+    const sessionId = crypto.randomUUID();
+
     const accessPayload = await this.generateAccessPayload(userId);
 
     const accessToken = this.jwtService.sign(
       {
+        jti: sessionId,
+        sessionId,
         sub: String(userId),
         email,
         type: 'access',
@@ -180,8 +185,26 @@ export class AuthService {
     return {
       accessToken,
       refreshToken: rawRefreshToken,
+      sessionId,
       userId,
     };
+  }
+
+  /**
+   * Regenerates a user session by revoking any prior refresh token and issuing
+   * fresh credentials with a new session ID. Directly prevents session fixation.
+   */
+  async regenerateSession(
+    userId: number,
+    email: string,
+    oldRefreshToken?: string,
+    userAgent?: string,
+    ipAddress?: string,
+  ) {
+    if (oldRefreshToken) {
+      await this.revokeRefreshToken(oldRefreshToken);
+    }
+    return this.login(userId, email, userAgent, ipAddress);
   }
 
   async register(dto: RegisterDto): Promise<any> {
@@ -320,8 +343,11 @@ export class AuthService {
     const email = tokenRecord.user.email;
     const accessPayload = await this.generateAccessPayload(userId);
 
+    const newSessionId = crypto.randomUUID();
     const newAccessToken = this.jwtService.sign(
       {
+        jti: newSessionId,
+        sessionId: newSessionId,
         sub: String(userId),
         email,
         type: 'access',
