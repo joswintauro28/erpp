@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
 
-from app.core.deps import get_current_token_payload
+from app.core.deps import get_current_token_payload, require_permission
 from app.integrations.inventory_client import get_products, get_product as get_product_inv, create_product_inv, update_product_inv, delete_product_inv
 
 router = APIRouter(prefix="/products", tags=["products"])
@@ -18,6 +18,7 @@ async def list_products(
 async def create_product(
     body: dict,
     payload: dict = Depends(get_current_token_payload),
+    _perm: bool = Depends(require_permission("products.create")),
 ):
     token = payload.get("_raw_token", "")
     return await create_product_inv(token, body)
@@ -41,6 +42,7 @@ async def update_product(
     product_id: int,
     body: dict,
     payload: dict = Depends(get_current_token_payload),
+    _perm: bool = Depends(require_permission("products.edit")),
 ):
     token = payload.get("_raw_token", "")
     return await update_product_inv(token, product_id, body)
@@ -50,6 +52,7 @@ async def update_product(
 async def delete_product(
     product_id: int,
     payload: dict = Depends(get_current_token_payload),
+    _perm: bool = Depends(require_permission("products.delete")),
 ):
     token = payload.get("_raw_token", "")
     await delete_product_inv(token, product_id)

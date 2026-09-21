@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
 
-from app.core.deps import get_current_token_payload
+from app.core.deps import get_current_token_payload, require_permission
 from app.integrations.crm_client import get_customers, get_customer_detail, create_customer, update_customer, delete_customer, extract_list
 
 router = APIRouter(prefix="/clients", tags=["clients"])
@@ -33,6 +33,7 @@ async def list_clients(
 async def create_client(
     body: dict,
     payload: dict = Depends(get_current_token_payload),
+    _perm: bool = Depends(require_permission("customers.create")),
 ):
     token = payload.get("_raw_token", "")
     crm_body = {"account": body.get("name", "")}
@@ -72,6 +73,7 @@ async def update_client(
     client_id: str,
     body: dict,
     payload: dict = Depends(get_current_token_payload),
+    _perm: bool = Depends(require_permission("customers.edit")),
 ):
     token = payload.get("_raw_token", "")
     id_str = client_id
@@ -102,6 +104,7 @@ async def update_client(
 async def delete_client(
     client_id: str,
     payload: dict = Depends(get_current_token_payload),
+    _perm: bool = Depends(require_permission("customers.delete")),
 ):
     token = payload.get("_raw_token", "")
     id_str = client_id
