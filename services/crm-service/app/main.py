@@ -256,6 +256,10 @@ async def create_entity(entity_type: str, payload: dict, db: AsyncSession = Depe
     filtered_payload["id_str"] = id_str
     filtered_payload.pop("id", None)
 
+    owner_id = token_payload.get("user_id")
+    if owner_id is not None and "owner_id" not in filtered_payload:
+        filtered_payload["owner_id"] = owner_id
+
     db_obj = model_class(**filtered_payload)
     db.add(db_obj)
     await db.commit()
@@ -289,7 +293,11 @@ async def update_entity(entity_type: str, id_str: str, payload: dict, db: AsyncS
         raise HTTPException(status_code=404, detail="Entity type not found")
 
     model_class = ENTITY_MODEL_MAP[entity_type]
-    result = await db.execute(select(model_class).filter(model_class.id_str == id_str))
+    owner_id = token_payload.get("user_id")
+    stmt = select(model_class).filter(model_class.id_str == id_str)
+    if owner_id is not None:
+        stmt = stmt.filter(model_class.owner_id == owner_id)
+    result = await db.execute(stmt)
     db_obj = result.scalars().first()
     if not db_obj:
         raise HTTPException(status_code=404, detail="Record not found")
@@ -358,7 +366,11 @@ async def delete_entity(entity_type: str, id_str: str, db: AsyncSession = Depend
         raise HTTPException(status_code=404, detail="Entity type not found")
 
     model_class = ENTITY_MODEL_MAP[entity_type]
-    result = await db.execute(select(model_class).filter(model_class.id_str == id_str))
+    owner_id = token_payload.get("user_id")
+    stmt = select(model_class).filter(model_class.id_str == id_str)
+    if owner_id is not None:
+        stmt = stmt.filter(model_class.owner_id == owner_id)
+    result = await db.execute(stmt)
     db_obj = result.scalars().first()
     if not db_obj:
         raise HTTPException(status_code=404, detail="Record not found")

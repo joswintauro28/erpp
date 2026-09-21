@@ -19,8 +19,12 @@ STAGE_PROBABILITY = {
 }
 
 @router.get("", response_model=schemas.OpportunityManagementData)
-async def get_opportunities_data(db: AsyncSession = Depends(database.get_db)):
-    opportunities = await crud.get_opportunities(db)
+async def get_opportunities_data(
+    db: AsyncSession = Depends(database.get_db),
+    payload: dict = Depends(get_current_token_payload),
+):
+    owner_id = payload.get("user_id")
+    opportunities = await crud.get_opportunities(db, owner_id=owner_id)
 
     total = len(opportunities)
     open_count = len([o for o in opportunities if o.stage in ['Discovery', 'Proposal', 'Negotiation']])

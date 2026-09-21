@@ -6,6 +6,7 @@ class Contact(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     id_str = Column(String, index=True)
+    owner_id = Column(Integer, index=True, nullable=True)
     name = Column(String)
     role = Column(String)
     account = Column(String)

@@ -3,33 +3,52 @@ from sqlalchemy import select
 from app import database, models
 from app.reports import schemas, crud
 from app.core.router_utils import generic_summary, parse_numeric_value
+from app.core.deps import get_current_token_payload
 
 router = APIRouter(prefix="/api/reports", tags=["reports"])
 
 @router.get("", response_model=schemas.ReportManagementData)
-async def get_reports_data(db=Depends(database.get_db)):
-    data = await crud.get_reports(db)
+async def get_reports_data(
+    db=Depends(database.get_db),
+    payload: dict = Depends(get_current_token_payload),
+):
+    owner_id = payload.get("user_id")
+    data = await crud.get_reports(db, owner_id=owner_id)
     summary = generic_summary(data, active_vals=['Generating'], attention_vals=['Failed'])
     return {"summary": summary, "reports": data}
 
 @router.get("/dashboard")
-async def get_reports_dashboard(db=Depends(database.get_db)):
-    result = await db.execute(select(models.SalesOrder))
+async def get_reports_dashboard(
+    db=Depends(database.get_db),
+    payload: dict = Depends(get_current_token_payload),
+):
+    owner_id = payload.get("user_id")
+
+    stmt_so = select(models.SalesOrder)
+    if owner_id is not None:
+        stmt_so = stmt_so.filter(models.SalesOrder.owner_id == owner_id)
+    result = await db.execute(stmt_so)
     sales = result.scalars().all()
     rep_sales = {}
     for s in sales:
         rep_name = s.owner or "Unassigned"
         amount = parse_numeric_value(s.value)
         rep_sales[rep_name] = rep_sales.get(rep_name, 0.0) + amount
-    
-    result = await db.execute(select(models.Lead))
+
+    stmt_lead = select(models.Lead)
+    if owner_id is not None:
+        stmt_lead = stmt_lead.filter(models.Lead.owner_id == owner_id)
+    result = await db.execute(stmt_lead)
     leads = result.scalars().all()
     lead_status = {}
     for l in leads:
         status = l.status or "Unknown"
         lead_status[status] = lead_status.get(status, 0) + 1
-        
-    result = await db.execute(select(models.Opportunity))
+
+    stmt_opp = select(models.Opportunity)
+    if owner_id is not None:
+        stmt_opp = stmt_opp.filter(models.Opportunity.owner_id == owner_id)
+    result = await db.execute(stmt_opp)
     opps = result.scalars().all()
     opp_stages = {}
     for o in opps:

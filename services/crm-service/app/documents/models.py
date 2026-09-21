@@ -6,6 +6,7 @@ class Document(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     id_str = Column(String, index=True)
+    owner_id = Column(Integer, index=True, nullable=True)
     name = Column(String)
     type = Column(String)
     account = Column(String)

@@ -7,6 +7,7 @@ class AIAssistantLog(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     id_str = Column(String, index=True)
+    owner_id = Column(Integer, index=True, nullable=True)
     query = Column(String)
     category = Column(String)
     date = Column(String)

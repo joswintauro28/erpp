@@ -34,8 +34,15 @@ def _score_lead(lead) -> dict:
 
 
 @router.get("/scoring")
-async def get_lead_scores(db: AsyncSession = Depends(database.get_db)):
-    result = await db.execute(select(models.Lead))
+async def get_lead_scores(
+    db: AsyncSession = Depends(database.get_db),
+    payload: dict = Depends(get_current_token_payload),
+):
+    owner_id = payload.get("user_id")
+    stmt = select(models.Lead)
+    if owner_id is not None:
+        stmt = stmt.filter(models.Lead.owner_id == owner_id)
+    result = await db.execute(stmt)
     leads = result.scalars().all()
     scored = [_score_lead(l) for l in leads]
     scored.sort(key=lambda s: s["score"], reverse=True)
@@ -63,8 +70,12 @@ async def score_single_lead(id_str: str, db: AsyncSession = Depends(database.get
     return _score_lead(lead)
 
 @router.get("", response_model=schemas.LeadManagementData)
-async def get_leads_data(db: AsyncSession = Depends(database.get_db)):
-    leads = await crud.get_leads(db)
+async def get_leads_data(
+    db: AsyncSession = Depends(database.get_db),
+    payload: dict = Depends(get_current_token_payload),
+):
+    owner_id = payload.get("user_id")
+    leads = await crud.get_leads(db, owner_id=owner_id)
 
     total = len(leads)
     open_count = len([l for l in leads if l.status in ['New', 'Qualified', 'In Progress']])

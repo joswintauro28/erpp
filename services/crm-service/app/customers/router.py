@@ -2,12 +2,17 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from app import database
 from app.customers import schemas, crud
+from app.core.deps import get_current_token_payload
 
 router = APIRouter(prefix="/api/customers", tags=["customers"])
 
 @router.get("", response_model=schemas.CustomerManagementData)
-async def get_customers_data(db: AsyncSession = Depends(database.get_db)):
-    customers = await crud.get_customers(db)
+async def get_customers_data(
+    db: AsyncSession = Depends(database.get_db),
+    payload: dict = Depends(get_current_token_payload),
+):
+    owner_id = payload.get("user_id")
+    customers = await crud.get_customers(db, owner_id=owner_id)
 
     total = len(customers)
     open_count = len([c for c in customers if c.status in ['Active', 'Prospect']])

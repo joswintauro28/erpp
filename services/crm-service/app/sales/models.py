@@ -7,6 +7,7 @@ class Sale(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     id_str = Column(String, index=True)
+    owner_id = Column(Integer, index=True, nullable=True)
     invoice_no = Column(String)
     account = Column(String)
     amount = Column(String)

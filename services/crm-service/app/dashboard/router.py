@@ -4,26 +4,35 @@ from sqlalchemy import select, func
 from app import models, database
 from app.dashboard import schemas, crud
 from app.core.router_utils import parse_numeric_value
+from app.core.deps import get_current_token_payload
 
 router = APIRouter(prefix="/api/dashboard", tags=["dashboard"])
 
 @router.get("", response_model=schemas.DashboardData)
-async def get_dashboard_data(db: AsyncSession = Depends(database.get_db)):
-    open_leads_result = await db.execute(
-        select(models.Lead).filter(models.Lead.status.in_(["New", "Qualified", "In Progress"]))
-    )
+async def get_dashboard_data(
+    db: AsyncSession = Depends(database.get_db),
+    payload: dict = Depends(get_current_token_payload),
+):
+    owner_id = payload.get("user_id")
+
+    stmt_leads = select(models.Lead).filter(models.Lead.status.in_(["New", "Qualified", "In Progress"]))
+    if owner_id is not None:
+        stmt_leads = stmt_leads.filter(models.Lead.owner_id == owner_id)
+    open_leads_result = await db.execute(stmt_leads)
     open_leads = open_leads_result.scalars().all()
 
-    open_opps_result = await db.execute(
-        select(models.Opportunity).filter(models.Opportunity.stage.in_(
-            ["Discovery", "Proposal", "Negotiation", "RFQ / Inquiry", "Technical Assessment", "Estimation & Quoting"]
-        ))
-    )
+    stmt_opps = select(models.Opportunity).filter(models.Opportunity.stage.in_(
+        ["Discovery", "Proposal", "Negotiation", "RFQ / Inquiry", "Technical Assessment", "Estimation & Quoting"]
+    ))
+    if owner_id is not None:
+        stmt_opps = stmt_opps.filter(models.Opportunity.owner_id == owner_id)
+    open_opps_result = await db.execute(stmt_opps)
     open_opps = open_opps_result.scalars().all()
 
-    open_orders_result = await db.execute(
-        select(models.SalesOrder).filter(models.SalesOrder.status.in_(["Pending", "Confirmed", "In Fulfillment"]))
-    )
+    stmt_orders = select(models.SalesOrder).filter(models.SalesOrder.status.in_(["Pending", "Confirmed", "In Fulfillment"]))
+    if owner_id is not None:
+        stmt_orders = stmt_orders.filter(models.SalesOrder.owner_id == owner_id)
+    open_orders_result = await db.execute(stmt_orders)
     open_orders = open_orders_result.scalars().all()
 
     total_leads_val = sum(l.est_value for l in open_leads if l.est_value)
@@ -39,9 +48,10 @@ async def get_dashboard_data(db: AsyncSession = Depends(database.get_db)):
     else:
         formatted_val = f"${pipeline_value}"
 
-    active_custs_result = await db.execute(
-        select(func.count(models.Customer.id)).filter(models.Customer.status == "Active")
-    )
+    stmt_custs = select(func.count(models.Customer.id)).filter(models.Customer.status == "Active")
+    if owner_id is not None:
+        stmt_custs = stmt_custs.filter(models.Customer.owner_id == owner_id)
+    active_custs_result = await db.execute(stmt_custs)
     active_custs = active_custs_result.scalar() or 0
 
     metrics = [
@@ -71,7 +81,10 @@ async def get_dashboard_data(db: AsyncSession = Depends(database.get_db)):
         }
     ]
 
-    all_sales_result = await db.execute(select(models.SalesOrder))
+    stmt_all_sales = select(models.SalesOrder)
+    if owner_id is not None:
+        stmt_all_sales = stmt_all_sales.filter(models.SalesOrder.owner_id == owner_id)
+    all_sales_result = await db.execute(stmt_all_sales)
     all_sales = all_sales_result.scalars().all()
 
     stages_data = {
@@ -97,7 +110,7 @@ async def get_dashboard_data(db: AsyncSession = Depends(database.get_db)):
             "color": colors.get(stage_name, "#94a3b8")
         })
 
-    recommendations = await crud.get_recommendations(db)
+    recommendations = await crud.get_recommendations(db, owner_id=owner_id)
 
     return {
         "metrics": metrics,

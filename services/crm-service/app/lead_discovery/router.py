@@ -16,6 +16,7 @@ from app import models
 from . import schemas
 from . import scraper
 from app.core.idgen import next_document_id
+from app.core.deps import get_current_token_payload
 
 router = APIRouter(prefix="/api/lead-discovery", tags=["lead-discovery"])
 
@@ -262,7 +263,12 @@ async def scrape_url_endpoint(request: ScrapeUrlRequest, db: AsyncSession = Depe
 
 
 @router.post("/import")
-async def import_leads(request: schemas.ImportLeadsRequest, db: AsyncSession = Depends(get_db)):
+async def import_leads(
+    request: schemas.ImportLeadsRequest,
+    db: AsyncSession = Depends(get_db),
+    payload: dict = Depends(get_current_token_payload),
+):
+    owner_id = payload.get("user_id")
     try:
         for c_data in request.companies:
             est_value = 0
@@ -279,12 +285,14 @@ async def import_leads(request: schemas.ImportLeadsRequest, db: AsyncSession = D
             from app.leads.scoring import apply_lead_score
 
             new_lead = models.Lead(
-                id_str=await next_document_id(db, models.Lead, "LD"),                name=contact_name,
+                id_str=await next_document_id(db, models.Lead, "LD"),
+                name=contact_name,
                 company=c_data.company_name,
                 source="AI Discovery",
                 est_value=est_value,
                 status="New",
                 owner="Unassigned",
+                owner_id=owner_id,
                 updated_at=datetime.now().strftime("%Y-%m-%d")
             )
             # M3: score captured leads immediately (MQL-ready leads are flagged
@@ -322,8 +330,15 @@ async def import_leads(request: schemas.ImportLeadsRequest, db: AsyncSession = D
 
 
 @router.get("/pinned", response_model=List[schemas.CompanyDetail])
-async def get_pinned_leads(db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(models.PinnedLead))
+async def get_pinned_leads(
+    db: AsyncSession = Depends(get_db),
+    payload: dict = Depends(get_current_token_payload),
+):
+    owner_id = payload.get("user_id")
+    stmt = select(models.PinnedLead)
+    if owner_id is not None:
+        stmt = stmt.filter(models.PinnedLead.owner_id == owner_id)
+    result = await db.execute(stmt)
     pinned = result.scalars().all()
     res = []
     for p in pinned:
@@ -356,7 +371,12 @@ async def get_pinned_leads(db: AsyncSession = Depends(get_db)):
 
 
 @router.post("/pinned")
-async def pin_lead(company: schemas.CompanyDetail, db: AsyncSession = Depends(get_db)):
+async def pin_lead(
+    company: schemas.CompanyDetail,
+    db: AsyncSession = Depends(get_db),
+    payload: dict = Depends(get_current_token_payload),
+):
+    owner_id = payload.get("user_id")
     result = await db.execute(
         select(models.PinnedLead).filter(models.PinnedLead.company_name == company.company_name)
     )
@@ -379,7 +399,8 @@ async def pin_lead(company: schemas.CompanyDetail, db: AsyncSession = Depends(ge
         business_pain_points=company.business_pain_points,
         recommended_ai_solutions=company.recommended_ai_solutions,
         key_decision_makers=[kdm.model_dump() for kdm in company.key_decision_makers],
-        public_contact=contact_dict
+        public_contact=contact_dict,
+        owner_id=owner_id,
     )
     db.add(db_obj)
     await db.commit()
@@ -387,10 +408,16 @@ async def pin_lead(company: schemas.CompanyDetail, db: AsyncSession = Depends(ge
 
 
 @router.delete("/pinned/{company_name}")
-async def unpin_lead(company_name: str, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(
-        select(models.PinnedLead).filter(models.PinnedLead.company_name == company_name)
-    )
+async def unpin_lead(
+    company_name: str,
+    db: AsyncSession = Depends(get_db),
+    payload: dict = Depends(get_current_token_payload),
+):
+    owner_id = payload.get("user_id")
+    stmt = select(models.PinnedLead).filter(models.PinnedLead.company_name == company_name)
+    if owner_id is not None:
+        stmt = stmt.filter(models.PinnedLead.owner_id == owner_id)
+    result = await db.execute(stmt)
     db_obj = result.scalars().first()
     if db_obj:
         await db.delete(db_obj)
@@ -399,10 +426,16 @@ async def unpin_lead(company_name: str, db: AsyncSession = Depends(get_db)):
 
 
 @router.get("/pinned/{company_name}", response_model=Optional[schemas.CompanyDetail])
-async def get_pinned_lead_detail(company_name: str, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(
-        select(models.PinnedLead).filter(models.PinnedLead.company_name == company_name)
-    )
+async def get_pinned_lead_detail(
+    company_name: str,
+    db: AsyncSession = Depends(get_db),
+    payload: dict = Depends(get_current_token_payload),
+):
+    owner_id = payload.get("user_id")
+    stmt = select(models.PinnedLead).filter(models.PinnedLead.company_name == company_name)
+    if owner_id is not None:
+        stmt = stmt.filter(models.PinnedLead.owner_id == owner_id)
+    result = await db.execute(stmt)
     p = result.scalars().first()
     if not p:
         return None

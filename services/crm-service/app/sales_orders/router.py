@@ -22,8 +22,12 @@ router = APIRouter(prefix="/api/sales-orders", tags=["sales-orders"])
 
 
 @router.get("", response_model=schemas.SalesOrderManagementData)
-async def get_sales_orders_data(db=Depends(database.get_db)):
-    sales_orders = await crud.get_sales_orders(db)
+async def get_sales_orders_data(
+    db=Depends(database.get_db),
+    payload: dict = Depends(get_current_token_payload),
+):
+    owner_id = payload.get("user_id")
+    sales_orders = await crud.get_sales_orders(db, owner_id=owner_id)
     
     total = len(sales_orders)
     open_count = len([so for so in sales_orders if so.status in ['Pending', 'Confirmed']])
@@ -84,6 +88,10 @@ async def create_sales_order(
         filtered_payload["so_no"] = id_str
     if "line_items" in payload:
         filtered_payload["line_items"] = payload["line_items"]
+
+    owner_id = token_payload.get("user_id")
+    if owner_id is not None:
+        filtered_payload["owner_id"] = owner_id
 
     so = models.SalesOrder(**filtered_payload)
     db.add(so)

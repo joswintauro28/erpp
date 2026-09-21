@@ -2,12 +2,17 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from app import database
 from app.documents import schemas, crud
+from app.core.deps import get_current_token_payload
 
 router = APIRouter(prefix="/api/documents", tags=["documents"])
 
 @router.get("", response_model=schemas.DocumentManagementData)
-async def get_documents_data(db: AsyncSession = Depends(database.get_db)):
-    documents = await crud.get_documents(db)
+async def get_documents_data(
+    db: AsyncSession = Depends(database.get_db),
+    payload: dict = Depends(get_current_token_payload),
+):
+    owner_id = payload.get("user_id")
+    documents = await crud.get_documents(db, owner_id=owner_id)
 
     total = len(documents)
     open_count = len([d for d in documents if d.status in ['Draft', 'Under Review']])

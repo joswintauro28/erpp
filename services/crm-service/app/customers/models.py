@@ -6,6 +6,7 @@ class Customer(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     id_str = Column(String, index=True)
+    owner_id = Column(Integer, index=True, nullable=True)
     account = Column(String)
     industry = Column(String)
     tier = Column(String)
