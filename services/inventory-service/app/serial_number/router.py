@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.deps import get_db, get_current_org_id
+from app.core.deps import get_db, get_current_org_id, require_permission
 from app.core.exceptions import NotFoundException
 from app.serial_number.schemas import (
     SerialNumberCreate,
@@ -43,6 +43,7 @@ async def create_serial_number(
     req: SerialNumberCreate,
     db: AsyncSession = Depends(get_db),
     org_id: int = Depends(get_current_org_id),
+    _perm: bool = Depends(require_permission("stock.manage")),
 ):
     service = SerialNumberService(db)
     return await service.create_serial_number(org_id, **req.model_dump())
@@ -67,6 +68,7 @@ async def update_serial_number(
     req: SerialNumberUpdate,
     db: AsyncSession = Depends(get_db),
     org_id: int = Depends(get_current_org_id),
+    _perm: bool = Depends(require_permission("stock.manage")),
 ):
     service = SerialNumberService(db)
     data = {k: v for k, v in req.model_dump().items() if v is not None}
@@ -81,6 +83,7 @@ async def delete_serial_number(
     serial_id: int,
     db: AsyncSession = Depends(get_db),
     org_id: int = Depends(get_current_org_id),
+    _perm: bool = Depends(require_permission("stock.manage")),
 ):
     service = SerialNumberService(db)
     deleted = await service.delete_serial_number(serial_id, org_id)

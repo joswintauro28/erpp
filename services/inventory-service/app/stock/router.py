@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.deps import get_db, get_current_org_id
+from app.core.deps import get_db, get_current_org_id, require_permission
 from app.stock.schemas import (
     StockOut,
     StockMovementCreate,
@@ -45,6 +45,7 @@ async def adjust_stock(
     req: StockAdjustment,
     db: AsyncSession = Depends(get_db),
     org_id: int = Depends(get_current_org_id),
+    _perm: bool = Depends(require_permission("stock.adjust")),
 ):
     service = StockService(db)
     return await service.adjust_stock(
@@ -57,6 +58,7 @@ async def record_movement(
     req: StockMovementCreate,
     db: AsyncSession = Depends(get_db),
     org_id: int = Depends(get_current_org_id),
+    _perm: bool = Depends(require_permission("stock.manage")),
 ):
     service = StockService(db)
     data = req.model_dump()

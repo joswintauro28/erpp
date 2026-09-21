@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.deps import get_db, get_current_org_id, get_current_token_payload
+from app.core.deps import get_db, get_current_org_id, get_current_token_payload, require_permission
 from app.core.exceptions import NotFoundException
 from app.core.idgen import next_document_id
 from app.purchase_requisition.models import PurchaseRequisition
@@ -36,6 +36,7 @@ async def create_requisition(
     db: AsyncSession = Depends(get_db),
     org_id: int = Depends(get_current_org_id),
     token_payload: dict = Depends(get_current_token_payload),
+    _perm: bool = Depends(require_permission("purchase_orders.create")),
 ):
     service = PurchaseRequisitionService(db)
     pr_number = await next_document_id(db, PurchaseRequisition, "PR", "pr_number", org_id)
@@ -81,6 +82,7 @@ async def approve_requisition(
     db: AsyncSession = Depends(get_db),
     org_id: int = Depends(get_current_org_id),
     token_payload: dict = Depends(get_current_token_payload),
+    _perm: bool = Depends(require_permission("purchase_orders.manage")),
 ):
     service = PurchaseRequisitionService(db)
     return await service.update_status(pr_id, org_id, "APPROVED", actor=_actor(token_payload))
@@ -92,6 +94,7 @@ async def reject_requisition(
     req: PurchaseRequisitionDecision | None = None,
     db: AsyncSession = Depends(get_db),
     org_id: int = Depends(get_current_org_id),
+    _perm: bool = Depends(require_permission("purchase_orders.manage")),
 ):
     service = PurchaseRequisitionService(db)
     return await service.update_status(
@@ -105,6 +108,7 @@ async def convert_requisition(
     req: PurchaseRequisitionConvert,
     db: AsyncSession = Depends(get_db),
     org_id: int = Depends(get_current_org_id),
+    _perm: bool = Depends(require_permission("purchase_orders.create")),
 ):
     """P1 -> P2: convert an APPROVED requisition into a Purchase Order."""
     service = PurchaseRequisitionService(db)
@@ -118,6 +122,7 @@ async def delete_requisition(
     pr_id: int,
     db: AsyncSession = Depends(get_db),
     org_id: int = Depends(get_current_org_id),
+    _perm: bool = Depends(require_permission("purchase_orders.delete")),
 ):
     service = PurchaseRequisitionService(db)
     deleted = await service.delete_requisition(pr_id, org_id)

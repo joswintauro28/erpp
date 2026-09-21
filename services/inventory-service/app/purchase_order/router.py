@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.deps import get_db, get_current_org_id, get_current_token_payload
+from app.core.deps import get_db, get_current_org_id, get_current_token_payload, require_permission
 from app.core.exceptions import NotFoundException
 from app.core.idgen import next_document_id
 from app.purchase_order.schemas import (
@@ -30,6 +30,7 @@ async def create_purchase_order(
     db: AsyncSession = Depends(get_db),
     org_id: int = Depends(get_current_org_id),
     token_payload: dict = Depends(get_current_token_payload),
+    _perm: bool = Depends(require_permission("purchase_orders.create")),
 ):
     service = PurchaseOrderService(db)
     from app.purchase_order.models import PurchaseOrder
@@ -62,6 +63,7 @@ async def update_purchase_order_status(
     db: AsyncSession = Depends(get_db),
     org_id: int = Depends(get_current_org_id),
     token_payload: dict = Depends(get_current_token_payload),
+    _perm: bool = Depends(require_permission("purchase_orders.manage")),
 ):
     service = PurchaseOrderService(db)
     if not req.status:
@@ -74,10 +76,6 @@ async def update_purchase_order_status(
     if not po:
         raise NotFoundException("Purchase order not found")
 
-    # NOTE: Accounts-Payable entries are created exclusively via the RabbitMQ
-    # `inventory.po.created` event (single AP path). The former REST webhook
-    # (`/internal/billing/trigger-vendor-bill`) is no longer called here to
-    # avoid duplicate AP invoices for the same purchase order.
     po = await service.get_purchase_order_with_items(po_id, org_id)
     return po
 
@@ -88,6 +86,7 @@ async def putaway_purchase_order_items(
     req: PutawayRequest,
     db: AsyncSession = Depends(get_db),
     org_id: int = Depends(get_current_org_id),
+    _perm: bool = Depends(require_permission("purchase_orders.manage")),
 ):
     service = PurchaseOrderService(db)
     po = await service.putaway_items(po_id, org_id, [i.model_dump() for i in req.items])
@@ -101,6 +100,7 @@ async def delete_purchase_order(
     po_id: int,
     db: AsyncSession = Depends(get_db),
     org_id: int = Depends(get_current_org_id),
+    _perm: bool = Depends(require_permission("purchase_orders.delete")),
 ):
     service = PurchaseOrderService(db)
     deleted = await service.delete_purchase_order(po_id, org_id)

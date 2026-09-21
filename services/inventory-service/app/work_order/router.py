@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.deps import get_db, get_current_org_id, get_current_token_payload
+from app.core.deps import get_db, get_current_org_id, get_current_token_payload, require_permission
 from app.core.exceptions import NotFoundException
 from app.core.idgen import next_document_id
 from app.work_order.models import WorkOrder
@@ -31,6 +31,7 @@ async def create_work_order(
     db: AsyncSession = Depends(get_db),
     org_id: int = Depends(get_current_org_id),
     token_payload: dict = Depends(get_current_token_payload),
+    _perm: bool = Depends(require_permission("stock.manage")),
 ):
     service = WorkOrderService(db)
     wo_no = await next_document_id(db, WorkOrder, "WO", "work_order_no", org_id)
@@ -66,6 +67,7 @@ async def release_work_order(
     wo_id: int,
     db: AsyncSession = Depends(get_db),
     org_id: int = Depends(get_current_org_id),
+    _perm: bool = Depends(require_permission("stock.manage")),
 ):
     service = WorkOrderService(db)
     return await service.release_work_order(wo_id, org_id)
@@ -76,6 +78,7 @@ async def start_work_order(
     wo_id: int,
     db: AsyncSession = Depends(get_db),
     org_id: int = Depends(get_current_org_id),
+    _perm: bool = Depends(require_permission("stock.manage")),
 ):
     service = WorkOrderService(db)
     return await service.start_work_order(wo_id, org_id)
@@ -87,6 +90,7 @@ async def issue_work_order_material(
     req: WorkOrderMaterialIssue,
     db: AsyncSession = Depends(get_db),
     org_id: int = Depends(get_current_org_id),
+    _perm: bool = Depends(require_permission("stock.manage")),
 ):
     service = WorkOrderService(db)
     return await service.issue_material(wo_id, org_id, req.product_id, req.quantity)
@@ -98,6 +102,7 @@ async def start_operation(
     operation_id: int,
     db: AsyncSession = Depends(get_db),
     org_id: int = Depends(get_current_org_id),
+    _perm: bool = Depends(require_permission("stock.manage")),
 ):
     service = WorkOrderService(db)
     return await service.start_operation(wo_id, org_id, operation_id)
@@ -109,6 +114,7 @@ async def complete_operation(
     operation_id: int,
     db: AsyncSession = Depends(get_db),
     org_id: int = Depends(get_current_org_id),
+    _perm: bool = Depends(require_permission("stock.manage")),
 ):
     service = WorkOrderService(db)
     return await service.complete_operation(wo_id, org_id, operation_id)
@@ -119,6 +125,7 @@ async def complete_work_order(
     wo_id: int,
     db: AsyncSession = Depends(get_db),
     org_id: int = Depends(get_current_org_id),
+    _perm: bool = Depends(require_permission("stock.manage")),
 ):
     service = WorkOrderService(db)
     return await service.complete_work_order(wo_id, org_id)
@@ -129,6 +136,7 @@ async def cancel_work_order(
     wo_id: int,
     db: AsyncSession = Depends(get_db),
     org_id: int = Depends(get_current_org_id),
+    _perm: bool = Depends(require_permission("stock.manage")),
 ):
     service = WorkOrderService(db)
     return await service.cancel_work_order(wo_id, org_id)
@@ -139,6 +147,7 @@ async def delete_work_order(
     wo_id: int,
     db: AsyncSession = Depends(get_db),
     org_id: int = Depends(get_current_org_id),
+    _perm: bool = Depends(require_permission("stock.manage")),
 ):
     service = WorkOrderService(db)
     wo = await service.get_work_order(wo_id, org_id)

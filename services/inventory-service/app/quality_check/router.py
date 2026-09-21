@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.deps import get_db, get_current_org_id, get_current_token_payload
+from app.core.deps import get_db, get_current_org_id, get_current_token_payload, require_permission
 from app.core.exceptions import NotFoundException
 from app.quality_check.schemas import QualityCheckCreate, QualityCheckOut, QualityCheckResult
 from app.quality_check.services import QualityCheckService
@@ -28,6 +28,7 @@ async def create_quality_check(
     req: QualityCheckCreate,
     db: AsyncSession = Depends(get_db),
     org_id: int = Depends(get_current_org_id),
+    _perm: bool = Depends(require_permission("stock.manage")),
 ):
     service = QualityCheckService(db)
     return await service.create_check(
@@ -61,6 +62,7 @@ async def record_quality_check_result(
     db: AsyncSession = Depends(get_db),
     org_id: int = Depends(get_current_org_id),
     token_payload: dict = Depends(get_current_token_payload),
+    _perm: bool = Depends(require_permission("stock.manage")),
 ):
     service = QualityCheckService(db)
     return await service.record_result(

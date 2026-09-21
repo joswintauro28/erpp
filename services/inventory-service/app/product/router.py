@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.deps import get_db, get_current_org_id
+from app.core.deps import get_db, get_current_org_id, require_permission
 from app.core.exceptions import NotFoundException, ConflictException
 from app.product.schemas import ProductCreate, ProductOut, ProductUpdate
 from app.product.services import ProductService
@@ -23,6 +23,7 @@ async def create_product(
     req: ProductCreate,
     db: AsyncSession = Depends(get_db),
     org_id: int = Depends(get_current_org_id),
+    _perm: bool = Depends(require_permission("products.create")),
 ):
     service = ProductService(db)
     if req.sku:
@@ -51,6 +52,7 @@ async def update_product(
     req: ProductUpdate,
     db: AsyncSession = Depends(get_db),
     org_id: int = Depends(get_current_org_id),
+    _perm: bool = Depends(require_permission("products.edit")),
 ):
     service = ProductService(db)
     data = {k: v for k, v in req.model_dump().items() if v is not None}
@@ -65,6 +67,7 @@ async def delete_product(
     product_id: int,
     db: AsyncSession = Depends(get_db),
     org_id: int = Depends(get_current_org_id),
+    _perm: bool = Depends(require_permission("products.delete")),
 ):
     service = ProductService(db)
     deleted = await service.delete_product(product_id, org_id)

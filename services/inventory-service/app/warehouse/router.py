@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.deps import get_db, get_current_org_id
+from app.core.deps import get_db, get_current_org_id, require_permission
 from app.core.exceptions import NotFoundException
 from app.warehouse.schemas import WarehouseCreate, WarehouseOut, WarehouseUpdate
 from app.warehouse.services import WarehouseService
@@ -23,6 +23,7 @@ async def create_warehouse(
     req: WarehouseCreate,
     db: AsyncSession = Depends(get_db),
     org_id: int = Depends(get_current_org_id),
+    _perm: bool = Depends(require_permission("warehouses.manage")),
 ):
     service = WarehouseService(db)
     return await service.create_warehouse(org_id, **req.model_dump())
@@ -47,6 +48,7 @@ async def update_warehouse(
     req: WarehouseUpdate,
     db: AsyncSession = Depends(get_db),
     org_id: int = Depends(get_current_org_id),
+    _perm: bool = Depends(require_permission("warehouses.manage")),
 ):
     service = WarehouseService(db)
     data = {k: v for k, v in req.model_dump().items() if v is not None}
@@ -61,6 +63,7 @@ async def delete_warehouse(
     warehouse_id: int,
     db: AsyncSession = Depends(get_db),
     org_id: int = Depends(get_current_org_id),
+    _perm: bool = Depends(require_permission("warehouses.manage")),
 ):
     service = WarehouseService(db)
     deleted = await service.delete_warehouse(warehouse_id, org_id)

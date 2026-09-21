@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.deps import get_db, get_current_org_id
+from app.core.deps import get_db, get_current_org_id, require_permission
 from app.core.exceptions import NotFoundException
 from app.supplier.schemas import SupplierCreate, SupplierOut, SupplierUpdate
 from app.supplier.services import SupplierService
@@ -23,6 +23,7 @@ async def create_supplier(
     req: SupplierCreate,
     db: AsyncSession = Depends(get_db),
     org_id: int = Depends(get_current_org_id),
+    _perm: bool = Depends(require_permission("suppliers.create")),
 ):
     service = SupplierService(db)
     return await service.create_supplier(org_id, **req.model_dump())
@@ -47,6 +48,7 @@ async def update_supplier(
     req: SupplierUpdate,
     db: AsyncSession = Depends(get_db),
     org_id: int = Depends(get_current_org_id),
+    _perm: bool = Depends(require_permission("suppliers.manage")),
 ):
     service = SupplierService(db)
     data = {k: v for k, v in req.model_dump().items() if v is not None}
@@ -61,6 +63,7 @@ async def delete_supplier(
     supplier_id: int,
     db: AsyncSession = Depends(get_db),
     org_id: int = Depends(get_current_org_id),
+    _perm: bool = Depends(require_permission("suppliers.manage")),
 ):
     service = SupplierService(db)
     deleted = await service.delete_supplier(supplier_id, org_id)

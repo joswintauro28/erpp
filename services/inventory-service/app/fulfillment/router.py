@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Header
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.deps import get_db, get_current_org_id
+from app.core.deps import get_db, get_current_org_id, require_permission
 from app.fulfillment.schemas import (
     FulfillmentCreate,
     FulfillmentDispatchAction,
@@ -30,6 +30,7 @@ async def create_fulfillment_order(
     data: FulfillmentCreate,
     db: AsyncSession = Depends(get_db),
     org_id: int = Depends(get_current_org_id),
+    _perm: bool = Depends(require_permission("stock.manage")),
 ):
     service = FulfillmentService(db)
     return await service.create_fulfillment(org_id, data)
@@ -50,6 +51,7 @@ async def check_fulfillment_stock(
     fulfillment_id: int,
     db: AsyncSession = Depends(get_db),
     org_id: int = Depends(get_current_org_id),
+    _perm: bool = Depends(require_permission("stock.view")),
 ):
     service = FulfillmentService(db)
     return await service.check_stock(org_id, fulfillment_id)
@@ -60,6 +62,7 @@ async def reserve_fulfillment_stock(
     fulfillment_id: int,
     db: AsyncSession = Depends(get_db),
     org_id: int = Depends(get_current_org_id),
+    _perm: bool = Depends(require_permission("stock.manage")),
 ):
     service = FulfillmentService(db)
     return await service.reserve_stock(org_id, fulfillment_id)
@@ -70,6 +73,7 @@ async def pick_fulfillment_items(
     fulfillment_id: int,
     db: AsyncSession = Depends(get_db),
     org_id: int = Depends(get_current_org_id),
+    _perm: bool = Depends(require_permission("stock.manage")),
 ):
     service = FulfillmentService(db)
     return await service.pick_items(org_id, fulfillment_id)
@@ -80,6 +84,7 @@ async def pack_fulfillment_items(
     fulfillment_id: int,
     db: AsyncSession = Depends(get_db),
     org_id: int = Depends(get_current_org_id),
+    _perm: bool = Depends(require_permission("stock.manage")),
 ):
     service = FulfillmentService(db)
     return await service.pack_items(org_id, fulfillment_id)
@@ -91,6 +96,7 @@ async def dispatch_fulfillment_order(
     data: FulfillmentDispatchAction,
     db: AsyncSession = Depends(get_db),
     org_id: int = Depends(get_current_org_id),
+    _perm: bool = Depends(require_permission("stock.manage")),
 ):
     service = FulfillmentService(db)
     return await service.dispatch_order(org_id, fulfillment_id, data)
@@ -101,6 +107,7 @@ async def trigger_po_for_fulfillment_shortage(
     fulfillment_id: int,
     db: AsyncSession = Depends(get_db),
     org_id: int = Depends(get_current_org_id),
+    _perm: bool = Depends(require_permission("purchase_orders.create")),
 ):
     service = FulfillmentService(db)
     return await service.trigger_po_for_shortage(org_id, fulfillment_id)
@@ -111,6 +118,7 @@ async def generate_fulfillment_shipping_label(
     fulfillment_id: int,
     db: AsyncSession = Depends(get_db),
     org_id: int = Depends(get_current_org_id),
+    _perm: bool = Depends(require_permission("stock.manage")),
 ):
     service = FulfillmentService(db)
     return await service.generate_shipping_label(org_id, fulfillment_id)
@@ -122,6 +130,7 @@ async def generate_invoice_for_fulfillment(
     authorization: str | None = Header(None),
     db: AsyncSession = Depends(get_db),
     org_id: int = Depends(get_current_org_id),
+    _perm: bool = Depends(require_permission("stock.manage")),
 ):
     token = authorization.split(" ")[1] if authorization and authorization.startswith("Bearer ") else None
     service = FulfillmentService(db)
@@ -133,6 +142,7 @@ async def delete_fulfillment_order(
     fulfillment_id: int,
     db: AsyncSession = Depends(get_db),
     org_id: int = Depends(get_current_org_id),
+    _perm: bool = Depends(require_permission("stock.manage")),
 ):
     service = FulfillmentService(db)
     await service.delete_fulfillment(org_id, fulfillment_id)
@@ -143,6 +153,7 @@ async def create_picking_batch(
     data: PickingBatchCreate,
     db: AsyncSession = Depends(get_db),
     org_id: int = Depends(get_current_org_id),
+    _perm: bool = Depends(require_permission("stock.manage")),
 ):
     """I7: create a picking wave/batch from reserved fulfillments."""
     service = FulfillmentService(db)
@@ -163,6 +174,7 @@ async def step_back_fulfillment_order(
     fulfillment_id: int,
     db: AsyncSession = Depends(get_db),
     org_id: int = Depends(get_current_org_id),
+    _perm: bool = Depends(require_permission("stock.manage")),
 ):
     service = FulfillmentService(db)
     return await service.step_back(org_id, fulfillment_id)
