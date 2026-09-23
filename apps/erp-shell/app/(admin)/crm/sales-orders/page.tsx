@@ -15,7 +15,10 @@ import SalesOrderCreateModal from "./SalesOrderCreateModal";
 import SalesOrderDetailsModal from "./SalesOrderDetailsModal";
 
 export default function SalesOrdersPage() {
-  const [data, setData] = useState({ summary: { total_sales_orders: 0, open: 0, overdue_at_risk: 0, owners: 0 }, sales_orders: [] });
+  const [data, setData] = useState<{
+    summary?: { total_sales_orders?: number; total_orders?: number; open?: number; overdue_at_risk?: number; owners?: number };
+    sales_orders?: any[];
+  }>({ summary: { total_sales_orders: 0, total_orders: 0, open: 0, overdue_at_risk: 0, owners: 0 }, sales_orders: [] });
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -112,9 +115,9 @@ export default function SalesOrdersPage() {
       <section>
         <SectionHeading label="Overview" />
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-          <KpiCard label="Total Orders" value={data.summary?.total_sales_orders ?? 0} subtitle="orders in system" icon={ShoppingCart} color="var(--chart-1)" index={0} />
+          <KpiCard label="Total Orders" value={data.summary?.total_sales_orders ?? data.summary?.total_orders ?? items.length} subtitle="orders in system" icon={ShoppingCart} color="var(--chart-1)" index={0} />
           <KpiCard label="Open" value={data.summary?.open ?? 0} subtitle="pending fulfillment" icon={Eye} color="var(--chart-2)" index={1} />
-          <KpiCard label="Overdue / At Risk" value={data.summary?.overdue_at_risk ?? 0} subtitle={data.summary?.overdue_at_risk > 0 ? "requires attention" : "all clear"} icon={AlertTriangle} color="var(--shell-danger)" index={2} />
+          <KpiCard label="Overdue / At Risk" value={data.summary?.overdue_at_risk ?? 0} subtitle={(data.summary?.overdue_at_risk ?? 0) > 0 ? "requires attention" : "all clear"} icon={AlertTriangle} color="var(--shell-danger)" index={2} />
           <KpiCard label="Representatives" value={data.summary?.owners ?? 0} subtitle="active reps" icon={Users} color="var(--chart-4)" index={3} />
         </div>
       </section>

@@ -204,8 +204,6 @@ export default function SalesOrderDetailsModal({
     );
   };
 
-  // "Hold"/"Stock Hold" stay approvable so a held order can be re-run through
-  // the approval pipeline once credit exposure or stock changes.
   const APPROVABLE = ["Pending", "Confirmed", "Approved", "Hold", "Stock Hold"];
   const canApprove = APPROVABLE.includes(record.status);
 
@@ -223,9 +221,8 @@ export default function SalesOrderDetailsModal({
           <div className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {renderFrameContent()}
-              
+
               <div className="space-y-4">
-                {/* Line Items Table */}
                 <div>
                   <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Order Line Items</h4>
                   {record.line_items && record.line_items.length > 0 ? (
@@ -274,7 +271,6 @@ export default function SalesOrderDetailsModal({
               </div>
             </div>
 
-            {/* Linked Data Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 border-t border-border pt-4">
               <div>
                 <h4 className="m-0 mb-2 flex items-center gap-1.5 text-xs font-semibold text-foreground">
@@ -288,14 +284,15 @@ export default function SalesOrderDetailsModal({
                 ) : (
                   <div className="flex flex-col gap-2">
                     {relatedQuotations.map((q, idx) => {
-                      const isTarget = q.quote_no === record.from_quote;
+                      const qNo = q.quote_no || q.quote_number || `#${q.id}`;
+                      const isTarget = qNo === record.from_quote;
                       return (
-                        <div key={`${q.id_str}-${idx}`} className={`rounded-lg border p-2.5 text-xs ${isTarget ? "border-[var(--shell-warning)]/40 bg-[var(--shell-warning-surface)]" : "border-border bg-background"}`}>
+                        <div key={`${q.id}-${idx}`} className={`rounded-lg border p-2.5 text-xs ${isTarget ? "border-[var(--shell-warning)]/40 bg-[var(--shell-warning-surface)]" : "border-border bg-background"}`}>
                           <div className="mb-0.5 flex items-center justify-between">
-                            <span className="font-semibold">{q.quote_no}</span>
+                            <span className="font-semibold">{qNo}</span>
                             <span className="rounded-full bg-background px-1.5 py-0.5 text-[0.7rem] font-semibold text-muted-foreground">{q.status}</span>
                           </div>
-                          <div className="text-muted-foreground text-[11px]">Value: {q.value} &middot; Owner: {q.owner}</div>
+                          <div className="text-muted-foreground text-[11px]">Value: {q.value ?? q.total ?? "—"} &middot; Owner: {q.owner || "—"}</div>
                         </div>
                       );
                     })}
@@ -315,12 +312,12 @@ export default function SalesOrderDetailsModal({
                 ) : (
                   <div className="flex flex-col gap-2">
                     {relatedRequirements.map((r, idx) => (
-                      <div key={`${r.id_str}-${idx}`} className="rounded-lg border border-border bg-background p-2.5 text-xs">
+                      <div key={`${r.id}-${idx}`} className="rounded-lg border border-border bg-background p-2.5 text-xs">
                         <div className="mb-0.5 flex items-center justify-between">
-                          <span className="font-semibold">{r.name}</span>
+                          <span className="font-semibold">{r.name || r.id_str}</span>
                           <span className="rounded-full bg-background px-1.5 py-0.5 text-[0.7rem] font-semibold text-muted-foreground">{r.status}</span>
                         </div>
-                        <div className="text-muted-foreground text-[11px]">Category: {r.category} &middot; Priority: {r.priority}</div>
+                        <div className="text-muted-foreground text-[11px]">Category: {r.category || "—"} &middot; Priority: {r.priority || "—"}</div>
                       </div>
                     ))}
                   </div>
@@ -328,7 +325,6 @@ export default function SalesOrderDetailsModal({
               </div>
             </div>
 
-            {/* Footer actions */}
             <div className="flex items-center justify-between border-t border-border pt-4">
               <div className="flex gap-2">
                 {onApprove && canApprove && (

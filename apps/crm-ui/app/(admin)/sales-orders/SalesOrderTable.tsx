@@ -49,8 +49,8 @@ export default function SalesOrderTable({ salesOrders, onView, onEdit, onDelete,
           const creditStatus = item.credit_check_status || "Not Checked";
           const canApprove = APPROVABLE.includes(item.status);
           return (
-          <TableRow key={item.id}>
-            <TableCell className="font-semibold text-[var(--shell-brand)] hover:underline cursor-pointer" onClick={() => onView(item)}>{item.so_no}</TableCell>
+          <TableRow key={item.id} className="cursor-pointer" onClick={() => onView(item)}>
+            <TableCell className="font-semibold text-[var(--shell-brand)] hover:underline cursor-pointer" onClick={(e) => { e.stopPropagation(); onView(item); }}>{item.so_no}</TableCell>
             <TableCell>{item.account}</TableCell>
             <TableCell>{formatCurrency(item.value)}</TableCell>
             <TableCell>{item.eta}</TableCell>
@@ -77,13 +77,13 @@ export default function SalesOrderTable({ salesOrders, onView, onEdit, onDelete,
                     size="icon-sm"
                     title="Approve order — runs Billing credit check then publishes to Inventory (O2–O4)"
                     className="cursor-pointer"
-                    onClick={() => onApprove(item)}
+                    onClick={(e) => { e.stopPropagation(); onApprove(item); }}
                   >
                     <BadgeCheck size={14} className="text-[var(--shell-success)]" />
                   </Button>
                 )}
-                <Button variant="ghost" size="icon-sm" className="cursor-pointer" onClick={() => onEdit(item)}><Edit2 size={14} className="text-[var(--shell-brand)]" /></Button>
-                <Button variant="ghost" size="icon-sm" className="cursor-pointer" onClick={() => onDelete(item)}><Trash2 size={14} className="text-[var(--shell-danger)]" /></Button>
+                <Button variant="ghost" size="icon-sm" className="cursor-pointer" onClick={(e) => { e.stopPropagation(); onEdit(item); }}><Edit2 size={14} className="text-[var(--shell-brand)]" /></Button>
+                <Button variant="ghost" size="icon-sm" className="cursor-pointer" onClick={(e) => { e.stopPropagation(); onDelete(item); }}><Trash2 size={14} className="text-[var(--shell-danger)]" /></Button>
               </div>
             </TableCell>
           </TableRow>

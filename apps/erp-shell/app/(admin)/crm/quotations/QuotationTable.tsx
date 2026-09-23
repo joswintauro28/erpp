@@ -28,7 +28,7 @@ export default function QuotationTable({ quotations, onView, onEdit, onDelete, o
         const approvalPending = row.approval_status === "Pending Approval";
         return (
           <span className="font-semibold text-primary hover:underline cursor-pointer flex items-center gap-1.5">
-            {row.quote_no}
+            {row.quote_no || row.quote_number}
             {approvalPending && (
               <span className="inline-flex items-center gap-0.5 rounded-full bg-[var(--shell-warning-surface)] px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-[var(--shell-warning)] border border-[var(--shell-warning)]/30">
                 <Lock className="h-2.5 w-2.5" /> Approval
@@ -39,7 +39,7 @@ export default function QuotationTable({ quotations, onView, onEdit, onDelete, o
       },
     },
     { key: "account", header: "ACCOUNT" },
-    { key: "value", header: "VALUE", render: (row) => formatCurrency(row.value) },
+    { key: "value", header: "VALUE", render: (row) => formatCurrency(row.value ?? row.total ?? 0) },
     {
       key: "discount_pct",
       header: "DISCOUNT",

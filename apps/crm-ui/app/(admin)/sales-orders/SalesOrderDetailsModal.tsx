@@ -288,14 +288,15 @@ export default function SalesOrderDetailsModal({
                 ) : (
                   <div className="flex flex-col gap-2">
                     {relatedQuotations.map((q, idx) => {
-                      const isTarget = q.quote_no === record.from_quote;
+                      const qNo = q.quote_no || q.quote_number || `#${q.id}`;
+                      const isTarget = qNo === record.from_quote;
                       return (
-                        <div key={`${q.id_str}-${idx}`} className={`rounded-lg border p-2.5 text-xs ${isTarget ? "border-[var(--shell-warning)]/40 bg-[var(--shell-warning-surface)]" : "border-[var(--shell-border)] bg-[var(--shell-bg)]"}`}>
+                        <div key={`${q.id}-${idx}`} className={`rounded-lg border p-2.5 text-xs ${isTarget ? "border-[var(--shell-warning)]/40 bg-[var(--shell-warning-surface)]" : "border-[var(--shell-border)] bg-[var(--shell-bg)]"}`}>
                           <div className="mb-0.5 flex items-center justify-between">
-                            <span className="font-semibold">{q.quote_no}</span>
+                            <span className="font-semibold">{qNo}</span>
                             <span className="rounded-full bg-[var(--shell-bg)] px-1.5 py-0.5 text-[0.7rem] font-semibold text-[var(--shell-muted)]">{q.status}</span>
                           </div>
-                          <div className="text-[var(--shell-muted)] text-[11px]">Value: {q.value} &middot; Owner: {q.owner}</div>
+                          <div className="text-[var(--shell-muted)] text-[11px]">Value: {q.value ?? q.total ?? "—"} &middot; Owner: {q.owner || "—"}</div>
                         </div>
                       );
                     })}
@@ -315,12 +316,12 @@ export default function SalesOrderDetailsModal({
                 ) : (
                   <div className="flex flex-col gap-2">
                     {relatedRequirements.map((r, idx) => (
-                      <div key={`${r.id_str}-${idx}`} className="rounded-lg border border-[var(--shell-border)] bg-[var(--shell-bg)] p-2.5 text-xs">
+                      <div key={`${r.id}-${idx}`} className="rounded-lg border border-[var(--shell-border)] bg-[var(--shell-bg)] p-2.5 text-xs">
                         <div className="mb-0.5 flex items-center justify-between">
-                          <span className="font-semibold">{r.name}</span>
+                          <span className="font-semibold">{r.name || r.id_str}</span>
                           <span className="rounded-full bg-[var(--shell-bg)] px-1.5 py-0.5 text-[0.7rem] font-semibold text-[var(--shell-muted)]">{r.status}</span>
                         </div>
-                        <div className="text-[var(--shell-muted)] text-[11px]">Category: {r.category} &middot; Priority: {r.priority}</div>
+                        <div className="text-[var(--shell-muted)] text-[11px]">Category: {r.category || "—"} &middot; Priority: {r.priority || "—"}</div>
                       </div>
                     ))}
                   </div>

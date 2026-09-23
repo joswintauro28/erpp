@@ -191,6 +191,22 @@ export default function LeadDetailsModal({ lead, isOpen, onClose, onSuccess, onV
                 <span class="details-label">Last Contact / Update</span>
                 <span class="details-val">${lead.updated_at}</span>
               </div>
+              <div class="details-item">
+                <span class="details-label">Email</span>
+                <span class="details-val">${lead.email || "—"}</span>
+              </div>
+              <div class="details-item">
+                <span class="details-label">Phone</span>
+                <span class="details-val">${lead.phone || "—"}</span>
+              </div>
+              <div class="details-item">
+                <span class="details-label">Probability</span>
+                <span class="details-val">${lead.probability || "—"}</span>
+              </div>
+              <div class="details-item">
+                <span class="details-label">Created</span>
+                <span class="details-val">${lead.created_at || "—"}</span>
+              </div>
             </div>
           </div>
         </body>
@@ -259,6 +275,11 @@ export default function LeadDetailsModal({ lead, isOpen, onClose, onSuccess, onV
               { label: "Est. Value", value: formatCurrency(lead.est_value), accent: true },
               { label: "Source", value: lead.source },
               { label: "Owner", value: lead.owner },
+              { label: "Email", value: lead.email || "—" },
+              { label: "Phone", value: lead.phone || "—" },
+              { label: "Probability", value: lead.probability || "—" },
+              { label: "Created", value: lead.created_at || "—" },
+              { label: "Updated", value: lead.updated_at || "—" },
             ].map((f) => (
               <div key={f.label}>
                 <div className="text-[11px] font-semibold uppercase text-[var(--shell-muted)] mb-0.5">{f.label}</div>
