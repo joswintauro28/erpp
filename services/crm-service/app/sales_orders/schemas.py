@@ -11,6 +11,7 @@ class SalesOrderBase(BaseModel):
     status: Optional[str] = None
     owner: Optional[str] = None
     file_uri: Optional[str] = None
+    file_id: Optional[int] = None
     line_items: Optional[List[dict]] = None
     # O2/O3 credit check + internal approval state
     credit_check_status: Optional[str] = "Not Checked"
@@ -25,6 +26,7 @@ class SalesOrder(SalesOrderBase):
 
 class SalesOrderSummary(BaseModel):
     total_orders: int
+    total_sales_orders: Optional[int] = None
     open: int
     overdue_at_risk: int
     owners: int

@@ -24,6 +24,7 @@ class QuotationOut(BaseModel):
     file_uri: Optional[str] = None
     converted_invoice_id: Optional[int] = None
     created_at: Optional[str] = None
+    owner: Optional[str] = None
     items: List[QuotationItemOut] = []
 
     # CPQ internal-approval overlay (S5/S6)

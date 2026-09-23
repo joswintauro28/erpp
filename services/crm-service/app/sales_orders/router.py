@@ -27,7 +27,9 @@ async def get_sales_orders_data(
     payload: dict = Depends(get_current_token_payload),
 ):
     owner_id = payload.get("user_id")
-    sales_orders = await crud.get_sales_orders(db, owner_id=owner_id)
+    role = payload.get("role")
+    is_owner = role in ["Organization Owner", "Admin"]
+    sales_orders = await crud.get_sales_orders(db, owner_id=owner_id, is_admin=is_owner)
     
     total = len(sales_orders)
     open_count = len([so for so in sales_orders if so.status in ['Pending', 'Confirmed']])
@@ -36,6 +38,7 @@ async def get_sales_orders_data(
     
     summary = {
         "total_orders": total,
+        "total_sales_orders": total,
         "open": open_count,
         "overdue_at_risk": at_risk,
         "owners": owners_count

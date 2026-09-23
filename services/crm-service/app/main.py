@@ -263,6 +263,15 @@ async def create_entity(entity_type: str, payload: dict, db: AsyncSession = Depe
     if owner_id is not None and "owner_id" not in filtered_payload:
         filtered_payload["owner_id"] = owner_id
 
+    # Stamp timestamps for entities that expose them (lead detail modal, etc.)
+    if entity_type == "leads":
+        from datetime import datetime
+        now = datetime.utcnow().strftime("%Y-%m-%d")
+        if "created_at" in mapper.columns and not filtered_payload.get("created_at"):
+            filtered_payload["created_at"] = now
+        if "updated_at" in mapper.columns and not filtered_payload.get("updated_at"):
+            filtered_payload["updated_at"] = now
+
     db_obj = model_class(**filtered_payload)
     db.add(db_obj)
     await db.commit()
@@ -297,9 +306,13 @@ async def update_entity(entity_type: str, id_str: str, payload: dict, db: AsyncS
 
     model_class = ENTITY_MODEL_MAP[entity_type]
     owner_id = token_payload.get("user_id")
+    role = token_payload.get("role")
+    is_owner = role in ["Organization Owner", "Admin"]
+
     stmt = select(model_class).filter(model_class.id_str == id_str)
-    if owner_id is not None:
-        stmt = stmt.filter(model_class.owner_id == owner_id)
+    if not is_owner and owner_id is not None:
+        from sqlalchemy import or_
+        stmt = stmt.filter(or_(model_class.owner_id == owner_id, model_class.owner_id.is_(None)))
     result = await db.execute(stmt)
     db_obj = result.scalars().first()
     if not db_obj:
@@ -336,6 +349,10 @@ async def update_entity(entity_type: str, id_str: str, payload: dict, db: AsyncS
             else:
                 setattr(db_obj, key, value)
 
+    if "updated_at" in mapper.columns and "updated_at" not in payload:
+        from datetime import datetime
+        setattr(db_obj, "updated_at", datetime.utcnow().strftime("%Y-%m-%d"))
+
     await db.commit()
     await db.refresh(db_obj)
 
@@ -370,9 +387,13 @@ async def delete_entity(entity_type: str, id_str: str, db: AsyncSession = Depend
 
     model_class = ENTITY_MODEL_MAP[entity_type]
     owner_id = token_payload.get("user_id")
+    role = token_payload.get("role")
+    is_owner = role in ["Organization Owner", "Admin"]
+
     stmt = select(model_class).filter(model_class.id_str == id_str)
-    if owner_id is not None:
-        stmt = stmt.filter(model_class.owner_id == owner_id)
+    if not is_owner and owner_id is not None:
+        from sqlalchemy import or_
+        stmt = stmt.filter(or_(model_class.owner_id == owner_id, model_class.owner_id.is_(None)))
     result = await db.execute(stmt)
     db_obj = result.scalars().first()
     if not db_obj:

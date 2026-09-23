@@ -12,7 +12,9 @@ async def get_contacts_data(
     payload: dict = Depends(get_current_token_payload),
 ):
     owner_id = payload.get("user_id")
-    contacts = await crud.get_contacts(db, owner_id=owner_id)
+    role = payload.get("role")
+    is_owner = role in ["Organization Owner", "Admin"]
+    contacts = await crud.get_contacts(db, owner_id=owner_id, is_admin=is_owner)
 
     total = len(contacts)
     open_count = len([c for c in contacts if c.type in ['Primary', 'Decision']])

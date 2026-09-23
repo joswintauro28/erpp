@@ -24,7 +24,9 @@ async def get_opportunities_data(
     payload: dict = Depends(get_current_token_payload),
 ):
     owner_id = payload.get("user_id")
-    opportunities = await crud.get_opportunities(db, owner_id=owner_id)
+    role = payload.get("role")
+    is_owner = role in ["Organization Owner", "Admin"]
+    opportunities = await crud.get_opportunities(db, owner_id=owner_id, is_admin=is_owner)
 
     total = len(opportunities)
     open_count = len([o for o in opportunities if o.stage in ['Discovery', 'Proposal', 'Negotiation']])

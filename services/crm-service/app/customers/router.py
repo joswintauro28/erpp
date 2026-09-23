@@ -12,7 +12,9 @@ async def get_customers_data(
     payload: dict = Depends(get_current_token_payload),
 ):
     owner_id = payload.get("user_id")
-    customers = await crud.get_customers(db, owner_id=owner_id)
+    role = payload.get("role")
+    is_owner = role in ["Organization Owner", "Admin"]
+    customers = await crud.get_customers(db, owner_id=owner_id, is_admin=is_owner)
 
     total = len(customers)
     open_count = len([c for c in customers if c.status in ['Active', 'Prospect']])

@@ -1,3 +1,4 @@
+from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 from starlette.status import HTTP_404_NOT_FOUND, HTTP_500_INTERNAL_SERVER_ERROR
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -47,9 +48,12 @@ def _build_quotation_out(q: dict) -> QuotationOut:
             notes_dict = json.loads(notes_raw)
             q_out.notes = notes_dict.get("notes", "")
             file_uri = notes_dict.get("file_uri")
+            owner = notes_dict.get("owner")
+            if owner:
+                q_out.owner = owner
         except Exception:
             pass
-            
+
     q_out.file_uri = file_uri
     return q_out
 
@@ -184,7 +188,11 @@ async def _map_crm_payload_to_billing(payload: dict, db: AsyncSession) -> dict:
 
 
 @router.get("", response_model=QuotationListResponse)
-async def list_quotations(token_payload: dict = Depends(get_current_token_payload), db: AsyncSession = Depends(get_db)):
+async def list_quotations(
+    account: Optional[str] = Query(None),
+    token_payload: dict = Depends(get_current_token_payload),
+    db: AsyncSession = Depends(get_db),
+):
     token = _get_token(token_payload)
     try:
         items = await quotations_list(token)
@@ -205,6 +213,11 @@ async def list_quotations(token_payload: dict = Depends(get_current_token_payloa
         out_dict = out.model_dump()
         out_dict.update(approval)
         mapped_quotations.append(out_dict)
+
+    if account:
+        mapped_quotations = [
+            q for q in mapped_quotations if (q.get("account") or "") == account
+        ]
 
     return QuotationListResponse(
         summary=QuotationSummary(

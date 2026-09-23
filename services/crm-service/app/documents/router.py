@@ -12,7 +12,9 @@ async def get_documents_data(
     payload: dict = Depends(get_current_token_payload),
 ):
     owner_id = payload.get("user_id")
-    documents = await crud.get_documents(db, owner_id=owner_id)
+    role = payload.get("role")
+    is_owner = role in ["Organization Owner", "Admin"]
+    documents = await crud.get_documents(db, owner_id=owner_id, is_admin=is_owner)
 
     total = len(documents)
     open_count = len([d for d in documents if d.status in ['Draft', 'Under Review']])

@@ -39,9 +39,13 @@ async def get_lead_scores(
     payload: dict = Depends(get_current_token_payload),
 ):
     owner_id = payload.get("user_id")
+    role = payload.get("role")
+    is_owner = role in ["Organization Owner", "Admin"]
+
     stmt = select(models.Lead)
-    if owner_id is not None:
-        stmt = stmt.filter(models.Lead.owner_id == owner_id)
+    if not is_owner and owner_id is not None:
+        from sqlalchemy import or_
+        stmt = stmt.filter(or_(models.Lead.owner_id == owner_id, models.Lead.owner_id.is_(None)))
     result = await db.execute(stmt)
     leads = result.scalars().all()
     scored = [_score_lead(l) for l in leads]
@@ -75,7 +79,9 @@ async def get_leads_data(
     payload: dict = Depends(get_current_token_payload),
 ):
     owner_id = payload.get("user_id")
-    leads = await crud.get_leads(db, owner_id=owner_id)
+    role = payload.get("role")
+    is_owner = role in ["Organization Owner", "Admin"]
+    leads = await crud.get_leads(db, owner_id=owner_id, is_admin=is_owner)
 
     total = len(leads)
     open_count = len([l for l in leads if l.status in ['New', 'Qualified', 'In Progress']])

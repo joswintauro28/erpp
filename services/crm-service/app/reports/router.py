@@ -13,7 +13,9 @@ async def get_reports_data(
     payload: dict = Depends(get_current_token_payload),
 ):
     owner_id = payload.get("user_id")
-    data = await crud.get_reports(db, owner_id=owner_id)
+    role = payload.get("role")
+    is_owner = role in ["Organization Owner", "Admin"]
+    data = await crud.get_reports(db, owner_id=owner_id, is_admin=is_owner)
     summary = generic_summary(data, active_vals=['Generating'], attention_vals=['Failed'])
     return {"summary": summary, "reports": data}
 
@@ -23,10 +25,13 @@ async def get_reports_dashboard(
     payload: dict = Depends(get_current_token_payload),
 ):
     owner_id = payload.get("user_id")
+    role = payload.get("role")
+    is_owner = role in ["Organization Owner", "Admin"]
 
     stmt_so = select(models.SalesOrder)
-    if owner_id is not None:
-        stmt_so = stmt_so.filter(models.SalesOrder.owner_id == owner_id)
+    if not is_owner and owner_id is not None:
+        from sqlalchemy import or_
+        stmt_so = stmt_so.filter(or_(models.SalesOrder.owner_id == owner_id, models.SalesOrder.owner_id.is_(None)))
     result = await db.execute(stmt_so)
     sales = result.scalars().all()
     rep_sales = {}
@@ -36,8 +41,9 @@ async def get_reports_dashboard(
         rep_sales[rep_name] = rep_sales.get(rep_name, 0.0) + amount
 
     stmt_lead = select(models.Lead)
-    if owner_id is not None:
-        stmt_lead = stmt_lead.filter(models.Lead.owner_id == owner_id)
+    if not is_owner and owner_id is not None:
+        from sqlalchemy import or_
+        stmt_lead = stmt_lead.filter(or_(models.Lead.owner_id == owner_id, models.Lead.owner_id.is_(None)))
     result = await db.execute(stmt_lead)
     leads = result.scalars().all()
     lead_status = {}
@@ -46,8 +52,9 @@ async def get_reports_dashboard(
         lead_status[status] = lead_status.get(status, 0) + 1
 
     stmt_opp = select(models.Opportunity)
-    if owner_id is not None:
-        stmt_opp = stmt_opp.filter(models.Opportunity.owner_id == owner_id)
+    if not is_owner and owner_id is not None:
+        from sqlalchemy import or_
+        stmt_opp = stmt_opp.filter(or_(models.Opportunity.owner_id == owner_id, models.Opportunity.owner_id.is_(None)))
     result = await db.execute(stmt_opp)
     opps = result.scalars().all()
     opp_stages = {}

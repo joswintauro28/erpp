@@ -14,6 +14,12 @@ class Lead(Base):
     status = Column(String)
     owner = Column(String)
     updated_at = Column(String)
+    created_at = Column(String, nullable=True)
+
+    # Contact / qualification detail collected by LeadCreateModal
+    email = Column(String, nullable=True)
+    phone = Column(String, nullable=True)
+    probability = Column(String, nullable=True)
 
     # Lead scoring (M3) / MQL qualification (M4 / S1 handoff)
     score = Column(Integer, default=0, nullable=False, server_default="0")

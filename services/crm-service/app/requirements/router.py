@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends
+from typing import Optional
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from app import database
 from app.requirements import schemas, crud
@@ -8,11 +9,17 @@ router = APIRouter(prefix="/api/requirements", tags=["requirements"])
 
 @router.get("", response_model=schemas.RequirementManagementData)
 async def get_requirements_data(
+    account: Optional[str] = Query(None),
     db: AsyncSession = Depends(database.get_db),
     payload: dict = Depends(get_current_token_payload),
 ):
     owner_id = payload.get("user_id")
-    requirements = await crud.get_requirements(db, owner_id=owner_id)
+    role = payload.get("role")
+    is_owner = role in ["Organization Owner", "Admin"]
+    requirements = await crud.get_requirements(db, owner_id=owner_id, is_admin=is_owner)
+
+    if account:
+        requirements = [r for r in requirements if (r.account or "") == account]
 
     total = len(requirements)
     open_count = len([r for r in requirements if r.status in ['Draft', 'Review']])

@@ -10,6 +10,10 @@ class LeadBase(BaseModel):
     status: Optional[str] = None
     owner: Optional[str] = None
     updated_at: Optional[str] = None
+    created_at: Optional[str] = None
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    probability: Optional[str] = None
     # Scoring (M3) / MQL (M4) fields surfaced to the UI
     score: Optional[int] = 0
     tier: Optional[str] = "Cold"
