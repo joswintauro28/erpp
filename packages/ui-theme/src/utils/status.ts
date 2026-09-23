@@ -149,6 +149,46 @@ const PAYMENT: Record<string, StatusVariantKey> = {
   refunded: "neutral",
 }
 
+const CREDIT_NOTE: Record<string, StatusVariantKey> = {
+  issued: "success",
+  applied: "success",
+  draft: "warning",
+  pending: "warning",
+  cancelled: "destructive",
+  void: "neutral",
+}
+
+const DEBIT_NOTE: Record<string, StatusVariantKey> = {
+  issued: "success",
+  applied: "success",
+  draft: "warning",
+  pending: "warning",
+  cancelled: "destructive",
+  void: "neutral",
+}
+
+const EXPENSE: Record<string, StatusVariantKey> = {
+  paid: "success",
+  approved: "success",
+  pending: "warning",
+  rejected: "destructive",
+  cancelled: "destructive",
+}
+
+const ACCOUNT: Record<string, StatusVariantKey> = {
+  active: "success",
+  inactive: "neutral",
+  suspended: "destructive",
+  closed: "neutral",
+}
+
+const RECURRING_INVOICE: Record<string, StatusVariantKey> = {
+  active: "success",
+  paused: "warning",
+  cancelled: "destructive",
+  completed: "neutral",
+}
+
 const STOCK: Record<string, StatusVariantKey> = {
   "in stock": "success",
   low: "warning",
@@ -170,6 +210,12 @@ const MAPS: Record<string, Record<string, StatusVariantKey>> = {
   ai_log: AI_LOG,
   purchase_order: PURCHASE_ORDER,
   payment: PAYMENT,
+  credit_note: CREDIT_NOTE,
+  debit_note: DEBIT_NOTE,
+  expense: EXPENSE,
+  account: ACCOUNT,
+  recurring: RECURRING_INVOICE,
+  recurring_invoice: RECURRING_INVOICE,
   stock: STOCK,
 }
 

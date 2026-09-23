@@ -210,10 +210,6 @@ export function AIFloatingBot({
     }
   }, []);
 
-  if (isAiPage) {
-    return null;
-  }
-
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "j") {
@@ -231,6 +227,10 @@ export function AIFloatingBot({
       setTimeout(() => inputRef.current?.focus(), 150);
     }
   }, [messages, loading, isOpen]);
+
+  if (isAiPage) {
+    return null;
+  }
 
   const handleCopy = (id: string, text: string) => {
     navigator.clipboard.writeText(text);

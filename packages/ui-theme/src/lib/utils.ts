@@ -13,19 +13,21 @@ export const money = (v: number | null | undefined) => {
 export const lakhFormat = (v: number) => `\u20B9${(v / 100000).toFixed(1)}L`;
 
 export const invoiceStatusVariant = (s: string) => {
-  if (s === "paid") return "default" as const;
-  if (s === "pending") return "secondary" as const;
-  if (s === "overdue" || s === "cancelled") return "destructive" as const;
-  if (s === "partially_paid") return "outline" as const;
-  return "outline" as const;
+  const norm = s?.toLowerCase().replace(/[\s_-]+/g, " ").trim();
+  if (norm === "paid") return "success" as const;
+  if (norm === "partially paid" || norm === "partially_paid" || norm === "pending") return "warning" as const;
+  if (norm === "sent" || norm === "draft") return "info" as const;
+  if (norm === "overdue" || norm === "cancelled" || norm === "declined" || norm === "discrepancy") return "destructive" as const;
+  return "neutral" as const;
 };
 
 export const quotationStatusVariant = (s: string) => {
-  if (s === "accepted") return "default" as const;
-  if (s === "sent") return "secondary" as const;
-  if (s === "draft") return "outline" as const;
-  if (s === "rejected" || s === "expired") return "destructive" as const;
-  return "outline" as const;
+  const norm = s?.toLowerCase().replace(/[\s_-]+/g, " ").trim();
+  if (norm === "accepted" || norm === "converted") return "success" as const;
+  if (norm === "sent") return "info" as const;
+  if (norm === "under review" || norm === "pending") return "warning" as const;
+  if (norm === "rejected") return "destructive" as const;
+  return "neutral" as const;
 };
 
 export const formatDate = (d: string | null | undefined) => {
@@ -40,8 +42,11 @@ export const formatDate = (d: string | null | undefined) => {
 };
 
 export const noteStatusVariant = (s: string) => {
-  if (s === "issued") return "default" as const;
-  return "outline" as const;
+  const norm = s?.toLowerCase().replace(/[\s_-]+/g, " ").trim();
+  if (norm === "issued" || norm === "applied" || norm === "closed" || norm === "active") return "success" as const;
+  if (norm === "draft" || norm === "pending") return "warning" as const;
+  if (norm === "cancelled" || norm === "void") return "destructive" as const;
+  return "neutral" as const;
 };
 
 export { statusVariant, type StatusVariantKey } from "../utils/status";

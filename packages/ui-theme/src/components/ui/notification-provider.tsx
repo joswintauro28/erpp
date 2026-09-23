@@ -44,10 +44,17 @@ function resolveEndpoints(props: { restBase?: string; wsUrl?: string }) {
   // M21: default to same-origin (goes through app proxy) instead of hardcoded localhost
   const restBase =
     props.restBase || process.env.NEXT_PUBLIC_ERP_API_URL || "";
-  const wsUrl =
-    props.wsUrl ||
-    process.env.NEXT_PUBLIC_ERP_WS_URL ||
-    `${restBase.replace(/^http/, "ws")}/ws/notifications`;
+  let wsUrl = props.wsUrl || process.env.NEXT_PUBLIC_ERP_WS_URL || "";
+  if (!wsUrl) {
+    if (restBase) {
+      wsUrl = `${restBase.replace(/^http/, "ws")}/ws/notifications`;
+    } else if (typeof window !== "undefined") {
+      const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
+      wsUrl = `${proto}//${window.location.host}/ws/notifications`;
+    } else {
+      wsUrl = "/ws/notifications";
+    }
+  }
   return { restBase: restBase.replace(/\/$/, ""), wsUrl: wsUrl.replace(/\/$/, "") };
 }
 

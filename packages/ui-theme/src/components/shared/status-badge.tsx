@@ -13,18 +13,53 @@ interface StatusConfig {
 
 const STATUS_MAPS: Record<string, Record<string, StatusConfig>> = {
   invoice: {
-    draft: { label: "Draft", variant: "outline" },
-    sent: { label: "Sent", variant: "default" },
+    draft: { label: "Draft", variant: "info" },
+    sent: { label: "Sent", variant: "info" },
     paid: { label: "Paid", variant: "success" },
     partially_paid: { label: "Partial", variant: "warning" },
     overdue: { label: "Overdue", variant: "destructive" },
-    void: { label: "Void", variant: "outline", className: "opacity-50" },
+    void: { label: "Void", variant: "neutral", className: "opacity-50" },
+    cancelled: { label: "Cancelled", variant: "neutral" },
   },
   payment: {
-    pending: { label: "Pending", variant: "outline" },
+    pending: { label: "Pending", variant: "warning" },
     cleared: { label: "Cleared", variant: "success" },
+    completed: { label: "Completed", variant: "success" },
     failed: { label: "Failed", variant: "destructive" },
-    refunded: { label: "Refunded", variant: "warning" },
+    refunded: { label: "Refunded", variant: "neutral" },
+  },
+  credit_note: {
+    draft: { label: "Draft", variant: "warning" },
+    pending: { label: "Pending", variant: "warning" },
+    issued: { label: "Issued", variant: "success" },
+    applied: { label: "Applied", variant: "success" },
+    cancelled: { label: "Cancelled", variant: "destructive" },
+    void: { label: "Void", variant: "neutral" },
+  },
+  debit_note: {
+    draft: { label: "Draft", variant: "warning" },
+    pending: { label: "Pending", variant: "warning" },
+    issued: { label: "Issued", variant: "success" },
+    applied: { label: "Applied", variant: "success" },
+    cancelled: { label: "Cancelled", variant: "destructive" },
+    void: { label: "Void", variant: "neutral" },
+  },
+  expense: {
+    paid: { label: "Paid", variant: "success" },
+    approved: { label: "Approved", variant: "success" },
+    pending: { label: "Pending", variant: "warning" },
+    rejected: { label: "Rejected", variant: "destructive" },
+  },
+  account: {
+    active: { label: "Active", variant: "success" },
+    inactive: { label: "Inactive", variant: "neutral" },
+    suspended: { label: "Suspended", variant: "destructive" },
+  },
+  recurring: {
+    active: { label: "Active", variant: "success" },
+    paused: { label: "Paused", variant: "warning" },
+    cancelled: { label: "Cancelled", variant: "destructive" },
+    completed: { label: "Completed", variant: "neutral" },
   },
   lead: {
     new: { label: "New", variant: "outline" },
