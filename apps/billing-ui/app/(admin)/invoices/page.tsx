@@ -60,7 +60,7 @@ export default function Invoices() {
     if (view === "kanban") params.set("view", "kanban");
     if (status) params.set("status", status);
     const qs = params.toString();
-    router.replace(`/billing/invoices${qs ? `?${qs}` : ""}`, { scroll: false });
+    router.replace(`/invoices${qs ? `?${qs}` : ""}`, { scroll: false });
   }, [router]);
 
   const handleViewMode = (mode: "table" | "kanban") => {
@@ -202,7 +202,7 @@ export default function Invoices() {
       resetForm();
       toast.success("Invoice created successfully");
       if (created?.id) {
-        router.push(`/billing/invoices/${created.id}`);
+        router.push(`/invoices/${created.id}`);
       } else {
         loadInvoices();
       }
@@ -297,7 +297,7 @@ export default function Invoices() {
                         <TableRow
                           key={inv.id}
                           className="group h-12 cursor-pointer"
-                          onClick={() => router.push(`/billing/invoices/${inv.id}`)}
+                          onClick={() => router.push(`/invoices/${inv.id}`)}
                         >
                           <TableCell>
                             <span className="font-mono text-xs font-semibold text-[--shell-foreground]">{inv.invoice_number}</span>
@@ -324,11 +324,11 @@ export default function Invoices() {
                           <TableCell>
                             <div className="flex items-center justify-end gap-0.5">
                               {inv.status === "draft" && (
-                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => router.push(`/billing/invoices/${inv.id}`)} aria-label="Edit invoice">
+                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => router.push(`/invoices/${inv.id}`)} aria-label="Edit invoice">
                                   <Pencil className="h-3.5 w-3.5 text-[var(--shell-brand)]" />
                                 </Button>
                               )}
-                              <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => router.push(`/billing/invoices/${inv.id}`)} aria-label="View invoice">
+                              <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => router.push(`/invoices/${inv.id}`)} aria-label="View invoice">
                                 <Eye className="h-3.5 w-3.5 text-[var(--shell-brand)]" />
                               </Button>
                             </div>
@@ -347,7 +347,7 @@ export default function Invoices() {
       {viewMode === "kanban" && (
         <KanbanBoard
           columns={kanbanColumns}
-          onItemClick={(id: number | string) => router.push(`/billing/invoices/${id}`)}
+          onItemClick={(id: number | string) => router.push(`/invoices/${id}`)}
           onStatusChange={handleStatusChange}
         />
       )}

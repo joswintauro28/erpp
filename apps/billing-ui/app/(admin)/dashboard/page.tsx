@@ -106,7 +106,7 @@ export default function BillingDashboard() {
         subtitle="Here's a live view of your revenue stream, receivables, payables, and invoice statuses."
         badge="Billing & Finance Console"
         actions={
-          <Button size="sm" className="bg-[var(--shell-brand)] text-white hover:bg-[var(--shell-brand)]/90 gap-1.5 text-xs shadow-sm" onClick={() => router.push("/billing/invoices")}>
+          <Button size="sm" className="bg-[var(--shell-brand)] text-white hover:bg-[var(--shell-brand)]/90 gap-1.5 text-xs shadow-sm" onClick={() => router.push("/invoices")}>
             <Plus className="h-3.5 w-3.5" /> New Invoice
           </Button>
         }
@@ -135,13 +135,13 @@ export default function BillingDashboard() {
       <section>
         <SectionHeading label="Quick Actions" />
         <div className="flex flex-wrap gap-2">
-          <Button size="sm" variant="outline" className="gap-1.5 text-xs" onClick={() => router.push("/billing/invoices")}>
+          <Button size="sm" variant="outline" className="gap-1.5 text-xs" onClick={() => router.push("/invoices")}>
             <Plus className="h-3.5 w-3.5" /> New Invoice
           </Button>
-          <Button size="sm" variant="outline" className="gap-1.5 text-xs" onClick={() => router.push("/billing/quotations")}>
+          <Button size="sm" variant="outline" className="gap-1.5 text-xs" onClick={() => router.push("/quotations")}>
             <Receipt className="h-3.5 w-3.5" /> New Quotation
           </Button>
-          <Button size="sm" variant="outline" className="gap-1.5 text-xs" onClick={() => router.push("/billing/payments")}>
+          <Button size="sm" variant="outline" className="gap-1.5 text-xs" onClick={() => router.push("/payments")}>
             <CreditCard className="h-3.5 w-3.5" /> Record Payment
           </Button>
         </div>
@@ -310,7 +310,7 @@ export default function BillingDashboard() {
               </CardTitle>
               <CardDescription>Latest invoice activity</CardDescription>
             </div>
-            <Button variant="ghost" size="sm" className="text-xs gap-1" onClick={() => router.push("/billing/invoices")}>
+            <Button variant="ghost" size="sm" className="text-xs gap-1" onClick={() => router.push("/invoices")}>
               View all <ArrowUp className="h-3 w-3 rotate-90" />
             </Button>
           </CardHeader>
@@ -330,7 +330,7 @@ export default function BillingDashboard() {
                     <TableCell colSpan={4} className="text-center text-muted-foreground py-8 text-sm">No invoices yet</TableCell>
                   </TableRow>
                 ) : (d?.recent_invoices ?? []).slice(0, 5).map((inv) => (
-                  <TableRow key={inv.id} className="cursor-pointer hover:bg-muted/30" onClick={() => router.push(`/billing/invoices/${inv.id}`)}>
+                  <TableRow key={inv.id} className="cursor-pointer hover:bg-muted/30" onClick={() => router.push(`/invoices/${inv.id}`)}>
                     <TableCell className="font-mono text-xs font-medium">{inv.invoice_number}</TableCell>
                     <TableCell className="text-sm text-muted-foreground">{inv.client_name}</TableCell>
                     <TableCell className="text-right font-mono text-sm font-medium">{lakhFormat(inv.total)}</TableCell>

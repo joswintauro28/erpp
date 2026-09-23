@@ -97,7 +97,7 @@ export default function Quotations() {
       <PageHeader
         title="Quotations"
         subtitle="Create and manage client quotations"
-        actions={canCreate ? <Button aria-label="Create Quotation" onClick={() => router.push("/billing/quotations/new")}><Plus className="h-4 w-4" /> New Quotation</Button> : undefined}
+        actions={canCreate ? <Button aria-label="Create Quotation" onClick={() => router.push("/quotations/new")}><Plus className="h-4 w-4" /> New Quotation</Button> : undefined}
       />
 
       <div className="flex flex-wrap items-center gap-3">
@@ -133,7 +133,7 @@ export default function Quotations() {
               <TableBody>
                 {filtered.map((qt) => (
                   <TableRow key={qt.id}>
-                    <TableCell className="cursor-pointer" onClick={() => router.push(`/billing/quotations/${qt.id}`)}>
+                    <TableCell className="cursor-pointer" onClick={() => router.push(`/quotations/${qt.id}`)}>
                       <span className="font-mono text-xs font-medium hover:text-[var(--shell-brand)] transition-colors">{qt.quote_number}</span>
                     </TableCell>
                     <TableCell className="text-[var(--shell-muted)]">{qt.client_name}</TableCell>
@@ -145,7 +145,7 @@ export default function Quotations() {
                       <div className="flex items-center justify-end gap-1">
                         <Button
                           variant="ghost" size="icon-sm"
-                          onClick={() => router.push(`/billing/quotations/${qt.id}`)}
+                          onClick={() => router.push(`/quotations/${qt.id}`)}
                           aria-label="View quotation"
                           title="View quotation"
                         >

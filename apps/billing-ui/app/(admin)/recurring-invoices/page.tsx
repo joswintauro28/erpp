@@ -15,7 +15,7 @@ import {
 import { SearchInput } from "@/components/shared/search-input";
 import { EmptyState } from "@/components/shared/empty-state";
 import { api } from "@/services/api";
-import { PageHeader, handleError } from "@datavex/ui-theme";
+import { PageHeader, handleError, statusVariant } from "@datavex/ui-theme";
 import { useToast } from "@/contexts/ToastContext";
 import { money } from "@/utils/format";
 import type { RecurringInvoice } from "@/types/billing";
@@ -240,7 +240,7 @@ export default function RecurringInvoices() {
                       </span>
                     </TableCell>
                     <TableCell>
-                      <Badge variant={r.status === "active" ? "default" : "secondary"} className="capitalize">{r.status}</Badge>
+                      <Badge variant={statusVariant("recurring", r.status)} className="capitalize">{r.status}</Badge>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center justify-end gap-1">

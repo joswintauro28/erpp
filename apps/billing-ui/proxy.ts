@@ -24,6 +24,9 @@ export function proxy(request: NextRequest) {
     url = new URL(`/api${path}${search}`, ERP_URL);
   } else if (path === "/settings" || path.startsWith("/settings/")) {
     url = new URL(`${path}${search}`, ERP_URL);
+  } else if (path === "/notifications" || path.startsWith("/notifications/") || path.startsWith("/notifications?")) {
+    // Notifications live in erp-service (gateway), not billing-service
+    url = new URL(`${path}${search}`, ERP_URL);
   } else {
     url = new URL(`/api${path}${search}`, BILLING_URL);
   }

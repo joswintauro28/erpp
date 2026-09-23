@@ -22,6 +22,8 @@ This directory contains the Billing Workstation UI for Accountants and Auditors.
 - `/api/auth/*` → core-iam (`http://localhost:8002`)
 - `/api/ai/*` → ai-service (`http://localhost:8005`, preserves `/api` prefix)
 - `/api/files/*` → erp-service (`http://localhost:8000`, preserves `/api` prefix)
+- `/api/settings*` → erp-service (`http://localhost:8000`, no `/api` prefix)
+- `/api/notifications*` → erp-service (`http://localhost:8000`, no `/api` prefix)
 - All other `/api/*` → billing-service (`http://localhost:8003`)
 
 ## 4. Sidebar Navigation
@@ -34,23 +36,25 @@ This directory contains the Billing Workstation UI for Accountants and Auditors.
 ## 5. Shared Components Used
 All pages use `PageHeader` from `@datavex/ui-theme` for consistent headers. Pages that previously used hand-rolled `<h1>` tags have been migrated:
 - `/dashboard` — Dashboard with KPI cards
-- `/billing/invoices` — Invoice list with GST summary
-- `/billing/quotations` — Quotation list
-- `/billing/payments` — Payment list with daily/monthly KPIs
-- `/billing/credit-notes` — Credit note list
-- `/billing/debit-notes` — Debit note list
-- `/billing/recurring-invoices` — Recurring invoice schedules
+- `/invoices` — Invoice list with GST summary
+- `/quotations` — Quotation list
+- `/payments` — Payment list with daily/monthly KPIs
+- `/credit-notes` — Credit note list
+- `/debit-notes` — Debit note list
+- `/recurring-invoices` — Recurring invoice schedules
 - `/accounting/*` — All 8 accounting pages (Accounts, Ledger, Expenses, Reports, Periods, Dunning, Aging, Reconciliation)
 
-## 6. Routes (9 Total)
+## 6. Routes
+Note: with `NEXT_PUBLIC_BASE_PATH=/billing` in single-domain mode, browser URLs appear as `/billing/invoices`. App router paths (below) are relative to that basePath.
+
 - `/dashboard`: `GET /api/dashboard/billing` — aggregated KPIs.
-- `/billing/invoices`: `GET /api/invoices` — invoice list.
-- `/billing/invoices/[id]`: `GET /api/invoices/:id` — invoice details, line items, and GST breakdown.
-- `/billing/quotations`: `GET /api/invoices/quotations` — quotation list.
-- `/billing/payments`: `GET /api/payments` — payment list with KPIs.
-- `/billing/credit-notes`: `GET /api/invoices/credit-notes` — credit note list.
-- `/billing/debit-notes`: `GET /api/invoices/debit-notes` — debit note list.
-- `/billing/recurring-invoices`: `GET /api/invoices/recurring` — recurring invoice schedules.
+- `/invoices`: `GET /api/invoices` — invoice list.
+- `/invoices/[id]`: `GET /api/invoices/:id` — invoice details, line items, and GST breakdown.
+- `/quotations`: `GET /api/invoices/quotations` — quotation list.
+- `/payments`: `GET /api/payments` — payment list with KPIs.
+- `/credit-notes`: `GET /api/invoices/credit-notes` — credit note list.
+- `/debit-notes`: `GET /api/invoices/debit-notes` — debit note list.
+- `/recurring-invoices`: `GET /api/invoices/recurring` — recurring invoice schedules.
 
 ## 7. Development Commands
 Run the development server for Billing UI:

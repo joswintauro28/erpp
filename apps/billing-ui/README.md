@@ -23,18 +23,21 @@ The Billing Workstation is a standalone Next.js 16 application configured on **p
 ## 3. Proxy Configurations
 The Next.js proxy middleware (`proxy.ts`) splits incoming requests:
 - `/api/auth/*` &rarr; `core-iam` (Port 8002)
+- `/api/ai/*` &rarr; `ai-service` (Port 8005)
+- `/api/files/*`, `/api/settings*`, `/api/notifications*` &rarr; `erp-service` (Port 8000)
 - All other `/api/*` &rarr; `billing-service` (Port 8003)
 
 ---
 
 ## 4. Workstation Routes
+Browser URLs are prefixed by `NEXT_PUBLIC_BASE_PATH` (e.g. `/billing/invoices` in single-domain mode). App router paths:
 - `/dashboard`: KPI analytics (overdue trackers, outstanding balances, GST summaries)
-- `/billing/invoices`: Main invoices ledger with detail popups and GST CGST/SGST/IGST breakdowns
-- `/billing/quotations`: Customer quotations manager
-- `/billing/payments`: Invoice payment records
-- `/billing/credit-notes`: Invoices credit note adjusters
-- `/billing/debit-notes`: Invoices debit note adjusters
-- `/billing/recurring-invoices`: Schedules templates frequency badges
+- `/invoices`: Main invoices ledger with detail popups and GST CGST/SGST/IGST breakdowns
+- `/quotations`: Customer quotations manager
+- `/payments`: Invoice payment records
+- `/credit-notes`: Invoices credit note adjusters
+- `/debit-notes`: Invoices debit note adjusters
+- `/recurring-invoices`: Schedules templates frequency badges
 
 ---
 

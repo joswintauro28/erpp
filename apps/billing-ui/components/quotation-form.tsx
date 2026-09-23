@@ -103,7 +103,7 @@ export default function QuotationForm({ mode, initialData, onSuccess }: Quotatio
         await api.put(`/invoices/quotations/${initialData.id}`, payload);
       } else {
         const result = await api.post<{ id: number }>("/invoices/quotations", payload);
-        router.push(`/billing/quotations/${result.id}`);
+        router.push(`/quotations/${result.id}`);
       }
       onSuccess?.();
     } catch {

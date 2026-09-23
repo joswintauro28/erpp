@@ -212,7 +212,7 @@ export default function InvoiceDetail() {
       <div className="flex flex-col items-center gap-3 py-20 text-[var(--shell-muted)]">
         <FileText className="h-12 w-12" />
         <p className="text-base font-medium text-[var(--shell-foreground)]">Invoice not found</p>
-        <Button variant="outline" size="sm" onClick={() => router.push("/billing/invoices")}>Back to Invoices</Button>
+        <Button variant="outline" size="sm" onClick={() => router.push("/invoices")}>Back to Invoices</Button>
       </div>
     );
   }
@@ -226,7 +226,7 @@ export default function InvoiceDetail() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 sm:gap-0">
           <div className="flex items-start gap-3 min-w-0">
-            <Button variant="ghost" size="icon" aria-label="Back to invoices" onClick={() => router.push("/billing/invoices")} className="shrink-0 mt-1 -ml-2 h-8 w-8">
+            <Button variant="ghost" size="icon" aria-label="Back to invoices" onClick={() => router.push("/invoices")} className="shrink-0 mt-1 -ml-2 h-8 w-8">
               <ArrowLeft className="h-4 w-4" />
             </Button>
             <div className="min-w-0">

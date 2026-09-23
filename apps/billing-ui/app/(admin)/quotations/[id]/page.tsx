@@ -89,7 +89,7 @@ export default function QuotationDetail() {
     setDeleteSaving(true);
     try {
       await api.delete(`/invoices/quotations/${params.id}`);
-      router.push("/billing/quotations");
+      router.push("/quotations");
     } catch (err) { handleError(err); } finally {
       setDeleteSaving(false);
       setDeleteOpen(false);
@@ -148,7 +148,7 @@ export default function QuotationDetail() {
       <div className="flex flex-col items-center gap-3 py-20 text-[var(--shell-muted)]">
         <FileText className="h-12 w-12 text-[var(--shell-brand)]" />
         <p className="text-base font-medium text-[var(--shell-foreground)]">Quotation not found</p>
-        <Button variant="outline" size="sm" onClick={() => router.push("/billing/quotations")}>Back to Quotations</Button>
+        <Button variant="outline" size="sm" onClick={() => router.push("/quotations")}>Back to Quotations</Button>
       </div>
     );
   }
@@ -166,11 +166,11 @@ export default function QuotationDetail() {
       {/* Header Actions */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-[--shell-border] pb-5 print:hidden">
         <div className="flex items-center gap-4">
-          <Button variant="outline" size="icon" className="rounded-full border-[--shell-border] hover:bg-[--shell-surface-alt]" aria-label="Back to quotations" title="Back to quotations" onClick={() => router.push("/billing/quotations")}>
+          <Button variant="outline" size="icon" className="rounded-full border-[--shell-border] hover:bg-[--shell-surface-alt]" aria-label="Back to quotations" title="Back to quotations" onClick={() => router.push("/quotations")}>
             <ArrowLeft className="h-4 w-4" />
           </Button>
           {canEdit && quotation.status === "draft" && (
-            <Button variant="outline" size="icon" className="rounded-full border-[--shell-border] hover:bg-[--shell-surface-alt]" aria-label="Edit quotation" title="Edit quotation" onClick={() => router.push(`/billing/quotations/${quotation.id}/edit`)}>
+            <Button variant="outline" size="icon" className="rounded-full border-[--shell-border] hover:bg-[--shell-surface-alt]" aria-label="Edit quotation" title="Edit quotation" onClick={() => router.push(`/quotations/${quotation.id}/edit`)}>
               <Pencil className="h-4 w-4" />
             </Button>
           )}
@@ -204,7 +204,7 @@ export default function QuotationDetail() {
               This quotation has been accepted and successfully converted into active invoice.
             </p>
           </div>
-          <Button size="sm" variant="outline" className="border-[var(--shell-success)]/20 text-[var(--shell-success)] hover:bg-[var(--shell-success)]/10 ml-auto" onClick={() => router.push(`/billing/invoices/${quotation.converted_invoice_id}`)}>
+          <Button size="sm" variant="outline" className="border-[var(--shell-success)]/20 text-[var(--shell-success)] hover:bg-[var(--shell-success)]/10 ml-auto" onClick={() => router.push(`/invoices/${quotation.converted_invoice_id}`)}>
             <ExternalLink className="mr-1.5 h-3.5 w-3.5" /> View Invoice
           </Button>
         </div>
@@ -355,7 +355,7 @@ export default function QuotationDetail() {
                       key={act.action}
                       onClick={() =>
                         act.action === "delete" ? setDeleteOpen(true) :
-                        act.action === "edit" ? router.push(`/billing/quotations/${quotation.id}/edit`) :
+                        act.action === "edit" ? router.push(`/quotations/${quotation.id}/edit`) :
                         handleStatusChange(act.action)
                       }
                       disabled={actionLoading === act.action}

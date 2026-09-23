@@ -56,7 +56,7 @@ export default function EditQuotation() {
             {error}
           </h1>
         </div>
-        <Button variant="outline" onClick={() => router.push("/billing/quotations")}>
+        <Button variant="outline" onClick={() => router.push("/quotations")}>
           Back to Quotations
         </Button>
       </div>
@@ -82,7 +82,7 @@ export default function EditQuotation() {
       <QuotationForm
         mode="edit"
         initialData={data}
-        onSuccess={() => router.push(`/billing/quotations/${id}`)}
+        onSuccess={() => router.push(`/quotations/${id}`)}
       />
     </div>
   );

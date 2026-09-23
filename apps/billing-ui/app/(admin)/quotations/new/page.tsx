@@ -11,7 +11,7 @@ export default function NewQuotation() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon-sm" onClick={() => router.push("/billing/quotations")}>
+        <Button variant="ghost" size="icon-sm" onClick={() => router.push("/quotations")}>
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div>
@@ -22,7 +22,7 @@ export default function NewQuotation() {
 
       <QuotationForm
         mode="create"
-        onSuccess={() => router.push("/billing/quotations")}
+        onSuccess={() => router.push("/quotations")}
       />
     </div>
   );

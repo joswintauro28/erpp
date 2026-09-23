@@ -14,15 +14,15 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { SearchInput } from "@/components/shared/search-input";
 import { EmptyState } from "@/components/shared/empty-state";
 import { api } from "@/services/api";
-import { PageHeader, KpiCard, SectionHeading, handleError } from "@datavex/ui-theme";
+import { PageHeader, KpiCard, SectionHeading, handleError, statusVariant } from "@datavex/ui-theme";
 import { useToast } from "@/contexts/ToastContext";
-import { money, noteStatusVariant as statusVariant } from "@/utils/format";
-import type { CreditNote } from "@/types/billing";
-import CreditNotesLoading from "./loading";
+import { money } from "@/utils/format";
+import type { DebitNote } from "@/types/billing";
+import DebitNotesLoading from "./loading";
 
-export default function CreditNotes() {
+export default function DebitNotes() {
   const { toast } = useToast();
-  const [notes, setNotes] = useState<CreditNote[]>([]);
+  const [notes, setNotes] = useState<DebitNote[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
@@ -30,13 +30,13 @@ export default function CreditNotes() {
   const [deleting, setDeleting] = useState<number | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
 
-  const [invoices, setInvoices] = useState<{ id: number; number: string; client: string; total: number; balance: number }[]>([]);
+  const [invoices, setInvoices] = useState<{ id: number; number: string; client: string; total: number }[]>([]);
 
   const load = useCallback(() => {
     setLoading(true);
     Promise.all([
-      api.get<CreditNote[]>("/invoices/credit-notes"),
-      api.get<any[]>("/invoices?status=sent,partially_paid,overdue").catch(() => []),
+      api.get<DebitNote[]>("/invoices/debit-notes"),
+      api.get<any[]>("/invoices").catch(() => []),
     ]).then(([notesData, invData]) => {
       setNotes(notesData);
       setInvoices(invData.map((i) => ({
@@ -44,7 +44,6 @@ export default function CreditNotes() {
         number: i.invoice_number ?? `INV-${i.id}`,
         client: i.client_name ?? "Unknown",
         total: Number(i.total),
-        balance: Number(i.balance_due ?? i.total),
       })));
     }).catch(() => setNotes([]))
     .finally(() => setLoading(false));
@@ -74,17 +73,17 @@ export default function CreditNotes() {
     setSaving(true);
     try {
       const inv = invoices.find((i) => i.number === formInvoice);
-      await api.post("/invoices/credit-notes", {
+      await api.post("/invoices/debit-notes", {
         invoiceId: inv?.id,
         amount: Number(formAmount),
         reason: formReason || undefined,
       });
       setCreateOpen(false);
       setFormInvoice(""); setFormAmount(""); setFormReason("");
-      toast.success("Credit note created successfully");
+      toast.success("Debit note created successfully");
       load();
     } catch {
-      toast.error("Failed to create credit note. Please try again.");
+      toast.error("Failed to create debit note. Please try again.");
     } finally { setSaving(false); }
   };
 
@@ -92,22 +91,22 @@ export default function CreditNotes() {
     setDeleting(id);
     setDeleteConfirmId(null);
     try {
-      await api.delete(`/invoices/credit-notes/${id}`);
-      toast.success("Credit note deleted");
+      await api.delete(`/invoices/debit-notes/${id}`);
+      toast.success("Debit note deleted");
       load();
     } catch {
-      toast.error("Failed to delete credit note.");
+      toast.error("Failed to delete debit note.");
     } finally { setDeleting(null); }
   };
 
-  if (loading) return <CreditNotesLoading />;
+  if (loading) return <DebitNotesLoading />;
 
   return (
     <div className="space-y-10 lg:space-y-12">
       <PageHeader
-        title="Credit Notes"
-        subtitle="Manage credit notes issued against invoices"
-        actions={<Button aria-label="Create Credit Note" onClick={() => setCreateOpen(true)}><Plus className="h-4 w-4" /> Create Credit Note</Button>}
+        title="Debit Notes"
+        subtitle="Manage debit notes issued to clients"
+        actions={<Button aria-label="Create Debit Note" onClick={() => setCreateOpen(true)}><Plus className="h-4 w-4" /> Create Debit Note</Button>}
       />
 
       <section>
@@ -120,12 +119,12 @@ export default function CreditNotes() {
         </div>
       </section>
 
-      <SearchInput value={search} onChange={setSearch} placeholder="Search credit notes..." className="max-w-xs" />
+      <SearchInput value={search} onChange={setSearch} placeholder="Search debit notes..." className="max-w-xs" />
 
       <Card>
         <CardContent className="p-0">
           {filtered.length === 0 ? (
-            <EmptyState icon={FileText} title={notes.length === 0 ? "No credit notes yet" : "No credit notes match your search"} />
+            <EmptyState icon={FileText} title={notes.length === 0 ? "No debit notes yet" : "No debit notes match your search"} />
           ) : (
             <Table>
               <TableHeader>
@@ -146,15 +145,15 @@ export default function CreditNotes() {
                     <TableCell className="font-mono text-xs">{n.invoice_number}</TableCell>
                     <TableCell className="text-[var(--shell-muted)]">{n.client_name}</TableCell>
                     <TableCell className="font-mono text-sm text-right">{money(n.amount)}</TableCell>
-                    <TableCell><Badge variant={statusVariant(n.status)} className="capitalize">{n.status}</Badge></TableCell>
+                    <TableCell><Badge variant={statusVariant("debit_note", n.status)} className="capitalize">{n.status}</Badge></TableCell>
                     <TableCell className="text-xs text-[var(--shell-muted)]">{n.date}</TableCell>
                     <TableCell>
-                      <div className="flex justify-end">
-                        <Button variant="ghost" size="icon-sm" onClick={() => setDeleteConfirmId(n.id)} disabled={deleting === n.id}>
-                          {deleting === n.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Trash2 className="h-3 w-3 text-[--shell-danger]" />}
-                        </Button>
-                      </div>
-                    </TableCell>
+                       <div className="flex justify-end">
+                         <Button variant="ghost" size="icon-sm" onClick={() => setDeleteConfirmId(n.id)} disabled={deleting === n.id}>
+                           {deleting === n.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Trash2 className="h-3 w-3 text-[--shell-danger]" />}
+                         </Button>
+                       </div>
+                     </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -165,7 +164,7 @@ export default function CreditNotes() {
 
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
         <DialogContent>
-          <DialogHeader><DialogTitle>Create Credit Note</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>Create Debit Note</DialogTitle></DialogHeader>
           <form className="space-y-5" onSubmit={handleCreate}>
             <div className="rounded-lg border border-[var(--shell-border)] bg-[var(--shell-surface)] p-4">
               <div className="mb-3 flex items-center gap-2">
@@ -173,13 +172,13 @@ export default function CreditNotes() {
                 <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--shell-foreground)]">Invoice Reference</span>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="cn-invoice">Invoice</Label>
+                <Label htmlFor="dn-invoice">Invoice</Label>
                 <Select value={formInvoice} onValueChange={(v) => v !== null && setFormInvoice(v)}>
-                  <SelectTrigger id="cn-invoice"><SelectValue placeholder="Select an invoice" /></SelectTrigger>
+                  <SelectTrigger id="dn-invoice"><SelectValue placeholder="Select an invoice" /></SelectTrigger>
                   <SelectContent>
                     {invoices.map((inv) => (
                       <SelectItem key={inv.id} value={inv.number}>
-                        {inv.number} — {inv.client} (Balance: {money(inv.balance)})
+                        {inv.number} — {inv.client}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -187,23 +186,23 @@ export default function CreditNotes() {
               </div>
               {selectedInvoice && (
                 <div className="mt-3 flex items-center justify-between rounded-md bg-[var(--shell-bg)] px-3 py-2 text-xs">
-                  <span className="text-[var(--shell-muted)]">Invoice Balance</span>
-                  <span className="font-mono font-semibold text-[var(--shell-brand)]">{money(selectedInvoice.balance)}</span>
+                  <span className="text-[var(--shell-muted)]">Invoice Total</span>
+                  <span className="font-mono font-semibold text-[var(--shell-foreground)]">{money(selectedInvoice.total)}</span>
                 </div>
               )}
             </div>
 
             <div className="rounded-lg border border-[var(--shell-border)] bg-[var(--shell-surface)] p-4">
               <div className="space-y-2">
-                <Label htmlFor="cn-amount">Amount (₹)</Label>
-                <Input id="cn-amount" type="number" min={0.01} step={0.01} placeholder="0.00" required value={formAmount} onChange={(e) => setFormAmount(e.target.value)} />
+                <Label htmlFor="dn-amount">Amount (₹)</Label>
+                <Input id="dn-amount" type="number" min={0.01} step={0.01} placeholder="0.00" required value={formAmount} onChange={(e) => setFormAmount(e.target.value)} />
               </div>
             </div>
 
             <div className="rounded-lg border border-[var(--shell-border)] bg-[var(--shell-surface)] p-4">
               <div className="space-y-2">
-                <Label htmlFor="cn-reason">Reason</Label>
-                <Textarea id="cn-reason" rows={2} placeholder="Reason for credit note" value={formReason} onChange={(e) => setFormReason(e.target.value)} />
+                <Label htmlFor="dn-reason">Reason</Label>
+                <Textarea id="dn-reason" rows={2} placeholder="Reason for debit note" value={formReason} onChange={(e) => setFormReason(e.target.value)} />
               </div>
             </div>
 
@@ -211,7 +210,7 @@ export default function CreditNotes() {
               <Button type="button" variant="outline" size="sm" onClick={() => setCreateOpen(false)}>Cancel</Button>
               <Button type="submit" size="sm" disabled={saving || !formInvoice || !formAmount}>
                 {saving && <Loader2 className="mr-1 h-4 w-4 animate-spin" />}
-                Create Credit Note
+                Create Debit Note
               </Button>
             </DialogFooter>
           </form>
@@ -226,11 +225,11 @@ export default function CreditNotes() {
               <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--shell-danger-surface)] text-[var(--shell-danger)]">
                 <AlertTriangle className="h-5 w-5" />
               </div>
-              <DialogTitle>Delete Credit Note</DialogTitle>
+              <DialogTitle>Delete Debit Note</DialogTitle>
             </div>
           </DialogHeader>
           <p className="text-sm text-[--shell-muted] pt-1">
-            Are you sure you want to delete this credit note? This action cannot be undone.
+            Are you sure you want to delete this debit note? This action cannot be undone.
           </p>
           <DialogFooter className="mt-4">
             <Button variant="outline" size="sm" onClick={() => setDeleteConfirmId(null)}>Cancel</Button>
