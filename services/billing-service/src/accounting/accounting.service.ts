@@ -102,9 +102,16 @@ export class AccountingService {
   async getReports(organizationId: number) {
     const monthNames = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
-    const key = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+    const key = (d: any) => {
+      if (!d) return null;
+      const dateObj = d instanceof Date ? d : new Date(d);
+      if (isNaN(dateObj.getTime())) return null;
+      return `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, "0")}`;
+    };
     const label = (k: string) => {
-      const m = parseInt(k.split("-")[1], 10);
+      const parts = k.split("-");
+      if (parts.length < 2) return k;
+      const m = parseInt(parts[1], 10);
       return monthNames[m - 1] ?? k;
     };
 
@@ -151,23 +158,23 @@ export class AccountingService {
 
     const revenueByMonth: Record<string, number> = {};
     for (const inv of invoices) {
-      if (!inv.issueDate) continue;
       const k = key(inv.issueDate);
-      revenueByMonth[k] = (revenueByMonth[k] ?? 0) + Number(inv.total);
+      if (!k) continue;
+      revenueByMonth[k] = (revenueByMonth[k] ?? 0) + Number(inv.total || 0);
     }
 
     const creditNoteByMonth: Record<string, number> = {};
     for (const cn of creditNotes) {
-      if (!cn.issueDate) continue;
       const k = key(cn.issueDate);
-      creditNoteByMonth[k] = (creditNoteByMonth[k] ?? 0) + Number(cn.amount);
+      if (!k) continue;
+      creditNoteByMonth[k] = (creditNoteByMonth[k] ?? 0) + Number(cn.amount || 0);
     }
 
     const debitNoteByMonth: Record<string, number> = {};
     for (const dn of debitNotes) {
-      if (!dn.issueDate) continue;
       const k = key(dn.issueDate);
-      debitNoteByMonth[k] = (debitNoteByMonth[k] ?? 0) + Number(dn.amount);
+      if (!k) continue;
+      debitNoteByMonth[k] = (debitNoteByMonth[k] ?? 0) + Number(dn.amount || 0);
     }
 
     // Adjust revenue: credit notes reduce, debit notes increase
@@ -180,16 +187,17 @@ export class AccountingService {
 
     const cogsByMonth: Record<string, number> = {};
     for (const item of invoiceItems) {
-      if (!item.invoice.issueDate) continue;
-      const k = key(item.invoice.issueDate);
-      const cost = Number(item.quantity) * Number(item.costPrice);
+      const k = key(item.invoice?.issueDate);
+      if (!k) continue;
+      const cost = Number(item.quantity || 0) * Number(item.costPrice || 0);
       cogsByMonth[k] = (cogsByMonth[k] ?? 0) + cost;
     }
 
     const expenseByMonth: Record<string, number> = {};
     for (const exp of expenses) {
       const k = key(exp.date);
-      expenseByMonth[k] = (expenseByMonth[k] ?? 0) + Number(exp.amount);
+      if (!k) continue;
+      expenseByMonth[k] = (expenseByMonth[k] ?? 0) + Number(exp.amount || 0);
     }
 
     const allMonths = [...new Set([...Object.keys(revenueByMonth), ...Object.keys(cogsByMonth), ...Object.keys(expenseByMonth)])].sort();
@@ -216,14 +224,14 @@ export class AccountingService {
     };
 
     const balance_sheet = typeOrder.map((type) => {
-      const typeAccounts = accounts.filter((a) => a.type === type);
-      const total = typeAccounts.reduce((s, a) => s + Number(a.balance), 0);
+      const typeAccounts = (accounts || []).filter((a) => a.type === type);
+      const total = typeAccounts.reduce((s, a) => s + Number(a.balance || 0), 0);
       return {
         category: displayNames[type] ?? type,
         items: [
           ...typeAccounts.map((a) => ({
             label: a.name,
-            amount: Math.round(Number(a.balance)),
+            amount: Math.round(Number(a.balance || 0)),
           })),
           { label: `Total ${displayNames[type] ?? type}`, amount: Math.round(total) },
         ],
@@ -1447,9 +1455,11 @@ export class AccountingService {
         }
       }
 
+      const txDate = repEntry.entryDate ? (repEntry.entryDate instanceof Date ? repEntry.entryDate : new Date(repEntry.entryDate)) : new Date();
+
       cashTransactionsList.push({
         id: repEntry.id,
-        date: repEntry.entryDate,
+        date: txDate,
         description: repEntry.description,
         amount: netCashChange,
         activity: txClassification,
@@ -1473,7 +1483,7 @@ export class AccountingService {
       if (e.account.type !== "Expense") return false;
       const key = (e.referenceType && e.referenceId)
         ? `${e.referenceType}_${e.referenceId}`
-        : `${e.entryDate.getTime()}_${e.description}`;
+        : `${e.entryDate ? (e.entryDate instanceof Date ? e.entryDate.getTime() : new Date(e.entryDate).getTime()) : 0}_${e.description}`;
       const group = txGroups.get(key) || [];
       return !group.some((ge) => cashAccountIdsSet.has(ge.accountId));
     });
@@ -1644,7 +1654,11 @@ export class AccountingService {
       netIncreaseDecrease: opNet + invNet + finNet,
       closingCashBalance,
       reconciliation,
-      transactions: cashTransactionsList.sort((a, b) => b.date.getTime() - a.date.getTime()),
+      transactions: cashTransactionsList.sort((a, b) => {
+        const timeA = a.date instanceof Date ? a.date.getTime() : new Date(a.date).getTime();
+        const timeB = b.date instanceof Date ? b.date.getTime() : new Date(b.date).getTime();
+        return timeB - timeA;
+      }),
     };
   }
 }
