@@ -2,19 +2,6 @@ import { setAccessToken, getAccessToken, API_BASE, api as baseApi } from "@datav
 
 export { setAccessToken, getAccessToken, API_BASE };
 
-const CRM_PATHS = [
-  "customers", "contacts", "documents", "opportunities", "sales", "sales-orders",
-  "requirements", "quotations", "reports", "ai-assistant", "lead-discovery", "leads"
-];
-
-function normalizePath(path: string): string {
-  const cleanPath = path.startsWith("/") ? path.slice(1) : path;
-  if (CRM_PATHS.some(p => cleanPath.startsWith(p)) && !cleanPath.startsWith("crm/")) {
-    return `/crm/${cleanPath}`;
-  }
-  return path;
-}
-
 function mapQuotationFields(data: any): any {
   if (!data) return data;
   if (Array.isArray(data)) {
@@ -61,23 +48,23 @@ function mapQuotationFields(data: any): any {
 
 export const api = {
   get: async <T>(path: string, opts?: any): Promise<T> => {
-    const res = await baseApi.get<any>(normalizePath(path), opts);
+    const res = await baseApi.get<any>(path, opts);
     return mapQuotationFields(res);
   },
   post: async <T>(path: string, body?: any, opts?: any): Promise<T> => {
-    const res = await baseApi.post<any>(normalizePath(path), body, opts);
+    const res = await baseApi.post<any>(path, body, opts);
     return mapQuotationFields(res);
   },
   put: async <T>(path: string, body?: any, opts?: any): Promise<T> => {
-    const res = await baseApi.put<any>(normalizePath(path), body, opts);
+    const res = await baseApi.put<any>(path, body, opts);
     return mapQuotationFields(res);
   },
   patch: async <T>(path: string, body?: any, opts?: any): Promise<T> => {
-    const res = await baseApi.patch<any>(normalizePath(path), body, opts);
+    const res = await baseApi.patch<any>(path, body, opts);
     return mapQuotationFields(res);
   },
   delete: async <T>(path: string, opts?: any): Promise<T> => {
-    const res = await baseApi.delete<any>(normalizePath(path), opts);
+    const res = await baseApi.delete<any>(path, opts);
     return mapQuotationFields(res);
   },
 };

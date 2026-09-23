@@ -113,20 +113,23 @@ export default function LoginPage() {
       <div className="relative z-10 w-full max-w-[400px] px-6 py-12 flex flex-col items-center">
         {/* Brand Header */}
         <div className="mb-8 flex flex-col items-center gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-border/60 bg-primary/10 overflow-hidden">
-            {logoUrl ? (
+          {logoUrl ? (
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-border/60 bg-card overflow-hidden shadow-sm">
               <img src={logoUrl} alt={companyName} className="h-full w-full object-contain" />
-            ) : (
-              <span className="font-heading text-lg font-bold text-[var(--shell-accent)] tracking-[0.05em]">
+            </div>
+          ) : (
+            <div className="relative flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-md transition-transform duration-300 select-none overflow-hidden">
+              <span className="absolute inset-0 bg-gradient-to-tr from-white/20 via-transparent to-transparent pointer-events-none" />
+              <span className="font-heading text-xl font-black tracking-tight text-white">
                 {companyName.charAt(0)}
               </span>
-            )}
-          </div>
+            </div>
+          )}
           <div className="flex flex-col items-center gap-0.5">
-            <h1 className="font-heading text-lg font-bold text-foreground tracking-[0.05em] uppercase">
+            <h1 className="font-heading text-lg font-bold text-foreground tracking-[0.08em] uppercase">
               {companyName}
             </h1>
-            <p className="text-xs text-muted-foreground uppercase tracking-[0.1em]">Command Center</p>
+            <p className="text-[11px] text-muted-foreground uppercase tracking-[0.15em] font-medium">Command Center</p>
           </div>
         </div>
 

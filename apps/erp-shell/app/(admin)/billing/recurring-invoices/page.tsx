@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { api } from "@/services/api";
 import { toastSuccess, toastError } from "@/utils/toast";
-import { SearchInput, EmptyState, PageHeader, handleError } from "@datavex/ui-theme";
+import { SearchInput, EmptyState, PageHeader, handleError, statusVariant } from "@datavex/ui-theme";
 import { money } from "@/utils/format";
 import type { RecurringInvoice } from "@/types/billing";
 import RecurringInvoicesLoading from "./loading";
@@ -237,7 +237,7 @@ export default function RecurringInvoices() {
                       </span>
                     </TableCell>
                     <TableCell>
-                      <Badge variant={r.status === "active" ? "default" : "secondary"} className="capitalize">{r.status}</Badge>
+                      <Badge variant={statusVariant("recurring", r.status)} className="capitalize">{r.status}</Badge>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center justify-end gap-1">

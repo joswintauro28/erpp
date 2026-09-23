@@ -1,16 +1,90 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { BarChart3, TrendingUp, TrendingDown, AlertTriangle, DollarSign, Receipt, Wallet, Banknote, ArrowUpRight, ArrowDownRight, Minus } from "lucide-react";
+import { BarChart3, TrendingUp, TrendingDown, AlertTriangle, DollarSign, Receipt, Wallet, Banknote, ArrowUpRight, ArrowDownRight, Minus, RotateCw } from "lucide-react";
 import ReportsLoading from "./loading";
 import { api } from "@/services/api";
 import { handleError, Button, PageHeader } from "@datavex/ui-theme";
 import { money } from "@/utils/format";
 
 type Tab = "pl" | "balance-sheet" | "cash-flow" | "cogs";
+
+const asArray = (v: any): any[] => (Array.isArray(v) ? v : []);
+
+const describePayload = (d: any): string => {
+  if (d === null) return "null";
+  if (Array.isArray(d)) return `a JSON array of ${d.length} items`;
+  if (typeof d !== "object") return `a JSON ${typeof d} (\`${String(d).slice(0, 60)}\`)`;
+  const keys = Object.keys(d);
+  const body = JSON.stringify(d);
+  const snippet = (body || "").length > 160 ? `${(body || "").slice(0, 160)}…` : body || "";
+  return `object with keys [${keys.join(", ") || "none"}] — ${snippet}`;
+};
+
+const normalizeReport = (d: any): { pl: any[]; balance_sheet: any[]; cash_flow: any[] } => {
+  if (!d || typeof d !== "object" || Array.isArray(d)) {
+    return { pl: [], balance_sheet: [], cash_flow: [] };
+  }
+  return {
+    pl: asArray(d.pl),
+    balance_sheet: asArray(d.balance_sheet).map((s: any) => ({
+      ...s,
+      items: asArray(s?.items).map((it: any) => ({ label: "", amount: 0, ...(it || {}) })),
+    })),
+    cash_flow: asArray(d.cash_flow),
+  };
+};
+
+const normalizeCashFlow = (d: any): any => {
+  if (!d || typeof d !== "object" || Array.isArray(d)) return null;
+  return {
+    ...d,
+    opening_balance: d.opening_balance ?? 0,
+    net_increase_decrease: d.net_increase_decrease ?? 0,
+    closing_cash_balance: d.closing_cash_balance ?? 0,
+    operating_activities: {
+      net_cash: 0,
+      ...(d.operating_activities || {}),
+      items: asArray(d?.operating_activities?.items),
+    },
+    investing_activities: {
+      net_cash: 0,
+      ...(d.investing_activities || {}),
+      items: asArray(d?.investing_activities?.items),
+    },
+    financing_activities: {
+      net_cash: 0,
+      ...(d.financing_activities || {}),
+      items: asArray(d?.financing_activities?.items),
+    },
+    reconciliation: {
+      difference: 0,
+      gl_closing_cash_balance: 0,
+      bank_statement_ending_balance: 0,
+      ...(d.reconciliation || {}),
+      reconciling_items: asArray(d?.reconciliation?.reconciling_items),
+    },
+    reporting_period: {
+      start_date: new Date().toISOString(),
+      end_date: new Date().toISOString(),
+      ...(d.reporting_period || {}),
+    },
+    transactions: asArray(d.transactions).map((t: any) => ({
+      description: "",
+      amount: 0,
+      activity: "",
+      type: "",
+      reference_type: null,
+      reference_id: null,
+      date: new Date().toISOString(),
+      ...(t || {}),
+      counter_account: { name: "", code: "", ...(t?.counter_account || {}) },
+    })),
+  };
+};
 
 export default function ReportsPage() {
   const [report, setReport] = useState<{ pl: any[]; balance_sheet: any[]; cash_flow: any[] } | null>(null);
@@ -33,32 +107,45 @@ export default function ReportsPage() {
   const [showDrilldown, setShowDrilldown] = useState(false);
   const [search, setSearch] = useState("");
 
-  useEffect(() => {
-    async function fetch() {
-      try {
-        const [d, cSummary, cInvoices, cProducts] = await Promise.all([
-          api.get<{ pl: any[]; balance_sheet: any[]; cash_flow: any[] }>("/reports").catch(() => null),
-          api.get<any>("/reports/cogs/summary").catch(() => null),
-          api.get<any>("/reports/cogs/invoices").catch(() => null),
-          api.get<any>("/reports/cogs/products").catch(() => null),
-        ]);
+  const loadReports = useCallback(async () => {
+    try {
+      setError("");
+      const [d, cSummary, cInvoices, cProducts] = await Promise.all([
+        api.get<{ pl: any[]; balance_sheet: any[]; cash_flow: any[] }>("/reports").catch(() => null),
+        api.get<any>("/reports/cogs/summary").catch(() => null),
+        api.get<any>("/reports/cogs/invoices").catch(() => null),
+        api.get<any>("/reports/cogs/products").catch(() => null),
+      ]);
 
-        if (d) setReport(d);
-        if (cSummary || cInvoices || cProducts) {
-          setCogsData({
-            summary: cSummary,
-            invoices: cInvoices?.invoices || [],
-            products: cProducts?.products || [],
-          });
+      if (d) {
+        const isReportShape =
+          typeof d === "object" &&
+          !Array.isArray(d) &&
+          Array.isArray(d.pl) &&
+          Array.isArray(d.balance_sheet) &&
+          Array.isArray(d.cash_flow);
+        if (!isReportShape) {
+          setError(`Reports service returned an unexpected response format (received ${describePayload(d)})`);
         }
-      } catch {
-        setError("Failed to load financial reports");
-      } finally {
-        setLoading(false);
+        setReport(normalizeReport(d));
       }
+      if (cSummary || cInvoices || cProducts) {
+        setCogsData({
+          summary: cSummary,
+          invoices: cInvoices?.invoices || [],
+          products: cProducts?.products || [],
+        });
+      }
+    } catch {
+      setError("Failed to load financial reports");
+    } finally {
+      setLoading(false);
     }
-    fetch();
   }, []);
+
+  useEffect(() => {
+    loadReports();
+  }, [loadReports]);
 
   useEffect(() => {
     if (tab !== "cash-flow") return;
@@ -69,7 +156,7 @@ export default function ReportsPage() {
           `/reports/cash-flow?startDate=${cfStartDate}&endDate=${cfEndDate}&reportingMode=${cfReportingMode}`
         );
         if (res) {
-          setDetailedCf(res);
+          setDetailedCf(normalizeCashFlow(res));
         }
       } catch (err) {
         handleError(err, "Failed to fetch detailed cash flow");
@@ -91,25 +178,25 @@ export default function ReportsPage() {
 
 
   const plTotals = report ? {
-    revenue: report.pl.reduce((s: number, r: any) => s + r.revenue, 0),
-    cogs: report.pl.reduce((s: number, r: any) => s + r.cost_of_goods, 0),
-    grossProfit: report.pl.reduce((s: number, r: any) => s + r.gross_profit, 0),
-    expenses: report.pl.reduce((s: number, r: any) => s + r.operating_expenses, 0),
-    netIncome: report.pl.reduce((s: number, r: any) => s + r.net_profit, 0),
+    revenue: report.pl.reduce((s: number, r: any) => s + (Number(r?.revenue) || 0), 0),
+    cogs: report.pl.reduce((s: number, r: any) => s + (Number(r?.cost_of_goods) || 0), 0),
+    grossProfit: report.pl.reduce((s: number, r: any) => s + (Number(r?.gross_profit) || 0), 0),
+    expenses: report.pl.reduce((s: number, r: any) => s + (Number(r?.operating_expenses) || 0), 0),
+    netIncome: report.pl.reduce((s: number, r: any) => s + (Number(r?.net_profit) || 0), 0),
   } : null;
 
   const cfTotals = report?.cash_flow?.length
     ? report.cash_flow.reduce((s, r: any) => ({
-        opInflow: s.opInflow + r.operating_activities.cash_inflow,
-        opOutflow: s.opOutflow + r.operating_activities.cash_outflow,
-        opNet: s.opNet + r.operating_activities.net_cash,
-        invInflow: s.invInflow + r.investing_activities.cash_inflow,
-        invOutflow: s.invOutflow + r.investing_activities.cash_outflow,
-        invNet: s.invNet + r.investing_activities.net_cash,
-        finInflow: s.finInflow + r.financing_activities.cash_inflow,
-        finOutflow: s.finOutflow + r.financing_activities.cash_outflow,
-        finNet: s.finNet + r.financing_activities.net_cash,
-        netChange: s.netChange + r.net_change_in_cash,
+        opInflow: s.opInflow + (Number(r?.operating_activities?.cash_inflow) || 0),
+        opOutflow: s.opOutflow + (Number(r?.operating_activities?.cash_outflow) || 0),
+        opNet: s.opNet + (Number(r?.operating_activities?.net_cash) || 0),
+        invInflow: s.invInflow + (Number(r?.investing_activities?.cash_inflow) || 0),
+        invOutflow: s.invOutflow + (Number(r?.investing_activities?.cash_outflow) || 0),
+        invNet: s.invNet + (Number(r?.investing_activities?.net_cash) || 0),
+        finInflow: s.finInflow + (Number(r?.financing_activities?.cash_inflow) || 0),
+        finOutflow: s.finOutflow + (Number(r?.financing_activities?.cash_outflow) || 0),
+        finNet: s.finNet + (Number(r?.financing_activities?.net_cash) || 0),
+        netChange: s.netChange + (Number(r?.net_change_in_cash) || 0),
       }), { opInflow: 0, opOutflow: 0, opNet: 0, invInflow: 0, invOutflow: 0, invNet: 0, finInflow: 0, finOutflow: 0, finNet: 0, netChange: 0 })
     : null;
 
@@ -118,12 +205,21 @@ export default function ReportsPage() {
       <PageHeader
         title="Financial Reports"
         subtitle="Generate and view financial statements"
+        actions={
+          <Button variant="outline" size="sm" onClick={loadReports} disabled={loading}>
+            <RotateCw className={"h-3.5 w-3.5" + (loading ? " animate-spin" : "")} />
+            Refresh
+          </Button>
+        }
       />
 
       {error && (
-        <div className="flex items-center gap-3 rounded-xl border border-destructive/30 bg-destructive/10 px-5 py-3.5">
-          <AlertTriangle className="h-4 w-4 text-destructive" />
-          <span className="text-sm font-medium text-destructive">{error}</span>
+        <div className="flex flex-wrap items-center gap-3 rounded-xl border border-destructive/30 bg-destructive/10 px-5 py-3.5">
+          <AlertTriangle className="h-4 w-4 text-destructive shrink-0" />
+          <span className="text-sm font-medium text-destructive flex-1">{error}</span>
+          <Button variant="outline" size="sm" onClick={loadReports} className="gap-1.5 text-xs">
+            <RotateCw className={"h-3.5 w-3.5" + (loading ? " animate-spin" : "")} /> Try again
+          </Button>
         </div>
       )}
 

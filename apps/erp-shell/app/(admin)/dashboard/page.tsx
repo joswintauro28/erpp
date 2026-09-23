@@ -97,7 +97,15 @@ export default function Dashboard() {
   useEffect(() => {
     async function fetchDashboard() {
       try {
-        const [stats, recent, trend, summary, payments, growth, crm] = await Promise.all([
+        const [
+          statsRes,
+          recentRes,
+          trendRes,
+          summaryRes,
+          paymentsRes,
+          growthRes,
+          crmRes,
+        ] = await Promise.allSettled([
           api.get<DashboardData["stats"]>("/dashboard/stats"),
           api.get<DashboardData["recentInvoices"]>("/dashboard/recent-invoices"),
           api.get<DashboardData["revenueTrend"]>("/dashboard/revenue-trend"),
@@ -106,6 +114,27 @@ export default function Dashboard() {
           api.get<{ month: string; count: number }[]>("/dashboard/client-growth"),
           api.get<any>("/dashboard/crm"),
         ]);
+
+        const stats = statsRes.status === "fulfilled" && statsRes.value ? statsRes.value : {
+          total_clients: 0,
+          total_invoices: 0,
+          total_revenue: 0,
+          outstanding_revenue: 0,
+          overdue_amount: 0,
+          total_products: 0,
+          low_stock_count: 0,
+          pipeline_value: 0,
+          open_opportunities: 0,
+          total_customers: 0,
+          total_leads: 0,
+        };
+
+        const recent = recentRes.status === "fulfilled" && Array.isArray(recentRes.value) ? recentRes.value : [];
+        const trend = trendRes.status === "fulfilled" && Array.isArray(trendRes.value) ? trendRes.value : [];
+        const summary = summaryRes.status === "fulfilled" && summaryRes.value ? summaryRes.value : {};
+        const payments = paymentsRes.status === "fulfilled" && Array.isArray(paymentsRes.value) ? paymentsRes.value : [];
+        const growth = growthRes.status === "fulfilled" && Array.isArray(growthRes.value) ? growthRes.value : [];
+        const crm = crmRes.status === "fulfilled" && crmRes.value ? crmRes.value : null;
 
         const invoiceSummary = Object.entries(summary ?? {}).map(([name, item]) => ({
           name,
@@ -119,24 +148,40 @@ export default function Dashboard() {
 
         setData({
           stats,
-          revenueTrend: trend ?? [],
+          revenueTrend: trend,
           invoiceSummary,
-          paymentAnalytics: (payments ?? []).map((p) => ({ method: p.method, amount: p.amount })),
-          recentInvoices: recent ?? [],
+          paymentAnalytics: payments.map((p) => ({ method: p.method, amount: p.amount })),
+          recentInvoices: recent,
           alerts: {
             overdue_invoices: stats?.overdue_amount && stats.overdue_amount > 0
-              ? recent?.filter((i) => i.status === "overdue" || (i.status === "sent" && i.due_date && new Date(i.due_date) < new Date())).length ?? 0
+              ? recent.filter((i) => i.status === "overdue" || (i.status === "sent" && i.due_date && new Date(i.due_date) < new Date())).length ?? 0
               : 0,
             low_stock_products: stats?.low_stock_count ?? 0,
           },
-          clientGrowth: growth ?? [],
+          clientGrowth: growth,
           crmDashboard: crmDash,
           pipelineValue: pv,
           pipelineStages: stages,
           recommendations: crmDash.recommendations ?? [],
         });
-      } catch {
-        // Keep initial state
+      } catch (e) {
+        console.error("Dashboard fetch error:", e);
+        setData((prev) => ({
+          ...prev,
+          stats: prev.stats || {
+            total_clients: 0,
+            total_invoices: 0,
+            total_revenue: 0,
+            outstanding_revenue: 0,
+            overdue_amount: 0,
+            total_products: 0,
+            low_stock_count: 0,
+            pipeline_value: 0,
+            open_opportunities: 0,
+            total_customers: 0,
+            total_leads: 0,
+          },
+        }));
       }
     }
     fetchDashboard();

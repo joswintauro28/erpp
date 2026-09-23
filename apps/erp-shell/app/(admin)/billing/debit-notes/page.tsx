@@ -13,8 +13,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { api } from "@/services/api";
 import { toastSuccess, toastError } from "@/utils/toast";
-import { SearchInput, EmptyState, PageHeader, handleError, KpiCard } from "@datavex/ui-theme";
-import { money, noteStatusVariant as statusVariant } from "@/utils/format";
+import { SearchInput, EmptyState, PageHeader, handleError, KpiCard, statusVariant } from "@datavex/ui-theme";
+import { money } from "@/utils/format";
 import type { DebitNote } from "@/types/billing";
 import DebitNotesLoading from "./loading";
 
@@ -139,7 +139,7 @@ export default function DebitNotes() {
                     <TableCell className="font-mono text-xs">{n.invoice_number}</TableCell>
                     <TableCell className="text-muted-foreground">{n.client_name}</TableCell>
                     <TableCell className="font-mono text-sm text-right">{money(n.amount)}</TableCell>
-                    <TableCell><Badge variant={statusVariant(n.status)} className="capitalize">{n.status}</Badge></TableCell>
+                    <TableCell><Badge variant={statusVariant("debit_note", n.status)} className="capitalize">{n.status}</Badge></TableCell>
                     <TableCell className="text-xs text-muted-foreground">{n.date}</TableCell>
                     <TableCell>
                        <div className="flex justify-end">

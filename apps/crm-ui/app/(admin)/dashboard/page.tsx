@@ -7,7 +7,7 @@ import {
 } from "recharts";
 import {
   TrendingUp, Users, Target, FileText, UserPlus, Layers, Plus,
-  Lightbulb, BarChart3, Sparkles,
+  Lightbulb, BarChart3, Sparkles, AlertTriangle,
 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -48,12 +48,13 @@ export default function DashboardPage() {
   const { user } = useAuth();
   const [data, setData] = useState<any>({ metrics: [], pipeline_stages: [], recommendations: [] });
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState("");
 
   useEffect(() => {
     let cancelled = false;
     api.get<any>("/dashboard")
       .then((result) => { if (!cancelled) setData(result); })
-      .catch(() => {})
+      .catch((err) => { if (!cancelled) setFetchError(err?.message || "Failed to load dashboard data"); })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
   }, []);
@@ -91,7 +92,14 @@ export default function DashboardPage() {
       />
 
       {/* Alert Banner */}
-      {hasAlerts && (
+      {fetchError && (
+        <AlertBanner
+          icon={AlertTriangle}
+          variant="danger"
+          message={fetchError}
+        />
+      )}
+      {!fetchError && hasAlerts && (
         <AlertBanner
           icon={Lightbulb}
           message="AI recommendations available"

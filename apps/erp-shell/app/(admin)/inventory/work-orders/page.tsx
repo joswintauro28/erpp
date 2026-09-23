@@ -93,9 +93,8 @@ export default function WorkOrdersPage() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const params = statusFilter !== "ALL" ? `?status=${statusFilter}` : "";
       const [woData, prodData] = await Promise.all([
-        api.get<WorkOrder[]>(`/work-orders${params}`),
+        api.get<WorkOrder[]>("/work-orders"),
         api.get<Product[]>("/products"),
       ]);
       setOrders(woData || []);
@@ -109,7 +108,7 @@ export default function WorkOrdersPage() {
 
   useEffect(() => {
     fetchData();
-  }, [statusFilter]);
+  }, []);
 
   const handleCreate = async () => {
     if (!productId) {
@@ -167,12 +166,14 @@ export default function WorkOrdersPage() {
     }
   };
 
-  const filtered = orders.filter(
-    (o) =>
-      !search ||
+  const filtered = orders.filter((o) => {
+    if (statusFilter !== "ALL" && o.status !== statusFilter) return false;
+    if (!search) return true;
+    return (
       o.work_order_no.toLowerCase().includes(search.toLowerCase()) ||
       o.product_name.toLowerCase().includes(search.toLowerCase())
-  );
+    );
+  });
 
   const counts = orders.reduce<Record<string, number>>((acc, o) => {
     acc[o.status] = (acc[o.status] || 0) + 1;
