@@ -4,10 +4,10 @@ import * as bcrypt from 'bcryptjs';
 const prisma = new PrismaClient();
 
 const PERMISSION_CODES = [
-  'clients.view',
-  'clients.create',
-  'clients.edit',
-  'clients.delete',
+  'customers.view',
+  'customers.create',
+  'customers.edit',
+  'customers.delete',
   'invoices.view',
   'invoices.create',
   'invoices.edit',
@@ -48,6 +48,10 @@ const PERMISSION_CODES = [
   'dashboard.view',
   'warehouses.view',
   'warehouses.manage',
+  'purchase_orders.view',
+  'purchase_orders.create',
+  'purchase_orders.manage',
+  'purchase_orders.delete',
 ];
 
 const SYSTEM_ROLES: Record<string, string[]> = {
@@ -78,9 +82,9 @@ const SYSTEM_ROLES: Record<string, string[]> = {
     'workflow.manage',
   ],
   'Sales Executive': [
-    'clients.view',
-    'clients.create',
-    'clients.edit',
+    'customers.view',
+    'customers.create',
+    'customers.edit',
     'quotations.view',
     'quotations.create',
     'quotations.edit',
@@ -102,6 +106,10 @@ const SYSTEM_ROLES: Record<string, string[]> = {
     'suppliers.manage',
     'warehouses.view',
     'warehouses.manage',
+    'purchase_orders.view',
+    'purchase_orders.create',
+    'purchase_orders.manage',
+    'purchase_orders.delete',
     'dashboard.view',
   ],
   Auditor: [
@@ -115,7 +123,7 @@ const SYSTEM_ROLES: Record<string, string[]> = {
     'dashboard.view',
   ],
   Employee: [
-    'clients.view',
+    'customers.view',
     'invoices.view',
     'products.view',
     'stock.view',

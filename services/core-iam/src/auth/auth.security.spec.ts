@@ -3,6 +3,7 @@ import { plainToInstance } from 'class-transformer';
 import { RegisterDto } from './dto/register.dto';
 import { CreateUserDto } from './dto/create-user.dto';
 import { InviteUserDto } from './dto/team.dto';
+import { AuthService } from './auth.service';
 
 describe('Auth Security Validation', () => {
   describe('Password Complexity Enforcement (Finding #6)', () => {
@@ -97,7 +98,6 @@ describe('Auth Security Validation', () => {
 
   describe('Session Fixation Mitigation (Finding #7)', () => {
     it('should generate a cryptographically unique session ID and jti on login', async () => {
-      const { AuthService } = await import('./auth.service');
       const mockPrisma: any = {
         organizationMember: {
           findFirst: jest.fn().mockResolvedValue({
@@ -148,7 +148,6 @@ describe('Auth Security Validation', () => {
     });
 
     it('should regenerate session by revoking previous refresh token and issuing fresh session', async () => {
-      const { AuthService } = await import('./auth.service');
       const mockPrisma: any = {
         organizationMember: {
           findFirst: jest.fn().mockResolvedValue({

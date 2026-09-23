@@ -231,7 +231,7 @@ export class AuthController {
 
   @Get('users')
   @UseGuards(PermissionsGuard)
-  @Permissions('users:list')
+  @Permissions('users.manage', 'users:list', 'users:manage')
   async listUsers(@Req() req: Request & { user: any }) {
     const orgId = Number(req.user.organization_id);
     return this.authService.listUsersInOrganization(orgId);
@@ -239,7 +239,7 @@ export class AuthController {
 
   @Post('users')
   @UseGuards(PermissionsGuard)
-  @Permissions('users:manage')
+  @Permissions('users.manage', 'users:manage')
   async inviteUser(
     @Req() req: Request & { user: any },
     @Body() body: InviteUserDto,
@@ -250,7 +250,7 @@ export class AuthController {
 
   @Put('users/:id/status')
   @UseGuards(PermissionsGuard)
-  @Permissions('users:manage')
+  @Permissions('users.manage', 'users:manage')
   async toggleStatus(
     @Req() req: Request & { user: any },
     @Param('id') id: string,
@@ -262,7 +262,7 @@ export class AuthController {
 
   @Put('users/:id/role')
   @UseGuards(PermissionsGuard)
-  @Permissions('users:manage')
+  @Permissions('users.manage', 'users:manage')
   async updateRole(
     @Req() req: Request & { user: any },
     @Param('id') id: string,
@@ -274,7 +274,7 @@ export class AuthController {
 
   @Delete('users/:id')
   @UseGuards(PermissionsGuard)
-  @Permissions('users:manage')
+  @Permissions('users.manage', 'users:manage')
   async deleteUser(
     @Req() req: Request & { user: any },
     @Param('id') id: string,
@@ -285,21 +285,21 @@ export class AuthController {
 
   @Get('roles')
   @UseGuards(PermissionsGuard)
-  @Permissions('roles:list')
+  @Permissions('roles.manage', 'roles:list', 'roles:manage', 'settings.manage')
   async listRoles() {
     return this.authService.listAvailableRoles();
   }
 
   @Get('permissions')
   @UseGuards(PermissionsGuard)
-  @Permissions('permissions:list')
+  @Permissions('roles.manage', 'permissions:list', 'settings.manage')
   async listPermissions() {
     return this.authService.listAllPermissions();
   }
 
   @Put('roles/:id/permissions')
   @UseGuards(PermissionsGuard)
-  @Permissions('roles:manage')
+  @Permissions('roles.manage', 'roles:manage', 'settings.manage')
   async updateRolePermissions(
     @Param('id') id: string,
     @Body() body: UpdateRolePermissionsDto,
