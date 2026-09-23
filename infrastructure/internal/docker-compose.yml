@@ -46,6 +46,8 @@ services:
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:?RABBITMQ_PASSWORD is required}
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
     healthcheck:
       test: ["CMD", "rabbitmq-diagnostics", "check_running"]
       interval: 10s
@@ -74,30 +76,6 @@ services:
       timeout: 5s
       retries: 5
       start_period: 10s
-    networks:
-      - erp-network
-
-  # ─── RustFS Bucket Init (runs once on first boot) ──────────────────────────
-  rustfs-init:
-    image: rustfs/rustfs:latest
-    container_name: datavex-rustfs-init
-    entrypoint: >
-      /bin/sh -c "
-        apk add --no-cache curl > /dev/null 2>&1 &&
-        rc alias set local http://rustfs:9000 ${RUSTFS_ACCESS_KEY:-datavex-rustfs-admin} ${RUSTFS_SECRET_KEY:?RUSTFS_SECRET_KEY is required} &&
-        rc mb local/crm-assets &&
-        rc mb local/inv-docs &&
-        rc mb local/finance-records &&
-        rc mb local/erp-backups &&
-        rc anonymous set download local/crm-assets &&
-        rc anonymous set download local/inv-docs &&
-        rc anonymous set download local/finance-records &&
-        rc anonymous set download local/erp-backups &&
-        echo 'RustFS buckets created successfully'
-      "
-    depends_on:
-      rustfs:
-        condition: service_healthy
     networks:
       - erp-network
 
@@ -447,6 +425,8 @@ volumes:
   postgres_data:
     driver: local
   rustfs_data:
+    driver: local
+  rabbitmq_data:
     driver: local
 
 networks:

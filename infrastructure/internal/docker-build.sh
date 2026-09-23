@@ -85,6 +85,7 @@ case "$COMMAND" in
     prune)
         docker builder prune -f
         docker image prune -f
+        docker volume prune -f
         ;;
     *)
         echo "Usage: $0 {up|build|down|restart|rebuild|logs|ps|prune} [service_name] [--mode single-domain|prod]"

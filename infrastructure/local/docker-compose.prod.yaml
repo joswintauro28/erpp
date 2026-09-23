@@ -131,3 +131,5 @@ volumes:
     name: datavex-erp_postgres_data
   rustfs_data:
     name: datavex-erp_rustfs_data
+  rabbitmq_data:
+    name: datavex-erp_rabbitmq_data
