@@ -40,6 +40,14 @@ async def get_current_org_id(
     return payload.get("organization_id", payload["user_id"])
 
 
+PERMISSION_ALIASES: dict[str, list[str]] = {
+    "purchase_orders.view": ["stock.view", "suppliers.view"],
+    "purchase_orders.create": ["stock.manage", "suppliers.create", "suppliers.manage"],
+    "purchase_orders.manage": ["stock.manage", "suppliers.manage"],
+    "purchase_orders.delete": ["stock.manage", "suppliers.manage"],
+}
+
+
 def require_permission(permission_code: str):
     async def permission_dep(
         payload: dict = Depends(get_current_token_payload),
@@ -47,7 +55,15 @@ def require_permission(permission_code: str):
         role = payload.get("role")
         permissions = payload.get("permissions", [])
 
-        if role == "Organization Owner" or permission_code in permissions:
+        if role == "Organization Owner":
+            return True
+
+        if permission_code in permissions:
+            return True
+
+        # Check aliases
+        aliases = PERMISSION_ALIASES.get(permission_code, [])
+        if any(alias in permissions for alias in aliases):
             return True
 
         raise ForbiddenException(f"Missing required permission: {permission_code}")
