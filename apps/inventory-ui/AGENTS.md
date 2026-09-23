@@ -22,6 +22,7 @@ This directory contains the Inventory Workstation UI for Inventory Managers.
 - `/api/auth/*` → core-iam (`http://localhost:8002`)
 - `/api/ai/*` → ai-service (`http://localhost:8005`, preserves `/api` prefix)
 - `/api/files/*` → erp-service (`http://localhost:8000`, preserves `/api` prefix)
+- `/api/settings*` and `/api/notifications*` → erp-service (`http://localhost:8000`, no `/api` prefix)
 - All other `/api/*` → inventory-service (`http://localhost:8004`)
 
 ## 4. Sidebar Navigation
