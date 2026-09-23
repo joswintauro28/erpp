@@ -194,21 +194,35 @@ export default function Sidebar({ collapsed }: { collapsed: boolean }) {
               onMouseLeave={handleGroupMouseLeave}
             >
               {!collapsed ? (
-                <div className="mb-1.5 flex items-center gap-2 px-2.5">
-                  <span className="font-heading text-[9px] font-bold uppercase tracking-[0.2em] text-sidebar-foreground/40 select-none">
+                <button
+                  type="button"
+                  onClick={(e) => toggleGroup(item.name)}
+                  title={item.name}
+                  className="mb-1.5 flex w-full cursor-pointer items-center gap-2 px-2.5 text-left group/eyebrow"
+                >
+                  <span className="font-heading text-[9px] font-bold uppercase tracking-[0.2em] text-sidebar-foreground/40 select-none transition-colors group-hover/eyebrow:text-sidebar-foreground/70">
                     {item.name}
                   </span>
                   <div className="h-px flex-1 bg-sidebar-border" />
-                </div>
+                </button>
               ) : (
-                <div className="mb-1.5 flex justify-center">
-                  <div className="h-1 w-5 rounded-full bg-sidebar-border" />
-                </div>
+                <button
+                  type="button"
+                  onClick={(e) => handleGroupMouseEnter(item, e)}
+                  title={item.name}
+                  aria-label={item.name}
+                  className="mb-1.5 flex w-full cursor-pointer justify-center"
+                >
+                  <div className="h-1 w-5 rounded-full bg-sidebar-border transition-colors hover:bg-sidebar-primary" />
+                </button>
               )}
 
               <div className="space-y-1">
                 <button
-                  onClick={() => toggleGroup(item.name)}
+                  onClick={(e) => {
+                    if (collapsed) handleGroupMouseEnter(item, e);
+                    else toggleGroup(item.name);
+                  }}
                   title={collapsed ? item.name : undefined}
                   type="button"
                   className={cn(

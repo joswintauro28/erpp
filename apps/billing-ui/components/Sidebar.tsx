@@ -35,12 +35,12 @@ const navItems: NavItem[] = [
       {
         name: "Billing Management",
         children: [
-          { name: "Invoices", href: "/billing/invoices", icon: FileText },
-          { name: "Quotations", href: "/billing/quotations", icon: ClipboardList },
-          { name: "Payments", href: "/billing/payments", icon: CreditCard },
-          { name: "Credit Notes", href: "/billing/credit-notes", icon: FileText },
-          { name: "Debit Notes", href: "/billing/debit-notes", icon: FileText },
-          { name: "Recurring Invoices", href: "/billing/recurring-invoices", icon: Repeat },
+          { name: "Invoices", href: "/invoices", icon: FileText },
+          { name: "Quotations", href: "/quotations", icon: ClipboardList },
+          { name: "Payments", href: "/payments", icon: CreditCard },
+          { name: "Credit Notes", href: "/credit-notes", icon: FileText },
+          { name: "Debit Notes", href: "/debit-notes", icon: FileText },
+          { name: "Recurring Invoices", href: "/recurring-invoices", icon: Repeat },
         ],
       },
     ],
@@ -90,7 +90,7 @@ function isActive(href: string, pathname: string): boolean {
   // Exact match
   if (pathname === href) return true;
 
-  // Detail page match (e.g. /billing/invoices/123 matching /billing/invoices)
+  // Detail page match (e.g. /invoices/123 matching /invoices)
   if (pathname.startsWith(href + "/")) {
     // Exclude if there is a more specific defined route matching the path
     return !allHrefs.some(
@@ -227,24 +227,38 @@ export default function Sidebar({ collapsed }: { collapsed: boolean }) {
               onMouseEnter={(e) => handleGroupMouseEnter(item, e)}
               onMouseLeave={handleGroupMouseLeave}
             >
-              {/* Section header */}
+              {/* Section header (clickable — same target as accordion button) */}
               {!collapsed ? (
-                <div className="mb-1.5 flex items-center gap-2 px-2.5">
-                  <span className="font-heading text-[9px] font-bold uppercase tracking-[0.2em] text-sidebar-foreground/40 select-none">
+                <button
+                  type="button"
+                  onClick={(e) => toggleGroup(item.name)}
+                  title={item.name}
+                  className="mb-1.5 flex w-full cursor-pointer items-center gap-2 px-2.5 text-left group/eyebrow"
+                >
+                  <span className="font-heading text-[9px] font-bold uppercase tracking-[0.2em] text-sidebar-foreground/40 select-none transition-colors group-hover/eyebrow:text-sidebar-foreground/70">
                     {item.name}
                   </span>
                   <div className="h-px flex-1 bg-sidebar-border" />
-                </div>
+                </button>
               ) : (
-                <div className="mb-1.5 flex justify-center">
-                  <div className="h-1 w-5 rounded-full bg-sidebar-border" />
-                </div>
+                <button
+                  type="button"
+                  onClick={(e) => handleGroupMouseEnter(item, e)}
+                  title={item.name}
+                  aria-label={item.name}
+                  className="mb-1.5 flex w-full cursor-pointer justify-center"
+                >
+                  <div className="h-1 w-5 rounded-full bg-sidebar-border transition-colors hover:bg-sidebar-primary" />
+                </button>
               )}
 
               <div className="space-y-1">
                 {/* Group accordion button */}
                 <button
-                  onClick={() => toggleGroup(item.name)}
+                  onClick={(e) => {
+                    if (collapsed) handleGroupMouseEnter(item, e);
+                    else toggleGroup(item.name);
+                  }}
                   title={collapsed ? item.name : undefined}
                   type="button"
                   className={cn(
