@@ -44,7 +44,7 @@ class Settings(BaseSettings):
     # Module permissions — maps module to allowed permission codes (user needs at least one)
     MODULE_PERMISSIONS: dict = {
         "admin": [],  # no extra permission needed for admin view
-        "crm": ["crm.view", "clients.view"],
+        "crm": ["crm.view", "customers.view"],
         "billing": ["invoices.view", "accounting.view", "payments.view"],
         "inventory": ["stock.view", "products.view"],
     }
