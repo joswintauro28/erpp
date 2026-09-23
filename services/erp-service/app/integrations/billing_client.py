@@ -239,6 +239,10 @@ async def get_reports(token: str) -> dict:
     return await _get("/reports", token)
 
 
+async def get_cash_flow(token: str, params: dict | None = None) -> dict:
+    return await _get("/reports/cash-flow", token, params)
+
+
 async def get_aging(token: str) -> dict:
     return await _get("/aging", token)
 

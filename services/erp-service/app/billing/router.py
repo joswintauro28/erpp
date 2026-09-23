@@ -10,7 +10,7 @@ from app.integrations.billing_client import (
     get_recurring_invoices, get_recurring_invoice, create_recurring_invoice, update_recurring_invoice, delete_recurring_invoice,
     get_payments, create_payment, refund_payment, get_payments_metrics,
     get_dashboard_billing,
-    get_accounts, get_expenses, create_account, update_account, create_expense, delete_expense, create_expense_from_po, get_ledger, get_reports, get_aging, get_dunning,
+    get_accounts, get_expenses, create_account, update_account, create_expense, delete_expense, create_expense_from_po, get_ledger, get_reports, get_cash_flow, get_aging, get_dunning,
     get_aging_summary, get_aging_customers, get_aging_invoices, get_aging_reconciliation, get_aging_invoice, get_aging_export,
     import_bank_csv, import_bank_file, get_bank_transactions, match_bank_transaction, reconcile_bank_transaction, unmatch_bank_transaction, get_bank_reports, get_bank_variance_report, get_bank_audit_logs, get_bank_config, update_bank_config,
     get_periods, close_period, reopen_period_request, get_periods_status,
@@ -402,6 +402,24 @@ async def list_reports(
 ):
     token = payload.get("_raw_token", "")
     return await get_reports(token)
+
+
+@router.get("/reports/cash-flow", response_model=dict)
+async def get_cash_flow_report(
+    start_date: str | None = Query(None, alias="startDate"),
+    end_date: str | None = Query(None, alias="endDate"),
+    reporting_mode: str | None = Query(None, alias="reportingMode"),
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    params = {}
+    if start_date:
+        params["startDate"] = start_date
+    if end_date:
+        params["endDate"] = end_date
+    if reporting_mode:
+        params["reportingMode"] = reporting_mode
+    return await get_cash_flow(token, params or None)
 
 
 @router.get("/aging", response_model=dict)

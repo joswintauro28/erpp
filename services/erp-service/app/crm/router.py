@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 
 from app.core.deps import get_current_token_payload
 from app.integrations import crm_client
@@ -196,13 +196,15 @@ async def convert_lead(
 @router.get("/{entity_type}")
 async def list_entities(
     entity_type: str,
+    request: Request,
     payload: dict = Depends(get_current_token_payload),
 ):
     if entity_type not in VALID_ENTITIES:
         raise HTTPException(status_code=404, detail=f"Unknown entity type: {entity_type}")
 
     token = _get_token(payload)
-    data = await crm_client.get_entity_list(entity_type, token)
+    params = dict(request.query_params) or None
+    data = await crm_client.get_entity_list(entity_type, token, params)
 
     return data
 

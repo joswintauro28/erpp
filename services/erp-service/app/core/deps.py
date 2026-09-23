@@ -36,6 +36,14 @@ async def get_optional_user_id(
         return None
 
 
+PERMISSION_ALIASES: dict[str, list[str]] = {
+    "clients.view": ["customers.view"],
+    "clients.create": ["customers.create"],
+    "clients.edit": ["customers.edit"],
+    "clients.delete": ["customers.delete"],
+}
+
+
 def require_permission(permission_code: str):
     async def permission_dep(
         payload: dict = Depends(get_current_token_payload),
@@ -43,7 +51,15 @@ def require_permission(permission_code: str):
         role = payload.get("role")
         permissions = payload.get("permissions", [])
 
-        if role == "Organization Owner" or permission_code in permissions:
+        if role == "Organization Owner":
+            return True
+
+        if permission_code in permissions:
+            return True
+
+        # Fallback aliases if an older client sends a legacy code
+        aliases = PERMISSION_ALIASES.get(permission_code, [])
+        if any(alias in permissions for alias in aliases):
             return True
 
         raise ForbiddenException(f"Missing required permission: {permission_code}")

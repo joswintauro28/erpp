@@ -216,10 +216,31 @@ async def delete_purchase_order_by_id(
 
 @router.get("/serial-numbers", response_model=list[dict])
 async def list_serial_numbers(
+    product_id: int | None = None,
+    warehouse_id: int | None = None,
+    status: str | None = None,
+    search: str | None = None,
     payload: dict = Depends(get_current_token_payload),
 ):
     token = payload.get("_raw_token", "")
-    return await get_serial_numbers(token)
+    params = {}
+    if product_id is not None:
+        params["product_id"] = str(product_id)
+    if warehouse_id is not None:
+        params["warehouse_id"] = str(warehouse_id)
+    if status is not None:
+        params["status"] = status
+    if search is not None:
+        params["search"] = search
+    return await get_serial_numbers(token, params or None)
+
+
+@router.get("/serial-numbers/stats", response_model=dict)
+async def get_serial_numbers_stats_endpoint(
+    payload: dict = Depends(get_current_token_payload),
+):
+    token = payload.get("_raw_token", "")
+    return await get_serial_numbers_stats(token)
 
 
 @router.post("/serial-numbers", response_model=dict, status_code=201)
@@ -377,16 +398,6 @@ async def create_fulfillment_batch_endpoint(
 ):
     token = payload.get("_raw_token", "")
     return await create_fulfillment_batch(token, body)
-
-
-# ─── Serial Numbers Stats ────────────────────────────────────
-
-@router.get("/serial-numbers/stats", response_model=dict)
-async def get_serial_numbers_stats_endpoint(
-    payload: dict = Depends(get_current_token_payload),
-):
-    token = payload.get("_raw_token", "")
-    return await get_serial_numbers_stats(token)
 
 
 # ─── Purchase Orders Putaway ──────────────────────────────────

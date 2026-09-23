@@ -168,8 +168,8 @@ async def delete_purchase_order(token: str, po_id: int) -> None:
 
 # ─── Serial Numbers ──────────────────────────────────────────
 
-async def get_serial_numbers(token: str) -> list[dict]:
-    data = await _get("/serial-numbers", token)
+async def get_serial_numbers(token: str, params: dict | None = None) -> list[dict]:
+    data = await _get("/serial-numbers", token, params)
     return data if isinstance(data, list) else []
 
 
