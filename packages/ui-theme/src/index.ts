@@ -55,6 +55,7 @@ export * from "./components/shared/status-badge";
 
 // Shared composites
 export * from "./components/shared/multi-step-dialog";
+export * from "./components/shared/org-switcher";
 export * from "./components/shared/empty-state";
 export * from "./components/shared/search-input";
 export * from "./components/shared/loading-spinner";

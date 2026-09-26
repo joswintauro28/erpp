@@ -229,6 +229,46 @@ export class AuthController {
     return this.authService.getUserMe(Number(req.user.sub));
   }
 
+  @Get('organizations')
+  @UseGuards(PermissionsGuard)
+  async listMyOrganizations(@Req() req: Request & { user: any }) {
+    return this.authService.listUserOrganizations(Number(req.user.sub));
+  }
+
+  @Post('organizations/:id/switch')
+  @UseGuards(PermissionsGuard)
+  @HttpCode(HttpStatus.OK)
+  async switchOrganization(
+    @Req() req: Request & { user: any },
+    @Param('id') id: string,
+  ) {
+    const userId = Number(req.user.sub);
+    const email = req.user.email;
+    const sessionId: string = req.user.sessionId || req.user.jti;
+
+    const accessPayload = await this.authService.switchOrganization(
+      userId,
+      Number(id),
+    );
+
+    const accessToken = await this.authService.signAccessPayload(
+      userId,
+      email,
+      sessionId,
+      accessPayload,
+    );
+
+    return {
+      access_token: accessToken,
+      expires_in: this.configService.get<number>(
+        'ACCESS_TOKEN_EXPIRE_SECONDS',
+        900,
+      ),
+      organization_id: accessPayload.organization_id,
+      organization_name: accessPayload.organization_name,
+    };
+  }
+
   @Get('users')
   @UseGuards(PermissionsGuard)
   @Permissions('users.manage', 'users:list', 'users:manage')

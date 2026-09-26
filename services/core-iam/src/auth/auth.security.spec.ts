@@ -72,7 +72,9 @@ describe('Auth Security Validation', () => {
         password: 'weak',
       });
       const weakErrors = await validate(weakDto);
-      const weakPasswordErrors = weakErrors.find((e) => e.property === 'password');
+      const weakPasswordErrors = weakErrors.find(
+        (e) => e.property === 'password',
+      );
       expect(weakPasswordErrors).toBeDefined();
 
       // Strong optional password should pass
@@ -99,6 +101,11 @@ describe('Auth Security Validation', () => {
   describe('Session Fixation Mitigation (Finding #7)', () => {
     it('should generate a cryptographically unique session ID and jti on login', async () => {
       const mockPrisma: any = {
+        user: {
+          findUnique: jest
+            .fn()
+            .mockResolvedValue({ activeOrganizationId: null }),
+        },
         organizationMember: {
           findFirst: jest.fn().mockResolvedValue({
             organizationId: 1,
@@ -149,6 +156,11 @@ describe('Auth Security Validation', () => {
 
     it('should regenerate session by revoking previous refresh token and issuing fresh session', async () => {
       const mockPrisma: any = {
+        user: {
+          findUnique: jest
+            .fn()
+            .mockResolvedValue({ activeOrganizationId: null }),
+        },
         organizationMember: {
           findFirst: jest.fn().mockResolvedValue({
             organizationId: 1,

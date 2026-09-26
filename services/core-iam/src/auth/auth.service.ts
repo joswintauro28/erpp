@@ -96,12 +96,23 @@ export class AuthService {
     return user;
   }
 
-  async generateAccessPayload(userId: number) {
+  async generateAccessPayload(userId: number, preferredOrgId?: number) {
+    // Resolve target organization: explicit request → persisted active org → any active membership
+    let targetOrgId: number | null = preferredOrgId ?? null;
+    if (!targetOrgId) {
+      const user = await this.prisma.user.findUnique({
+        where: { id: userId },
+        select: { activeOrganizationId: true },
+      });
+      targetOrgId = user?.activeOrganizationId ?? null;
+    }
+
     // 1. Fetch user membership, organization, and role details
-    const membership = await this.prisma.organizationMember.findFirst({
+    let membership = await this.prisma.organizationMember.findFirst({
       where: {
         userId,
         status: 'active',
+        ...(targetOrgId ? { organizationId: targetOrgId } : {}),
       },
       include: {
         organization: true,
@@ -117,6 +128,33 @@ export class AuthService {
         },
       },
     });
+
+    // Preferred/persisted org no longer active for this user → fall back to any active membership
+    if (!membership && targetOrgId) {
+      membership = await this.prisma.organizationMember.findFirst({
+        where: { userId, status: 'active' },
+        include: {
+          organization: true,
+          user: true,
+          role: {
+            include: {
+              rolePermissions: {
+                include: {
+                  permission: true,
+                },
+              },
+            },
+          },
+        },
+      });
+      // Clear stale active organization pointer
+      await this.prisma.user
+        .update({
+          where: { id: userId },
+          data: { activeOrganizationId: null },
+        })
+        .catch(() => undefined);
+    }
 
     const orgId = membership?.organizationId || null;
     const orgName = membership?.organization?.name || null;
@@ -134,6 +172,77 @@ export class AuthService {
       organization_name: orgName,
       permissions,
     };
+  }
+
+  async listUserOrganizations(userId: number) {
+    const memberships = await this.prisma.organizationMember.findMany({
+      where: { userId, status: 'active' },
+      include: {
+        organization: { include: { parent: true } },
+        role: true,
+      },
+      orderBy: { organizationId: 'asc' },
+    });
+
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { activeOrganizationId: true },
+    });
+
+    const activeOrgId =
+      user?.activeOrganizationId ?? memberships[0]?.organizationId ?? null;
+
+    return {
+      active_organization_id: activeOrgId,
+      organizations: memberships.map((m) => ({
+        id: m.organizationId,
+        name: m.organization.name,
+        role: m.role?.name || null,
+        status: m.status,
+        parent_id: m.organization.parentId ?? null,
+        parent_name: m.organization.parent?.name ?? null,
+      })),
+    };
+  }
+
+  async switchOrganization(userId: number, orgId: number) {
+    const membership = await this.prisma.organizationMember.findFirst({
+      where: { organizationId: orgId, userId, status: 'active' },
+    });
+    if (!membership) {
+      throw new UnauthorizedException(
+        'You are not an active member of this organization',
+      );
+    }
+
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { activeOrganizationId: orgId },
+    });
+
+    return this.generateAccessPayload(userId, orgId);
+  }
+
+  async signAccessPayload(
+    userId: number,
+    email: string,
+    sessionId: string,
+    accessPayload: Awaited<ReturnType<AuthService['generateAccessPayload']>>,
+  ) {
+    return this.jwtService.sign(
+      {
+        jti: sessionId,
+        sessionId,
+        sub: String(userId),
+        email,
+        type: 'access',
+        ...accessPayload,
+      },
+      {
+        secret: this.configService.get<string>('JWT_SECRET'),
+        expiresIn: `${this.configService.get<number>('ACCESS_TOKEN_EXPIRE_SECONDS', 900)}s`,
+      },
+    );
   }
 
   async login(
@@ -271,7 +380,7 @@ export class AuthService {
         // 3. Create settings records
         await tx.companySetting.create({
           data: {
-            ownerId: user.id,
+            organizationId: org.id,
             companyName: `${dto.fullName}'s Company`,
             email: user.email,
           },
@@ -279,13 +388,13 @@ export class AuthService {
 
         await tx.brandingSetting.create({
           data: {
-            ownerId: user.id,
+            organizationId: org.id,
           },
         });
 
         await tx.notificationSetting.create({
           data: {
-            ownerId: user.id,
+            organizationId: org.id,
             invoiceNotifications: true,
             paymentReminders: true,
             lowStockAlerts: true,
@@ -295,7 +404,7 @@ export class AuthService {
 
         await tx.workflowSetting.create({
           data: {
-            ownerId: user.id,
+            organizationId: org.id,
             sendUpcomingInvoiceReminders: true,
             sendOverdueReminders: true,
             notifyLowStock: true,
@@ -408,6 +517,7 @@ export class AuthService {
     }
 
     const accessPayload = await this.generateAccessPayload(userId);
+    const orgList = await this.listUserOrganizations(userId);
 
     return {
       id: user.id,
@@ -420,6 +530,8 @@ export class AuthService {
       organization_name: accessPayload.organization_name,
       role: accessPayload.role,
       permissions: accessPayload.permissions,
+      active_organization_id: orgList.active_organization_id,
+      organizations: orgList.organizations,
     };
   }
 

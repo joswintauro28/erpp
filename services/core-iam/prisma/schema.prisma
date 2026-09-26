@@ -44,72 +44,69 @@ model User {
   failedLoginAttempts  Int                  @default(0) @map("failed_login_attempts")
   lockedUntil          DateTime?            @map("locked_until")
   passwordChangedAt    DateTime?            @map("password_changed_at")
-  
+  activeOrganizationId Int?                 @map("active_organization_id")
+
   organizationMembers  OrganizationMember[]
   refreshTokens        RefreshToken[]
   ownedOrganizations   Organization[]
-  brandingSetting      BrandingSetting?
-  companySetting       CompanySetting?
-  notificationSetting  NotificationSetting?
-  workflowSetting      WorkflowSetting?
 
   @@index([email])
   @@map("users")
 }
 
 model BrandingSetting {
-  id            Int      @id @default(autoincrement())
-  ownerId       Int      @unique @map("owner_id")
-  logoUrl       String?  @map("logo_url")
-  primaryColor  String?  @map("primary_color")
-  accentColor   String?  @map("accent_color")
-  invoiceFooter String?  @map("invoice_footer")
-  paymentTerms  String?  @map("payment_terms")
-  owner         User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  updatedAt     DateTime @default(now()) @updatedAt @map("updated_at")
+  id             Int          @id @default(autoincrement())
+  organizationId Int          @unique @map("organization_id")
+  logoUrl        String?      @map("logo_url")
+  primaryColor   String?      @map("primary_color")
+  accentColor    String?      @map("accent_color")
+  invoiceFooter  String?      @map("invoice_footer")
+  paymentTerms   String?      @map("payment_terms")
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  updatedAt      DateTime     @default(now()) @updatedAt @map("updated_at")
 
   @@map("branding_settings")
 }
 
 model CompanySetting {
-  id          Int      @id @default(autoincrement())
-  ownerId     Int      @unique @map("owner_id")
-  companyName String   @map("company_name")
-  email       String?
-  phone       String?
-  address     String?
-  state       String?
-  gstNumber   String?  @map("gst_number")
-  website     String?
-  industry    String?
-  owner       User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at")
+  id             Int          @id @default(autoincrement())
+  organizationId Int          @unique @map("organization_id")
+  companyName    String       @map("company_name")
+  email          String?
+  phone          String?
+  address        String?
+  state          String?
+  gstNumber      String?      @map("gst_number")
+  website        String?
+  industry       String?
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  updatedAt      DateTime     @default(now()) @updatedAt @map("updated_at")
 
   @@map("company_settings")
 }
 
 model NotificationSetting {
-  id                   Int      @id @default(autoincrement())
-  ownerId              Int      @unique @map("owner_id")
-  invoiceNotifications Boolean  @map("invoice_notifications")
-  paymentReminders     Boolean  @map("payment_reminders")
-  lowStockAlerts       Boolean  @map("low_stock_alerts")
-  weeklyReports        Boolean  @map("weekly_reports")
-  owner                User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  updatedAt            DateTime @default(now()) @updatedAt @map("updated_at")
+  id                   Int          @id @default(autoincrement())
+  organizationId       Int          @unique @map("organization_id")
+  invoiceNotifications Boolean      @map("invoice_notifications")
+  paymentReminders     Boolean      @map("payment_reminders")
+  lowStockAlerts       Boolean      @map("low_stock_alerts")
+  weeklyReports        Boolean      @map("weekly_reports")
+  organization         Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  updatedAt            DateTime     @default(now()) @updatedAt @map("updated_at")
 
   @@map("notification_settings")
 }
 
 model WorkflowSetting {
-  id                           Int      @id @default(autoincrement())
-  ownerId                      Int      @unique @map("owner_id")
-  sendUpcomingInvoiceReminders Boolean  @map("send_upcoming_invoice_reminders")
-  sendOverdueReminders         Boolean  @map("send_overdue_reminders")
-  notifyLowStock               Boolean  @map("notify_low_stock")
-  createdAt                    String   @map("created_at")
-  owner                        User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  updatedAt                    DateTime @default(now()) @updatedAt @map("updated_at")
+  id                           Int          @id @default(autoincrement())
+  organizationId               Int          @unique @map("organization_id")
+  sendUpcomingInvoiceReminders Boolean      @map("send_upcoming_invoice_reminders")
+  sendOverdueReminders         Boolean      @map("send_overdue_reminders")
+  notifyLowStock               Boolean      @map("notify_low_stock")
+  createdAt                    String       @map("created_at")
+  organization                 Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  updatedAt                    DateTime     @default(now()) @updatedAt @map("updated_at")
 
   @@map("workflow_settings")
 }
@@ -118,11 +115,19 @@ model Organization {
   id                  Int                  @id @default(autoincrement())
   name                String
   ownerId             Int                  @map("owner_id")
+  parentId            Int?                 @map("parent_id")
+  parent              Organization?        @relation("OrgHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+  children            Organization[]       @relation("OrgHierarchy")
   createdAt           DateTime             @default(now()) @map("created_at")
   owner               User                 @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   organizationMembers OrganizationMember[]
+  brandingSetting     BrandingSetting?
+  companySetting      CompanySetting?
+  notificationSetting NotificationSetting?
+  workflowSetting     WorkflowSetting?
   updatedAt           DateTime             @default(now()) @updatedAt @map("updated_at")
 
+  @@index([parentId])
   @@map("organizations")
 }
 

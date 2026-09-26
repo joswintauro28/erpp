@@ -61,6 +61,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return u;
   }, []);
 
+  const refreshUser = useCallback(async () => {
+    try {
+      const u = await api.get<User>("/auth/users/me");
+      setUser(u);
+      return u;
+    } catch {
+      return null;
+    }
+  }, []);
+
+  // Sync org switches / token updates across same-origin tabs
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key !== "datavex_access_token" || !e.newValue) return;
+      setAccessToken(e.newValue);
+      api.get<User>("/auth/users/me").then(setUser).catch(() => {});
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
+
   const logout = useCallback(async () => {
     try {
       await api.post("/auth/logout");
@@ -78,6 +99,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isAuthenticated: !!user,
         loading,
         login,
+        refreshUser,
         logout,
       }}
     >

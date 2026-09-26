@@ -13,6 +13,7 @@ This service provides central SSO, Authentication, and Role-Based Access Control
 ## 2. SSO & Auth Flow
 - **Signed JWT Claims:** `sub` (userId), `email`, `role`, `permissions[]`, `organization_id`, `organization_name`.
 - **Refresh Strategy:** Secure HttpOnly refresh cookies.
+- **Multi-Organization:** Users may hold active memberships in multiple organizations (incl. parent/child hierarchy via `Organization.parentId`). `User.activeOrganizationId` persists the selected org across logins/refreshes; `POST /api/auth/organizations/:id/switch` re-issues the access token with the target org's claims.
 - **RBAC:** Guards routes using `@Permissions(...codes)` custom decorator and `PermissionsGuard`.
 - **Shared Secret:** Shares the global `JWT_SECRET` configured across all backend services to validate tokens issued by this engine.
 
@@ -24,7 +25,9 @@ This service provides central SSO, Authentication, and Role-Based Access Control
 | `/api/auth/register` | POST | User registration |
 | `/api/auth/refresh` | POST | Token refresh via HttpOnly cookie |
 | `/api/auth/logout` | POST | Clear refresh cookie |
-| `/api/auth/users/me` | GET | Current user profile |
+| `/api/auth/users/me` | GET | Current user profile (includes `organizations[]` memberships) |
+| `/api/auth/organizations` | GET | List caller's active organization memberships + active org id |
+| `/api/auth/organizations/:id/switch` | POST | Switch active organization (re-issues access token) |
 | `/api/auth/users` | GET | List all users (admin) |
 | `/api/auth/users` | POST | Create user |
 | `/api/auth/users/:id/status` | PUT | Toggle user active/inactive |

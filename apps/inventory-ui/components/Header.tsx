@@ -3,7 +3,8 @@
 import { PanelLeftOpen, PanelLeftClose, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NotificationBell } from "@/components/ui/notification-bell";
-import { ThemeToggle } from "@datavex/ui-theme";
+import { ThemeToggle, OrgSwitcher } from "@datavex/ui-theme";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function Header({
   collapsed,
@@ -12,6 +13,7 @@ export default function Header({
   collapsed: boolean;
   onToggleSidebar: () => void;
 }) {
+  const { user, refreshUser } = useAuth();
   return (
     <header className="sticky top-0 z-30 flex h-20 shrink-0 items-center justify-between border-b border-border bg-background px-6 shadow-engineered">
       <span
@@ -50,6 +52,12 @@ export default function Header({
       </div>
 
       <div className="flex items-center gap-3">
+        <OrgSwitcher
+          organizations={user?.organizations}
+          currentId={user?.organization_id}
+          currentName={user?.organization_name}
+          onSwitched={refreshUser}
+        />
         <NotificationBell />
         <ThemeToggle />
       </div>
