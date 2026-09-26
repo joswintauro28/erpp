@@ -260,46 +260,93 @@ async function main() {
   }
   console.log('  Upserted 1 organization with members');
 
-  for (const du of dbUsers) {
-    const userId = du.user.id;
-    const isAdmin = du.roleName === 'Organization Owner';
+  // Demo organization hierarchy: parent "Eternal" with sub-organizations
+  const ownerRoleId = roleMap.get('Organization Owner');
+  const upsertOrgByName = async (name: string, parentId: number | null) => {
+    const existing = await prisma.organization.findFirst({ where: { name } });
+    if (existing) {
+      return prisma.organization.update({
+        where: { id: existing.id },
+        data: { parentId },
+      });
+    }
+    return prisma.organization.create({
+      data: { name, ownerId: mainAdmin.id, parentId },
+    });
+  };
+  const upsertAdminMembership = async (organizationId: number) => {
+    await prisma.organizationMember.upsert({
+      where: {
+        organizationId_userId: { organizationId, userId: mainAdmin.id },
+      },
+      update: { roleId: ownerRoleId ?? null, status: 'active' },
+      create: {
+        organizationId,
+        userId: mainAdmin.id,
+        roleId: ownerRoleId ?? null,
+        status: 'active',
+      },
+    });
+  };
+
+  const eternal = await upsertOrgByName('Eternal', null);
+  await upsertAdminMembership(eternal.id);
+  for (const subName of ['Zomato', 'Blinkit', 'District']) {
+    const sub = await upsertOrgByName(subName, eternal.id);
+    await upsertAdminMembership(sub.id);
+  }
+  console.log(
+    '  Upserted org hierarchy: Eternal > Zomato, Blinkit, District (admin member of all)',
+  );
+
+  const profile = process.env.SEED_PROFILE || (process.argv.includes('--testing') || process.argv.includes('--profile=testing') ? 'testing' : 'dev');
+  console.log(`Seeding core-iam database [Profile: ${profile}]...`);
+
+  const allOrgs = [org, eternal, ...(await prisma.organization.findMany({ where: { parentId: eternal.id } }))];
+
+  const BRAND_COLORS: Record<string, { primary: string; accent: string }> = {
+    "DATAVEX Industries Pvt Ltd": { primary: "#96282E", accent: "#CBA052" },
+    "Eternal": { primary: "#0F5132", accent: "#D1E7DD" },
+    "Zomato": { primary: "#E23744", accent: "#FFF0F1" },
+    "Blinkit": { primary: "#F8CB46", accent: "#FFF9E6" },
+    "District": { primary: "#343A40", accent: "#CED4DA" },
+  };
+
+  for (const o of allOrgs) {
+    const colors = BRAND_COLORS[o.name] || { primary: "#96282E", accent: "#CBA052" };
     await prisma.companySetting.upsert({
-      where: { ownerId: userId },
+      where: { organizationId: o.id },
       update: {},
       create: {
-        ownerId: userId,
-        companyName: isAdmin
-          ? 'DATAVEX Industries Pvt Ltd'
-          : `${du.user.email.split('@')[0]} Consulting`,
-        email: du.user.email,
+        organizationId: o.id,
+        companyName: o.name,
+        email: `info@${o.name.toLowerCase().replace(/[^a-z0-9]/g, '')}.com`,
         phone: '+91-80-4567-8900',
         address: '42, Industrial Layout, Whitefield, Bangalore',
         state: 'Karnataka',
         gstNumber: '29AABCD1234E1Z5',
-        website: isAdmin ? 'https://datavex.com' : undefined,
-        industry: isAdmin
-          ? 'Industrial Automation & Electronics'
-          : 'Consulting',
+        website: `https://${o.name.toLowerCase().replace(/[^a-z0-9]/g, '')}.com`,
+        industry: 'Industrial Automation & Electronics',
       },
     });
     await prisma.brandingSetting.upsert({
-      where: { ownerId: userId },
-      update: {},
+      where: { organizationId: o.id },
+      update: { primaryColor: colors.primary, accentColor: colors.accent },
       create: {
-        ownerId: userId,
+        organizationId: o.id,
         logoUrl: '/brand/logo.svg',
-        primaryColor: '#96282E',
-        accentColor: '#CBA052',
+        primaryColor: colors.primary,
+        accentColor: colors.accent,
         invoiceFooter:
           'Thank you for your business! Payment due within 15 days.',
         paymentTerms: 'Net 15 — 2% discount if paid within 7 days',
       },
     });
     await prisma.notificationSetting.upsert({
-      where: { ownerId: userId },
+      where: { organizationId: o.id },
       update: {},
       create: {
-        ownerId: userId,
+        organizationId: o.id,
         invoiceNotifications: true,
         paymentReminders: true,
         lowStockAlerts: true,
@@ -307,10 +354,10 @@ async function main() {
       },
     });
     await prisma.workflowSetting.upsert({
-      where: { ownerId: userId },
+      where: { organizationId: o.id },
       update: {},
       create: {
-        ownerId: userId,
+        organizationId: o.id,
         sendUpcomingInvoiceReminders: true,
         sendOverdueReminders: true,
         notifyLowStock: true,
@@ -319,8 +366,60 @@ async function main() {
     });
   }
   console.log(
-    '  Created company/branding/notification/workflow settings for all users',
+    '  Created company/branding/notification/workflow settings for all organizations',
   );
+
+  if (profile === 'testing') {
+    const maya = dbUsers.find((du) => du.user.email === 'sales@datavex.com')?.user!;
+    if (maya && eternal) {
+      await prisma.organizationMember.upsert({
+        where: { organizationId_userId: { organizationId: eternal.id, userId: maya.id } },
+        update: { roleId: ownerRoleId ?? null, status: 'active' },
+        create: { organizationId: eternal.id, userId: maya.id, roleId: ownerRoleId ?? null, status: 'active' },
+      });
+    }
+
+    const jordan = dbUsers.find((du) => du.user.email === 'accounts@datavex.com')?.user!;
+    const auditorRoleId = roleMap.get('Auditor') ?? null;
+    const zomatoOrg = allOrgs.find((o) => o.name === 'Zomato');
+    if (jordan && zomatoOrg) {
+      await prisma.organizationMember.upsert({
+        where: { organizationId_userId: { organizationId: zomatoOrg.id, userId: jordan.id } },
+        update: { roleId: auditorRoleId, status: 'active' },
+        create: { organizationId: zomatoOrg.id, userId: jordan.id, roleId: auditorRoleId, status: 'active' },
+      });
+    }
+
+    const testUserPw = await bcrypt.hash('Test@123!', salt);
+    const blinkitOrg = allOrgs.find((o) => o.name === 'Blinkit');
+    if (blinkitOrg) {
+      const singleOrgUser = await prisma.user.upsert({
+        where: { email: 'blinkit-lead@datavex.com' },
+        update: { passwordHash: testUserPw },
+        create: { email: 'blinkit-lead@datavex.com', passwordHash: testUserPw, fullName: 'Blinkit Lead', isActive: true },
+      });
+      await prisma.organizationMember.upsert({
+        where: { organizationId_userId: { organizationId: blinkitOrg.id, userId: singleOrgUser.id } },
+        update: { roleId: roleMap.get('Sales Executive') ?? null, status: 'active' },
+        create: { organizationId: blinkitOrg.id, userId: singleOrgUser.id, roleId: roleMap.get('Sales Executive') ?? null, status: 'active' },
+      });
+    }
+
+    const districtOrg = allOrgs.find((o) => o.name === 'District');
+    if (districtOrg) {
+      const disabledUser = await prisma.user.upsert({
+        where: { email: 'inactive@datavex.com' },
+        update: { passwordHash: testUserPw, isActive: false },
+        create: { email: 'inactive@datavex.com', passwordHash: testUserPw, fullName: 'Inactive User', isActive: false },
+      });
+      await prisma.organizationMember.upsert({
+        where: { organizationId_userId: { organizationId: districtOrg.id, userId: disabledUser.id } },
+        update: { roleId: auditorRoleId, status: 'suspended' },
+        create: { organizationId: districtOrg.id, userId: disabledUser.id, roleId: auditorRoleId, status: 'suspended' },
+      });
+    }
+    console.log('  Seeded testing profile RBAC matrix (multi-org, single-org, suspended)');
+  }
 
   const userList = dbUsers.map((u) => ({
     id: u.user.id,

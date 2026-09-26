@@ -7,13 +7,16 @@ DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # ── Defaults ──────────────────────────────────────────────────────────
 FAIL_FAST=true
+PROFILE="dev"
 SKIP=()
 
 # ── Argument parsing ──────────────────────────────────────────────────
 usage() {
-    echo "Usage: $0 [--fail-fast|--no-fail-fast] [--skip SERVICE,...] [--help]"
+    echo "Usage: $0 [--profile dev|testing] [--testing] [--fail-fast|--no-fail-fast] [--skip SERVICE,...] [--help]"
     echo ""
     echo "Options:"
+    echo "  --profile PROFILE  Seed profile: dev or testing (default: dev)"
+    echo "  --testing          Shortcut for --profile testing"
     echo "  --fail-fast        Stop on first failure (default: on)"
     echo "  --no-fail-fast     Continue on failure"
     echo "  --skip NAME,...    Skip one or more services (comma-separated)"
@@ -23,6 +26,9 @@ usage() {
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
+        --profile)      PROFILE="$2"; shift 2 ;;
+        --profile=*)    PROFILE="${1#*=}"; shift ;;
+        --testing)      PROFILE="testing"; shift ;;
         --fail-fast)    FAIL_FAST=true; shift ;;
         --no-fail-fast) FAIL_FAST=false; shift ;;
         --skip)         IFS=',' read -ra SKIP <<< "$2"; shift 2 ;;
@@ -31,6 +37,8 @@ while [[ $# -gt 0 ]]; do
         *)              echo "Unknown argument: $1"; usage ;;
     esac
 done
+
+export SEED_PROFILE="$PROFILE"
 
 # ── Helpers ───────────────────────────────────────────────────────────
 now_ms() { date +%s%3N; }
@@ -57,7 +65,7 @@ container_healthy() {
 }
 
 ORDINAL=0
-TOTAL=5
+TOTAL=6
 SUCCESS_COUNT=0
 FAIL_COUNT=0
 
@@ -101,6 +109,7 @@ done
 # ── Header ────────────────────────────────────────────────────────────
 echo "╔══════════════════════════════════════════════╗"
 echo "║   DATAVEX ERP — Docker Database Seeding      ║"
+echo "║   Profile: $PROFILE                          ║"
 echo "╚══════════════════════════════════════════════╝"
 if [[ ${#SKIP[@]} -gt 0 ]]; then
     echo -e "Skipping: \e[33m${SKIP[*]}\e[0m"
@@ -115,7 +124,9 @@ for triplet in \
     "datavex-core-iam" \
     "datavex-billing-service" \
     "datavex-crm-service" \
-    "datavex-inventory-service"; do
+    "datavex-inventory-service" \
+    "datavex-erp-service" \
+    "datavex-ai-service"; do
     should_skip "$triplet" && continue
     if ! container_healthy "$triplet"; then
         echo -e "  \e[31m$triplet is not healthy\e[0m" >&2
@@ -131,61 +142,74 @@ echo ""
 
 # ── Seeding steps ─────────────────────────────────────────────────────
 
-# Step 1: core-iam (compile seed.ts on host, run seed.js with node inside container)
+# Step 1: core-iam
 if ! should_skip "core-iam"; then
     run_step "core-iam (SSO & Permissions)" \
         sh -c "
             SEED_DIR=\"$DIR/../../services/core-iam\"
             cd \"\$SEED_DIR\" && \
-            npx tsc prisma/seed.ts --module commonjs --target es2022 && \
+            bun build prisma/seed.ts --outfile prisma/seed.js --target node --format cjs --external '@prisma/client-iam' --external 'bcryptjs' && \
             docker exec datavex-core-iam sh -c 'npx prisma db push --accept-data-loss --skip-generate 2>&1' && \
             docker cp \"\$SEED_DIR/prisma/seed.js\" datavex-core-iam:/app/services/core-iam/prisma/seed.js && \
-            docker exec datavex-core-iam node prisma/seed.js && \
+            docker exec -e SEED_PROFILE=$PROFILE datavex-core-iam node prisma/seed.js && \
             rm -f \"\$SEED_DIR/prisma/seed.js\"
         "
 fi
 
-# Step 2: billing-service (compile seed.ts on host, run seed.js with node inside container)
+# Step 2: billing-service
 if ! should_skip "billing-service"; then
     run_step "billing-service (Invoices, Payments, Ledgers)" \
         sh -c "
             SEED_DIR=\"$DIR/../../services/billing-service\"
             cd \"\$SEED_DIR\" && \
-            npx tsc prisma/seed.ts --module commonjs --target es2022 && \
+            bun build prisma/seed.ts --outfile prisma/seed.js --target node --format cjs --external '@prisma/client' --external 'xlsx' && \
             docker exec datavex-billing-service sh -c 'npx prisma db push --accept-data-loss --skip-generate 2>&1' && \
             docker cp \"\$SEED_DIR/prisma/seed.js\" datavex-billing-service:/app/services/billing-service/prisma/seed.js && \
-            docker exec datavex-billing-service node prisma/seed.js && \
+            docker exec -e SEED_PROFILE=$PROFILE datavex-billing-service node prisma/seed.js && \
             rm -f \"\$SEED_DIR/prisma/seed.js\"
         "
 fi
 
-# Step 3: crm-service (FastAPI, seed.py)
+# Step 3: crm-service
 if ! should_skip "crm-service"; then
     run_step "crm-service (Leads, Customers, Pipelines)" \
         sh -c "
+            docker cp '$DIR/../../scripts/seed_lib' datavex-crm-service:/app/scripts/ && \
             docker cp '$DIR/../../services/crm-service/scripts' datavex-crm-service:/app/services/crm-service/ && \
             docker exec -e PYTHONPATH=. datavex-crm-service /opt/venv/bin/alembic upgrade head && \
-            docker exec -e PYTHONPATH=. datavex-crm-service /opt/venv/bin/python /app/services/crm-service/scripts/seed.py
+            docker exec -e PYTHONPATH=. -e SEED_PROFILE=$PROFILE datavex-crm-service /opt/venv/bin/python /app/services/crm-service/scripts/seed.py --profile $PROFILE
         "
 fi
 
-# Step 4: inventory-service (FastAPI, seed.py)
+# Step 4: inventory-service
 if ! should_skip "inventory-service"; then
     run_step "inventory-service (Products, Warehouses, Stock)" \
         sh -c "
+            docker cp '$DIR/../../scripts/seed_lib' datavex-inventory-service:/app/scripts/ && \
             docker cp '$DIR/../../services/inventory-service/scripts' datavex-inventory-service:/app/services/inventory-service/ && \
             docker exec -e PYTHONPATH=. datavex-inventory-service /opt/venv/bin/alembic upgrade head && \
-            docker exec -e PYTHONPATH=. datavex-inventory-service /opt/venv/bin/python /app/services/inventory-service/scripts/seed.py
+            docker exec -e PYTHONPATH=. -e SEED_PROFILE=$PROFILE datavex-inventory-service /opt/venv/bin/python /app/services/inventory-service/scripts/seed.py --profile $PROFILE
         "
 fi
 
-# Step 5: erp-service (FastAPI, seed.py)
+# Step 5: erp-service
 if ! should_skip "erp-service"; then
     run_step "erp-service (Gateway, System Settings, Notifications)" \
         sh -c "
+            docker cp '$DIR/../../scripts/seed_lib' datavex-erp-service:/app/scripts/ && \
             docker cp '$DIR/../../services/erp-service/scripts' datavex-erp-service:/app/services/erp-service/ && \
             docker exec -e PYTHONPATH=. datavex-erp-service /opt/venv/bin/alembic upgrade head && \
-            docker exec -e PYTHONPATH=. datavex-erp-service /opt/venv/bin/python /app/services/erp-service/scripts/seed.py
+            docker exec -e PYTHONPATH=. -e SEED_PROFILE=$PROFILE datavex-erp-service /opt/venv/bin/python /app/services/erp-service/scripts/seed.py --profile $PROFILE
+        "
+fi
+
+# Step 6: ai-service
+if ! should_skip "ai-service"; then
+    run_step "ai-service (AI Chat, History, Audit Logs)" \
+        sh -c "
+            docker cp '$DIR/../../services/ai-service/scripts' datavex-ai-service:/app/services/ai-service/ && \
+            docker exec -e PYTHONPATH=. datavex-ai-service /opt/venv/bin/alembic upgrade head && \
+            docker exec -e PYTHONPATH=. -e SEED_PROFILE=$PROFILE datavex-ai-service /opt/venv/bin/python /app/services/ai-service/scripts/seed.py --profile $PROFILE
         "
 fi
 

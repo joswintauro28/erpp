@@ -2,7 +2,7 @@ import asyncio
 import asyncpg
 
 ADMIN_DB_URL = "postgresql://postgres:root@localhost:5432/postgres"
-DATABASES = ["erp_iam", "erp_billing", "erp_inventory", "erp_db", "erp_crm"]
+DATABASES = ["erp_iam", "erp_billing", "erp_inventory", "erp_db", "erp_crm", "erp_ai"]
 
 
 async def recreate_databases():

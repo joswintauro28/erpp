@@ -1,7 +1,8 @@
-# DATAVEX ERP â€” Docker Database Seeding Utility
+# DATAVEX ERP — Docker Database Seeding Utility
 # Runs database seeding scripts inside active Docker containers.
 
 param(
+    [string] $Profile = "dev",
     [switch] $FailFast = $true,
     [string[]] $Skip = @(),
     [switch] $PassThru
@@ -57,7 +58,7 @@ function Invoke-Step {
     if ($PassThru) { [PSCustomObject]@{ Service = $Label; Ok = $ok; Elapsed = $elapsed } }
 }
 
-# â”€â”€ Services definitions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ── Services definitions ──────────────────────────────────────────────
 $services = @(
     @{ Name = 'core-iam';          Container = 'datavex-core-iam';
        Label = 'core-iam (SSO & Permissions)' },
@@ -68,10 +69,12 @@ $services = @(
     @{ Name = 'inventory-service'; Container = 'datavex-inventory-service';
        Label = 'inventory-service (Products, Warehouses, Stock)' },
     @{ Name = 'erp-service';       Container = 'datavex-erp-service';
-       Label = 'erp-service (Gateway, System Settings, Notifications)' }
+       Label = 'erp-service (Gateway, System Settings, Notifications)' },
+    @{ Name = 'ai-service';        Container = 'datavex-ai-service';
+       Label = 'ai-service (AI Chat, History, Audit Logs)' }
 )
 
-# â”€â”€ Help / bootstrap â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ── Help / bootstrap ──────────────────────────────────────────────────
 if ($Skip -contains '*') { Write-Host "All services skipped via -Skip '*'. Nothing to do."; return }
 
 $script:ordinal   = 0
@@ -83,12 +86,13 @@ $script:results   = @()
 # ── Header ────────────────────────────────────────────────────────────
 Write-Host "+----------------------------------------------+" -ForegroundColor Cyan
 Write-Host "|   DATAVEX ERP - Docker Database Seeding      |" -ForegroundColor Cyan
+Write-Host "|   Profile: $Profile                          |" -ForegroundColor Cyan
 Write-Host "+----------------------------------------------+" -ForegroundColor Cyan
 if ($Skip.Count) { Write-Host "Skipping: $($Skip -join ', ')" -ForegroundColor DarkYellow }
 $totalTimer = [System.Diagnostics.Stopwatch]::StartNew()
 Write-Host ""
 
-# â”€â”€ Container health pre-check â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ── Container health pre-check ────────────────────────────────────────
 Write-Host "Checking active Docker containers..." -ForegroundColor Yellow
 $involved = $services | Where-Object { -not (Test-ShouldSkip $_.Name) }
 $missing = @()
@@ -107,7 +111,7 @@ if ($missing.Count) {
 Write-Host "  All containers are healthy! Proceeding with seed..." -ForegroundColor Green
 Write-Host ""
 
-# â”€â”€ Seeding steps â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ── Seeding steps ─────────────────────────────────────────────────────
 # Step 1: core-iam (compile seed.ts on host with bun, copy .js to container, run with node)
 $script:ordinal++
 if (-not (Test-ShouldSkip 'core-iam')) {
@@ -121,7 +125,7 @@ if (-not (Test-ShouldSkip 'core-iam')) {
             if ($LASTEXITCODE -and $LASTEXITCODE -ne 0) { throw "prisma db push failed (exit $LASTEXITCODE)" }
             docker cp prisma/seed.js datavex-core-iam:/app/services/core-iam/prisma/seed.js 2>&1
             if ($LASTEXITCODE -and $LASTEXITCODE -ne 0) { throw "docker cp failed (exit $LASTEXITCODE)" }
-            docker exec datavex-core-iam node prisma/seed.js 2>&1
+            docker exec -e SEED_PROFILE=$Profile datavex-core-iam node prisma/seed.js 2>&1
             if ($LASTEXITCODE -and $LASTEXITCODE -ne 0) { throw "seed script failed (exit $LASTEXITCODE)" }
         } finally {
             Remove-Item prisma/seed.js -ErrorAction SilentlyContinue
@@ -143,7 +147,7 @@ if (-not (Test-ShouldSkip 'billing-service')) {
             if ($LASTEXITCODE -and $LASTEXITCODE -ne 0) { throw "prisma db push failed (exit $LASTEXITCODE)" }
             docker cp prisma/seed.js datavex-billing-service:/app/services/billing-service/prisma/seed.js 2>&1
             if ($LASTEXITCODE -and $LASTEXITCODE -ne 0) { throw "docker cp failed (exit $LASTEXITCODE)" }
-            docker exec datavex-billing-service node prisma/seed.js 2>&1
+            docker exec -e SEED_PROFILE=$Profile datavex-billing-service node prisma/seed.js 2>&1
             if ($LASTEXITCODE -and $LASTEXITCODE -ne 0) { throw "seed script failed (exit $LASTEXITCODE)" }
         } finally {
             Remove-Item prisma/seed.js -ErrorAction SilentlyContinue
@@ -156,11 +160,12 @@ if (-not (Test-ShouldSkip 'billing-service')) {
 $script:ordinal++
 if (-not (Test-ShouldSkip 'crm-service')) {
     Invoke-Step -Label $services[2].Label -Container $services[2].Container -ScriptBlock {
+        docker cp "$PSScriptRoot\..\..\scripts\seed_lib" datavex-crm-service:/app/scripts/ 2>&1
         docker cp "$PSScriptRoot\..\..\services\crm-service\scripts" datavex-crm-service:/app/services/crm-service/ 2>&1
         if ($LASTEXITCODE -and $LASTEXITCODE -ne 0) { throw "docker cp failed" }
         docker exec -e PYTHONPATH=. datavex-crm-service /opt/venv/bin/alembic upgrade head 2>&1
         if ($LASTEXITCODE -and $LASTEXITCODE -ne 0) { throw "alembic upgrade head failed (exit $LASTEXITCODE)" }
-        docker exec -e PYTHONPATH=. datavex-crm-service /opt/venv/bin/python /app/services/crm-service/scripts/seed.py 2>&1
+        docker exec -e PYTHONPATH=. -e SEED_PROFILE=$Profile datavex-crm-service /opt/venv/bin/python /app/services/crm-service/scripts/seed.py --profile $Profile 2>&1
         if ($LASTEXITCODE -and $LASTEXITCODE -ne 0) { throw "seed script failed (exit $LASTEXITCODE)" }
     }
 } else { $script:ordinal--; $script:total-- }
@@ -169,11 +174,12 @@ if (-not (Test-ShouldSkip 'crm-service')) {
 $script:ordinal++
 if (-not (Test-ShouldSkip 'inventory-service')) {
     Invoke-Step -Label $services[3].Label -Container $services[3].Container -ScriptBlock {
+        docker cp "$PSScriptRoot\..\..\scripts\seed_lib" datavex-inventory-service:/app/scripts/ 2>&1
         docker cp "$PSScriptRoot\..\..\services\inventory-service\scripts" datavex-inventory-service:/app/services/inventory-service/ 2>&1
         if ($LASTEXITCODE -and $LASTEXITCODE -ne 0) { throw "docker cp failed" }
         docker exec -e PYTHONPATH=. datavex-inventory-service /opt/venv/bin/alembic upgrade head 2>&1
         if ($LASTEXITCODE -and $LASTEXITCODE -ne 0) { throw "alembic upgrade head failed (exit $LASTEXITCODE)" }
-        docker exec -e PYTHONPATH=. datavex-inventory-service /opt/venv/bin/python /app/services/inventory-service/scripts/seed.py 2>&1
+        docker exec -e PYTHONPATH=. -e SEED_PROFILE=$Profile datavex-inventory-service /opt/venv/bin/python /app/services/inventory-service/scripts/seed.py --profile $Profile 2>&1
         if ($LASTEXITCODE -and $LASTEXITCODE -ne 0) { throw "seed script failed (exit $LASTEXITCODE)" }
     }
 } else { $script:ordinal--; $script:total-- }
@@ -182,11 +188,25 @@ if (-not (Test-ShouldSkip 'inventory-service')) {
 $script:ordinal++
 if (-not (Test-ShouldSkip 'erp-service')) {
     Invoke-Step -Label $services[4].Label -Container $services[4].Container -ScriptBlock {
+        docker cp "$PSScriptRoot\..\..\scripts\seed_lib" datavex-erp-service:/app/scripts/ 2>&1
         docker cp "$PSScriptRoot\..\..\services\erp-service\scripts" datavex-erp-service:/app/services/erp-service/ 2>&1
         if ($LASTEXITCODE -and $LASTEXITCODE -ne 0) { throw "docker cp failed" }
         docker exec -e PYTHONPATH=. datavex-erp-service /opt/venv/bin/alembic upgrade head 2>&1
         if ($LASTEXITCODE -and $LASTEXITCODE -ne 0) { throw "alembic upgrade head failed (exit $LASTEXITCODE)" }
-        docker exec -e PYTHONPATH=. datavex-erp-service /opt/venv/bin/python /app/services/erp-service/scripts/seed.py 2>&1
+        docker exec -e PYTHONPATH=. -e SEED_PROFILE=$Profile datavex-erp-service /opt/venv/bin/python /app/services/erp-service/scripts/seed.py --profile $Profile 2>&1
+        if ($LASTEXITCODE -and $LASTEXITCODE -ne 0) { throw "seed script failed (exit $LASTEXITCODE)" }
+    }
+} else { $script:ordinal--; $script:total-- }
+
+# Step 6: ai-service
+$script:ordinal++
+if (-not (Test-ShouldSkip 'ai-service')) {
+    Invoke-Step -Label $services[5].Label -Container $services[5].Container -ScriptBlock {
+        docker cp "$PSScriptRoot\..\..\services\ai-service\scripts" datavex-ai-service:/app/services/ai-service/ 2>&1
+        if ($LASTEXITCODE -and $LASTEXITCODE -ne 0) { throw "docker cp failed" }
+        docker exec -e PYTHONPATH=. datavex-ai-service /opt/venv/bin/alembic upgrade head 2>&1
+        if ($LASTEXITCODE -and $LASTEXITCODE -ne 0) { throw "alembic upgrade head failed (exit $LASTEXITCODE)" }
+        docker exec -e PYTHONPATH=. -e SEED_PROFILE=$Profile datavex-ai-service /opt/venv/bin/python /app/services/ai-service/scripts/seed.py --profile $Profile 2>&1
         if ($LASTEXITCODE -and $LASTEXITCODE -ne 0) { throw "seed script failed (exit $LASTEXITCODE)" }
     }
 } else { $script:ordinal--; $script:total-- }
