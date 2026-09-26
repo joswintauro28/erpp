@@ -16,7 +16,7 @@ from app import models
 from . import schemas
 from . import scraper
 from app.core.idgen import next_document_id
-from app.core.deps import get_current_token_payload
+from app.core.deps import get_current_token_payload, get_current_org_id
 
 router = APIRouter(prefix="/api/lead-discovery", tags=["lead-discovery"])
 
@@ -267,6 +267,7 @@ async def import_leads(
     request: schemas.ImportLeadsRequest,
     db: AsyncSession = Depends(get_db),
     payload: dict = Depends(get_current_token_payload),
+    org_id: int = Depends(get_current_org_id),
 ):
     owner_id = payload.get("user_id")
     try:
@@ -286,6 +287,7 @@ async def import_leads(
 
             new_lead = models.Lead(
                 id_str=await next_document_id(db, models.Lead, "LD"),
+                organization_id=org_id,
                 name=contact_name,
                 company=c_data.company_name,
                 source="AI Discovery",
@@ -295,17 +297,19 @@ async def import_leads(
                 owner_id=owner_id,
                 updated_at=datetime.now().strftime("%Y-%m-%d")
             )
-            # M3: score captured leads immediately (MQL-ready leads are flagged
-            # and surface in the Lead Qualification view).
             apply_lead_score(new_lead)
             db.add(new_lead)
 
             result = await db.execute(
-                select(models.PinnedLead).filter(models.PinnedLead.company_name == c_data.company_name)
+                select(models.PinnedLead).filter(
+                    models.PinnedLead.company_name == c_data.company_name,
+                    models.PinnedLead.organization_id == org_id,
+                )
             )
             existing_pin = result.scalars().first()
             if not existing_pin:
                 pin_obj = models.PinnedLead(
+                    organization_id=org_id,
                     company_name=c_data.company_name,
                     industry=c_data.industry,
                     location=c_data.location,
@@ -318,7 +322,8 @@ async def import_leads(
                     business_pain_points=c_data.business_pain_points,
                     recommended_ai_solutions=c_data.recommended_ai_solutions,
                     key_decision_makers=[kdm.model_dump() for kdm in c_data.key_decision_makers],
-                    public_contact=c_data.public_contact.model_dump()
+                    public_contact=c_data.public_contact.model_dump(),
+                    owner_id=owner_id,
                 )
                 db.add(pin_obj)
 
@@ -332,12 +337,9 @@ async def import_leads(
 @router.get("/pinned", response_model=List[schemas.CompanyDetail])
 async def get_pinned_leads(
     db: AsyncSession = Depends(get_db),
-    payload: dict = Depends(get_current_token_payload),
+    org_id: int = Depends(get_current_org_id),
 ):
-    owner_id = payload.get("user_id")
-    stmt = select(models.PinnedLead)
-    if owner_id is not None:
-        stmt = stmt.filter(models.PinnedLead.owner_id == owner_id)
+    stmt = select(models.PinnedLead).filter(models.PinnedLead.organization_id == org_id)
     result = await db.execute(stmt)
     pinned = result.scalars().all()
     res = []
@@ -375,10 +377,14 @@ async def pin_lead(
     company: schemas.CompanyDetail,
     db: AsyncSession = Depends(get_db),
     payload: dict = Depends(get_current_token_payload),
+    org_id: int = Depends(get_current_org_id),
 ):
     owner_id = payload.get("user_id")
     result = await db.execute(
-        select(models.PinnedLead).filter(models.PinnedLead.company_name == company.company_name)
+        select(models.PinnedLead).filter(
+            models.PinnedLead.company_name == company.company_name,
+            models.PinnedLead.organization_id == org_id,
+        )
     )
     existing = result.scalars().first()
     if existing:
@@ -387,6 +393,7 @@ async def pin_lead(
     contact_dict = company.public_contact.model_dump() if hasattr(company.public_contact, "model_dump") else company.public_contact.dict()
 
     db_obj = models.PinnedLead(
+        organization_id=org_id,
         company_name=company.company_name,
         industry=company.industry,
         location=company.location,
@@ -411,12 +418,12 @@ async def pin_lead(
 async def unpin_lead(
     company_name: str,
     db: AsyncSession = Depends(get_db),
-    payload: dict = Depends(get_current_token_payload),
+    org_id: int = Depends(get_current_org_id),
 ):
-    owner_id = payload.get("user_id")
-    stmt = select(models.PinnedLead).filter(models.PinnedLead.company_name == company_name)
-    if owner_id is not None:
-        stmt = stmt.filter(models.PinnedLead.owner_id == owner_id)
+    stmt = select(models.PinnedLead).filter(
+        models.PinnedLead.company_name == company_name,
+        models.PinnedLead.organization_id == org_id,
+    )
     result = await db.execute(stmt)
     db_obj = result.scalars().first()
     if db_obj:
@@ -429,12 +436,12 @@ async def unpin_lead(
 async def get_pinned_lead_detail(
     company_name: str,
     db: AsyncSession = Depends(get_db),
-    payload: dict = Depends(get_current_token_payload),
+    org_id: int = Depends(get_current_org_id),
 ):
-    owner_id = payload.get("user_id")
-    stmt = select(models.PinnedLead).filter(models.PinnedLead.company_name == company_name)
-    if owner_id is not None:
-        stmt = stmt.filter(models.PinnedLead.owner_id == owner_id)
+    stmt = select(models.PinnedLead).filter(
+        models.PinnedLead.company_name == company_name,
+        models.PinnedLead.organization_id == org_id,
+    )
     result = await db.execute(stmt)
     p = result.scalars().first()
     if not p:

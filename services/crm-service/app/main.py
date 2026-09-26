@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
 from app import models, database
-from app.core.deps import get_current_token_payload
+from app.core.deps import get_current_token_payload, get_current_org_id
 from app.core.idgen import next_document_id, next_customer_id
 from app.core.middleware import SecurityHeadersMiddleware, RequestBodyLimitMiddleware
 
@@ -214,7 +214,13 @@ async def get_entity_fields(entity_type: str, token_payload: dict = Depends(get_
 
 
 @app.post("/api/{entity_type}")
-async def create_entity(entity_type: str, payload: dict, db: AsyncSession = Depends(database.get_db), token_payload: dict = Depends(get_current_token_payload)):
+async def create_entity(
+    entity_type: str,
+    payload: dict,
+    db: AsyncSession = Depends(database.get_db),
+    token_payload: dict = Depends(get_current_token_payload),
+    org_id: int = Depends(get_current_org_id),
+):
     if entity_type not in ENTITY_MODEL_MAP:
         raise HTTPException(status_code=404, detail="Entity type not found")
 
@@ -259,6 +265,9 @@ async def create_entity(entity_type: str, payload: dict, db: AsyncSession = Depe
     filtered_payload["id_str"] = id_str
     filtered_payload.pop("id", None)
 
+    if "organization_id" in mapper.columns:
+        filtered_payload["organization_id"] = org_id
+
     owner_id = token_payload.get("user_id")
     if owner_id is not None and "owner_id" not in filtered_payload:
         filtered_payload["owner_id"] = owner_id
@@ -300,19 +309,25 @@ async def create_entity(entity_type: str, payload: dict, db: AsyncSession = Depe
 
 
 @app.put("/api/{entity_type}/{id_str}")
-async def update_entity(entity_type: str, id_str: str, payload: dict, db: AsyncSession = Depends(database.get_db), token_payload: dict = Depends(get_current_token_payload)):
+async def update_entity(
+    entity_type: str,
+    id_str: str,
+    payload: dict,
+    db: AsyncSession = Depends(database.get_db),
+    token_payload: dict = Depends(get_current_token_payload),
+    org_id: int = Depends(get_current_org_id),
+):
     if entity_type not in ENTITY_MODEL_MAP:
         raise HTTPException(status_code=404, detail="Entity type not found")
 
     model_class = ENTITY_MODEL_MAP[entity_type]
-    owner_id = token_payload.get("user_id")
-    role = token_payload.get("role")
-    is_owner = role in ["Organization Owner", "Admin"]
+    from sqlalchemy.inspection import inspect
+    mapper = inspect(model_class)
 
     stmt = select(model_class).filter(model_class.id_str == id_str)
-    if not is_owner and owner_id is not None:
-        from sqlalchemy import or_
-        stmt = stmt.filter(or_(model_class.owner_id == owner_id, model_class.owner_id.is_(None)))
+    if "organization_id" in mapper.columns:
+        stmt = stmt.filter(model_class.organization_id == org_id)
+
     result = await db.execute(stmt)
     db_obj = result.scalars().first()
     if not db_obj:
@@ -320,12 +335,10 @@ async def update_entity(entity_type: str, id_str: str, payload: dict, db: AsyncS
 
     old_status = getattr(db_obj, "status", None)
 
-    from sqlalchemy.inspection import inspect
     from sqlalchemy import String, Integer, Float, Boolean
-    mapper = inspect(model_class)
 
     for key, value in payload.items():
-        if key in mapper.columns and key not in ["id", "id_str"]:
+        if key in mapper.columns and key not in ["id", "id_str", "organization_id"]:
             col_type = mapper.columns[key].type
             if value is None:
                 setattr(db_obj, key, None)
@@ -381,19 +394,24 @@ async def update_entity(entity_type: str, id_str: str, payload: dict, db: AsyncS
 
 
 @app.delete("/api/{entity_type}/{id_str}")
-async def delete_entity(entity_type: str, id_str: str, db: AsyncSession = Depends(database.get_db), token_payload: dict = Depends(get_current_token_payload)):
+async def delete_entity(
+    entity_type: str,
+    id_str: str,
+    db: AsyncSession = Depends(database.get_db),
+    token_payload: dict = Depends(get_current_token_payload),
+    org_id: int = Depends(get_current_org_id),
+):
     if entity_type not in ENTITY_MODEL_MAP:
         raise HTTPException(status_code=404, detail="Entity type not found")
 
     model_class = ENTITY_MODEL_MAP[entity_type]
-    owner_id = token_payload.get("user_id")
-    role = token_payload.get("role")
-    is_owner = role in ["Organization Owner", "Admin"]
+    from sqlalchemy.inspection import inspect
+    mapper = inspect(model_class)
 
     stmt = select(model_class).filter(model_class.id_str == id_str)
-    if not is_owner and owner_id is not None:
-        from sqlalchemy import or_
-        stmt = stmt.filter(or_(model_class.owner_id == owner_id, model_class.owner_id.is_(None)))
+    if "organization_id" in mapper.columns:
+        stmt = stmt.filter(model_class.organization_id == org_id)
+
     result = await db.execute(stmt)
     db_obj = result.scalars().first()
     if not db_obj:

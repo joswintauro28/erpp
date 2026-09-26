@@ -10,6 +10,7 @@ class Requirement(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     id_str = Column(String, index=True)
+    organization_id = Column(Integer, nullable=False, default=1, index=True)
     owner_id = Column(Integer, index=True, nullable=True)
     name = Column(String)
     account = Column(String)

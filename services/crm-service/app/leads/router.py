@@ -4,13 +4,12 @@ from sqlalchemy import select
 from datetime import datetime
 from app import database, models
 from app.leads import schemas, crud
-from app.core.deps import get_current_token_payload
+from app.core.deps import get_current_token_payload, get_current_org_id
 
 router = APIRouter(prefix="/api/leads", tags=["leads"])
 
 
 def _score_lead(lead) -> dict:
-    # Single source of truth for scoring: app/leads/scoring.py (M3/M4).
     from app.leads.scoring import compute_lead_score
 
     result = compute_lead_score(
@@ -36,16 +35,9 @@ def _score_lead(lead) -> dict:
 @router.get("/scoring")
 async def get_lead_scores(
     db: AsyncSession = Depends(database.get_db),
-    payload: dict = Depends(get_current_token_payload),
+    org_id: int = Depends(get_current_org_id),
 ):
-    owner_id = payload.get("user_id")
-    role = payload.get("role")
-    is_owner = role in ["Organization Owner", "Admin"]
-
-    stmt = select(models.Lead)
-    if not is_owner and owner_id is not None:
-        from sqlalchemy import or_
-        stmt = stmt.filter(or_(models.Lead.owner_id == owner_id, models.Lead.owner_id.is_(None)))
+    stmt = select(models.Lead).filter(models.Lead.organization_id == org_id)
     result = await db.execute(stmt)
     leads = result.scalars().all()
     scored = [_score_lead(l) for l in leads]
@@ -66,8 +58,12 @@ async def get_lead_scores(
 
 
 @router.post("/{id_str}/score")
-async def score_single_lead(id_str: str, db: AsyncSession = Depends(database.get_db)):
-    result = await db.execute(select(models.Lead).filter(models.Lead.id_str == id_str))
+async def score_single_lead(
+    id_str: str,
+    db: AsyncSession = Depends(database.get_db),
+    org_id: int = Depends(get_current_org_id),
+):
+    result = await db.execute(select(models.Lead).filter(models.Lead.id_str == id_str, models.Lead.organization_id == org_id))
     lead = result.scalars().first()
     if not lead:
         raise HTTPException(status_code=404, detail="Lead not found")
@@ -76,12 +72,9 @@ async def score_single_lead(id_str: str, db: AsyncSession = Depends(database.get
 @router.get("", response_model=schemas.LeadManagementData)
 async def get_leads_data(
     db: AsyncSession = Depends(database.get_db),
-    payload: dict = Depends(get_current_token_payload),
+    org_id: int = Depends(get_current_org_id),
 ):
-    owner_id = payload.get("user_id")
-    role = payload.get("role")
-    is_owner = role in ["Organization Owner", "Admin"]
-    leads = await crud.get_leads(db, owner_id=owner_id, is_admin=is_owner)
+    leads = await crud.get_leads(db, organization_id=org_id)
 
     total = len(leads)
     open_count = len([l for l in leads if l.status in ['New', 'Qualified', 'In Progress']])
@@ -110,16 +103,12 @@ async def qualify_mql_lead(
     id_str: str,
     db: AsyncSession = Depends(database.get_db),
     token_payload: dict = Depends(get_current_token_payload),
+    org_id: int = Depends(get_current_org_id),
 ):
-    """S1 handoff: 1-click MQL -> SQL conversion that auto-creates an Opportunity.
-
-    Only leads that reached the MQL threshold may be qualified. The lead is
-    marked nurture_status=SQL and a linked Opportunity (stage Discovery) is
-    created from its profile.
-    """
+    """S1 handoff: 1-click MQL -> SQL conversion that auto-creates an Opportunity."""
     from app.leads.scoring import apply_lead_score, MQL_SCORE_THRESHOLD
 
-    result = await db.execute(select(models.Lead).filter(models.Lead.id_str == id_str))
+    result = await db.execute(select(models.Lead).filter(models.Lead.id_str == id_str, models.Lead.organization_id == org_id))
     lead = result.scalars().first()
     if not lead:
         raise HTTPException(status_code=404, detail="Lead not found")
@@ -144,6 +133,8 @@ async def qualify_mql_lead(
     opp_id_str = await next_document_id(db, Opportunity, "OP")
     opp = Opportunity(
         id_str=opp_id_str,
+        organization_id=org_id,
+        owner_id=token_payload.get("user_id"),
         name=lead.company or lead.name,
         account=lead.company or lead.name,
         value=str(lead.est_value or 0),
@@ -180,11 +171,12 @@ async def qualify_mql_lead(
 async def recalculate_lead_score(
     id_str: str,
     db: AsyncSession = Depends(database.get_db),
+    org_id: int = Depends(get_current_org_id),
 ):
     """Re-run the scoring heuristic and persist it."""
     from app.leads.scoring import apply_lead_score
 
-    result = await db.execute(select(models.Lead).filter(models.Lead.id_str == id_str))
+    result = await db.execute(select(models.Lead).filter(models.Lead.id_str == id_str, models.Lead.organization_id == org_id))
     lead = result.scalars().first()
     if not lead:
         raise HTTPException(status_code=404, detail="Lead not found")

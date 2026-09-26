@@ -1,39 +1,38 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, or_
+from sqlalchemy import select, func
 from app import models, database
 from app.dashboard import schemas, crud
 from app.core.router_utils import parse_numeric_value
-from app.core.deps import get_current_token_payload
+from app.core.deps import get_current_org_id
 
 router = APIRouter(prefix="/api/dashboard", tags=["dashboard"])
 
 @router.get("", response_model=schemas.DashboardData)
 async def get_dashboard_data(
     db: AsyncSession = Depends(database.get_db),
-    payload: dict = Depends(get_current_token_payload),
+    org_id: int = Depends(get_current_org_id),
 ):
-    owner_id = payload.get("user_id")
-    role = payload.get("role")
-    is_owner = role in ["Organization Owner", "Admin"]
-
-    stmt_leads = select(models.Lead).filter(models.Lead.status.in_(["New", "Qualified", "In Progress"]))
-    if not is_owner and owner_id is not None:
-        stmt_leads = stmt_leads.filter(or_(models.Lead.owner_id == owner_id, models.Lead.owner_id.is_(None)))
+    stmt_leads = select(models.Lead).filter(
+        models.Lead.organization_id == org_id,
+        models.Lead.status.in_(["New", "Qualified", "In Progress"]),
+    )
     open_leads_result = await db.execute(stmt_leads)
     open_leads = open_leads_result.scalars().all()
 
-    stmt_opps = select(models.Opportunity).filter(models.Opportunity.stage.in_(
-        ["Discovery", "Proposal", "Negotiation", "RFQ / Inquiry", "Technical Assessment", "Estimation & Quoting"]
-    ))
-    if not is_owner and owner_id is not None:
-        stmt_opps = stmt_opps.filter(or_(models.Opportunity.owner_id == owner_id, models.Opportunity.owner_id.is_(None)))
+    stmt_opps = select(models.Opportunity).filter(
+        models.Opportunity.organization_id == org_id,
+        models.Opportunity.stage.in_(
+            ["Discovery", "Proposal", "Negotiation", "RFQ / Inquiry", "Technical Assessment", "Estimation & Quoting"]
+        ),
+    )
     open_opps_result = await db.execute(stmt_opps)
     open_opps = open_opps_result.scalars().all()
 
-    stmt_orders = select(models.SalesOrder).filter(models.SalesOrder.status.in_(["Pending", "Confirmed", "In Fulfillment"]))
-    if not is_owner and owner_id is not None:
-        stmt_orders = stmt_orders.filter(or_(models.SalesOrder.owner_id == owner_id, models.SalesOrder.owner_id.is_(None)))
+    stmt_orders = select(models.SalesOrder).filter(
+        models.SalesOrder.organization_id == org_id,
+        models.SalesOrder.status.in_(["Pending", "Confirmed", "In Fulfillment"]),
+    )
     open_orders_result = await db.execute(stmt_orders)
     open_orders = open_orders_result.scalars().all()
 
@@ -50,9 +49,10 @@ async def get_dashboard_data(
     else:
         formatted_val = f"${pipeline_value}"
 
-    stmt_custs = select(func.count(models.Customer.id)).filter(models.Customer.status == "Active")
-    if not is_owner and owner_id is not None:
-        stmt_custs = stmt_custs.filter(or_(models.Customer.owner_id == owner_id, models.Customer.owner_id.is_(None)))
+    stmt_custs = select(func.count(models.Customer.id)).filter(
+        models.Customer.organization_id == org_id,
+        models.Customer.status == "Active",
+    )
     active_custs_result = await db.execute(stmt_custs)
     active_custs = active_custs_result.scalar() or 0
 
@@ -83,9 +83,7 @@ async def get_dashboard_data(
         }
     ]
 
-    stmt_all_sales = select(models.SalesOrder)
-    if not is_owner and owner_id is not None:
-        stmt_all_sales = stmt_all_sales.filter(or_(models.SalesOrder.owner_id == owner_id, models.SalesOrder.owner_id.is_(None)))
+    stmt_all_sales = select(models.SalesOrder).filter(models.SalesOrder.organization_id == org_id)
     all_sales_result = await db.execute(stmt_all_sales)
     all_sales = all_sales_result.scalars().all()
 
@@ -112,7 +110,7 @@ async def get_dashboard_data(
             "color": colors.get(stage_name, "#94a3b8")
         })
 
-    recommendations = await crud.get_recommendations(db)
+    recommendations = await crud.get_recommendations(db, organization_id=org_id)
 
     return {
         "metrics": metrics,

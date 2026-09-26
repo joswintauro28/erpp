@@ -4,6 +4,7 @@ from app.database import Base
 class PinnedLead(Base):
     __tablename__ = "pinned_leads"
     id = Column(Integer, primary_key=True, index=True)
+    organization_id = Column(Integer, nullable=False, default=1, index=True)
     owner_id = Column(Integer, index=True, nullable=True)
     company_name = Column(String, unique=True, index=True)
     industry = Column(String, nullable=True)

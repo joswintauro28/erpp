@@ -26,6 +26,24 @@ async def get_current_user_id(
 ) -> int | None:
     return payload.get("user_id") or payload.get("sub")
 
+async def get_current_org_id(
+    payload: dict = Depends(get_current_token_payload),
+) -> int:
+    org_id = payload.get("organization_id") or payload.get("user_id") or payload.get("sub")
+    if not org_id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Missing organization context in token",
+        )
+    try:
+        return int(org_id)
+    except (ValueError, TypeError):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid organization context in token",
+        )
+
+
 def require_permission(permission_code: str):
     async def permission_dep(
         payload: dict = Depends(get_current_token_payload),

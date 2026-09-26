@@ -22,21 +22,24 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    op.create_table(
-        "sales",
-        sa.Column("id", sa.Integer, primary_key=True, index=True),
-        sa.Column("id_str", sa.String, index=True),
-        sa.Column("invoice_no", sa.String),
-        sa.Column("account", sa.String),
-        sa.Column("amount", sa.String),
-        sa.Column("issued_date", sa.String, nullable=True),
-        sa.Column("due_date", sa.String, nullable=True),
-        sa.Column("status", sa.String),
-        sa.Column("rep", sa.String, nullable=True),
-        # Include legacy columns so a2b3c4d5e6f7 can drop them
-        sa.Column("file_data", sa.String, nullable=True),
-        sa.Column("file_name", sa.String, nullable=True),
-    )
+    bind = op.get_bind()
+    insp = sa.inspect(bind)
+    if "sales" not in insp.get_table_names():
+        op.create_table(
+            "sales",
+            sa.Column("id", sa.Integer, primary_key=True, index=True),
+            sa.Column("id_str", sa.String, index=True),
+            sa.Column("invoice_no", sa.String),
+            sa.Column("account", sa.String),
+            sa.Column("amount", sa.String),
+            sa.Column("issued_date", sa.String, nullable=True),
+            sa.Column("due_date", sa.String, nullable=True),
+            sa.Column("status", sa.String),
+            sa.Column("rep", sa.String, nullable=True),
+            # Include legacy columns so a2b3c4d5e6f7 can drop them
+            sa.Column("file_data", sa.String, nullable=True),
+            sa.Column("file_name", sa.String, nullable=True),
+        )
 
 
 def downgrade() -> None:

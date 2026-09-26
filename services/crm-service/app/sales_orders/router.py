@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from app import database, models
 from app.sales_orders import schemas, crud
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.core.deps import get_current_token_payload
+from app.core.deps import get_current_token_payload, get_current_org_id
 from app.core.idgen import next_document_id
 from sqlalchemy import select
 import logging
@@ -24,12 +24,9 @@ router = APIRouter(prefix="/api/sales-orders", tags=["sales-orders"])
 @router.get("", response_model=schemas.SalesOrderManagementData)
 async def get_sales_orders_data(
     db=Depends(database.get_db),
-    payload: dict = Depends(get_current_token_payload),
+    org_id: int = Depends(get_current_org_id),
 ):
-    owner_id = payload.get("user_id")
-    role = payload.get("role")
-    is_owner = role in ["Organization Owner", "Admin"]
-    sales_orders = await crud.get_sales_orders(db, owner_id=owner_id, is_admin=is_owner)
+    sales_orders = await crud.get_sales_orders(db, organization_id=org_id)
     
     total = len(sales_orders)
     open_count = len([so for so in sales_orders if so.status in ['Pending', 'Confirmed']])
@@ -53,7 +50,8 @@ async def get_sales_orders_data(
 async def create_sales_order(
     payload: dict,
     db: AsyncSession = Depends(database.get_db),
-    token_payload: dict = Depends(get_current_token_payload)
+    token_payload: dict = Depends(get_current_token_payload),
+    org_id: int = Depends(get_current_org_id),
 ):
     id_str = await next_document_id(db, models.SalesOrder, "SO")
     from sqlalchemy.inspection import inspect
@@ -87,6 +85,7 @@ async def create_sales_order(
                 filtered_payload[k] = v
 
     filtered_payload["id_str"] = id_str
+    filtered_payload["organization_id"] = org_id
     if not filtered_payload.get("so_no"):
         filtered_payload["so_no"] = id_str
     if "line_items" in payload:
@@ -111,10 +110,14 @@ async def update_sales_order(
     id_str: str,
     payload: dict,
     db: AsyncSession = Depends(database.get_db),
-    token_payload: dict = Depends(get_current_token_payload)
+    token_payload: dict = Depends(get_current_token_payload),
+    org_id: int = Depends(get_current_org_id),
 ):
     result = await db.execute(
-        select(models.SalesOrder).filter(models.SalesOrder.id_str == id_str)
+        select(models.SalesOrder).filter(
+            models.SalesOrder.id_str == id_str,
+            models.SalesOrder.organization_id == org_id,
+        )
     )
     so = result.scalars().first()
     if not so:
@@ -173,18 +176,14 @@ async def approve_sales_order(
     id_str: str,
     db: AsyncSession = Depends(database.get_db),
     token_payload: dict = Depends(get_current_token_payload),
+    org_id: int = Depends(get_current_org_id),
 ):
-    """O2/O3/O4: dedicated approval endpoint.
-
-    1. Synchronous REST credit check against billing-service (O2) — on failure
-       or timeout the SO is placed on Hold (O3) and NOT published.
-    2. If approved, runs the stock check and publishes `crm.order.approved`
-       (O4) so inventory performs its ATP check.
-
-    Returns the full audit trail (credit + stock) for the UI toast.
-    """
+    """O2/O3/O4: dedicated approval endpoint."""
     result = await db.execute(
-        select(models.SalesOrder).filter(models.SalesOrder.id_str == id_str)
+        select(models.SalesOrder).filter(
+            models.SalesOrder.id_str == id_str,
+            models.SalesOrder.organization_id == org_id,
+        )
     )
     so = result.scalars().first()
     if not so:
@@ -222,9 +221,13 @@ async def check_sales_order_stock(
     id_str: str,
     db: AsyncSession = Depends(database.get_db),
     token_payload: dict = Depends(get_current_token_payload),
+    org_id: int = Depends(get_current_org_id),
 ):
     result = await db.execute(
-        select(models.SalesOrder).filter(models.SalesOrder.id_str == id_str)
+        select(models.SalesOrder).filter(
+            models.SalesOrder.id_str == id_str,
+            models.SalesOrder.organization_id == org_id,
+        )
     )
     so = result.scalars().first()
     if not so:
@@ -237,9 +240,6 @@ async def check_sales_order_stock(
         stock_result = await check_stock_availability(token, items)
     except Exception as e:
         logger.warning(f"Stock check unavailable for {so.so_no}: {str(e)}")
-        # Fail open BUT still ingest: the durable crm.order.approved event will
-        # be consumed once inventory is reachable, and the worker runs its own
-        # ATP check anyway.
         stock_result = {"available": True, "overall_available": True, "warehouse_id": None, "items": []}
 
     available = bool(stock_result.get("overall_available", False))
@@ -249,9 +249,6 @@ async def check_sales_order_stock(
         await db.refresh(so)
         await publish_fulfillment_event(token_payload, so, stock_result)
 
-    # ALWAYS ingest into the fulfillment queue: when stock is available the
-    # inventory worker auto-reserves it; on shortage it runs the auto-PO flow.
-    # Both cases must enter the queue as an approved sales order.
     await publish_crm_order_approved(token_payload, so, stock_result)
 
     return {

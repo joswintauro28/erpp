@@ -4,7 +4,7 @@ from sqlalchemy import select
 from datetime import datetime
 from app import database, models
 from app.opportunities import schemas, crud
-from app.core.deps import get_current_token_payload
+from app.core.deps import get_current_token_payload, get_current_org_id
 
 router = APIRouter(prefix="/api/opportunities", tags=["opportunities"])
 
@@ -21,12 +21,9 @@ STAGE_PROBABILITY = {
 @router.get("", response_model=schemas.OpportunityManagementData)
 async def get_opportunities_data(
     db: AsyncSession = Depends(database.get_db),
-    payload: dict = Depends(get_current_token_payload),
+    org_id: int = Depends(get_current_org_id),
 ):
-    owner_id = payload.get("user_id")
-    role = payload.get("role")
-    is_owner = role in ["Organization Owner", "Admin"]
-    opportunities = await crud.get_opportunities(db, owner_id=owner_id, is_admin=is_owner)
+    opportunities = await crud.get_opportunities(db, organization_id=org_id)
 
     total = len(opportunities)
     open_count = len([o for o in opportunities if o.stage in ['Discovery', 'Proposal', 'Negotiation']])
@@ -53,11 +50,15 @@ async def update_opportunity_stage(
     note: str = Body("", embed=True),
     db: AsyncSession = Depends(database.get_db),
     token_payload: dict = Depends(get_current_token_payload),
+    org_id: int = Depends(get_current_org_id),
 ):
     """Kanban stage progression. Tracks the full stage trail in stage_history
     and auto-adjusts probability per the canonical pipeline."""
     result = await db.execute(
-        select(models.Opportunity).filter(models.Opportunity.id_str == id_str)
+        select(models.Opportunity).filter(
+            models.Opportunity.id_str == id_str,
+            models.Opportunity.organization_id == org_id,
+        )
     )
     opp = result.scalars().first()
     if not opp:

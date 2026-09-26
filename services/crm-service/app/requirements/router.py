@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from app import database
 from app.requirements import schemas, crud
-from app.core.deps import get_current_token_payload
+from app.core.deps import get_current_org_id
 
 router = APIRouter(prefix="/api/requirements", tags=["requirements"])
 
@@ -11,12 +11,9 @@ router = APIRouter(prefix="/api/requirements", tags=["requirements"])
 async def get_requirements_data(
     account: Optional[str] = Query(None),
     db: AsyncSession = Depends(database.get_db),
-    payload: dict = Depends(get_current_token_payload),
+    org_id: int = Depends(get_current_org_id),
 ):
-    owner_id = payload.get("user_id")
-    role = payload.get("role")
-    is_owner = role in ["Organization Owner", "Admin"]
-    requirements = await crud.get_requirements(db, owner_id=owner_id, is_admin=is_owner)
+    requirements = await crud.get_requirements(db, organization_id=org_id)
 
     if account:
         requirements = [r for r in requirements if (r.account or "") == account]

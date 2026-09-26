@@ -2,17 +2,18 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from app import models
 
-# Dashboard tables (metrics, pipeline_stages, recommendations) have no owner_id
-# column — they are global template/aggregate rows, not per-user records.
-
-async def get_metrics(db: AsyncSession):
-    result = await db.execute(select(models.Metric))
+async def get_metrics(db: AsyncSession, organization_id: int):
+    result = await db.execute(select(models.Metric).filter(models.Metric.organization_id == organization_id))
     return list(result.scalars().all())
 
-async def get_pipeline_stages(db: AsyncSession):
-    result = await db.execute(select(models.PipelineStage))
+async def get_pipeline_stages(db: AsyncSession, organization_id: int):
+    result = await db.execute(select(models.PipelineStage).filter(models.PipelineStage.organization_id == organization_id))
     return list(result.scalars().all())
 
-async def get_recommendations(db: AsyncSession):
-    result = await db.execute(select(models.Recommendation))
+async def get_recommendations(db: AsyncSession, organization_id: int):
+    result = await db.execute(select(models.Recommendation).filter(models.Recommendation.organization_id == organization_id))
+    return list(result.scalars().all())
+
+async def get_hot_leads(db: AsyncSession, organization_id: int):
+    result = await db.execute(select(models.HotLead).filter(models.HotLead.organization_id == organization_id))
     return list(result.scalars().all())

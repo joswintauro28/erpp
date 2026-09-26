@@ -8,7 +8,7 @@ import json
 
 from app.database import get_db
 from app.customers.models import Customer
-from app.core.deps import get_current_token_payload
+from app.core.deps import get_current_token_payload, get_current_org_id
 from app.core.idgen import is_valid_document_id
 from app.core.billing_client import (
     quotations_list,
@@ -58,16 +58,15 @@ def _build_quotation_out(q: dict) -> QuotationOut:
     return q_out
 
 
-async def _get_approval_overlay(db: AsyncSession, quote_id: int) -> dict:
+async def _get_approval_overlay(db: AsyncSession, quote_id: int, organization_id: int | None = None) -> dict:
     """Fetch the CPQ approval overlay for a billing quotation, or defaults."""
     from sqlalchemy import select as sa_select
     from app.quotation_approvals.models import QuotationApproval
 
-    result = await db.execute(
-        sa_select(QuotationApproval)
-        .filter(QuotationApproval.quote_id == quote_id)
-        .order_by(QuotationApproval.id.desc())
-    )
+    stmt = sa_select(QuotationApproval).filter(QuotationApproval.quote_id == quote_id)
+    if organization_id is not None:
+        stmt = stmt.filter(QuotationApproval.organization_id == organization_id)
+    result = await db.execute(stmt.order_by(QuotationApproval.id.desc()))
     row = result.scalars().first()
     if not row:
         return {
@@ -122,13 +121,16 @@ async def _upsert_approval_overlay(
     await db.commit()
 
 
-async def _map_crm_payload_to_billing(payload: dict, db: AsyncSession) -> dict:
+async def _map_crm_payload_to_billing(payload: dict, db: AsyncSession, organization_id: int | None = None) -> dict:
     account_name = payload.get("account") or payload.get("clientName") or payload.get("client_name")
     client_id = payload.get("clientId") or 999
     client_name = account_name or "Unknown Client"
 
     if account_name and not payload.get("clientId"):
-        result = await db.execute(select(Customer).filter(Customer.account == account_name))
+        stmt = select(Customer).filter(Customer.account == account_name)
+        if organization_id is not None:
+            stmt = stmt.filter(Customer.organization_id == organization_id)
+        result = await db.execute(stmt)
         customer = result.scalars().first()
         if customer:
             client_id = customer.id
@@ -191,6 +193,7 @@ async def _map_crm_payload_to_billing(payload: dict, db: AsyncSession) -> dict:
 async def list_quotations(
     account: Optional[str] = Query(None),
     token_payload: dict = Depends(get_current_token_payload),
+    org_id: int = Depends(get_current_org_id),
     db: AsyncSession = Depends(get_db),
 ):
     token = _get_token(token_payload)
@@ -209,7 +212,7 @@ async def list_quotations(
     mapped_quotations = []
     for q in items:
         out = _build_quotation_out(q)
-        approval = await _get_approval_overlay(db, q.get("id") or 0)
+        approval = await _get_approval_overlay(db, q.get("id") or 0, organization_id=org_id)
         out_dict = out.model_dump()
         out_dict.update(approval)
         mapped_quotations.append(out_dict)
@@ -231,12 +234,17 @@ async def list_quotations(
 
 
 @router.get("/{id}", response_model=QuotationOut)
-async def get_quotation(id: int, token_payload: dict = Depends(get_current_token_payload), db: AsyncSession = Depends(get_db)):
+async def get_quotation(
+    id: int,
+    token_payload: dict = Depends(get_current_token_payload),
+    org_id: int = Depends(get_current_org_id),
+    db: AsyncSession = Depends(get_db),
+):
     token = _get_token(token_payload)
     try:
         data = await quotations_get(token, id)
         out = _build_quotation_out(data)
-        approval = await _get_approval_overlay(db, id)
+        approval = await _get_approval_overlay(db, id, organization_id=org_id)
         out_dict = out.model_dump()
         out_dict.update(approval)
         return QuotationOut(**out_dict)
@@ -251,6 +259,7 @@ async def create_cpq_quotation(
     payload: dict,
     db: AsyncSession = Depends(get_db),
     token_payload: dict = Depends(get_current_token_payload),
+    org_id: int = Depends(get_current_org_id),
 ):
     """CPQ (Configure, Price, Quote) endpoint.
 
@@ -288,7 +297,7 @@ async def create_cpq_quotation(
 
     account = payload.get("account") or payload.get("clientName") or payload.get("client_name") or "Unknown Client"
 
-    billing_payload = await _map_crm_payload_to_billing(payload, db)
+    billing_payload = await _map_crm_payload_to_billing(payload, db, organization_id=org_id)
     try:
         data = await quotations_create(token, billing_payload)
     except HTTPException:
@@ -311,7 +320,7 @@ async def create_cpq_quotation(
         discount_pct=discount_pct,
         status=approval_status,
         requested_by=str(token_payload.get("user_id") or "user"),
-        organization_id=token_payload.get("organization_id", 1) or 1,
+        organization_id=org_id,
     )
 
     # S5: quote over the discount threshold -> notify the manager (Organization
@@ -362,6 +371,7 @@ async def decide_quotation_approval(
     payload: dict,
     db: AsyncSession = Depends(get_db),
     token_payload: dict = Depends(get_current_token_payload),
+    org_id: int = Depends(get_current_org_id),
 ):
     """S6: dedicated manager approval endpoint for locked (over-threshold) quotes."""
     role = token_payload.get("role") or ""
@@ -378,14 +388,17 @@ async def decide_quotation_approval(
     from app.quotation_approvals.models import QuotationApproval
     result = await db.execute(
         select(QuotationApproval)
-        .filter(QuotationApproval.quote_id == id)
+        .filter(
+            QuotationApproval.quote_id == id,
+            QuotationApproval.organization_id == org_id,
+        )
         .order_by(QuotationApproval.id.desc())
     )
     row = result.scalars().first()
     if not row:
         # Auto-create a draft overlay so the decision is always recorded.
         row = QuotationApproval(
-            organization_id=token_payload.get("organization_id", 1) or 1,
+            organization_id=org_id,
             quote_id=id,
             quote_number="",
             account="",
@@ -418,14 +431,23 @@ async def decide_quotation_approval(
 
 
 @router.get("/{id}/approval")
-async def get_quotation_approval(id: int, db: AsyncSession = Depends(get_db)):
-    return await _get_approval_overlay(db, id)
+async def get_quotation_approval(
+    id: int,
+    db: AsyncSession = Depends(get_db),
+    org_id: int = Depends(get_current_org_id),
+):
+    return await _get_approval_overlay(db, id, organization_id=org_id)
 
 
 @router.post("", response_model=QuotationOut, status_code=201)
-async def create_quotation(payload: dict, db: AsyncSession = Depends(get_db), token_payload: dict = Depends(get_current_token_payload)):
+async def create_quotation(
+    payload: dict,
+    db: AsyncSession = Depends(get_db),
+    token_payload: dict = Depends(get_current_token_payload),
+    org_id: int = Depends(get_current_org_id),
+):
     token = _get_token(token_payload)
-    billing_payload = await _map_crm_payload_to_billing(payload, db)
+    billing_payload = await _map_crm_payload_to_billing(payload, db, organization_id=org_id)
     try:
         data = await quotations_create(token, billing_payload)
         return _build_quotation_out(data)
@@ -436,9 +458,15 @@ async def create_quotation(payload: dict, db: AsyncSession = Depends(get_db), to
 
 
 @router.put("/{id}", response_model=QuotationOut)
-async def update_quotation(id: int, payload: dict, db: AsyncSession = Depends(get_db), token_payload: dict = Depends(get_current_token_payload)):
+async def update_quotation(
+    id: int,
+    payload: dict,
+    db: AsyncSession = Depends(get_db),
+    token_payload: dict = Depends(get_current_token_payload),
+    org_id: int = Depends(get_current_org_id),
+):
     token = _get_token(token_payload)
-    billing_payload = await _map_crm_payload_to_billing(payload, db)
+    billing_payload = await _map_crm_payload_to_billing(payload, db, organization_id=org_id)
     try:
         data = await quotations_update(token, id, billing_payload)
         return _build_quotation_out(data)
@@ -527,6 +555,7 @@ async def convert_quotation_to_sales_order(
     id: int,
     db: AsyncSession = Depends(get_db),
     token_payload: dict = Depends(get_current_token_payload),
+    org_id: int = Depends(get_current_org_id),
 ):
     token = _get_token(token_payload)
     try:
@@ -562,6 +591,8 @@ async def convert_quotation_to_sales_order(
     so = SalesOrder(
         id_str=so_id_str,
         so_no=so_id_str,
+        organization_id=org_id,
+        owner_id=token_payload.get("user_id"),
         account=account,
         from_quote=quote_no,
         value=str(value),
