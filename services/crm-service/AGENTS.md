@@ -12,7 +12,7 @@ This backend service manages the sales pipeline: leads, opportunities, requireme
 
 ## 2. API Design & Authentication
 - **Token Verification Only:** No local login or credential storage endpoints. Authentication is delegated to `core-iam` (8002) using the shared `JWT_SECRET`.
-- **Data Isolation:** All database models query using an `owner_id` (Integer index) extracted from JWT claims to prevent cross-organization leaking.
+- **Data Isolation:** All database models query using `organization_id` (Integer index, NOT NULL) extracted from JWT claims (`get_current_org_id`) to enforce strict multi-tenant isolation. No cross-organization bypass.
 - **Dynamic CRUD:** Includes generic endpoints (`/api/:entity_type`) that support CRUD operations dynamically based on schema definitions.
 - **Interactive OpenAPI Documentation:** Exposes Swagger UI (`http://localhost:8001/docs`), ReDoc (`http://localhost:8001/redoc`), and OpenAPI spec (`http://localhost:8001/openapi.json`) with Bearer JWT authorization.
 

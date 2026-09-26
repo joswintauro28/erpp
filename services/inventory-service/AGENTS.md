@@ -11,7 +11,7 @@ This backend service manages the product catalog, warehouses, stock levels, supp
 
 ## 2. API Design & Patterns
 - **Auth Pattern:** Claims-based JWT validation using the shared `JWT_SECRET` (no DB lookup for authentication).
-- **Data Isolation:** All models contain an `owner_id` field to partition data per organization.
+- **Data Isolation:** All models contain an `organization_id` field (indexed integer) to partition data per organization.
 - **Models:** Product, Warehouse, Stock, StockMovement, Supplier, PurchaseOrder (with PurchaseOrderItem), SerialNumber.
 
 ## 3. Key Modules

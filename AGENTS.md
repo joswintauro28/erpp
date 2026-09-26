@@ -203,7 +203,7 @@ DATAVEX ERP utilizes a decoupled backend architecture where each business domain
 | **Recurring Invoices** | `GET /invoices/recurring`, `GET /:id`, `POST /`, `DELETE /:id` | Template-based scheduling with frequency enum |
 | **Dashboard** | `GET /dashboard/billing` | Aggregated KPIs: totalRevenue, outstanding, overdue, paymentMetrics, summary, recentInvoices, revenueTrend |
 
-**Prisma Schema (7 models):** Invoice (with InvoiceItem relation), Payment, CreditNote, DebitNote, Quotation, RecurringInvoice. All models use `ownerId` for data isolation.
+**Prisma Schema (7 models):** Invoice (with InvoiceItem relation), Payment, CreditNote, DebitNote, Quotation, RecurringInvoice. All models use `organizationId` for data isolation.
 
 ### 3.3 Inventory Service ([services/inventory-service](services/inventory-service/AGENTS.md)) — Port 8004
 
@@ -213,7 +213,7 @@ DATAVEX ERP utilizes a decoupled backend architecture where each business domain
 - **Database Target:** `erp_inventory` (PostgreSQL)
 - **Claims-Based Verification:** JWT payload decoded from shared `JWT_SECRET` — no DB queries for auth.
 
-**Models (7):** Product, Warehouse, Stock, StockMovement, Supplier, PurchaseOrder (with PurchaseOrderItem), SerialNumber. All models use `owner_id` for data isolation.
+**Models (7):** Product, Warehouse, Stock, StockMovement, Supplier, PurchaseOrder (with PurchaseOrderItem), SerialNumber. All models use `organization_id` for data isolation.
 
 **Modules & Endpoints**
 
@@ -259,7 +259,7 @@ DATAVEX ERP utilizes a decoupled backend architecture where each business domain
 - **Database Target:** `erp_crm` (PostgreSQL)
 - **Claims-Based Verification:** JWT payload decoded from shared `JWT_SECRET` — no DB queries for auth. Uses `get_current_token_payload` / `get_current_user_id` dependencies.
 - **Auth Pattern:** Token-verification only — no login endpoints, no credential handling. All authentication delegated to core-iam (port 8002).
-- **Data Isolation:** All models use `owner_id` (Integer, indexed) scoped from JWT `user_id` claim — no local user/Admin model or password storage.
+- **Data Isolation:** All models use `organization_id` (Integer, indexed) scoped from JWT `organization_id` claim — strict multi-tenant isolation.
 
 **Modules & Endpoints**
 
@@ -388,7 +388,7 @@ cd services/erp-service
 $env:PYTHONPATH="."
 .venv\Scripts\alembic upgrade head      # Apply migrations
 .venv\Scripts\python scripts/reset_db.py # Drop all tables
-.venv\Scripts\python scripts/seed.py     # Seed 241 rows of business data
+.venv\Scripts\python scripts/seed.py     # Seed business data
 ```
 
 #### FastAPI AI DB (`services/ai-service`)

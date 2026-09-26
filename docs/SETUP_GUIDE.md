@@ -262,7 +262,7 @@ Configure each module sequentially. Configure environment properties (`.env`), s
    # Deploy schema via Alembic
    PYTHONPATH=. alembic upgrade head
    # Populate crm mock data
-   PYTHONPATH=. python scripts/seed_data.py
+   PYTHONPATH=. python scripts/seed.py
    ```
 
 ---

@@ -12,7 +12,7 @@ This backend service manages invoices, payments, quotations, ledger entries, and
 ## 2. API Design & Patterns
 - **Auth Pattern:** Claims-based JWT verification using the shared `JWT_SECRET`. No database check is performed for session queries; standard route parameters are validated via `AuthGuard` and permissions via `PermissionsGuard` based on the JWT payload.
 - **Snake Case Conversion:** All responses are automatically converted from camelCase to snake_case via the global `SnakeCaseInterceptor`.
-- **Response Scope:** All query methods filter records using `ownerId` to enforce data isolation.
+- **Response Scope:** All query methods filter records using `organizationId` (`organization_id` in database) to enforce multi-tenant data isolation.
 
 ## 3. Document Numbering Standard
 - **Format:** `[PREFIX]-[YYYYMM]-[NNNN]` (regex `^[A-Z]{2,4}-\d{6}-\d{4}$`), e.g. `INV-202608-0001`.
