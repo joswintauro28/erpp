@@ -100,7 +100,7 @@ async def chat(
 
     # Get or create session
     if req.session_id:
-        session = await crud.get_session(db, req.session_id, user_id)
+        session = await crud.get_session(db, req.session_id, user_id, org_id)
         if not session:
             raise NotFoundException("Session not found")
         session_id = session.id
@@ -238,7 +238,7 @@ async def chat_stream(
 
     # Get or create session
     if req.session_id:
-        session = await crud.get_session(db, req.session_id, user_id)
+        session = await crud.get_session(db, req.session_id, user_id, org_id)
         if not session:
             raise NotFoundException("Session not found")
         session_id = session.id
@@ -345,7 +345,9 @@ async def list_sessions(
     db: AsyncSession = Depends(get_db),
 ):
     """List user's AI chat sessions, optionally filtered by module."""
-    sessions = await crud.list_sessions(db, user["user_id"], module)
+    sessions = await crud.list_sessions(
+        db, user["user_id"], module, user.get("organization_id")
+    )
     return [
         SessionResponse(
             id=s.id,
@@ -366,7 +368,9 @@ async def get_history(
     db: AsyncSession = Depends(get_db),
 ):
     """Get message history for a session."""
-    session = await crud.get_session(db, session_id, user["user_id"])
+    session = await crud.get_session(
+        db, session_id, user["user_id"], user.get("organization_id")
+    )
     if not session:
         raise NotFoundException("Session not found")
 
@@ -393,7 +397,9 @@ async def rename_session(
     db: AsyncSession = Depends(get_db),
 ):
     """Rename a session title."""
-    session = await crud.update_session_title(db, session_id, user["user_id"], body.title)
+    session = await crud.update_session_title(
+        db, session_id, user["user_id"], body.title, user.get("organization_id")
+    )
     if not session:
         raise NotFoundException("Session not found")
     return SessionResponse(
@@ -413,12 +419,16 @@ async def delete_session(
     db: AsyncSession = Depends(get_db),
 ):
     """Delete a session and all its messages."""
-    session = await crud.get_session(db, session_id, user["user_id"])
+    session = await crud.get_session(
+        db, session_id, user["user_id"], user.get("organization_id")
+    )
     if not session:
         raise NotFoundException("Session not found")
 
     module_name = session.module
-    await crud.delete_session(db, session_id, user["user_id"])
+    await crud.delete_session(
+        db, session_id, user["user_id"], user.get("organization_id")
+    )
 
     # Audit log (session_id=None because session is deleted)
     await crud.log_interaction(
@@ -441,7 +451,9 @@ async def clear_sessions(
     db: AsyncSession = Depends(get_db),
 ):
     """Bulk delete all sessions for the current user, optionally scoped to a module."""
-    count = await crud.clear_all_sessions(db, user["user_id"], module)
+    count = await crud.clear_all_sessions(
+        db, user["user_id"], module, user.get("organization_id")
+    )
     await crud.log_interaction(
         db,
         user_id=user["user_id"],
@@ -515,7 +527,9 @@ async def get_analytics_overview(
     db: AsyncSession = Depends(get_db),
 ):
     """Get aggregated AI usage analytics for the current user."""
-    data = await crud.get_analytics_overview(db, user["user_id"])
+    data = await crud.get_analytics_overview(
+        db, user["user_id"], user.get("organization_id")
+    )
     return AnalyticsOverview(**data)
 
 
@@ -530,7 +544,9 @@ async def get_module_analytics(
         raise ValidationException(f"Invalid module: {module}")
 
     _check_module_permission(user, module)
-    data = await crud.get_module_analytics(db, user["user_id"], module)
+    data = await crud.get_module_analytics(
+        db, user["user_id"], module, user.get("organization_id")
+    )
     return AnalyticsModule(**data)
 
 

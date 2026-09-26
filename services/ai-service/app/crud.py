@@ -36,24 +36,30 @@ async def create_session(
     return session
 
 
-async def get_session(db: AsyncSession, session_id: str, user_id: int) -> AISession | None:
+async def get_session(
+    db: AsyncSession, session_id: str, user_id: int, organization_id: int | None = None
+) -> AISession | None:
     stmt = (
         sa.select(AISession)
         .options(selectinload(AISession.messages))
         .where(AISession.id == session_id, AISession.user_id == user_id)
     )
+    if organization_id:
+        stmt = stmt.where(AISession.organization_id == organization_id)
     result = await db.execute(stmt)
     return result.scalar_one_or_none()
 
 
 async def list_sessions(
-    db: AsyncSession, user_id: int, module: str | None = None
+    db: AsyncSession, user_id: int, module: str | None = None, organization_id: int | None = None
 ) -> list[AISession]:
     stmt = (
         sa.select(AISession)
         .options(selectinload(AISession.messages))
         .where(AISession.user_id == user_id)
     )
+    if organization_id:
+        stmt = stmt.where(AISession.organization_id == organization_id)
     if module:
         stmt = stmt.where(AISession.module == module)
     stmt = stmt.order_by(AISession.updated_at.desc())
@@ -61,8 +67,10 @@ async def list_sessions(
     return list(result.scalars().all())
 
 
-async def delete_session(db: AsyncSession, session_id: str, user_id: int) -> bool:
-    session = await get_session(db, session_id, user_id)
+async def delete_session(
+    db: AsyncSession, session_id: str, user_id: int, organization_id: int | None = None
+) -> bool:
+    session = await get_session(db, session_id, user_id, organization_id)
     if not session:
         return False
     await db.delete(session)
@@ -71,10 +79,10 @@ async def delete_session(db: AsyncSession, session_id: str, user_id: int) -> boo
 
 
 async def clear_all_sessions(
-    db: AsyncSession, user_id: int, module: str | None = None
+    db: AsyncSession, user_id: int, module: str | None = None, organization_id: int | None = None
 ) -> int:
-    """Delete all sessions for a user, optionally filtered by module."""
-    sessions = await list_sessions(db, user_id, module)
+    """Delete all sessions for a user, optionally filtered by module and organization."""
+    sessions = await list_sessions(db, user_id, module, organization_id)
     count = len(sessions)
     for s in sessions:
         await db.delete(s)
@@ -83,9 +91,9 @@ async def clear_all_sessions(
 
 
 async def update_session_title(
-    db: AsyncSession, session_id: str, user_id: int, title: str
+    db: AsyncSession, session_id: str, user_id: int, title: str, organization_id: int | None = None
 ) -> AISession | None:
-    session = await get_session(db, session_id, user_id)
+    session = await get_session(db, session_id, user_id, organization_id)
     if not session:
         return None
     session.title = title.strip()[:200]
@@ -261,54 +269,63 @@ async def log_interaction(
 
 # ── Analytics Queries ───────────────────────────────────────────────
 
-async def get_analytics_overview(db: AsyncSession, user_id: int) -> dict:
-    """Get aggregated analytics for a user."""
+async def get_analytics_overview(
+    db: AsyncSession, user_id: int, organization_id: int | None = None
+) -> dict:
+    """Get aggregated analytics for a user and organization."""
     now = datetime.now(timezone.utc)
     today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
     week_ago = now - timedelta(days=7)
+
+    # Base conditions
+    session_where = [AISession.user_id == user_id]
+    audit_where = [AIAuditLog.user_id == user_id]
+    if organization_id:
+        session_where.append(AISession.organization_id == organization_id)
+        audit_where.append(AIAuditLog.organization_id == organization_id)
 
     # Total messages
     msg_count = await db.scalar(
         sa.select(sa.func.count(AIMessage.id))
         .join(AISession)
-        .where(AISession.user_id == user_id)
+        .where(*session_where)
     )
 
     # Total sessions
     session_count = await db.scalar(
         sa.select(sa.func.count(AISession.id))
-        .where(AISession.user_id == user_id)
+        .where(*session_where)
     )
 
     # Token usage
     total_tokens = await db.scalar(
         sa.select(sa.func.coalesce(sa.func.sum(AIMessage.token_count), 0))
         .join(AISession)
-        .where(AISession.user_id == user_id)
+        .where(*session_where)
     )
 
     # Average response time
     avg_time = await db.scalar(
         sa.select(sa.func.coalesce(sa.func.avg(AIAuditLog.response_time_ms), 0))
-        .where(AIAuditLog.user_id == user_id, AIAuditLog.action.in_(["chat", "stream"]))
+        .where(*audit_where, AIAuditLog.action.in_(["chat", "stream"]))
     )
 
     # Today's counts
     messages_today = await db.scalar(
         sa.select(sa.func.count(AIMessage.id))
         .join(AISession)
-        .where(AISession.user_id == user_id, AIMessage.created_at >= today_start)
+        .where(*session_where, AIMessage.created_at >= today_start)
     )
 
     sessions_today = await db.scalar(
         sa.select(sa.func.count(AISession.id))
-        .where(AISession.user_id == user_id, AISession.created_at >= today_start)
+        .where(*session_where, AISession.created_at >= today_start)
     )
 
     # Module usage breakdown
     module_rows = await db.execute(
         sa.select(AISession.module, sa.func.count(AISession.id))
-        .where(AISession.user_id == user_id)
+        .where(*session_where)
         .group_by(AISession.module)
     )
     module_usage = {row[0]: row[1] for row in module_rows.all()}
@@ -320,7 +337,7 @@ async def get_analytics_overview(db: AsyncSession, user_id: int) -> dict:
             sa.func.count(AIMessage.id).label("count"),
         )
         .join(AISession)
-        .where(AISession.user_id == user_id, AIMessage.created_at >= week_ago)
+        .where(*session_where, AIMessage.created_at >= week_ago)
         .group_by(sa.func.date(AIMessage.created_at))
         .order_by(sa.func.date(AIMessage.created_at))
     )
@@ -338,41 +355,49 @@ async def get_analytics_overview(db: AsyncSession, user_id: int) -> dict:
     }
 
 
-async def get_module_analytics(db: AsyncSession, user_id: int, module: str) -> dict:
-    """Get analytics for a specific module."""
+async def get_module_analytics(
+    db: AsyncSession, user_id: int, module: str, organization_id: int | None = None
+) -> dict:
+    """Get analytics for a specific module and organization."""
+    session_where = [AISession.user_id == user_id, AISession.module == module]
+    audit_where = [AIAuditLog.user_id == user_id, AIAuditLog.module == module]
+    if organization_id:
+        session_where.append(AISession.organization_id == organization_id)
+        audit_where.append(AIAuditLog.organization_id == organization_id)
+
     # Message and session counts
     msg_count = await db.scalar(
         sa.select(sa.func.count(AIMessage.id))
         .join(AISession)
-        .where(AISession.user_id == user_id, AISession.module == module)
+        .where(*session_where)
     )
 
     session_count = await db.scalar(
         sa.select(sa.func.count(AISession.id))
-        .where(AISession.user_id == user_id, AISession.module == module)
+        .where(*session_where)
     )
 
     # Token usage
     total_tokens = await db.scalar(
         sa.select(sa.func.coalesce(sa.func.sum(AIMessage.token_count), 0))
         .join(AISession)
-        .where(AISession.user_id == user_id, AISession.module == module)
+        .where(*session_where)
     )
 
     # Average response time
     avg_time = await db.scalar(
         sa.select(sa.func.coalesce(sa.func.avg(AIAuditLog.response_time_ms), 0))
-        .where(AIAuditLog.user_id == user_id, AIAuditLog.module == module)
+        .where(*audit_where)
     )
 
     # Success rate
     total_interactions = await db.scalar(
         sa.select(sa.func.count(AIAuditLog.id))
-        .where(AIAuditLog.user_id == user_id, AIAuditLog.module == module)
+        .where(*audit_where)
     )
     successful = await db.scalar(
         sa.select(sa.func.count(AIAuditLog.id))
-        .where(AIAuditLog.user_id == user_id, AIAuditLog.module == module, AIAuditLog.success == True)
+        .where(*audit_where, AIAuditLog.success == True)
     )
     success_rate = (successful / total_interactions * 100) if total_interactions else 100.0
 
@@ -381,8 +406,7 @@ async def get_module_analytics(db: AsyncSession, user_id: int, module: str) -> d
     top_rows = await db.execute(
         sa.select(AIAuditLog.user_message_preview)
         .where(
-            AIAuditLog.user_id == user_id,
-            AIAuditLog.module == module,
+            *audit_where,
             AIAuditLog.created_at >= thirty_days_ago,
             AIAuditLog.user_message_preview.isnot(None),
         )

@@ -37,7 +37,12 @@ async def get_current_token_payload(
 async def get_current_org_id(
     payload: dict = Depends(get_current_token_payload),
 ) -> int:
-    return payload.get("organization_id", payload["user_id"])
+    org_id = payload.get("organization_id") or payload.get("org_id") or payload.get("user_id") or payload.get("sub") or 1
+    try:
+        val = int(org_id)
+        return val if val > 0 else 1
+    except (ValueError, TypeError):
+        return 1
 
 
 PERMISSION_ALIASES: dict[str, list[str]] = {

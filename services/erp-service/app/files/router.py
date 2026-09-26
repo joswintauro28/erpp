@@ -77,11 +77,21 @@ def _validate_bucket(bucket: str) -> None:
 # ---------------------------------------------------------------------------
 
 def _org_filter(stmt, payload: dict):
-    """Add organization_id filter to prevent cross-tenant file access."""
-    org_id = payload.get("organization_id")
-    if org_id is not None:
-        stmt = stmt.where(FileRecord.organization_id == org_id)
-    return stmt
+    """Add organization_id filter to prevent cross-tenant file access (fail-closed)."""
+    raw_org = payload.get("organization_id") or payload.get("org_id")
+    if not raw_org:
+        raise HTTPException(
+            status_code=403,
+            detail="Missing organization context for file operation",
+        )
+    try:
+        org_id = int(raw_org)
+    except (ValueError, TypeError):
+        raise HTTPException(
+            status_code=403,
+            detail="Invalid organization context for file operation",
+        )
+    return stmt.where(FileRecord.organization_id == org_id)
 
 
 # ---------------------------------------------------------------------------
@@ -102,7 +112,19 @@ async def request_upload(
     _validate_size(body.size_bytes)
     _validate_bucket(body.bucket)
 
-    org_id = payload.get("organization_id", 1)
+    raw_org = payload.get("organization_id") or payload.get("org_id")
+    if not raw_org:
+        raise HTTPException(
+            status_code=403,
+            detail="Missing organization context for file upload",
+        )
+    try:
+        org_id = int(raw_org)
+    except (ValueError, TypeError):
+        raise HTTPException(
+            status_code=403,
+            detail="Invalid organization context for file upload",
+        )
     user_id = payload["user_id"]
 
     # M23: self-cleanup — remove stale pending records on each new upload

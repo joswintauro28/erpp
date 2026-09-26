@@ -24,6 +24,17 @@ async def get_current_user_id(
     return payload["user_id"]
 
 
+async def get_current_org_id(
+    payload: dict = Depends(get_current_token_payload),
+) -> int:
+    raw = payload.get("organization_id") or payload.get("org_id") or payload.get("user_id") or payload.get("sub") or 1
+    try:
+        val = int(raw)
+        return val if val > 0 else 1
+    except (ValueError, TypeError):
+        return 1
+
+
 async def get_optional_user_id(
     authorization: str | None = Header(None, alias="Authorization"),
 ) -> int | None:

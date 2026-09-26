@@ -35,7 +35,6 @@ export class InventoryClientService {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-organization-id": String(organizationId),
         },
         body: JSON.stringify({ items }),
       });
@@ -62,11 +61,6 @@ export class InventoryClientService {
     try {
       const resp = await fetch(
         `${this.inventoryUrl}/products/${productId}/cost?quantity=${quantity}`,
-        {
-          headers: {
-            "x-organization-id": String(organizationId),
-          },
-        },
       );
 
       if (!resp.ok) return null;

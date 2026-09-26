@@ -19,8 +19,13 @@ def _target_from_payload(payload: dict) -> dict:
     `permissions` comes straight from the core-iam JWT claim, so permission-
     targeted notifications (e.g. stock.view -> Inventory Manager + admin) are
     visible to exactly the users who hold the code."""
+    org_id_raw = payload.get("organization_id") or payload.get("org_id") or 1
+    try:
+        org_id = int(org_id_raw)
+    except (ValueError, TypeError):
+        org_id = 1
     return {
-        "organization_id": int(payload.get("organization_id") or payload.get("sub") or 1),
+        "organization_id": org_id,
         "user_id": int(payload.get("user_id") or payload.get("sub") or 0) or None,
         "role": payload.get("role"),
         "permissions": list(payload.get("permissions") or []),
