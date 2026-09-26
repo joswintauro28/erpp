@@ -1,6 +1,6 @@
 # DATAVEX ERP — Project Roadmap
 
-**Last Updated:** 2026-09-18
+**Last Updated:** 2026-09-26
 
 ---
 
@@ -247,6 +247,7 @@ apps/erp-shell/app/layout.tsx            # MODIFIED — added <CssOverrides /> c
 | Phase 3: Frontend Theme Injection | ✅ Complete | Apply overrides on load |
 | Phase 4: Cleanup & Migration | ✅ Complete | Token consolidation done |
 | Phase 5: Polish & Edge Cases | ✅ Complete | Validation, export, responsive |
+| Org-Scoped Data & Seed Overhaul | 🚧 In Progress | JWT org scoping + dual-profile seeds |
 
 ---
 
@@ -260,6 +261,74 @@ apps/erp-shell/app/layout.tsx            # MODIFIED — added <CssOverrides /> c
 | Phase 4: Cleanup | 1 day | Phase 3 | ✅ Done |
 | Phase 5: Polish | 1–2 days | Phase 3 | ✅ Done |
 | **Total** | **7–10 days** | | **All Complete** |
+
+---
+
+## Org-Scoped Data & Seed Overhaul (2026-09-26)
+
+**Goal:** Every backend query consumes `organization_id` from the JWT (true tenant isolation), settings become org-level so switching orgs swaps branding, and all seeds are rebuilt as two profiles — `dev` (local development) and `testing` (internal testing, edge cases + bulk volume) — with org-segregated data across DATAVEX (1), Eternal (2), Zomato (3), Blinkit (4), District (5).
+
+**Decisions locked:**
+- Org context travels in the JWT (no client org header — JWT is source of truth)
+- CRM scoping = org-primary (Owner = all rows *in my org*; no cross-org bypass)
+- Settings migrate to per-org (core-iam + erp-service `SystemSettings`)
+- Seeds generated LAST (Phases 0–4 first)
+
+### Phase 0: Track timeline
+- [x] Add this section to TODO.md
+
+### Phase 1: crm-service org scoping
+- [x] 1.1 Alembic migration — `organization_id INTEGER NOT NULL DEFAULT 1` + index on 11 models (customers, leads, opportunities, sales_orders, contacts, documents, requirements, sales, reports, ai_assistant, lead_discovery) + 4 dashboard tables (metrics, pipeline_stages, recommendations, hot_leads)
+- [x] 1.2 `app/core/deps.py` — add `get_current_org_id` with strict fallback (`org claim or user_id`, never `None`)
+- [x] 1.3 All `crud.py` — add `AND organization_id == org`; **remove `owner_id IS NULL` OR-leak**; **remove Owner/Admin role bypass**
+- [x] 1.4 Generic CRUD (`app/main.py`) — stamp `organization_id` on create; org predicate on list/update/delete
+- [x] 1.5 Dashboard (5 statements + recommendations), quotation approvals, lead-discovery pinned leads
+- [x] 1.6 Verify — `alembic upgrade head`, service boots, quick isolation probe
+
+### Phase 2: Small org fixes (ai, inventory, erp)
+- [x] 2.1 ai-service — filter sessions/analytics/delete by `organization_id`; fix `0` org coercion; router passes `org_id` (8 call sites)
+- [x] 2.2 inventory-service — fix `get_current_org_id` null-claim bug (returns `None` → 0 rows)
+- [x] 2.3 erp-service — files org filter **fail-closed**; notifications drop `or payload.get("sub")` fallback
+- [x] 2.4 Remove dead `x-organization-id` header in `billing-service/src/invoices/inventory.client.ts`
+
+### Phase 3: Settings → per-org migration
+- [x] 3.1 core-iam Prisma — Branding/Company/Notification/Workflow settings `ownerId` → `organizationId @unique`; `register()` creates settings per new org; `prisma db push`
+- [x] 3.2 erp-service `SystemSettings` — `owner_id` → `organization_id` (unique) + Alembic migration; router uses `get_current_org_id`
+- [x] 3.3 Frontend — `branding-provider` + `use-css-overrides` refetch on token change so org switch swaps branding live
+- [x] 3.4 Verify — core-iam tests, tsc ×4 apps
+
+### Phase 4: Verification + docs
+- [x] 4.1 Isolation probe — org-2 user sees zero org-1 rows (CRM/AI/erp); cross-org record-by-id → 404
+- [x] 4.2 Rebuild affected containers; browser spot-check org switch changes data
+- [x] 4.3 Fix stale docs — billing/inventory AGENTS.md `ownerId` claims, crm AGENTS.md scoping, erp-service "241 rows", SETUP_GUIDE `seed_data.py` dead reference
+- [x] 4.4 Commit
+
+### Phase 5: Seed overhaul (LAST)
+- [x] 5.1 Cleanup defects — billing↔CRM customer ID mismatch (20 vs 10, 4 mis-mapped), CRM TRUNCATE list missing `sales`/`quotation_approvals`, `seed-docker.sh` missing erp-service health check + TS toolchain mismatch vs `.ps1`, `erp_ai` missing from `recreate_all_dbs.py`
+- [x] 5.2 Shared `scripts/seed_lib/orgs.py` (Python ×4) — canonical 20 customers, 8 suppliers, 5 orgs, 5 users; Prisma seeds (core-iam, billing) read the same canonical lists inline
+- [x] 5.3 `--profile dev` content — density gradient (Org 1 rich, Eternal minimal, Zomato minimal, Blinkit minimal, District strictly empty), current scale, fast
+- [x] 5.4 `--profile testing` content —
+  - all 5 orgs density gradient (Org 1 rich+bulk, Eternal rich-medium, Zomato medium, Blinkit sparse, District strictly empty)
+  - bulk volume: 500 invoices, 200 quotations, 300 customers, 1000 leads, 150 opportunities, 400 SOs, 120 products (Org 1)
+  - edge matrix: zero-amount/negative/overpaid invoices, void/draft/overdue, failed+refunded payments, duplicate invoice number collision across orgs (INV-202608-0001), duplicate customer/SKU names across orgs, cancelled POs, FAILED QC, all serial statuses, full lead/SO lifecycles
+  - RBAC matrix: multi-org users with different roles per org, single-org users, disabled + invited memberships
+  - distinct branding per org
+- [x] 5.5 NEW `ai-service/scripts/seed.py` (both dev and testing profiles)
+- [x] 5.6 Orchestrators — `seed_all_dbs.py --profile dev|testing`, `seed-docker.ps1/-sh -Profile` (default `dev`); health checks and shared seed lib sync
+- [x] 5.7 Run both profiles clean (local host verified with 0 errors)
+- [x] 5.8 Final verification — isolation probes on seeded data, empty-state verification on Org 5, bun test (7 pass), tsc --noEmit (4 frontend apps: 0 errors)
+- [ ] 5.9 Commit + push (awaiting user approval)
+
+### Commit plan
+| # | Commit | Phases |
+|---|--------|--------|
+| 1 | `feat(iam): multi-organization switcher and per-org settings` | Org-switcher + Phase 3 core-iam |
+| 2 | `feat(crm): org-scoped data isolation` | Phase 1 |
+| 3 | `fix(services): strict org claim handling across ai, inventory, erp, billing` | Phase 2 |
+| 4 | `refactor(settings): per-org settings refetch and erp-service migration` | Phase 3 frontend + erp |
+| 5 | `docs: align service docs with org scoping` | Phase 4 |
+| 6 | `feat(seeds): dual-profile dev/testing seed overhaul` | Phase 5 |
+| 7 | `chore(todo): mark roadmap progress` | Tracking |
 
 ---
 
