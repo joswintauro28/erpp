@@ -247,7 +247,7 @@ apps/erp-shell/app/layout.tsx            # MODIFIED — added <CssOverrides /> c
 | Phase 3: Frontend Theme Injection | ✅ Complete | Apply overrides on load |
 | Phase 4: Cleanup & Migration | ✅ Complete | Token consolidation done |
 | Phase 5: Polish & Edge Cases | ✅ Complete | Validation, export, responsive |
-| Org-Scoped Data & Seed Overhaul | 🚧 In Progress | JWT org scoping + dual-profile seeds |
+| Org-Scoped Data & Seed Overhaul | ✅ Complete | JWT org scoping + dual-profile seeds |
 
 ---
 
@@ -317,7 +317,7 @@ apps/erp-shell/app/layout.tsx            # MODIFIED — added <CssOverrides /> c
 - [x] 5.6 Orchestrators — `seed_all_dbs.py --profile dev|testing`, `seed-docker.ps1/-sh -Profile` (default `dev`); health checks and shared seed lib sync
 - [x] 5.7 Run both profiles clean (local host verified with 0 errors)
 - [x] 5.8 Final verification — isolation probes on seeded data, empty-state verification on Org 5, bun test (7 pass), tsc --noEmit (4 frontend apps: 0 errors)
-- [ ] 5.9 Commit + push (awaiting user approval)
+- [x] 5.9 Commit + push (7 commits `81f1f61..54d5b08` pushed to origin/dev)
 
 ### Commit plan
 | # | Commit | Phases |
