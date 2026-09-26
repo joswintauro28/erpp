@@ -51,8 +51,18 @@ export function useCssOverrides() {
 
     loadAndApply();
 
+    const handleTokenChange = () => {
+      loadAndApply();
+    };
+    if (typeof window !== "undefined") {
+      window.addEventListener("datavex:token-changed", handleTokenChange);
+    }
+
     return () => {
       cancelled = true;
+      if (typeof window !== "undefined") {
+        window.removeEventListener("datavex:token-changed", handleTokenChange);
+      }
     };
   }, []);
 }

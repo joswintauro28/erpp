@@ -17,22 +17,27 @@ def _deep_merge(base: dict, override: dict) -> dict:
     return base
 
 
-async def get_settings_by_owner(db: AsyncSession, owner_id: int) -> SystemSettings:
-    stmt = sa.select(SystemSettings).where(SystemSettings.owner_id == owner_id)
+async def get_settings_by_org(db: AsyncSession, org_id: int) -> SystemSettings:
+    stmt = sa.select(SystemSettings).where(SystemSettings.organization_id == org_id)
     result = await db.execute(stmt)
     db_settings = result.scalar_one_or_none()
 
     if not db_settings:
         # Generate default settings based on schemas defaults
         default_data = SettingsSchema().model_dump()
-        db_settings = SystemSettings(owner_id=owner_id, settings=default_data)
+        db_settings = SystemSettings(organization_id=org_id, settings=default_data)
         db.add(db_settings)
         await db.flush()
 
     return db_settings
 
-async def update_settings_by_owner(db: AsyncSession, owner_id: int, updated_data: dict) -> SystemSettings:
-    db_settings = await get_settings_by_owner(db, owner_id)
+
+# Backwards compatibility alias
+get_settings_by_owner = get_settings_by_org
+
+
+async def update_settings_by_org(db: AsyncSession, org_id: int, updated_data: dict) -> SystemSettings:
+    db_settings = await get_settings_by_org(db, org_id)
 
     # Merge existing and incoming updates (deep merge preserves nested fields)
     current_settings = copy.deepcopy(db_settings.settings)
@@ -42,4 +47,8 @@ async def update_settings_by_owner(db: AsyncSession, owner_id: int, updated_data
     flag_modified(db_settings, "settings")
     await db.flush()
     return db_settings
+
+
+# Backwards compatibility alias
+update_settings_by_owner = update_settings_by_org
 

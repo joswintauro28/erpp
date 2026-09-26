@@ -264,7 +264,16 @@ export function BrandingProvider({ children }: { children: React.ReactNode }) {
 
   React.useEffect(() => {
     loadBranding();
+    const handleTokenChange = () => {
+      loadBranding();
+    };
+    if (typeof window !== "undefined") {
+      window.addEventListener("datavex:token-changed", handleTokenChange);
+    }
     return () => {
+      if (typeof window !== "undefined") {
+        window.removeEventListener("datavex:token-changed", handleTokenChange);
+      }
       clearInjectedColors();
       setFavicon(null);
     };

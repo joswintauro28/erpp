@@ -24,6 +24,7 @@ export function setAccessToken(token: string | null) {
     } else {
       localStorage.removeItem("datavex_access_token");
     }
+    window.dispatchEvent(new CustomEvent("datavex:token-changed", { detail: { token } }));
   }
 }
 
