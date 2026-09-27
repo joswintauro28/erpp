@@ -180,14 +180,30 @@ curl http://app.erp.datavex.com
 
 ## 8. Seed Initial Data
 
-After all containers are healthy, run the database seeds:
+After all containers are healthy, run the database seeds with the bundled wrapper. It seeds **all six databases** (IAM, billing, CRM, inventory, ERP, AI) and defaults to the **`testing`** profile — edge cases, bulk volume data, and the multi-org RBAC matrix:
+
+```bash
+# Linux / macOS (from infrastructure/internal/)
+./seed-docker.sh
+
+# Windows (PowerShell, from infrastructure\internal\)
+# .\seed-docker.ps1
+```
+
+To seed the lighter `dev` profile instead:
+
+```bash
+./seed-docker.sh --profile dev
+```
+
+Manual per-service alternative:
 
 ```bash
 # ERP Business Data
-docker compose --env-file .env.docker exec erp-service python scripts/seed.py
+docker compose --env-file .env.docker exec -e SEED_PROFILE=testing erp-service python scripts/seed.py --profile testing
 
 # IAM Users + Permissions
-docker compose --env-file .env.docker exec core-iam bunx prisma db seed
+docker compose --env-file .env.docker exec -e SEED_PROFILE=testing core-iam bunx prisma db seed
 ```
 
 ### Default Login Accounts
@@ -199,6 +215,8 @@ docker compose --env-file .env.docker exec core-iam bunx prisma db seed
 | Jordan Kim | accounts@datavex.com | Acc@123! | Accountant |
 | Sam Rivera | inventory@datavex.com | Inv@123! | Inventory Manager |
 | Priya Sharma | auditor@datavex.com | Aud@123! | Auditor |
+
+> All five accounts are members of **DATAVEX Industries (org 1)**; `admin@datavex.com` belongs to all 5 seeded organizations (use the Org Switcher in the header to swap tenants). The `testing` profile additionally seeds `blinkit-lead@datavex.com` / `Test@123!` and a disabled `inactive@datavex.com` / `Test@123!`.
 
 > **Change these passwords before sharing access with anyone else.**
 

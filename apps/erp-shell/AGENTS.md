@@ -12,7 +12,8 @@ This directory contains the main Executive / Super Admin Shell of the DATAVEX ER
 - **Theme Aesthetics:** "Refined Crimson & Brushed Gold"
 
 ## 2. Core Architecture & Patterns
-- **Authentication (`useAuth`):** Handles centralized login status, token intake, and session persistence via `@datavex/auth-middleware`. User payload claims: `id, email, full_name, role, organization_name, permissions`.
+- **Authentication (`useAuth`):** Handles centralized login status, token intake, and session persistence via `@datavex/auth-middleware`. User payload claims: `id, email, full_name, role, organization_id, organization_name, active_organization_id, organizations[], permissions`.
+- **Organization Switching (multi-tenancy):** The shared `OrgSwitcher` chip in `components/Header.tsx` renders `user.organizations[]`; picking an org calls `POST /api/auth/organizations/:id/switch`, stores the re-issued access token, and triggers a data + per-org settings/branding refetch (live color/logo swap).
 - **SSO Redirection:**
   - Login page processes a `?redirect=...` query parameter to redirect the user back to the calling workstation domain.
   - Passes the authenticated token via `?token=<jwt>` to the target workstation on successful login.

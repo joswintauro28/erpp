@@ -5,7 +5,7 @@ This document serves as an entrypoint map and index for developers and AI agents
 ## 1. Core Architecture Overview
 DATAVEX ERP is an **Nx Polyglot Monorepo** composed of:
 - **4 Frontend Workstations:** Next.js 16 (Turbopack) communicating via cookies and shared tokens.
-- **5 Backend Microservices:** Built with NestJS (TypeScript/Prisma) and FastAPI (Python/SQLAlchemy).
+- **6 Backend Microservices:** Built with NestJS (TypeScript/Prisma) and FastAPI (Python/SQLAlchemy).
 - **2 Shared Packages:** Shared authentication middleware and UI design theme tokens.
 
 ---
@@ -132,7 +132,7 @@ The DATAVEX CRM Workspace handles end-to-end customer relationship management, s
 
 #### Auth, RBAC & Data Isolation Model
 - **Token Verification Dependency (`get_current_token_payload`):** Decodes JWT bearer tokens passed in `Authorization: Bearer <jwt>` headers using the shared secret (`JWT_SECRET`).
-- **Multi-Tenant Data Scoping:** All queries filter against `owner_id` (Integer index) extracted from JWT claims (`user_id` or `sub`) to guarantee data isolation without a local user/password table.
+- **Multi-Tenant Data Scoping:** All queries filter against `organization_id` (Integer index, NOT NULL) extracted from the JWT via `get_current_org_id` — strict claim handling, no cross-org bypass, no local user/password table.
 
 #### Dynamic Entity Engine (`app/main.py`)
 To avoid repetitive CRUD boilerplate, `main.py` registers a central dynamic entity mapper:
@@ -435,6 +435,8 @@ The DATAVEX Inventory Workspace manages multi-warehouse stock tracking, product 
 | Sam Rivera | `inventory@datavex.com` | `Inv@123!` | Inventory Manager |
 | Priya Sharma | `auditor@datavex.com` | `Aud@123!` | Auditor |
 
+All five users are members of DATAVEX Industries (org 1); `admin@datavex.com` is additionally an Organization Owner member of the Eternal/Zomato/Blinkit/District hierarchy, so the header Org Switcher lists all 5 organizations. The `testing` seed profile adds `blinkit-lead@datavex.com` / `Test@123!` (single-org) and disabled `inactive@datavex.com` / `Test@123!`, plus cross-org memberships (Maya → Eternal owner, Jordan → Zomato auditor).
+
 ---
 
 ## 8. Central Shared Packages Comprehensive Technical Audit & Context
@@ -446,7 +448,7 @@ The DATAVEX Inventory Workspace manages multi-warehouse stock tracking, product 
 - **Target:** Exported client library consumed by all Next.js workstations (`erp-shell`, `crm-ui`, `billing-ui`, `inventory-ui`).
 - **Core Files (`src/`):**
   - `api.ts`: Central HTTP client configured with Axios/Fetch interceptors. Handles `setAccessToken` and `getAccessToken` in-memory. Intercepts `401 Unauthorized` responses to perform transparent `/api/auth/refresh` token refreshes via HttpOnly cookies.
-  - `types.ts`: Universal interfaces: `User` (`id`, `email`, `full_name`, `role`, `organization_name`, `permissions`), `ApiError`, `ApiClientError`.
+  - `types.ts`: Universal interfaces: `User` (`id`, `email`, `full_name`, `role`, `organization_id`, `organization_name`, `active_organization_id`, `organizations[]`, `permissions`), `UserOrganization`, `ApiError`, `ApiClientError`.
   - `index.ts`: Public package re-exports (`api`, `setAccessToken`, `getAccessToken`, `User`, `ApiError`, `ApiClientError`).
 
 ### 8.2 UI Theme Package (`packages/ui-theme`) — `@datavex/ui-theme`
@@ -534,7 +536,7 @@ The DATAVEX Inventory Workspace manages multi-warehouse stock tracking, product 
 ### Token Forwarding & Claims Authentication (`app/core/deps.py`)
 - **`decode_access_token`:** Decodes incoming JWT bearer tokens using shared `JWT_SECRET` (HS256).
 - **`_raw_token` Context:** Extracts the raw JWT token string from the `Authorization` header and places it into `payload["_raw_token"]`, enabling backend microservice queries on behalf of the user.
-- **Tenant Isolation:** Enforces `owner_id` scoping across active database models (`Client`, `Lead`, `Product`).
+- **Tenant Isolation:** `get_current_org_id` scopes every query on the active models (`SystemSettings`, `FileRecord`, `Notification`) to the JWT `organization_id` claim (file reads fail closed when the claim is missing).
 
 ### Microservice Integration Clients (`app/integrations/`)
 1. **`billing_client.py`:**

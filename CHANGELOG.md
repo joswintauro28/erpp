@@ -71,6 +71,10 @@ All notable changes to the DATAVEX ERP monorepo are documented here. Format foll
 - **Error pages** — 403 (`forbidden`), 404 (`not-found`), 500 (`error`) in all workstations.
 - **Multi-step dialog** — Shared `MultiStepDialog` wizard with branded horizontal step indicator and `animate-step-in` animation.
 - **Event-driven workflows** — RabbitMQ event bus integration for SO-to-fulfillment ingestion, shortage auto-PO, pending fulfillment auto-resume, and SO status sync from inventory lifecycle.
+- **Multi-organization switcher** — Shared `OrgSwitcher` header chip in all 4 workstations; `POST /api/auth/organizations/:id/switch` re-issues the access token with the target org's claims; `User.activeOrganizationId` persists the selection across logins/refreshes.
+- **5-organization demo hierarchy** — DATAVEX Industries (1), Eternal (2), Zomato (3), Blinkit (4), District (5, strictly empty; Zomato/Blinkit/District are children of Eternal) with per-org Company/Branding/Notification/Workflow settings and distinct brand colors.
+- **Dual-profile seed system** — All 6 seeders (core-iam, billing, crm, inventory, erp, ai) accept `dev` (density-gradient data) and `testing` (edge-case matrix, bulk volume, multi-org RBAC matrix) profiles via `SEED_PROFILE` / `--profile`; shared fixtures in `scripts/seed_lib/orgs.py`; host orchestrator `scripts/seed_all_dbs.py`; wrappers `infrastructure/local/seed-docker.*` (default `dev`) and `infrastructure/internal/seed-docker.*` (default `testing`).
+- **Docs aligned to multi-tenancy & seeding** — `SETUP_GUIDE`, `README`, root `AGENTS`, `docs/CONTEXT`, `infrastructure/internal/DEPLOY`, and service README/AGENTS files now document the org hierarchy, org-switcher flow, per-profile seed commands, and the current erp-service model/router layout (removed dead `seed_admin.py` / `owner_id` references, fixed clone URL to the internal GitLab remote).
 
 ### Changed
 
@@ -90,6 +94,8 @@ All notable changes to the DATAVEX ERP monorepo are documented here. Format foll
 - **CRM module scope clarified** — Marketing (M1) explicitly out of scope. Interaction and Service modules reserved for future Service-Desk module. 12 live entity types + 8 reserved.
 - **Document ID standardization** — All services use `[PREFIX]-[YYYYMM]-[NNNN]` format. Clients must not fabricate IDs.
 - **Sidebar collapsed width** — Updated to 260px expanded / 64px collapsed across all workstations.
+- **Tenant isolation reworked from `owner_id` to `organization_id`** — All backend queries now scope by the JWT `organization_id` claim: CRM re-scoped 11 models + 4 dashboard tables (removed `owner_id IS NULL` OR-leaks and Owner/Admin bypasses), AI/inventory strict org-claim handling, erp-service files filter fail-closed + notifications drop the `sub` fallback, billing drops the dead `x-organization-id` header.
+- **Settings migrated to per-org** — core-iam Branding/Company/Notification/Workflow `ownerId` → `organizationId`; erp-service `SystemSettings.owner_id` → `organization_id` (unique); frontends refetch settings/branding on token change so switching orgs swaps data and colors live.
 
 ### Fixed
 

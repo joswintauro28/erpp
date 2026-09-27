@@ -14,7 +14,7 @@ This backend service provides AI-powered chat, session management, and context-a
 
 ## 2. Authentication & Authorization
 - **Claims-Based Verification:** JWT payload decoded from shared `JWT_SECRET` — no DB queries for auth.
-- **Data Isolation:** All models use `user_id` (Integer, indexed) scoped from JWT `user_id` claim.
+- **Data Isolation:** Session and audit rows carry `user_id` **and** `organization_id` (Integer, indexed, from the JWT claims); every list/get/history query filters on both, so users only see their own chats within the active organization. Messages inherit scoping through their session.
 - **Auth Pattern:** Token-verification only — no login endpoints, no credential handling. All authentication delegated to core-iam (port 8002).
 
 ## 3. API Endpoints
@@ -33,9 +33,9 @@ This backend service provides AI-powered chat, session management, and context-a
 
 | Model | Key Fields | Description |
 |-------|-----------|-------------|
-| `AISession` | id (UUID), user_id, module (enum: admin/crm/billing/inventory), title | Chat session metadata |
-| `AIMessage` | id, session_id, role, content, token_count | Individual messages |
-| `AIAuditLog` | id, user_id, action, details, model_used, tokens_used | Usage audit trail |
+| `AISession` | id (UUID), user_id, organization_id, module (enum: admin/crm/billing/inventory), title | Chat session metadata |
+| `AIMessage` | id, session_id, role, content, token_count | Individual messages (scoped via session) |
+| `AIAuditLog` | id, user_id, organization_id, action, details, model_used, tokens_used | Usage audit trail |
 
 ## 5. LLM Providers
 

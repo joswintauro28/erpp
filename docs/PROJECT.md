@@ -469,13 +469,14 @@ Each core domain folder in your project owns its own data store completely:
 
 ### The Database Allotments
 
-You will need **5 separate logical databases** (which can be hosted on a single server engine locally, but split apart in production):
+You will need **6 separate logical databases** (which can be hosted on a single server engine locally, but split apart in production):
 
-1. `erp_iam` (Core IAM): Stores global users, password hashes, organizations, tenants, master roles, and global system metadata (PostgreSQL via Prisma).
+1. `erp_iam` (Core IAM): Stores global users, password hashes, organizations, memberships, roles/permissions, per-org settings, and refresh tokens (PostgreSQL via Prisma).
 2. `erp_crm`: Stores leads, clients, sales pipelines, opportunities, and sales orders (PostgreSQL via SQLAlchemy 2.0).
 3. `erp_billing`: Stores invoices, quotations, payments, receipts, and the general accounting ledger (PostgreSQL via Prisma).
-4. `erp_inventory`: Stores product catalogs, warehouse locations, stock levels, batches, and serial tracking numbers (PostgreSQL via SQLModel).
-5. `erp_hrms`: Stores employee files, payroll history, attendance logs, and internal department structures (PostgreSQL via Prisma).
+4. `erp_inventory`: Stores product catalogs, warehouse locations, stock levels, batches, and serial tracking numbers (PostgreSQL via SQLAlchemy 2.0).
+5. `erp_db` (erp-service gateway): Stores per-org system settings, the RustFS file registry, and notifications (PostgreSQL via SQLAlchemy 2.0).
+6. `erp_ai` (AI service): Stores AI chat sessions, messages, and audit logs (PostgreSQL via SQLAlchemy 2.0).
 
 ---
 
@@ -484,12 +485,12 @@ You will need **5 separate logical databases** (which can be hosted on a single 
 You will structure your code so that databases are grouped logically for your teams but orchestrated universally based on your deployment stage.
 
 ```
-[Local: 1 Postgres Container with 5 Databases] ──> [Cloud Stage 1: 1 Managed RDS Instance with 5 Schemas] ──> [Cloud Stage 2: Independent Isolated DB Instances]
+[Local: 1 Postgres Container with 6 Databases] ──> [Cloud Stage 1: 1 Managed RDS Instance with 6 Schemas] ──> [Cloud Stage 2: Independent Isolated DB Instances]
 ```
 
 #### Step 1: Local Development Setup (Zero Cost, One Command)
 
-To make local development easy for your developers, they should not have to spin up 5 separate database servers on their laptops. Instead, you run **one single PostgreSQL container** that hosts 5 distinct, isolated databases inside it.
+To make local development easy for your developers, they should not have to spin up 6 separate database servers on their laptops. Instead, you run **one single PostgreSQL container** that hosts 6 distinct, isolated databases inside it.
 
 You define this directly in your local orchestration setup (`infrastructure/local/docker-compose.yml`):
 
@@ -503,7 +504,7 @@ services:
     environment:
       POSTGRES_USER: erp_master
       POSTGRES_PASSWORD: local_secure_password
-      # We use a custom initialization script to create all 5 databases on startup
+      # We use a custom initialization script to create all 6 databases on startup
     volumes:
       - ./init-multiple-databases.sh:/docker-entrypoint-initdb.d/init-multiple-databases.sh
       - erp_local_data:/var/lib/postgresql/data
@@ -523,7 +524,7 @@ Your services will connect to their respective databases using localized environ
 When you move to a single cloud Virtual Machine using Docker Compose + Caddy, **do not run your production databases inside Docker containers.** If the container crashes or the VM disk runs out of space, you risk corrupting your core ERP data.
 
 * **The Setup**: Provision **one managed cloud database instance** (like AWS RDS or DigitalOcean Managed Databases).
-* **The Division**: Inside this single managed instance, create your 5 isolated databases. This keeps your costs low (you only pay for one database server instance) while maintaining total code isolation between your microservice folders.
+* **The Division**: Inside this single managed instance, create your 6 isolated databases. This keeps your costs low (you only pay for one database server instance) while maintaining total code isolation between your microservice folders.
 
 #### Step 3: Production Setup with Kubernetes (Stage 2 High-Scale)
 

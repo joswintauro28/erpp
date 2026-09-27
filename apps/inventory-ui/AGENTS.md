@@ -17,6 +17,7 @@ This directory contains the Inventory Workstation UI for Inventory Managers.
 - **Fallback Redirect:** If no authentication is active, redirects to:
   `http://localhost:3000/login?redirect=http://localhost:3004`
 - **Auth context (`useAuth`):** Returns `{ user, isAuthenticated, loading, logout }`.
+- **Org Switcher (multi-tenancy):** `components/Header.tsx` embeds the shared `OrgSwitcher` from `@datavex/ui-theme`, which lists `user.organizations[]` and swaps tenants via `POST /api/auth/organizations/:id/switch` (new access token → data and per-org branding refetch).
 
 ## 3. Proxy Routing (`proxy.ts`)
 - `/api/auth/*` → core-iam (`http://localhost:8002`)

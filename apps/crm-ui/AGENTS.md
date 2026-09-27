@@ -17,6 +17,7 @@ This directory contains the CRM Workstation / Sales Hub of the DATAVEX ERP syste
 - **Fallback Redirect:** If no authentication is active, redirects to:
   `http://localhost:3000/login?redirect=http://localhost:3001`
 - **Auth context (`useAuth`):** Returns `{ user, isAuthenticated, loading, logout }` (does not have a local `login()` handler).
+- **Org Switcher (multi-tenancy):** `components/Header.tsx` embeds the shared `OrgSwitcher` from `@datavex/ui-theme`, which lists `user.organizations[]` and swaps tenants via `POST /api/auth/organizations/:id/switch` (new access token → data and per-org branding refetch).
 
 ## 3. Proxy Routing (`proxy.ts`)
 - `/api/auth/*` → core-iam (`http://localhost:8002`)

@@ -10,7 +10,7 @@ This backend service acts as the central business logic gateway and handles lead
 - **Port:** 8000
 
 ## 2. Architecture & Design Patterns
-- **Auth Pattern:** Token verification via `decode_access_token` and shared `JWT_SECRET`. Enforces isolation via the standard `owner_id` context. `require_permission(code)` dependency available for RBAC enforcement.
+- **Auth Pattern:** Token verification via `decode_access_token` and shared `JWT_SECRET`. Tenant isolation via `get_current_org_id` (`organization_id` JWT claim) on every query — strict claim handling, no cross-org bypass. `require_permission(code)` dependency available for RBAC enforcement.
 - **Request Logging:** `RequestLoggingMiddleware` generates unique `X-Request-ID` for every request, logs method, path, status code, duration, and flags slow requests (>2s). Request IDs are propagated in error responses.
 - **Standardized API Contracts:** `core/schemas.py` provides `PaginatedResponse[T]`, `SuccessResponse`, `ErrorResponse`, `HealthResponse`, `PaginationMeta`, `paginate()` helper, and `parse_pagination()` for consistent responses.
 - **Proxy Routers (passthrough to downstream microservices):**
@@ -26,12 +26,12 @@ This backend service acts as the central business logic gateway and handles lead
   - `inventory_client.py` -> Connects to inventory-service (`http://localhost:8004`).
   - `crm_client.py` -> Connects to crm-service (`http://localhost:8001/api`) — generic CRUD + specific functions for dashboard, lead-discovery, AI assistant.
 - **Interactive OpenAPI Documentation:** Exposes Swagger UI (`http://localhost:8000/docs`), ReDoc (`http://localhost:8000/redoc`), and OpenAPI spec (`http://localhost:8000/openapi.json`) with Bearer JWT authorization. `SecurityHeadersMiddleware` excludes `/docs`, `/redoc`, and `/openapi.json` from restrictive CSP headers.
-- **Active Models:** Client, Lead, Product.
+- **Active Models:** SystemSettings (per-org settings/branding, `organization_id` unique), FileRecord (per-org file registry), Notification (per-org, org-filtered).
 - **RustFS File Module (`app/files/`):**
-  - `models.py` — `FileRecord` model (bucket, object_key, uri, original_name, mime_type, size_bytes, checksum_sha256, owner_type, owner_id)
+  - `models.py` — `FileRecord` model (organization_id, bucket, object_key, uri, original_name, mime_type, size_bytes, checksum_sha256, uploader_id, owner_type, owner_id)
   - `s3_client.py` — Boto3 S3 client with presigned URL generation (PUT for upload, GET for download)
   - `schemas.py` — Pydantic schemas (UploadRequest, UploadResponse, ConfirmUploadRequest, FileRecordOut, DownloadResponse)
-  - `router.py` — 6 REST endpoints on `/api/files` (upload-request, confirm-upload, get metadata, download via 302 redirect, delete, list by owner)
+  - `router.py` — REST endpoints on `/api/files` (upload-request, confirm-upload, get metadata, download by 302 redirect, stream, delete, list by owner_type+owner_id with org filter, cleanup-pending)
   - Bucket constants: `crm-assets`, `inv-docs`, `finance-records`, `erp-backups`
 
 ## 3. Run & Database Setup Commands
@@ -47,5 +47,5 @@ This backend service acts as the central business logic gateway and handles lead
   $env:PYTHONPATH="."
   .venv\Scripts\alembic upgrade head      # Apply migrations
   .venv\Scripts\python scripts/reset_db.py # Drop all tables
-  .venv\Scripts\python scripts/seed.py     # Seed 241 rows of business data
+  .venv\Scripts\python scripts/seed.py     # Seed org-scoped business data (--profile dev|testing)
   ```

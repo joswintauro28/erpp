@@ -89,6 +89,16 @@ The system securely verifies your identity, assigns your session token, and **au
 - Accountants and Auditors arrive at the **Billing Workstation** (`/billing/dashboard`).
 - Inventory Managers arrive at the **Inventory Workstation** (`/inventory/dashboard`).
 
+## Switching organizations
+
+If your account belongs to more than one organization, the **organization switcher chip** in the top header of every workstation shows the organization you are currently working in.
+
+1. Click the chip to see every organization you are a member of.
+2. Select the organization you want to work in.
+3. Your session is re-issued instantly for the new organization — no sign-out or re-login is needed.
+
+All dashboards, records, and branding (logo and colors) refresh to the selected organization immediately. You will only ever see organizations your administrator has granted you membership in, and data never crosses organization boundaries.
+
 ## Where your credentials come from
 
 - **Administrator-provisioned accounts:** Your Organization Owner or Super Administrator sets up internal employee profiles in the Executive Shell under **Team Management**. You will receive your initial email and temporary password directly from them.

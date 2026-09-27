@@ -10,8 +10,8 @@ This document is the official, comprehensive setup guide for the **DATAVEX ERP**
 
 ```bash
 # Clone the repository
-git clone https://github.com/joswintauro28/ERP.git
-cd ERP
+git clone https://internal-devrepo.datavex.ai/Joswin/erp.git
+cd erp
 
 # Switch to the active development branch and pull updates
 git checkout dev
@@ -24,8 +24,8 @@ For a quicker checkout that only pulls the `dev` branch with truncated history:
 
 ```bash
 # Clone only the dev branch with depth 1 (latest commit, no full history)
-git clone https://github.com/joswintauro28/ERP.git --branch dev --single-branch --depth 1
-cd ERP
+git clone https://internal-devrepo.datavex.ai/Joswin/erp.git --branch dev --single-branch --depth 1
+cd erp
 ```
 
 ---
@@ -89,16 +89,20 @@ Use the docker helper script to build and launch all 16 services:
 > The `rebuild` command compiles all images with `--no-cache` and immediately starts the stack. If you only need to start existing containers without rebuilding, use `.\infrastructure\local\docker-build.ps1 up`.
 
 ### Step 6: Seed Container Databases
-After all containers report healthy, execute the database seeder to populate all PostgreSQL instances:
+After all containers report healthy, execute the database seeder to populate all PostgreSQL instances. Seeds are dual-profile — `dev` (default: density-gradient data across the 5 seeded organizations for day-to-day development) and `testing` (edge-case matrix, bulk volume data, and the multi-org RBAC matrix):
 
 * **Windows (PowerShell):**
   ```powershell
-  .\infrastructure\local\seed-docker.ps1
+  .\infrastructure\local\seed-docker.ps1                  # dev profile (default)
+  .\infrastructure\local\seed-docker.ps1 -Profile testing # testing profile
   ```
 * **Linux / macOS (Bash):**
   ```bash
-  ./infrastructure/local/seed-docker.sh
+  ./infrastructure/local/seed-docker.sh                    # dev profile (default)
+  ./infrastructure/local/seed-docker.sh --profile testing  # testing profile
   ```
+
+> The internal VM deployment (Path A2 below) uses its own wrapper defaulting to the `testing` profile: `infrastructure/internal/seed-docker.ps1` / `.sh` — see [`infrastructure/internal/DEPLOY.md`](../infrastructure/internal/DEPLOY.md).
 
 ### Step 7: Verify Container Health
 Verify that all containers are healthy and running:
@@ -120,7 +124,7 @@ Open `http://app.erp.local` (or `http://localhost:3000` if hosts not configured)
 |-------|----------|
 | `admin@datavex.com` | `Admin@123!` |
 
-Other test accounts are listed in the [Seeded Users Reference](#4-reference-seeded-users-reference) section below.
+Other test accounts are listed in the [Seeded Users & Organizations](#4-reference-seeded-users--organizations) section below.
 
 ---
 
@@ -157,9 +161,10 @@ nano .env.docker  # Fill in production secrets
 docker compose --env-file .env.docker build
 docker compose --env-file .env.docker up -d
 
-# 6. Seed databases
-docker compose --env-file .env.docker exec erp-service python scripts/seed.py
-docker compose --env-file .env.docker exec core-iam bunx prisma db seed
+# 6. Seed databases (internal wrapper defaults to the testing profile:
+#    edge cases, bulk volume, and the multi-org RBAC matrix)
+./seed-docker.sh    # Linux / macOS
+# .\seed-docker.ps1 # Windows
 
 # 7. Verify
 docker compose --env-file .env.docker ps
@@ -181,13 +186,14 @@ Ensure the following tools are installed locally:
 - **PostgreSQL (v15+)**: Standard local database server.
 
 ### Step 2: Initialize PostgreSQL Databases
-Create the 5 isolated database targets inside your PostgreSQL instance:
+Create the 6 isolated database targets inside your PostgreSQL instance:
 ```sql
 CREATE DATABASE erp_iam;
 CREATE DATABASE erp_billing;
 CREATE DATABASE erp_crm;
 CREATE DATABASE erp_inventory;
 CREATE DATABASE erp_db;
+CREATE DATABASE erp_ai;
 ```
 
 ### Step 3: Install Workspace Packages
@@ -199,6 +205,12 @@ bun install
 ### Step 4: Individual Component Setup
 
 Configure each module sequentially. Configure environment properties (`.env`), setup dependencies/venv, deploy migrations, and run seeds.
+
+> **Tip:** once all schemas are pushed/migrated, you can seed every database in one shot from the repository root instead of running each service's seeder manually:
+> ```bash
+> python scripts/seed_all_dbs.py                      # dev profile (default)
+> python scripts/seed_all_dbs.py --profile testing    # testing profile
+> ```
 
 ---
 
@@ -216,7 +228,9 @@ Configure each module sequentially. Configure environment properties (`.env`), s
 2. **Deploy Schema & Seed**:
    ```bash
    bunx prisma db push
-   bunx prisma db seed
+   bunx prisma db seed    # dev profile (default)
+   # Testing profile (edge-case users + multi-org RBAC matrix):
+   bun run prisma/seed.ts --profile testing
    ```
 
 ---
@@ -261,7 +275,7 @@ Configure each module sequentially. Configure environment properties (`.env`), s
    ```bash
    # Deploy schema via Alembic
    PYTHONPATH=. alembic upgrade head
-   # Populate crm mock data
+   # Populate CRM mock data (org-scoped; add --profile testing for edge/bulk data)
    PYTHONPATH=. python scripts/seed.py
    ```
 
@@ -289,6 +303,7 @@ Configure each module sequentially. Configure environment properties (`.env`), s
 3. **Run Migrations & Seed**:
    ```bash
    PYTHONPATH=. alembic upgrade head
+   # Org-scoped seed; add --profile testing for edge/bulk data
    PYTHONPATH=. python scripts/seed.py
    ```
 
@@ -313,9 +328,11 @@ Configure each module sequentially. Configure environment properties (`.env`), s
    pip install --upgrade pip
    pip install -r requirements.txt
    ```
-3. **Run Migrations**:
+3. **Run Migrations & Seed**:
    ```bash
    PYTHONPATH=. alembic upgrade head
+   # Seed per-org SystemSettings / branding (add --profile testing for edge data)
+   PYTHONPATH=. python scripts/seed.py
    ```
 
 ---
@@ -365,9 +382,25 @@ bun nx run-many --target=dev
 
 ---
 
-## 4. Reference: Seeded Users Reference
+## 4. Reference: Seeded Users & Organizations
 
-Executing the seeding scripts populates the IAM databases with the following standard test credentials:
+### 4.1 Seeded Organizations (Multi-Tenancy)
+
+DATAVEX ERP is multi-tenant: every backend query is scoped to the `organization_id` claim carried in the JWT, and each organization has its own settings/branding. Seeding creates a 5-organization hierarchy:
+
+| ID | Organization | Hierarchy |
+| :--- | :--- | :--- |
+| 1 | DATAVEX Industries Pvt Ltd | Root organization |
+| 2 | Eternal | Root organization |
+| 3 | Zomato | Child of Eternal |
+| 4 | Blinkit | Child of Eternal |
+| 5 | District | Child of Eternal (strictly empty — used to verify empty states) |
+
+The **Org Switcher** chip in every workstation header (erp-shell, CRM, Billing, Inventory) lists the signed-in user's organization memberships. Switching calls `POST /api/auth/organizations/:id/switch`, which re-issues the access token with the new org's claims; per-org branding, settings, and data refetch automatically.
+
+### 4.2 Seeded Users
+
+Executing the seeding scripts populates the IAM database with the following standard test credentials. All five users are active members of **DATAVEX Industries (org 1)**, and `admin@datavex.com` is additionally an Organization Owner member of Eternal, Zomato, Blinkit, and District (so the Org Switcher shows all five organizations):
 
 | Full Name | Email | Password | Primary Role | Assigned Workstation |
 | :--- | :--- | :--- | :--- | :--- |
@@ -376,3 +409,8 @@ Executing the seeding scripts populates the IAM databases with the following sta
 | **Jordan Kim** | `accounts@datavex.com` | `Acc@123!` | Accountant | http://billing.erp.local:3002 |
 | **Sam Rivera** | `inventory@datavex.com` | `Inv@123!` | Inventory Manager | http://inventory.erp.local:3004 |
 | **Priya Sharma** | `auditor@datavex.com` | `Aud@123!` | Auditor | http://billing.erp.local:3002 |
+
+> **Testing profile only:** seeding with `--profile testing` (or `-Profile testing` / the internal wrapper) additionally creates a multi-org RBAC matrix:
+> * `blinkit-lead@datavex.com` / `Test@123!` — single-org Sales Executive (Blinkit only).
+> * `inactive@datavex.com` / `Test@123!` — suspended membership in District (`isActive: false`).
+> * Cross-org memberships: Maya Patel becomes an Organization Owner of Eternal, and Jordan Kim becomes an Auditor of Zomato.

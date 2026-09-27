@@ -42,10 +42,12 @@ This service provides central SSO, Authentication, and Role-Based Access Control
   ```bash
   bunx prisma db push
   ```
-- **Seeding Users & Permissions:**
+- **Seeding Users & Permissions (dual-profile: `dev` default, `testing` for the multi-org RBAC matrix):**
   ```bash
-  bunx prisma db seed
+  bunx prisma db seed                       # dev profile
+  bun run prisma/seed.ts --profile testing  # testing profile
   ```
+  Seeds 5 organizations (DATAVEX 1, Eternal 2, Zomato 3, Blinkit 4, District 5 — Zomato/Blinkit/District are children of Eternal), the 5 dev accounts as org-1 members, admin membership in every org, and per-org Company/Branding/Notification/Workflow settings. The testing profile adds `blinkit-lead@datavex.com` / `inactive@datavex.com` (`Test@123!`) and cross-org memberships.
 - **Run Service:**
   ```bash
   bun nx run core-iam:dev

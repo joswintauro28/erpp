@@ -499,7 +499,7 @@ The repository contains a production-ready dockerization configuration (featurin
 # 2. Spin up all containers in background
 .\infrastructure\local\docker-build.ps1 start
 
-# 3. Seed database containers with development data
+# 3. Seed database containers (dev profile; use `-Profile testing` for edge/bulk data)
 .\infrastructure\local\seed-docker.ps1
 
 # 4. Check status (verify healthy transitions)
@@ -517,7 +517,7 @@ The repository contains a production-ready dockerization configuration (featurin
 # 2. Spin up all containers in background
 ./infrastructure/local/docker-build.sh start
 
-# 3. Seed database containers with development data
+# 3. Seed database containers (dev profile; use `--profile testing` for edge/bulk data)
 ./infrastructure/local/seed-docker.sh
 
 # 4. Check status (verify healthy transitions)
@@ -535,6 +535,9 @@ cd infrastructure/internal
 cp .env.docker.example .env.docker  # Fill in production secrets
 docker compose --env-file .env.docker build
 docker compose --env-file .env.docker up -d
+
+# Seed databases (internal wrapper defaults to the testing profile)
+./seed-docker.sh
 ```
 
 See [`infrastructure/internal/DEPLOY.md`](infrastructure/internal/DEPLOY.md) for the full step-by-step deployment guide.

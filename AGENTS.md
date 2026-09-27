@@ -68,7 +68,7 @@ DATAVEX/ERP/ (Root)
 All tokens defined in `packages/ui-theme/src/globals.css` as CSS custom properties, mapped to Tailwind via `@theme inline`.
 
 **Core Frontend Patterns**
-- **Authentication (`useAuth`):** `AuthContext` handles login status, session persistence via `localStorage`. User payload: `id, email, full_name, role, organization_name, permissions`.
+- **Authentication (`useAuth`):** `AuthContext` handles login status, session persistence via `localStorage`. User payload: `id, email, full_name, role, organization_id, organization_name, active_organization_id, organizations[], permissions`.
 - **Central SSO Redirection & Routing:**
   - Login page processes `?redirect=...` for full browser redirects back to calling workstation domains.
   - On success, passes `?token=<jwt>` in the redirect URL so the target workstation can authenticate.
@@ -172,6 +172,7 @@ DATAVEX ERP utilizes a decoupled backend architecture where each business domain
 - **Auth Hashing:** `bcryptjs`
 - **RBAC:** `@Permissions(...codes)` decorator + `PermissionsGuard` for endpoint security
 - **JWT SSO Strategy:** Signed JWTs with claims: `sub` (string userId), `email`, `role`, `permissions[]`, `organization_id`, `organization_name`. HttpOnly refresh cookie.
+- **Multi-Organization Model:** 5 seeded orgs — DATAVEX Industries (1), Eternal (2), Zomato (3), Blinkit (4), District (5, strictly empty); Zomato/Blinkit/District are children of Eternal. Users may hold memberships in multiple orgs; `POST /api/auth/organizations/:id/switch` re-issues the access token with the target org's claims, and the shared `OrgSwitcher` chip in each workstation header swaps orgs (branding + data refetch).
 - **Seed Users:**
   | Name | Email | Password | Role |
   |---|---|---|---|
@@ -180,6 +181,8 @@ DATAVEX ERP utilizes a decoupled backend architecture where each business domain
   | Jordan Kim | accounts@datavex.com | Acc@123! | Accountant |
   | Sam Rivera | inventory@datavex.com | Inv@123! | Inventory Manager |
   | Priya Sharma | auditor@datavex.com | Aud@123! | Auditor |
+
+  All five are members of org 1 (DATAVEX); `admin@datavex.com` is also an Organization Owner member of all other orgs. The `testing` seed profile adds a multi-org RBAC matrix (`blinkit-lead@datavex.com` / `inactive@datavex.com`, both `Test@123!`) plus cross-org memberships (Maya → Eternal owner, Jordan → Zomato auditor).
 - **Prisma isolation:** Uses `output = "../node_modules/@prisma/client-iam"` in schema.prisma to avoid conflicts with other services' Prisma clients. Imports from `@prisma/client-iam`.
 
 ### 3.2 Billing Service ([services/billing-service](services/billing-service/AGENTS.md)) — Port 8003
@@ -233,12 +236,12 @@ DATAVEX ERP utilizes a decoupled backend architecture where each business domain
 - **Database ORM:** SQLAlchemy 2.0 (AsyncSession via `postgresql+asyncpg`)
 - **Migrations:** Alembic
 - **Database Target:** `erp_db` (PostgreSQL)
-- **Claims-Based Verification:** `decode_access_token` decodes JWT locally via shared `JWT_SECRET` + HS256 — no DB queries. `require_permission` dependency defined for RBAC enforcement. All endpoints use `get_current_token_payload` or `get_current_user_id` with `owner_id` scoping.
+- **Claims-Based Verification:** `decode_access_token` decodes JWT locally via shared `JWT_SECRET` + HS256 — no DB queries. `require_permission` dependency defined for RBAC enforcement. All queries are tenant-scoped via `get_current_org_id` (`organization_id` JWT claim – strict, no cross-org bypass).
 - **Request Logging:** `RequestLoggingMiddleware` adds unique `X-Request-ID` to every request/response, logs method, path, status code, duration (ms), and flags slow requests (>2s).
 - **Standardized API Contracts:** `app/core/schemas.py` defines `PaginatedResponse`, `SuccessResponse`, `ErrorResponse`, `HealthResponse` for consistent API responses across all endpoints. Error responses include `success`, `error`, `detail`, and `request_id` fields.
 - **Monolithic `/auth` endpoints decommissioned** — auth handled entirely by core-iam.
 - **Inter-service Integration:** Dashboard and Notification modules forward the raw JWT to billing-service (port 8003) and inventory-service (port 8004) via `_raw_token` in the JWT payload.
-- **Active Models (3):** Client, Lead, Product — all with `owner_id` data isolation.
+- **Active Models (3):** SystemSettings (per-org, `organization_id` unique), FileRecord (per-org registry), Notification (per-org) — all with `organization_id` data isolation.
 - **Integration Clients:**
   - `billing_client.py` → `http://localhost:8003/api` (dashboard KPIs, invoices, payments)
   - `inventory_client.py` → `http://localhost:8004` (dashboard, products, warehouses)
@@ -248,7 +251,7 @@ DATAVEX ERP utilizes a decoupled backend architecture where each business domain
   - Client uploads/downloads directly to/from RustFS via presigned PUT/GET URLs
   - Centralized `file_records` table in `erp_db` — only erp-service has RustFS client
   - Per-domain buckets: `crm-assets`, `inv-docs`, `finance-records`, `erp-backups`
-  - Endpoints: `POST /api/files/upload-request`, `POST /api/files/confirm-upload`, `GET /api/files/:id`, `GET /api/files/:id/download`, `DELETE /api/files/:id`, `GET /api/files?owner_type=&owner_id=`
+  - Endpoints: `POST /api/files/upload-request`, `POST /api/files/confirm-upload`, `GET /api/files/:id`, `GET /api/files/:id/download`, `GET /api/files/:id/stream`, `DELETE /api/files/:id`, `GET /api/files?owner_type=&owner_id=`, `POST /api/files/cleanup-pending`
 
 ---
 
@@ -288,7 +291,7 @@ All endpoints require `Authorization: Bearer <jwt>` header and validate via shar
 - **LLM Provider:** Pluggable — Groq (`httpx` REST calls, default) or Gemini (`google-genai` SDK)
 - **Streaming:** Server-Sent Events (SSE) for real-time chat responses
 
-**Models (3):** AISession (UUID, user_id, module enum, title), AIMessage (role, content, token_count), AIAuditLog (action, details). All models use `user_id` for data isolation.
+**Models (3):** AISession (UUID, user_id, organization_id, module enum, title), AIMessage (role, content, token_count), AIAuditLog (action, details, organization_id). Session/audit queries are scoped by both `user_id` and `organization_id` JWT claims; messages inherit scoping through their session.
 
 **Modules & Endpoints**
 
@@ -382,13 +385,19 @@ All backend services share the same JWT secret (`JWT_SECRET`) to validate tokens
 
 ### Database Operations
 
+All seeders are dual-profile: `dev` (default — density-gradient data across the 5 orgs) and `testing` (edge cases, bulk volume, multi-org RBAC matrix). Orchestrator from the repo root seeds all 6 databases in one shot:
+
+```powershell
+python scripts/seed_all_dbs.py --profile dev        # or: --profile testing / --testing
+```
+
 #### FastAPI Business DB (`services/erp-service`)
 ```powershell
 cd services/erp-service
 $env:PYTHONPATH="."
 .venv\Scripts\alembic upgrade head      # Apply migrations
 .venv\Scripts\python scripts/reset_db.py # Drop all tables
-.venv\Scripts\python scripts/seed.py     # Seed business data
+.venv\Scripts\python scripts/seed.py     # Seed business data (--profile dev|testing)
 ```
 
 #### FastAPI AI DB (`services/ai-service`)
@@ -396,13 +405,15 @@ $env:PYTHONPATH="."
 cd services/ai-service
 $env:PYTHONPATH="."
 .venv\Scripts\alembic upgrade head      # Apply migrations
+.venv\Scripts\python scripts/seed.py    # Seed sessions/suggestions (--profile dev|testing)
 ```
 
 #### NestJS IAM DB (`services/core-iam`)
 ```powershell
 cd services/core-iam
-bunx prisma db push    # Deploy schema to erp_iam
-bunx prisma db seed    # Seed developer accounts + permissions
+bunx prisma db push                # Deploy schema to erp_iam
+bunx prisma db seed                # Seed developer accounts + permissions (dev profile)
+bun run prisma/seed.ts --profile testing   # Testing profile: RBAC matrix + cross-org users
 ```
 
 #### NestJS Billing DB (`services/billing-service`)
@@ -410,6 +421,7 @@ bunx prisma db seed    # Seed developer accounts + permissions
 cd services/billing-service
 bunx prisma db push    # Deploy schema to erp_billing
 bunx prisma generate   # Regenerate Prisma client
+bunx prisma db seed    # Seed invoices/payments/etc. (set SEED_PROFILE=testing for testing profile)
 ```
 
 ---
@@ -424,6 +436,7 @@ bunx prisma generate   # Regenerate Prisma client
 6. **Browser Reload (Ctrl+R) Protection:** On page refresh, `AuthProvider` checks active access tokens via `getAccessToken()` before attempting `/api/auth/refresh`. This prevents session lockouts across workstations and Incognito windows.
 7. **Cookie Domain Scoping:** `COOKIE_DOMAIN=localhost` (local dev) and `COOKIE_DOMAIN=erp.local` (Docker Compose) ensure HttpOnly refresh cookies are scoped correctly across all workstation origins.
 8. On 401 Unauthorized response, `api.ts` automatically calls `/api/auth/refresh` with credentials before retrying the original request or redirecting to login.
+9. **Organization Switching:** The JWT's `organization_id` claim is the single source of truth for tenant scoping (no client org header). The `OrgSwitcher` chip in each workstation header calls `POST /api/auth/organizations/:id/switch` → core-iam re-issues the access token with the new org's claims → the frontend stores it and refetches data, per-org settings, and branding (live color/logo swap).
 
 ---
 
@@ -471,9 +484,10 @@ The application contains a production-optimized local Docker sandbox configured 
 * **Start the Stack**:
   * **Windows**: `.\infrastructure\local\docker-build.ps1 start`
   * **Linux / macOS**: `./infrastructure/local/docker-build.sh start`
-* **Seed Database Containers**:
-  * **Windows**: `.\infrastructure\local\seed-docker.ps1`
-  * **Linux / macOS**: `./infrastructure/local/seed-docker.sh`
+* **Seed Database Containers** (dual-profile: `dev` default, `testing` for edge cases + bulk volume):
+  * **Windows**: `.\infrastructure\local\seed-docker.ps1 [-Profile testing]`
+  * **Linux / macOS**: `./infrastructure/local/seed-docker.sh [--profile testing]`
+  * **Internal VM (testing profile default)**: `.\infrastructure\internal\seed-docker.ps1` / `./infrastructure/internal/seed-docker.sh`
 * **View Container Status**:
   * **Windows**: `.\infrastructure\local\docker-build.ps1 ps`
   * **Linux / macOS**: `./infrastructure/local/docker-build.sh ps`

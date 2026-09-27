@@ -588,7 +588,7 @@
 - **Framework:** FastAPI (Python 3.13+)
 - **Database:** PostgreSQL via SQLAlchemy (`erp_crm`)
 - **Endpoints:** ~45
-- **Authentication:** Claims-based JWT verification (`owner_id` multi-tenant isolation)
+- **Authentication:** Claims-based JWT verification (`organization_id` multi-tenant isolation — superseded the earlier `owner_id` scoping in the 2026-09-26 org-scoping rework)
 
 ### CRITICAL Findings
 
