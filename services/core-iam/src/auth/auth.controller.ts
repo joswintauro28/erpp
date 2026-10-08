@@ -45,13 +45,14 @@ export class AuthController {
     );
     const domain = this.configService.get<string>('COOKIE_DOMAIN');
     const nodeEnv = this.configService.get<string>('NODE_ENV', 'development');
+    const cookiePath = this.configService.get<string>('COOKIE_PATH') || '/';
 
     res.cookie('refresh_token', token, {
       httpOnly: true,
       secure: nodeEnv === 'production',
-      sameSite: 'strict',
+      sameSite: 'lax',
       maxAge: expireSeconds * 1000,
-      path: '/api/auth',
+      path: cookiePath,
       ...(domain ? { domain } : {}),
     });
   }
@@ -59,11 +60,12 @@ export class AuthController {
   private clearRefreshTokenCookie(res: Response) {
     const domain = this.configService.get<string>('COOKIE_DOMAIN');
     const nodeEnv = this.configService.get<string>('NODE_ENV', 'development');
+    const cookiePath = this.configService.get<string>('COOKIE_PATH') || '/';
     res.clearCookie('refresh_token', {
       httpOnly: true,
       secure: nodeEnv === 'production',
-      sameSite: 'strict',
-      path: '/api/auth',
+      sameSite: 'lax',
+      path: cookiePath,
       ...(domain ? { domain } : {}),
     });
   }

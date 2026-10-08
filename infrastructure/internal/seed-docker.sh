@@ -43,6 +43,16 @@ export SEED_PROFILE="$PROFILE"
 # ── Helpers ───────────────────────────────────────────────────────────
 now_ms() { date +%s%3N; }
 
+# Steps 1–2 compile TS seed scripts with bun. Fall back to the same oven/bun
+# image used by the service Dockerfiles when bun is not installed on the host.
+BUN_IMAGE="${BUN_IMAGE:-oven/bun:1.2-alpine}"
+if command -v bun >/dev/null 2>&1; then
+    BUN_PREFIX="bun"
+else
+    echo "Note: host 'bun' not found — using dockerized bun ($BUN_IMAGE) for seed compilation."
+    BUN_PREFIX="docker run --rm -v \"\$PWD:/work\" -w /work $BUN_IMAGE bun"
+fi
+
 should_skip() {
     local name="$1"
     for s in "${SKIP[@]}"; do
@@ -148,7 +158,7 @@ if ! should_skip "core-iam"; then
         sh -c "
             SEED_DIR=\"$DIR/../../services/core-iam\"
             cd \"\$SEED_DIR\" && \
-            bun build prisma/seed.ts --outfile prisma/seed.js --target node --format cjs --external '@prisma/client-iam' --external 'bcryptjs' && \
+            $BUN_PREFIX build prisma/seed.ts --outfile prisma/seed.js --target node --format cjs --external '@prisma/client-iam' --external 'bcryptjs' && \
             docker exec datavex-core-iam sh -c 'npx prisma db push --accept-data-loss --skip-generate 2>&1' && \
             docker cp \"\$SEED_DIR/prisma/seed.js\" datavex-core-iam:/app/services/core-iam/prisma/seed.js && \
             docker exec -e SEED_PROFILE=$PROFILE datavex-core-iam node prisma/seed.js && \
@@ -162,7 +172,7 @@ if ! should_skip "billing-service"; then
         sh -c "
             SEED_DIR=\"$DIR/../../services/billing-service\"
             cd \"\$SEED_DIR\" && \
-            bun build prisma/seed.ts --outfile prisma/seed.js --target node --format cjs --external '@prisma/client' --external 'xlsx' && \
+            $BUN_PREFIX build prisma/seed.ts --outfile prisma/seed.js --target node --format cjs --external '@prisma/client' --external 'xlsx' && \
             docker exec datavex-billing-service sh -c 'npx prisma db push --accept-data-loss --skip-generate 2>&1' && \
             docker cp \"\$SEED_DIR/prisma/seed.js\" datavex-billing-service:/app/services/billing-service/prisma/seed.js && \
             docker exec -e SEED_PROFILE=$PROFILE datavex-billing-service node prisma/seed.js && \
@@ -174,7 +184,8 @@ fi
 if ! should_skip "crm-service"; then
     run_step "crm-service (Leads, Customers, Pipelines)" \
         sh -c "
-            docker cp '$DIR/../../scripts/seed_lib' datavex-crm-service:/app/scripts/ && \
+            docker exec -u root datavex-crm-service sh -c 'rm -rf /app/scripts/seed_lib && mkdir -p /app/scripts/seed_lib' && \
+            docker cp '$DIR/../../scripts/seed_lib/.' datavex-crm-service:/app/scripts/seed_lib/ && \
             docker cp '$DIR/../../services/crm-service/scripts' datavex-crm-service:/app/services/crm-service/ && \
             docker exec -e PYTHONPATH=. datavex-crm-service /opt/venv/bin/alembic upgrade head && \
             docker exec -e PYTHONPATH=. -e SEED_PROFILE=$PROFILE datavex-crm-service /opt/venv/bin/python /app/services/crm-service/scripts/seed.py --profile $PROFILE
@@ -185,7 +196,8 @@ fi
 if ! should_skip "inventory-service"; then
     run_step "inventory-service (Products, Warehouses, Stock)" \
         sh -c "
-            docker cp '$DIR/../../scripts/seed_lib' datavex-inventory-service:/app/scripts/ && \
+            docker exec -u root datavex-inventory-service sh -c 'rm -rf /app/scripts/seed_lib && mkdir -p /app/scripts/seed_lib' && \
+            docker cp '$DIR/../../scripts/seed_lib/.' datavex-inventory-service:/app/scripts/seed_lib/ && \
             docker cp '$DIR/../../services/inventory-service/scripts' datavex-inventory-service:/app/services/inventory-service/ && \
             docker exec -e PYTHONPATH=. datavex-inventory-service /opt/venv/bin/alembic upgrade head && \
             docker exec -e PYTHONPATH=. -e SEED_PROFILE=$PROFILE datavex-inventory-service /opt/venv/bin/python /app/services/inventory-service/scripts/seed.py --profile $PROFILE
@@ -196,7 +208,8 @@ fi
 if ! should_skip "erp-service"; then
     run_step "erp-service (Gateway, System Settings, Notifications)" \
         sh -c "
-            docker cp '$DIR/../../scripts/seed_lib' datavex-erp-service:/app/scripts/ && \
+            docker exec -u root datavex-erp-service sh -c 'rm -rf /app/scripts/seed_lib && mkdir -p /app/scripts/seed_lib' && \
+            docker cp '$DIR/../../scripts/seed_lib/.' datavex-erp-service:/app/scripts/seed_lib/ && \
             docker cp '$DIR/../../services/erp-service/scripts' datavex-erp-service:/app/services/erp-service/ && \
             docker exec -e PYTHONPATH=. datavex-erp-service /opt/venv/bin/alembic upgrade head && \
             docker exec -e PYTHONPATH=. -e SEED_PROFILE=$PROFILE datavex-erp-service /opt/venv/bin/python /app/services/erp-service/scripts/seed.py --profile $PROFILE

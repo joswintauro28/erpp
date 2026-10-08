@@ -92,10 +92,11 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/erp_iam
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
       RABBITMQ_URL: amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASSWORD:?RABBITMQ_PASSWORD is required}@rabbitmq:5672
-      COOKIE_DOMAIN: ${COOKIE_DOMAIN:-.${MAIN_DOMAIN:-erp.datavex.com}}
+      COOKIE_DOMAIN: ${COOKIE_DOMAIN:-.${MAIN_DOMAIN:-erp.datavex.ai}}
+      COOKIE_PATH: ${COOKIE_PATH:-/}
       NODE_ENV: production
       PORT: "8002"
-      CORS_ORIGINS: ${IAM_CORS_ORIGINS:-http://app.${MAIN_DOMAIN:-erp.datavex.com},http://crm.${MAIN_DOMAIN:-erp.datavex.com},http://billing.${MAIN_DOMAIN:-erp.datavex.com},http://inventory.${MAIN_DOMAIN:-erp.datavex.com}}
+      CORS_ORIGINS: ${IAM_CORS_ORIGINS:-http://${MAIN_DOMAIN:-erp.datavex.ai}}
     depends_on:
       postgres:
         condition: service_healthy
@@ -122,7 +123,7 @@ services:
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
       RABBITMQ_URL: amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASSWORD:?RABBITMQ_PASSWORD is required}@rabbitmq:5672
       PORT: "8003"
-      CORS_ORIGINS: ${BILLING_CORS_ORIGINS:-http://app.${MAIN_DOMAIN:-erp.datavex.com},http://billing.${MAIN_DOMAIN:-erp.datavex.com}}
+      CORS_ORIGINS: ${BILLING_CORS_ORIGINS:-http://${MAIN_DOMAIN:-erp.datavex.ai}}
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -152,13 +153,13 @@ services:
       RUSTFS_ACCESS_KEY: ${RUSTFS_ACCESS_KEY:-datavex-rustfs-admin}
       RUSTFS_SECRET_KEY: ${RUSTFS_SECRET_KEY:?RUSTFS_SECRET_KEY is required}
       RUSTFS_SECURE: "false"
-      RUSTFS_PUBLIC_URL: ${RUSTFS_SERVER_URL:-http://rustfs.${MAIN_DOMAIN:-erp.datavex.com}}
+      RUSTFS_PUBLIC_URL: ${RUSTFS_SERVER_URL:-http://rustfs.${MAIN_DOMAIN:-erp.datavex.ai}}
       PORT: "8000"
-      FRONTEND_URL: ${SHELL_APP_URL:-http://app.${MAIN_DOMAIN:-erp.datavex.com}}
+      FRONTEND_URL: ${SHELL_APP_URL:-http://${MAIN_DOMAIN:-erp.datavex.ai}/admin}
       BILLING_SERVICE_URL: http://billing-service:8003/api
       INVENTORY_SERVICE_URL: http://inventory-service:8004
       CRM_SERVICE_URL: http://crm-service:8001
-      CORS_ORIGINS: ${ERP_CORS_ORIGINS:-http://app.${MAIN_DOMAIN:-erp.datavex.com},http://crm.${MAIN_DOMAIN:-erp.datavex.com},http://billing.${MAIN_DOMAIN:-erp.datavex.com},http://inventory.${MAIN_DOMAIN:-erp.datavex.com}}
+      CORS_ORIGINS: ${ERP_CORS_ORIGINS:-http://${MAIN_DOMAIN:-erp.datavex.ai}}
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -185,7 +186,7 @@ services:
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
       BILLING_SERVICE_URL: http://billing-service:8003
       INVENTORY_SERVICE_URL: http://inventory-service:8004
-      CORS_ORIGINS: ${CRM_CORS_ORIGINS:-http://crm.${MAIN_DOMAIN:-erp.datavex.com},http://app.${MAIN_DOMAIN:-erp.datavex.com}}
+      CORS_ORIGINS: ${CRM_CORS_ORIGINS:-http://${MAIN_DOMAIN:-erp.datavex.ai}}
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -206,8 +207,8 @@ services:
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
       RABBITMQ_URL: amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASSWORD:?RABBITMQ_PASSWORD is required}@rabbitmq:5672
       PORT: "8004"
-      FRONTEND_URL: ${INVENTORY_APP_URL:-http://inventory.${MAIN_DOMAIN:-erp.datavex.com}}
-      CORS_ORIGINS: ${INVENTORY_CORS_ORIGINS:-http://inventory.${MAIN_DOMAIN:-erp.datavex.com},http://app.${MAIN_DOMAIN:-erp.datavex.com}}
+      FRONTEND_URL: ${INVENTORY_APP_URL:-http://${MAIN_DOMAIN:-erp.datavex.ai}/inventory}
+      CORS_ORIGINS: ${INVENTORY_CORS_ORIGINS:-http://${MAIN_DOMAIN:-erp.datavex.ai}}
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -234,7 +235,7 @@ services:
       CRM_SERVICE_URL: http://crm-service:8001
       BILLING_SERVICE_URL: http://billing-service:8003
       INVENTORY_SERVICE_URL: http://inventory-service:8004
-      CORS_ORIGINS: ${AI_CORS_ORIGINS:-http://app.${MAIN_DOMAIN:-erp.datavex.com},http://crm.${MAIN_DOMAIN:-erp.datavex.com},http://billing.${MAIN_DOMAIN:-erp.datavex.com},http://inventory.${MAIN_DOMAIN:-erp.datavex.com}}
+      CORS_ORIGINS: ${AI_CORS_ORIGINS:-http://${MAIN_DOMAIN:-erp.datavex.ai}}
     depends_on:
       postgres:
         condition: service_healthy
@@ -248,11 +249,11 @@ services:
       dockerfile: apps/erp-shell/Dockerfile
       args:
         BUILD_PROXY: ${BUILD_PROXY:-}
-        NEXT_PUBLIC_BILLING_APP_URL: ${BILLING_APP_URL:-http://billing.${MAIN_DOMAIN:-erp.datavex.com}}
-        NEXT_PUBLIC_CRM_APP_URL: ${CRM_APP_URL:-http://crm.${MAIN_DOMAIN:-erp.datavex.com}}
-        NEXT_PUBLIC_INVENTORY_APP_URL: ${INVENTORY_APP_URL:-http://inventory.${MAIN_DOMAIN:-erp.datavex.com}}
+        NEXT_PUBLIC_BILLING_APP_URL: ${BILLING_APP_URL:-http://${MAIN_DOMAIN:-erp.datavex.ai}/billing}
+        NEXT_PUBLIC_CRM_APP_URL: ${CRM_APP_URL:-http://${MAIN_DOMAIN:-erp.datavex.ai}/crm}
+        NEXT_PUBLIC_INVENTORY_APP_URL: ${INVENTORY_APP_URL:-http://${MAIN_DOMAIN:-erp.datavex.ai}/inventory}
         NEXT_PUBLIC_BASE_PATH: ""
-        NEXT_PUBLIC_DEPLOY_MODE: ${DEPLOY_MODE:-subdomain}
+        NEXT_PUBLIC_DEPLOY_MODE: ${DEPLOY_MODE:-single-domain}
     container_name: datavex-erp-shell
     restart: unless-stopped
     environment:
@@ -263,9 +264,9 @@ services:
       IAM_API_URL: http://core-iam:8002
       AI_API_URL: http://ai-service:8005
       NEXT_PUBLIC_API_URL: /api
-      NEXT_PUBLIC_BILLING_APP_URL: ${BILLING_APP_URL:-http://billing.${MAIN_DOMAIN:-erp.datavex.com}}
-      NEXT_PUBLIC_CRM_APP_URL: ${CRM_APP_URL:-http://crm.${MAIN_DOMAIN:-erp.datavex.com}}
-      NEXT_PUBLIC_INVENTORY_APP_URL: ${INVENTORY_APP_URL:-http://inventory.${MAIN_DOMAIN:-erp.datavex.com}}
+      NEXT_PUBLIC_BILLING_APP_URL: ${BILLING_APP_URL:-http://${MAIN_DOMAIN:-erp.datavex.ai}/billing}
+      NEXT_PUBLIC_CRM_APP_URL: ${CRM_APP_URL:-http://${MAIN_DOMAIN:-erp.datavex.ai}/crm}
+      NEXT_PUBLIC_INVENTORY_APP_URL: ${INVENTORY_APP_URL:-http://${MAIN_DOMAIN:-erp.datavex.ai}/inventory}
     depends_on:
       core-iam:
         condition: service_healthy
@@ -293,10 +294,10 @@ services:
       dockerfile: apps/crm-ui/Dockerfile
       args:
         BUILD_PROXY: ${BUILD_PROXY:-}
-        NEXT_PUBLIC_SHELL_APP_URL: ${SHELL_APP_URL:-http://app.${MAIN_DOMAIN:-erp.datavex.com}}
-        NEXT_PUBLIC_APP_URL: ${CRM_APP_URL:-http://crm.${MAIN_DOMAIN:-erp.datavex.com}}
+        NEXT_PUBLIC_SHELL_APP_URL: ${SHELL_APP_URL:-http://${MAIN_DOMAIN:-erp.datavex.ai}/admin}
+        NEXT_PUBLIC_APP_URL: ${CRM_APP_URL:-http://${MAIN_DOMAIN:-erp.datavex.ai}/crm}
         NEXT_PUBLIC_BASE_PATH: ""
-        NEXT_PUBLIC_DEPLOY_MODE: ${DEPLOY_MODE:-subdomain}
+        NEXT_PUBLIC_DEPLOY_MODE: ${DEPLOY_MODE:-single-domain}
     container_name: datavex-crm-shell
     restart: unless-stopped
     environment:
@@ -308,8 +309,8 @@ services:
       ERP_API_URL: http://erp-service:8000
       AI_API_URL: http://ai-service:8005
       NEXT_PUBLIC_API_URL: /api
-      NEXT_PUBLIC_APP_URL: ${CRM_APP_URL:-http://crm.${MAIN_DOMAIN:-erp.datavex.com}}
-      NEXT_PUBLIC_SHELL_APP_URL: ${SHELL_APP_URL:-http://app.${MAIN_DOMAIN:-erp.datavex.com}}
+      NEXT_PUBLIC_APP_URL: ${CRM_APP_URL:-http://${MAIN_DOMAIN:-erp.datavex.ai}/crm}
+      NEXT_PUBLIC_SHELL_APP_URL: ${SHELL_APP_URL:-http://${MAIN_DOMAIN:-erp.datavex.ai}/admin}
     depends_on:
       core-iam:
         condition: service_healthy
@@ -331,10 +332,10 @@ services:
       dockerfile: apps/billing-ui/Dockerfile
       args:
         BUILD_PROXY: ${BUILD_PROXY:-}
-        NEXT_PUBLIC_SHELL_APP_URL: ${SHELL_APP_URL:-http://app.${MAIN_DOMAIN:-erp.datavex.com}}
-        NEXT_PUBLIC_APP_URL: ${BILLING_APP_URL:-http://billing.${MAIN_DOMAIN:-erp.datavex.com}}
+        NEXT_PUBLIC_SHELL_APP_URL: ${SHELL_APP_URL:-http://${MAIN_DOMAIN:-erp.datavex.ai}/admin}
+        NEXT_PUBLIC_APP_URL: ${BILLING_APP_URL:-http://${MAIN_DOMAIN:-erp.datavex.ai}/billing}
         NEXT_PUBLIC_BASE_PATH: ""
-        NEXT_PUBLIC_DEPLOY_MODE: ${DEPLOY_MODE:-subdomain}
+        NEXT_PUBLIC_DEPLOY_MODE: ${DEPLOY_MODE:-single-domain}
     container_name: datavex-billing-ui
     restart: unless-stopped
     environment:
@@ -345,8 +346,8 @@ services:
       IAM_API_URL: http://core-iam:8002
       AI_API_URL: http://ai-service:8005
       NEXT_PUBLIC_API_URL: /api
-      NEXT_PUBLIC_APP_URL: ${BILLING_APP_URL:-http://billing.${MAIN_DOMAIN:-erp.datavex.com}}
-      NEXT_PUBLIC_SHELL_APP_URL: ${SHELL_APP_URL:-http://app.${MAIN_DOMAIN:-erp.datavex.com}}
+      NEXT_PUBLIC_APP_URL: ${BILLING_APP_URL:-http://${MAIN_DOMAIN:-erp.datavex.ai}/billing}
+      NEXT_PUBLIC_SHELL_APP_URL: ${SHELL_APP_URL:-http://${MAIN_DOMAIN:-erp.datavex.ai}/admin}
     depends_on:
       core-iam:
         condition: service_healthy
@@ -361,17 +362,17 @@ services:
     networks:
       - erp-network
 
-  # ─── Inventory UI (Next.js) — Port 3004 ────────────────────────────────────
+# ─── Inventory UI (Next.js) — Port 3004 ────────────────────────────────────
   inventory-ui:
     build:
       context: ../../
       dockerfile: apps/inventory-ui/Dockerfile
       args:
         BUILD_PROXY: ${BUILD_PROXY:-}
-        NEXT_PUBLIC_SHELL_APP_URL: ${SHELL_APP_URL:-http://app.${MAIN_DOMAIN:-erp.datavex.com}}
-        NEXT_PUBLIC_APP_URL: ${INVENTORY_APP_URL:-http://inventory.${MAIN_DOMAIN:-erp.datavex.com}}
+        NEXT_PUBLIC_SHELL_APP_URL: ${SHELL_APP_URL:-http://${MAIN_DOMAIN:-erp.datavex.ai}/admin}
+        NEXT_PUBLIC_APP_URL: ${INVENTORY_APP_URL:-http://${MAIN_DOMAIN:-erp.datavex.ai}/inventory}
         NEXT_PUBLIC_BASE_PATH: ""
-        NEXT_PUBLIC_DEPLOY_MODE: ${DEPLOY_MODE:-subdomain}
+        NEXT_PUBLIC_DEPLOY_MODE: ${DEPLOY_MODE:-single-domain}
     container_name: datavex-inventory-ui
     restart: unless-stopped
     environment:
@@ -382,8 +383,8 @@ services:
       IAM_API_URL: http://core-iam:8002
       AI_API_URL: http://ai-service:8005
       NEXT_PUBLIC_API_URL: /api
-      NEXT_PUBLIC_APP_URL: ${INVENTORY_APP_URL:-http://inventory.${MAIN_DOMAIN:-erp.datavex.com}}
-      NEXT_PUBLIC_SHELL_APP_URL: ${SHELL_APP_URL:-http://app.${MAIN_DOMAIN:-erp.datavex.com}}
+      NEXT_PUBLIC_APP_URL: ${INVENTORY_APP_URL:-http://${MAIN_DOMAIN:-erp.datavex.ai}/inventory}
+      NEXT_PUBLIC_SHELL_APP_URL: ${SHELL_APP_URL:-http://${MAIN_DOMAIN:-erp.datavex.ai}/admin}
     depends_on:
       core-iam:
         condition: service_healthy

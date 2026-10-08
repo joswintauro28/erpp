@@ -34,7 +34,7 @@ services:
       NEXT_PUBLIC_BILLING_APP_URL: http://${MAIN_DOMAIN:-erp.datavex.com}/billing
       NEXT_PUBLIC_CRM_APP_URL: http://${MAIN_DOMAIN:-erp.datavex.com}/crm
       NEXT_PUBLIC_INVENTORY_APP_URL: http://${MAIN_DOMAIN:-erp.datavex.com}/inventory
-      CORS_ORIGINS: http://${MAIN_DOMAIN:-erp.datavex.com}
+      CORS_ORIGINS: https://${MAIN_DOMAIN:-erp.datavex.ai},http://${MAIN_DOMAIN:-erp.datavex.ai}
     healthcheck:
       test: ["CMD", "node", "-e", "require('http').get('http://127.0.0.1:3000/admin', (res) => { if (res.statusCode >= 200 && res.statusCode < 400) process.exit(0); else process.exit(1); }).on('error', () => process.exit(1))"]
 
@@ -50,7 +50,7 @@ services:
       NEXT_PUBLIC_DEPLOY_MODE: single-domain
       NEXT_PUBLIC_SHELL_APP_URL: http://${MAIN_DOMAIN:-erp.datavex.com}/admin
       NEXT_PUBLIC_APP_URL: http://${MAIN_DOMAIN:-erp.datavex.com}/crm
-      CORS_ORIGINS: http://${MAIN_DOMAIN:-erp.datavex.com}
+      CORS_ORIGINS: https://${MAIN_DOMAIN:-erp.datavex.ai},http://${MAIN_DOMAIN:-erp.datavex.ai}
 
   # ─── Billing UI — basePath /billing ───────────────────────────────────────
   billing-ui:
@@ -64,7 +64,7 @@ services:
       NEXT_PUBLIC_DEPLOY_MODE: single-domain
       NEXT_PUBLIC_SHELL_APP_URL: http://${MAIN_DOMAIN:-erp.datavex.com}/admin
       NEXT_PUBLIC_APP_URL: http://${MAIN_DOMAIN:-erp.datavex.com}/billing
-      CORS_ORIGINS: http://${MAIN_DOMAIN:-erp.datavex.com}
+      CORS_ORIGINS: https://${MAIN_DOMAIN:-erp.datavex.ai},http://${MAIN_DOMAIN:-erp.datavex.ai}
     healthcheck:
       test: ["CMD", "node", "-e", "require('http').get('http://127.0.0.1:3002/billing', (res) => { if (res.statusCode >= 200 && res.statusCode < 400) process.exit(0); else process.exit(1); }).on('error', () => process.exit(1))"]
 
@@ -80,38 +80,39 @@ services:
       NEXT_PUBLIC_DEPLOY_MODE: single-domain
       NEXT_PUBLIC_SHELL_APP_URL: http://${MAIN_DOMAIN:-erp.datavex.com}/admin
       NEXT_PUBLIC_APP_URL: http://${MAIN_DOMAIN:-erp.datavex.com}/inventory
-      CORS_ORIGINS: http://${MAIN_DOMAIN:-erp.datavex.com}
+      CORS_ORIGINS: https://${MAIN_DOMAIN:-erp.datavex.ai},http://${MAIN_DOMAIN:-erp.datavex.ai}
     healthcheck:
       test: ["CMD", "node", "-e", "require('http').get('http://127.0.0.1:3004/inventory', (res) => { if (res.statusCode >= 200 && res.statusCode < 400) process.exit(0); else process.exit(1); }).on('error', () => process.exit(1))"]
 
   # ─── Backend Services — CORS & single-domain adjustments ─────────────────
   core-iam:
     environment:
-      COOKIE_DOMAIN: ${MAIN_DOMAIN:-erp.datavex.com}
-      CORS_ORIGINS: http://${MAIN_DOMAIN:-erp.datavex.com}
+      COOKIE_DOMAIN: .${MAIN_DOMAIN:-erp.datavex.ai}
+      COOKIE_PATH: /
+      CORS_ORIGINS: https://${MAIN_DOMAIN:-erp.datavex.ai},http://${MAIN_DOMAIN:-erp.datavex.ai}
 
   erp-service:
     environment:
-      CORS_ORIGINS: http://${MAIN_DOMAIN:-erp.datavex.com}
+      CORS_ORIGINS: https://${MAIN_DOMAIN:-erp.datavex.ai},http://${MAIN_DOMAIN:-erp.datavex.ai}
       RUSTFS_PUBLIC_URL: http://${MAIN_DOMAIN:-erp.datavex.com}
       FRONTEND_URL: http://${MAIN_DOMAIN:-erp.datavex.com}/admin
 
   crm-service:
     environment:
-      CORS_ORIGINS: http://${MAIN_DOMAIN:-erp.datavex.com}
+      CORS_ORIGINS: https://${MAIN_DOMAIN:-erp.datavex.ai},http://${MAIN_DOMAIN:-erp.datavex.ai}
 
   billing-service:
     environment:
-      CORS_ORIGINS: http://${MAIN_DOMAIN:-erp.datavex.com}
+      CORS_ORIGINS: https://${MAIN_DOMAIN:-erp.datavex.ai},http://${MAIN_DOMAIN:-erp.datavex.ai}
 
   inventory-service:
     environment:
-      CORS_ORIGINS: http://${MAIN_DOMAIN:-erp.datavex.com}
+      CORS_ORIGINS: https://${MAIN_DOMAIN:-erp.datavex.ai},http://${MAIN_DOMAIN:-erp.datavex.ai}
       FRONTEND_URL: http://${MAIN_DOMAIN:-erp.datavex.com}/inventory
 
   ai-service:
     environment:
-      CORS_ORIGINS: http://${MAIN_DOMAIN:-erp.datavex.com}
+      CORS_ORIGINS: https://${MAIN_DOMAIN:-erp.datavex.ai},http://${MAIN_DOMAIN:-erp.datavex.ai}
 
   # ─── Nginx — Switch to single-domain HTTP config ─────────────────────────
   nginx:

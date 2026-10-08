@@ -1,5 +1,5 @@
-import { Button as ButtonPrimitive } from "@base-ui/react/button"
 import { cva, type VariantProps } from "class-variance-authority"
+import { forwardRef, type ForwardRefExoticComponent, type RefAttributes } from "react"
 
 import { cn } from "../../lib/utils"
 
@@ -41,19 +41,39 @@ const buttonVariants = cva(
   }
 )
 
-function Button({
-  className,
-  variant = "default",
-  size = "default",
-  ...props
-}: ButtonPrimitive.Props & VariantProps<typeof buttonVariants>) {
-  return (
-    <ButtonPrimitive
-      data-slot="button"
-      className={cn(buttonVariants({ variant, size, className }))}
-      {...props}
-    />
-  )
-}
+const Button = forwardRef<HTMLButtonElement, React.ButtonHTMLAttributes<HTMLButtonElement> & {
+  variant?: VariantProps<typeof buttonVariants>["variant"]
+  size?: VariantProps<typeof buttonVariants>["size"]
+}>(
+  (
+    {
+      variant = "default",
+      size = "default",
+      className,
+      ...props
+    }: React.ButtonHTMLAttributes<HTMLButtonElement> & {
+      variant?: VariantProps<typeof buttonVariants>["variant"]
+      size?: VariantProps<typeof buttonVariants>["size"]
+    },
+    ref: React.Ref<HTMLButtonElement>
+  ) => {
+    return (
+      <button
+        ref={ref}
+        type={props.type ?? "button"}
+        className={cn(buttonVariants({ variant, size, className }))}
+        onMouseDown={(e: React.MouseEvent<HTMLButtonElement>) => {
+          if (!e.currentTarget.disabled) {
+            e.currentTarget.focus()
+          }
+          props.onMouseDown?.(e)
+        }}
+        {...props}
+      />
+    )
+  }
+)
+
+Button.displayName = "Button"
 
 export { Button, buttonVariants }

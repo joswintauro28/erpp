@@ -1,5 +1,6 @@
 # Real environment file with secrets — never commit this
 .env.docker
+.env.docker.save
 
 # Docker volumes (persistent data)
 postgres_data/
