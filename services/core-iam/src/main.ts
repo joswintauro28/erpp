@@ -52,7 +52,12 @@ async function bootstrap() {
       ) {
         callback(null, true);
       } else {
-        callback(new Error('Not allowed by CORS'));
+        // Deny the CORS headers instead of failing the request. Browsers always
+        // attach an Origin header to POSTs (e.g. /auth/login), and all
+        // workstation traffic is same-origin behind nginx — erroring here turned
+        // any Origin missing from CORS_ORIGINS into an HTTP 500 on login.
+        // The browser still enforces CORS by withholding cross-origin access.
+        callback(null, false);
       }
     },
     credentials: true,

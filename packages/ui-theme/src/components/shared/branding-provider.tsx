@@ -159,9 +159,12 @@ let faviconLinkEl: HTMLLinkElement | null = null;
 function setFavicon(url: string | null) {
   if (typeof document === "undefined") return;
 
-  // Remove ALL existing favicon links (including Next.js default)
-  const existing = document.querySelectorAll<HTMLLinkElement>("link[rel='icon'], link[rel='shortcut icon']");
-  existing.forEach((el) => el.remove());
+  // Remove ONLY the <link> element this module created. React 19 owns the
+  // other nodes in <head> (Next.js metadata icons, hoisted <style> tags) and
+  // its unmount path throws "Cannot read properties of null (reading
+  // 'removeChild')" — killing the whole React commit and freezing the UI —
+  // when those nodes are detached behind its back.
+  faviconLinkEl?.remove();
   faviconLinkEl = null;
 
   if (!url) return;
@@ -182,7 +185,9 @@ function setFavicon(url: string | null) {
   faviconLinkEl.rel = "icon";
   faviconLinkEl.type = mimeMap[ext] ?? "image/png";
   faviconLinkEl.href = url;
-  document.head.appendChild(faviconLinkEl);
+  // Prepend so the branding icon takes precedence over Next's default
+  // favicon without removing (and untracking) React's own link element.
+  document.head.insertBefore(faviconLinkEl, document.head.firstChild);
 }
 
 /* ── Cache (for login page / unauthenticated views) ────────────────────── */

@@ -96,7 +96,7 @@ services:
       COOKIE_PATH: ${COOKIE_PATH:-/}
       NODE_ENV: production
       PORT: "8002"
-      CORS_ORIGINS: ${IAM_CORS_ORIGINS:-http://${MAIN_DOMAIN:-erp.datavex.ai}}
+      CORS_ORIGINS: ${IAM_CORS_ORIGINS:-https://${MAIN_DOMAIN:-erp.datavex.ai},http://${MAIN_DOMAIN:-erp.datavex.ai}}
     depends_on:
       postgres:
         condition: service_healthy
@@ -123,7 +123,7 @@ services:
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
       RABBITMQ_URL: amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASSWORD:?RABBITMQ_PASSWORD is required}@rabbitmq:5672
       PORT: "8003"
-      CORS_ORIGINS: ${BILLING_CORS_ORIGINS:-http://${MAIN_DOMAIN:-erp.datavex.ai}}
+      CORS_ORIGINS: ${BILLING_CORS_ORIGINS:-https://${MAIN_DOMAIN:-erp.datavex.ai},http://${MAIN_DOMAIN:-erp.datavex.ai}}
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -159,7 +159,7 @@ services:
       BILLING_SERVICE_URL: http://billing-service:8003/api
       INVENTORY_SERVICE_URL: http://inventory-service:8004
       CRM_SERVICE_URL: http://crm-service:8001
-      CORS_ORIGINS: ${ERP_CORS_ORIGINS:-http://${MAIN_DOMAIN:-erp.datavex.ai}}
+      CORS_ORIGINS: ${ERP_CORS_ORIGINS:-https://${MAIN_DOMAIN:-erp.datavex.ai},http://${MAIN_DOMAIN:-erp.datavex.ai}}
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -186,7 +186,7 @@ services:
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
       BILLING_SERVICE_URL: http://billing-service:8003
       INVENTORY_SERVICE_URL: http://inventory-service:8004
-      CORS_ORIGINS: ${CRM_CORS_ORIGINS:-http://${MAIN_DOMAIN:-erp.datavex.ai}}
+      CORS_ORIGINS: ${CRM_CORS_ORIGINS:-https://${MAIN_DOMAIN:-erp.datavex.ai},http://${MAIN_DOMAIN:-erp.datavex.ai}}
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -208,7 +208,7 @@ services:
       RABBITMQ_URL: amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASSWORD:?RABBITMQ_PASSWORD is required}@rabbitmq:5672
       PORT: "8004"
       FRONTEND_URL: ${INVENTORY_APP_URL:-http://${MAIN_DOMAIN:-erp.datavex.ai}/inventory}
-      CORS_ORIGINS: ${INVENTORY_CORS_ORIGINS:-http://${MAIN_DOMAIN:-erp.datavex.ai}}
+      CORS_ORIGINS: ${INVENTORY_CORS_ORIGINS:-https://${MAIN_DOMAIN:-erp.datavex.ai},http://${MAIN_DOMAIN:-erp.datavex.ai}}
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -235,7 +235,7 @@ services:
       CRM_SERVICE_URL: http://crm-service:8001
       BILLING_SERVICE_URL: http://billing-service:8003
       INVENTORY_SERVICE_URL: http://inventory-service:8004
-      CORS_ORIGINS: ${AI_CORS_ORIGINS:-http://${MAIN_DOMAIN:-erp.datavex.ai}}
+      CORS_ORIGINS: ${AI_CORS_ORIGINS:-https://${MAIN_DOMAIN:-erp.datavex.ai},http://${MAIN_DOMAIN:-erp.datavex.ai}}
     depends_on:
       postgres:
         condition: service_healthy

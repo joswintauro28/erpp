@@ -1,1 +1,11 @@
 @import "@datavex/ui-theme/globals.css";
+
+/* Hide Edge/IE password-field reveal & clear glyphs.
+   NOTE: kept here (not as a JSX <style> tag) because React 19 hoists raw
+   <style> elements into <head> and unmounting them during client-side
+   navigation caused an intermittent "Cannot read properties of null
+   (reading 'removeChild')" crash that froze the UI after login. */
+input::-ms-reveal,
+input::-ms-clear {
+  display: none !important;
+}

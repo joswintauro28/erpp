@@ -100,12 +100,6 @@ export default function LoginPage() {
 
   return (
     <div className="relative flex min-h-screen w-full bg-background overflow-hidden justify-center items-center">
-      <style>{`
-        input::-ms-reveal,
-        input::-ms-clear {
-          display: none !important;
-        }
-      `}</style>
       {/* Premium background sweeps */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,color-mix(in srgb, var(--shell-brand) 15%, transparent)_0%,transparent_60%)]" />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,color-mix(in srgb, var(--shell-accent) 6%, transparent)_0%,transparent_50%)]" />

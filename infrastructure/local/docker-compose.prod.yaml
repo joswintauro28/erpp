@@ -25,15 +25,18 @@ services:
       args:
         NEXT_PUBLIC_BASE_PATH: /admin
         NEXT_PUBLIC_DEPLOY_MODE: single-domain
-        NEXT_PUBLIC_BILLING_APP_URL: http://erp.local/billing
-        NEXT_PUBLIC_CRM_APP_URL: http://erp.local/crm
-        NEXT_PUBLIC_INVENTORY_APP_URL: http://erp.local/inventory
+        # Same-origin relative paths: redirects/links stay on whichever host
+        # serves the app (erp.datavex.ai, erp.local, localhost) instead of
+        # bouncing users off to a hardcoded domain.
+        NEXT_PUBLIC_BILLING_APP_URL: /billing
+        NEXT_PUBLIC_CRM_APP_URL: /crm
+        NEXT_PUBLIC_INVENTORY_APP_URL: /inventory
     environment:
       NEXT_PUBLIC_BASE_PATH: /admin
       NEXT_PUBLIC_DEPLOY_MODE: single-domain
-      NEXT_PUBLIC_BILLING_APP_URL: http://erp.local/billing
-      NEXT_PUBLIC_CRM_APP_URL: http://erp.local/crm
-      NEXT_PUBLIC_INVENTORY_APP_URL: http://erp.local/inventory
+      NEXT_PUBLIC_BILLING_APP_URL: /billing
+      NEXT_PUBLIC_CRM_APP_URL: /crm
+      NEXT_PUBLIC_INVENTORY_APP_URL: /inventory
       CORS_ORIGINS: http://erp.local
     healthcheck:
       test: ["CMD", "node", "-e", "require('http').get('http://127.0.0.1:3000/admin', (res) => { if (res.statusCode >= 200 && res.statusCode < 400) process.exit(0); else process.exit(1); }).on('error', () => process.exit(1))"]
@@ -44,12 +47,12 @@ services:
       args:
         NEXT_PUBLIC_BASE_PATH: /crm
         NEXT_PUBLIC_DEPLOY_MODE: single-domain
-        NEXT_PUBLIC_SHELL_APP_URL: http://erp.local/admin
-        NEXT_PUBLIC_APP_URL: http://erp.local/crm
+        NEXT_PUBLIC_SHELL_APP_URL: /admin
+        NEXT_PUBLIC_APP_URL: /crm
     environment:
       NEXT_PUBLIC_DEPLOY_MODE: single-domain
-      NEXT_PUBLIC_SHELL_APP_URL: http://erp.local/admin
-      NEXT_PUBLIC_APP_URL: http://erp.local/crm
+      NEXT_PUBLIC_SHELL_APP_URL: /admin
+      NEXT_PUBLIC_APP_URL: /crm
       CORS_ORIGINS: http://erp.local
 
   # ─── Billing UI — basePath /billing ─────────────────────────────────────
@@ -58,12 +61,12 @@ services:
       args:
         NEXT_PUBLIC_BASE_PATH: /billing
         NEXT_PUBLIC_DEPLOY_MODE: single-domain
-        NEXT_PUBLIC_SHELL_APP_URL: http://erp.local/admin
-        NEXT_PUBLIC_APP_URL: http://erp.local/billing
+        NEXT_PUBLIC_SHELL_APP_URL: /admin
+        NEXT_PUBLIC_APP_URL: /billing
     environment:
       NEXT_PUBLIC_DEPLOY_MODE: single-domain
-      NEXT_PUBLIC_SHELL_APP_URL: http://erp.local/admin
-      NEXT_PUBLIC_APP_URL: http://erp.local/billing
+      NEXT_PUBLIC_SHELL_APP_URL: /admin
+      NEXT_PUBLIC_APP_URL: /billing
       CORS_ORIGINS: http://erp.local
     healthcheck:
       test: ["CMD", "node", "-e", "require('http').get('http://127.0.0.1:3002/billing', (res) => { if (res.statusCode >= 200 && res.statusCode < 400) process.exit(0); else process.exit(1); }).on('error', () => process.exit(1))"]
@@ -74,12 +77,12 @@ services:
       args:
         NEXT_PUBLIC_BASE_PATH: /inventory
         NEXT_PUBLIC_DEPLOY_MODE: single-domain
-        NEXT_PUBLIC_SHELL_APP_URL: http://erp.local/admin
-        NEXT_PUBLIC_APP_URL: http://erp.local/inventory
+        NEXT_PUBLIC_SHELL_APP_URL: /admin
+        NEXT_PUBLIC_APP_URL: /inventory
     environment:
       NEXT_PUBLIC_DEPLOY_MODE: single-domain
-      NEXT_PUBLIC_SHELL_APP_URL: http://erp.local/admin
-      NEXT_PUBLIC_APP_URL: http://erp.local/inventory
+      NEXT_PUBLIC_SHELL_APP_URL: /admin
+      NEXT_PUBLIC_APP_URL: /inventory
       CORS_ORIGINS: http://erp.local
     healthcheck:
       test: ["CMD", "node", "-e", "require('http').get('http://127.0.0.1:3004/inventory', (res) => { if (res.statusCode >= 200 && res.statusCode < 400) process.exit(0); else process.exit(1); }).on('error', () => process.exit(1))"]
@@ -92,31 +95,31 @@ services:
   # ─── Backend services — Update CORS & routing for single domain ─────────
   erp-service:
     environment:
-      CORS_ORIGINS: http://erp.local
+      CORS_ORIGINS: https://${MAIN_DOMAIN:-erp.datavex.ai},http://${MAIN_DOMAIN:-erp.datavex.ai},http://erp.local,http://localhost
       RUSTFS_PUBLIC_URL: http://erp.local/rustfs
       FRONTEND_URL: http://erp.local/admin
 
   crm-service:
     environment:
-      CORS_ORIGINS: http://erp.local
+      CORS_ORIGINS: https://${MAIN_DOMAIN:-erp.datavex.ai},http://${MAIN_DOMAIN:-erp.datavex.ai},http://erp.local,http://localhost
 
   billing-service:
     environment:
-      CORS_ORIGINS: http://erp.local
+      CORS_ORIGINS: https://${MAIN_DOMAIN:-erp.datavex.ai},http://${MAIN_DOMAIN:-erp.datavex.ai},http://erp.local,http://localhost
 
   inventory-service:
     environment:
-      CORS_ORIGINS: http://erp.local
+      CORS_ORIGINS: https://${MAIN_DOMAIN:-erp.datavex.ai},http://${MAIN_DOMAIN:-erp.datavex.ai},http://erp.local,http://localhost
       FRONTEND_URL: http://erp.local/inventory
 
   ai-service:
     environment:
-      CORS_ORIGINS: http://erp.local
+      CORS_ORIGINS: https://${MAIN_DOMAIN:-erp.datavex.ai},http://${MAIN_DOMAIN:-erp.datavex.ai},http://erp.local,http://localhost
 
   core-iam:
     environment:
       COOKIE_DOMAIN: erp.local
-      CORS_ORIGINS: http://erp.local
+      CORS_ORIGINS: https://${MAIN_DOMAIN:-erp.datavex.ai},http://${MAIN_DOMAIN:-erp.datavex.ai},http://erp.local,http://localhost
 
   # ─── Nginx — Switch to single-domain config ─────────────────────────────
   nginx:
